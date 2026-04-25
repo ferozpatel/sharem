@@ -1,0 +1,3395 @@
+nohup: ignoring input
+/home/ubuntu/trading-bot/Strategy_Jul_2025.py:166: RuntimeWarning: divide by zero encountered in scalar divide
+  option_type[index1] == 'PE' else round(oich[index2] / oich[index1],
+/home/ubuntu/trading-bot/Strategy_Jul_2025.py:166: RuntimeWarning: divide by zero encountered in scalar divide
+  option_type[index1] == 'PE' else round(oich[index2] / oich[index1],
+26JAN
+checkInstrument =  NSE:NIFTYBANK-INDEX
+bnExpDate =  26JAN
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:18:00.233918
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60500PE   0.25   -0.12 CALL added 4890   PUT unwind -570
+pcr2 =  NSE:BANKNIFTY26JAN60400PE   0.3   0.48 CALL unwind -1830   PUT unwind -870
+pcr3 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.08 CALL added 1950   PUT added 150
+pcr4 =  NSE:BANKNIFTY26JAN60200PE   0.29   -0.07 CALL unwind -1740   PUT added 120
+pcr5 =  NSE:BANKNIFTY26JAN60100PE   0.2   -6.8 CALL unwind -300   PUT added 2040
+pcr6 =  NSE:BANKNIFTY26JAN60000PE   0.54    0.2 CALL added 15000   PUT added 2940
+pcr7 =  NSE:BANKNIFTY26JAN59900PE   0.62   -0.09 CALL unwind -3060   PUT added 270
+pcr8 =  NSE:BANKNIFTY26JAN59800PE   0.96   19.33 CALL unwind -270   PUT unwind -5220
+pcr9 =  NSE:BANKNIFTY26JAN59700PE   0.94   0.59 CALL added 4650   PUT added 2730
+pcr10 =  NSE:BANKNIFTY26JAN59600PE   1.01   3.1 CALL added 4920   PUT added 15270
+pcr11 =  NSE:BANKNIFTY26JAN59500CE   1.21   0.81 CALL unwind -3240   PUT unwind -2640
+pcr12 =  NSE:BANKNIFTY26JAN59400PE   1.88   9.83 CALL added 180   PUT added 1770
+pcr13 =  NSE:BANKNIFTY26JAN59300PE   3.39   -9.0 CALL unwind -60   PUT added 540
+pcr14 =  NSE:BANKNIFTY26JAN59200PE   2.73   -28.6 CALL added 150   PUT unwind -4290
+pcr15 =  NSE:BANKNIFTY26JAN59100PE   6.79   -inf CALL unwind 0   PUT unwind -390
+pcr16 =  NSE:BANKNIFTY26JAN59000PE   3.2   8.0 CALL added 270   PUT added 2160
+pcr17 =  NSE:BANKNIFTY26JAN58900PE   4.43   -inf CALL unwind 0   PUT unwind -1530
+pcrSummation= 5.92  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 28.89
+pcrSummation== 5.92
+VOLPCRSUM== 4.62
+spotLTP =  59711.0  ATM_STRIKE =  59700
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59700: 59700}
+avgOiPcrList2 = [np.float64(1.7)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 60000
+CEoich val =  15000.0  PEoich val =  2940.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 60.41
+RSI_VAL2== 60.41
+newSynthFut =  59900
+ATMStrike =  59700
+AVG_OIPCR= 0.66
+avgoiPCROld=  1.7
+SUPP_RES = 60000
+FUT LTP = 59860.8
+====================================
+totalOIPCR = 0.9
+AVG_VOLPCR= 0.51
+atmPCR= 0.2  belowATM  0.54
+atmVolPCR= 0.29  belowATM  0.67
+True   59860.8   60000   False   False   60.41
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 1.47  PE= 96420  CE= 65370      cpr =  0.68
+NSE:BANKNIFTY26JAN59700PE  prev candle vol pcr = 0.81  PE= 17730  CE= 21840      cpr =  1.23
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60000PE   0.54
+oipcr2 =  NSE:BANKNIFTY26JAN59900PE   0.62
+oipcr3 =  NSE:BANKNIFTY26JAN59800PE   0.96
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.94    1.01
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:21:00.000001
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60500PE   0.25   0.02 CALL added 13860   PUT added 330
+pcr2 =  NSE:BANKNIFTY26JAN60400PE   0.3   0.54 CALL unwind -1440   PUT unwind -780
+pcr3 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.17 CALL added 2760   PUT added 480
+pcr4 =  NSE:BANKNIFTY26JAN60200PE   0.28   0.15 CALL added 5310   PUT added 780
+pcr5 =  NSE:BANKNIFTY26JAN60100PE   0.2   -4.21 CALL unwind -990   PUT added 4170
+pcr6 =  NSE:BANKNIFTY26JAN60000PE   0.55    0.76 CALL added 36960   PUT added 27960
+pcr7 =  NSE:BANKNIFTY26JAN59900PE   0.62   0.8 CALL added 11340   PUT added 9060
+pcr8 =  NSE:BANKNIFTY26JAN59800PE   0.94   0.48 CALL added 20160   PUT added 9660
+pcr9 =  NSE:BANKNIFTY26JAN59700PE   1.03   2.06 CALL added 24540   PUT added 50610
+pcr10 =  NSE:BANKNIFTY26JAN59600PE   1.09   3.58 CALL added 11430   PUT added 40920
+pcr11 =  NSE:BANKNIFTY26JAN59500CE   1.23   -2.58 CALL unwind -6630   PUT added 17130
+pcr12 =  NSE:BANKNIFTY26JAN59400PE   1.96   -8.84 CALL unwind -960   PUT added 8490
+pcr13 =  NSE:BANKNIFTY26JAN59300PE   3.41   9.46 CALL added 390   PUT added 3690
+pcr14 =  NSE:BANKNIFTY26JAN59200PE   2.78   -13.0 CALL added 60   PUT unwind -780
+pcr15 =  NSE:BANKNIFTY26JAN59100PE   6.77   18.0 CALL unwind -90   PUT unwind -1620
+pcr16 =  NSE:BANKNIFTY26JAN59000PE   3.24   20.58 CALL added 720   PUT added 14820
+pcr17 =  NSE:BANKNIFTY26JAN58900PE   4.4   -inf CALL unwind 0   PUT unwind -2400
+pcrSummation= 6.09  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 29.2
+pcrSummation== 6.09
+VOLPCRSUM== 4.0600000000000005
+spotLTP =  59741.3  ATM_STRIKE =  59700
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59700: 59700}
+avgOiPcrList2 = [np.float64(1.7), np.float64(1.72)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  36960.0  PEoich val =  27960.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 63.73
+RSI_VAL2== 63.73
+newSynthFut =  59900
+ATMStrike =  59700
+AVG_OIPCR= 0.68
+avgoiPCROld=  1.72
+SUPP_RES = 60000
+FUT LTP = 59890.2
+====================================
+totalOIPCR = 0.9
+AVG_VOLPCR= 0.45
+atmPCR= 0.2  belowATM  0.55
+atmVolPCR= 0.28  belowATM  0.57
+False   59890.2   60000   False   False   63.73
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 0.74  PE= 59970  CE= 81450      cpr =  1.36
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 1.47  PE= 96420  CE= 65370      cpr =  0.68
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60000PE   0.55
+oipcr2 =  NSE:BANKNIFTY26JAN59900PE   0.62
+oipcr3 =  NSE:BANKNIFTY26JAN59800PE   0.94
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.03    1.09
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:24:00.000003
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60500PE   0.25   0.07 CALL added 18810   PUT added 1230
+pcr2 =  NSE:BANKNIFTY26JAN60400PE   0.29   1.0 CALL unwind -810   PUT unwind -810
+pcr3 =  NSE:BANKNIFTY26JAN60300PE   0.16   0.33 CALL added 3510   PUT added 1170
+pcr4 =  NSE:BANKNIFTY26JAN60200PE   0.28   0.14 CALL added 7080   PUT added 1020
+pcr5 =  NSE:BANKNIFTY26JAN60100PE   0.21   -2.79 CALL unwind -2280   PUT added 6360
+pcr6 =  NSE:BANKNIFTY26JAN60000PE   0.56    0.99 CALL added 47820   PUT added 47550
+pcr7 =  NSE:BANKNIFTY26JAN59900PE   0.7   1.36 CALL added 27720   PUT added 37650
+pcr8 =  NSE:BANKNIFTY26JAN59800PE   0.91   0.48 CALL added 44700   PUT added 21570
+pcr9 =  NSE:BANKNIFTY26JAN59700PE   1.11   2.84 CALL added 27660   PUT added 78510
+pcr10 =  NSE:BANKNIFTY26JAN59600PE   1.16   /home/ubuntu/trading-bot/Strategy_Jul_2025.py:166: RuntimeWarning: divide by zero encountered in scalar divide
+  option_type[index1] == 'PE' else round(oich[index2] / oich[index1],
+11.57 CALL added 4290   PUT added 49650
+pcr11 =  NSE:BANKNIFTY26JAN59500CE   1.24   -6.38 CALL unwind -6270   PUT added 39990
+pcr12 =  NSE:BANKNIFTY26JAN59400PE   1.96   32.25 CALL added 360   PUT added 11610
+pcr13 =  NSE:BANKNIFTY26JAN59300PE   3.41   5.2 CALL added 1350   PUT added 7020
+pcr14 =  NSE:BANKNIFTY26JAN59200PE   2.75   -3.35 CALL added 510   PUT unwind -1710
+pcr15 =  NSE:BANKNIFTY26JAN59100PE   6.77   -28.0 CALL added 30   PUT unwind -840
+pcr16 =  NSE:BANKNIFTY26JAN59000PE   3.27   30.44 CALL added 750   PUT added 22830
+pcr17 =  NSE:BANKNIFTY26JAN58900PE   4.48   11.0 CALL added 30   PUT added 330
+pcrSummation= 6.33  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 29.51
+pcrSummation== 6.33
+VOLPCRSUM== 4.21
+spotLTP =  59683.35  ATM_STRIKE =  59700
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59700: 59700}
+avgOiPcrList2 = [np.float64(1.7), np.float64(1.72), np.float64(1.74)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 60000
+CEoich val =  47820.0  PEoich val =  47550.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 59.42
+RSI_VAL2== 59.42
+isPcrInc = True
+newSynthFut =  59900
+ATMStrike =  59700
+AVG_OIPCR= 0.7
+avgoiPCROld=  1.74
+SUPP_RES = 60000
+FUT LTP = 59866.6
+====================================
+totalOIPCR = 0.91
+AVG_VOLPCR= 0.47
+atmPCR= 0.21  belowATM  0.56
+atmVolPCR= 0.29  belowATM  0.56
+False   59866.6   60000   True   False   59.42
+no trade yet = [np.float64(1.7), np.float64(1.72), np.float64(1.74)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59900PE  curr candle vol pcr = 0.89  PE= 25800  CE= 29130      cpr =  1.13
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 0.74  PE= 59970  CE= 81450      cpr =  1.36
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60000PE   0.56
+oipcr2 =  NSE:BANKNIFTY26JAN59900PE   0.7
+oipcr3 =  NSE:BANKNIFTY26JAN59800PE   0.91
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.11    1.16
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:27:00.000005
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60600PE   0.58   1.67 CALL added 1530   PUT added 2550
+pcr2 =  NSE:BANKNIFTY26JAN60500PE   0.25   0.07 CALL added 19620   PUT added 1350
+pcr3 =  NSE:BANKNIFTY26JAN60400PE   0.3   0.39 CALL unwind -1710   PUT unwind -660
+pcr4 =  NSE:BANKNIFTY26JAN60300PE   0.16   0.27 CALL added 5400   PUT added 1470
+pcr5 =  NSE:BANKNIFTY26JAN60200PE   0.28   0.1 CALL added 10650   PUT added 1080
+pcr6 =  NSE:BANKNIFTY26JAN60100PE   0.21    -40.0 CALL unwind -150   PUT added 6000
+pcr7 =  NSE:BANKNIFTY26JAN60000PE   0.56   0.79 CALL added 71460   PUT added 56610
+pcr8 =  NSE:BANKNIFTY26JAN59900PE   0.68   1.08 CALL added 36690   PUT added 39690
+pcr9 =  NSE:BANKNIFTY26JAN59800PE   0.9   0.5 CALL added 53460   PUT added 26880
+pcr10 =  NSE:BANKNIFTY26JAN59700PE   1.09   1.94 CALL added 48660   PUT added 94470
+pcr11 =  NSE:BANKNIFTY26JAN59600PE   1.15   5.44 CALL added 9900   PUT added 53850
+pcr12 =  NSE:BANKNIFTY26JAN59500CE   1.24   -9.55 CALL unwind -4350   PUT added 41550
+pcr13 =  NSE:BANKNIFTY26JAN59400PE   1.97   -80.4 CALL unwind -150   PUT added 12060
+pcr14 =  NSE:BANKNIFTY26JAN59300PE   3.39   3.72 CALL added 1830   PUT added 6810
+pcr15 =  NSE:BANKNIFTY26JAN59200PE   2.75   -44.0 CALL added 60   PUT unwind -2640
+pcr16 =  NSE:BANKNIFTY26JAN59100PE   6.79   -inf CALL unwind 0   PUT unwind -480
+pcr17 =  NSE:BANKNIFTY26JAN59000PE   3.3   25.82 CALL added 1320   PUT added 34080
+pcrSummation= 6.27  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 25.6
+pcrSummation== 6.27
+VOLPCRSUM== 3.2600000000000007
+spotLTP =  59761.0  ATM_STRIKE =  59800
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {59800: 59800}
+avgOiPcrList2 = [np.float64(1.51)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  71460.0  PEoich val =  56610.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 61.47
+RSI_VAL2== 63.11
+newSynthFut =  59900
+ATMStrike =  59800
+AVG_OIPCR= 0.7
+avgoiPCROld=  1.51
+SUPP_RES = 60000
+FUT LTP = 59899.0
+====================================
+totalOIPCR = 0.91
+AVG_VOLPCR= 0.36
+atmPCR= 0.28  belowATM  0.21
+atmVolPCR= 0.16  belowATM  0.3
+False   59899.0   60000   False   False   63.11
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 1.02  PE= 43650  CE= 42600      cpr =  0.98
+NSE:BANKNIFTY26JAN59900PE  prev candle vol pcr = 0.89  PE= 25800  CE= 29130      cpr =  1.13
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60100PE   0.21
+oipcr2 =  NSE:BANKNIFTY26JAN60000PE   0.56
+oipcr3 =  NSE:BANKNIFTY26JAN59900PE   0.68
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.9    1.09
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:30:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60600PE   0.58   1.01 CALL added 2400   PUT added 2430
+pcr2 =  NSE:BANKNIFTY26JAN60500PE   0.24   0.03 CALL added 24810   PUT added 690
+pcr3 =  NSE:BANKNIFTY26JAN60400PE   0.29   1.36 CALL unwind -1080   PUT unwind -1470
+pcr4 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.19 CALL added 7170   PUT added 1350
+pcr5 =  NSE:BANKNIFTY26JAN60200PE   0.28   0.18 CALL added 10110   PUT added 1860
+pcr6 =  NSE:BANKNIFTY26JAN60100PE   0.22    68.75 CALL added 120   PUT added 8250
+pcr7 =  NSE:BANKNIFTY26JAN60000PE   0.56   0.81 CALL added 72720   PUT added 59010
+pcr8 =  NSE:BANKNIFTY26JAN59900PE   0.69   1.09 CALL added 41430   PUT added 44970
+pcr9 =  NSE:BANKNIFTY26JAN59800PE   0.89   0.54 CALL added 62850   PUT added 33990
+pcr10 =  NSE:BANKNIFTY26JAN59700PE   1.15   2.31 CALL added 49380   PUT added 114180
+pcr11 =  NSE:BANKNIFTY26JAN59600PE   1.2   11.65 CALL added 5130   PUT added 59760
+pcr12 =  NSE:BANKNIFTY26JAN59500CE   1.25   -10.21 CALL unwind -5070   PUT added 51750
+pcr13 =  NSE:BANKNIFTY26JAN59400PE   1.97   14.73 CALL added 900   PUT added 13260
+pcr14 =  NSE:BANKNIFTY26JAN59300PE   3.39   3.55 CALL added 2580   PUT added 9150
+pcr15 =  NSE:BANKNIFTY26JAN59200PE   2.78   1.83 CALL added 360   PUT added 660
+pcr16 =  NSE:BANKNIFTY26JAN59100PE   6.87   -100.0 CALL unwind -30   PUT added 3000
+pcr17 =  NSE:BANKNIFTY26JAN59000PE   3.33   24.02 CALL added 1890   PUT added 45390
+pcrSummation= 6.39  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 25.84
+pcrSummation== 6.39
+VOLPCRSUM== 3.27
+spotLTP =  59764.45  ATM_STRIKE =  59800
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59800: 59800}
+avgOiPcrList2 = [np.float64(1.51), np.float64(1.52)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  72720.0  PEoich val =  59010.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 64.17
+RSI_VAL2== 64.17
+newSynthFut =  59900
+ATMStrike =  59800
+AVG_OIPCR= 0.71
+avgoiPCROld=  1.52
+SUPP_RES = 60000
+FUT LTP = 59908.8
+====================================
+totalOIPCR = 0.91
+AVG_VOLPCR= 0.36
+atmPCR= 0.28  belowATM  0.22
+atmVolPCR= 0.16  belowATM  0.3
+False   59908.8   60000   False   False   64.17
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 0.97  PE= 70980  CE= 72810      cpr =  1.03
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 1.02  PE= 43650  CE= 42600      cpr =  0.98
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60100PE   0.22
+oipcr2 =  NSE:BANKNIFTY26JAN60000PE   0.56
+oipcr3 =  NSE:BANKNIFTY26JAN59900PE   0.69
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.89    1.15
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:33:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60500PE   0.24   0.03 CALL added 22680   PUT added 720
+pcr2 =  NSE:BANKNIFTY26JAN60400PE   0.29   47.0 CALL unwind -30   PUT unwind -1410
+pcr3 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.17 CALL added 6990   PUT added 1200
+pcr4 =  NSE:BANKNIFTY26JAN60200PE   0.27   0.1 CALL added 16710   PUT added 1710
+pcr5 =  NSE:BANKNIFTY26JAN60100PE   0.22   12.0 CALL added 900   PUT added 10800
+pcr6 =  NSE:BANKNIFTY26JAN60000PE   0.56    0.72 CALL added 88920   PUT added 64110
+pcr7 =  NSE:BANKNIFTY26JAN59900PE   0.7   1.12 CALL added 47850   PUT added 53610
+pcr8 =  NSE:BANKNIFTY26JAN59800PE   0.91   0.65 CALL added 73620   PUT added 47970
+pcr9 =  NSE:BANKNIFTY26JAN59700PE   1.19   2.69 CALL added 47340   PUT added 127440
+pcr10 =  NSE:BANKNIFTY26JAN59600PE   1.28   30.96 CALL added 2430   PUT added 75240
+pcr11 =  NSE:BANKNIFTY26JAN59500CE   1.26   -4.19 CALL unwind -14220   PUT added 59610
+pcr12 =  NSE:BANKNIFTY26JAN59400PE   1.98   19.52 CALL added 750   PUT added 14640
+pcr13 =  NSE:BANKNIFTY26JAN59300PE   3.37   2.9 CALL added 2820   PUT added 8190
+pcr14 =  NSE:BANKNIFTY26JAN59200PE   2.78   -1.0 CALL added 240   PUT unwind -240
+pcr15 =  NSE:BANKNIFTY26JAN59100PE   6.86   -25.33 CALL unwind -90   PUT added 2280
+pcr16 =  NSE:BANKNIFTY26JAN59000PE   3.34   21.3 CALL added 2430   PUT added 51750
+pcr17 =  NSE:BANKNIFTY26JAN58900PE   4.44   0.44 CALL added 270   PUT added 120
+pcrSummation= 6.54  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 29.84
+pcrSummation== 6.54
+VOLPCRSUM== 4.27
+spotLTP =  59704.6  ATM_STRIKE =  59700
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {59700: 59700}
+avgOiPcrList2 = [np.float64(1.76)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  88920.0  PEoich val =  64110.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 56.21
+RSI_VAL2== 56.21
+newSynthFut =  59900
+ATMStrike =  59700
+AVG_OIPCR= 0.73
+avgoiPCROld=  1.76
+SUPP_RES = 60000
+FUT LTP = 59864.0
+====================================
+totalOIPCR = 0.91
+AVG_VOLPCR= 0.47
+atmPCR= 0.22  belowATM  0.56
+atmVolPCR= 0.33  belowATM  0.53
+True   59864.0   60000   False   False   56.21
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 1.99  PE= 96780  CE= 48570      cpr =  0.5
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 0.97  PE= 70980  CE= 72810      cpr =  1.03
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60000PE   0.56
+oipcr2 =  NSE:BANKNIFTY26JAN59900PE   0.7
+oipcr3 =  NSE:BANKNIFTY26JAN59800PE   0.91
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.19    1.28
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:36:00.000003
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60600PE   0.58   1.15 CALL added 2130   PUT added 2460
+pcr2 =  NSE:BANKNIFTY26JAN60500PE   0.24   -0.02 CALL added 20520   PUT unwind -360
+pcr3 =  NSE:BANKNIFTY26JAN60400PE   0.29   -3.36 CALL added 420   PUT unwind -1410
+pcr4 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.1 CALL added 7380   PUT added 750
+pcr5 =  NSE:BANKNIFTY26JAN60200PE   0.27   0.1 CALL added 17970   PUT added 1770
+pcr6 =  NSE:BANKNIFTY26JAN60100PE   0.22    29.83 CALL added 360   PUT added 10740
+pcr7 =  NSE:BANKNIFTY26JAN60000PE   0.56   0.7 CALL added 96900   PUT added 68250
+pcr8 =  NSE:BANKNIFTY26JAN59900PE   0.7   1.09 CALL added 51870   PUT added 56520
+pcr9 =  NSE:BANKNIFTY26JAN59800PE   0.91   0.69 CALL added 77040   PUT added 53040
+pcr10 =  NSE:BANKNIFTY26JAN59700PE   1.17   2.35 CALL added 55260   PUT added 129630
+pcr11 =  NSE:BANKNIFTY26JAN59600PE   1.29   29.62 CALL added 2640   PUT added 78210
+pcr12 =  NSE:BANKNIFTY26JAN59500CE   1.28   -5.35 CALL unwind -15390   PUT added 82320
+pcr13 =  NSE:BANKNIFTY26JAN59400PE   2.0   39.64 CALL added 420   PUT added 16650
+pcr14 =  NSE:BANKNIFTY26JAN59300PE   3.38   3.21 CALL added 3150   PUT added 10110
+pcr15 =  NSE:BANKNIFTY26JAN59200PE   2.79   2.39 CALL added 690   PUT added 1650
+pcr16 =  NSE:BANKNIFTY26JAN59100PE   6.9   -44.33 CALL unwind -90   PUT added 3990
+pcr17 =  NSE:BANKNIFTY26JAN59000PE   3.37   51.92 CALL added 1080   PUT added 56070
+pcrSummation= 6.55  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 26.1
+pcrSummation== 6.55
+VOLPCRSUM== 3.42
+spotLTP =  59755.75  ATM_STRIKE =  59800
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {59800: 59800}
+avgOiPcrList2 = [np.float64(1.54)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  96900.0  PEoich val =  68250.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 58.04
+RSI_VAL2== 58.04
+newSynthFut =  59900
+ATMStrike =  59800
+AVG_OIPCR= 0.73
+avgoiPCROld=  1.54
+SUPP_RES = 60000
+FUT LTP = 59878.6
+====================================
+totalOIPCR = 0.92
+AVG_VOLPCR= 0.38
+atmPCR= 0.27  belowATM  0.22
+atmVolPCR= 0.15  belowATM  0.34
+True   59878.6   60000   False   False   58.04
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 1.38  PE= 51090  CE= 37140      cpr =  0.73
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 1.99  PE= 96780  CE= 48570      cpr =  0.5
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60100PE   0.22
+oipcr2 =  NSE:BANKNIFTY26JAN60000PE   0.56
+oipcr3 =  NSE:BANKNIFTY26JAN59900PE   0.7
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.91    1.17
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:39:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60600PE   0.57   0.57 CALL added 4050   PUT added 2310
+pcr2 =  NSE:BANKNIFTY26JAN60500PE   0.24   0.01 CALL added 21510   PUT added 300
+pcr3 =  NSE:BANKNIFTY26JAN60400PE   0.29   -4.7 CALL added 300   PUT unwind -1410
+pcr4 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.1 CALL added 8940   PUT added 900
+pcr5 =  NSE:BANKNIFTY26JAN60200PE   0.27   0.15 CALL added 18270   PUT added 2760
+pcr6 =  NSE:BANKNIFTY26JAN60100PE   0.23    8.9 CALL added 1470   PUT added 13080
+pcr7 =  NSE:BANKNIFTY26JAN60000PE   0.56   0.84 CALL added 90090   PUT added 75780
+pcr8 =  NSE:BANKNIFTY26JAN59900PE   0.73   1.22 CALL added 51000   PUT added 62130
+pcr9 =  NSE:BANKNIFTY26JAN59800PE   0.95   0.86 CALL added 74640   PUT added 64080
+pcr10 =  NSE:BANKNIFTY26JAN59700PE   1.22   2.81 CALL added 50400   PUT added 141390
+pcr11 =  NSE:BANKNIFTY26JAN59600PE   1.31   79.29 CALL added 1020   PUT added 80880
+pcr12 =  NSE:BANKNIFTY26JAN59500CE   1.28   -5.58 CALL unwind -15180   PUT added 84660
+pcr13 =  NSE:BANKNIFTY26JAN59400PE   2.0   179.0 CALL added 90   PUT added 16110
+pcr14 =  NSE:BANKNIFTY26JAN59300PE   3.41   4.0 CALL added 3030   PUT added 12120
+pcr15 =  NSE:BANKNIFTY26JAN59200PE   2.79   3.0 CALL added 1020   PUT added 3060
+pcr16 =  NSE:BANKNIFTY26JAN59100PE   6.9   35.8 CALL added 150   PUT added 5370
+pcr17 =  NSE:BANKNIFTY26JAN59000PE   3.4   70.87 CALL added 930   PUT added 65910
+pcrSummation= 6.7  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 26.3
+pcrSummation== 6.7
+VOLPCRSUM== 3.31
+spotLTP =  59792.25  ATM_STRIKE =  59800
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59800: 59800}
+avgOiPcrList2 = [np.float64(1.54), np.float64(1.55)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  90090.0  PEoich val =  75780.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 63.57
+RSI_VAL2== 63.57
+newSynthFut =  59900
+ATMStrike =  59800
+AVG_OIPCR= 0.74
+avgoiPCROld=  1.55
+SUPP_RES = 60000
+FUT LTP = 59928.0
+====================================
+totalOIPCR = 0.92
+AVG_VOLPCR= 0.37
+atmPCR= 0.27  belowATM  0.23
+atmVolPCR= 0.16  belowATM  0.33
+False   59928.0   60000   False   False   63.57
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59800PE  curr candle vol pcr = 0.76  PE= 69540  CE= 91260      cpr =  1.31
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 1.38  PE= 51090  CE= 37140      cpr =  0.73
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60100PE   0.23
+oipcr2 =  NSE:BANKNIFTY26JAN60000PE   0.56
+oipcr3 =  NSE:BANKNIFTY26JAN59900PE   0.73
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.95    1.22
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:42:00.000005
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60600PE   0.56   0.53 CALL added 4350   PUT added 2310
+pcr2 =  NSE:BANKNIFTY26JAN60500PE   0.24   0.03 CALL added 22530   PUT added 600
+pcr3 =  NSE:BANKNIFTY26JAN60400PE   0.29   -1.29 CALL added 1140   PUT unwind -1470
+pcr4 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.13 CALL added 10350   PUT added 1320
+pcr5 =  NSE:BANKNIFTY26JAN60200PE   0.28   0.2 CALL added 16560   PUT added 3240
+pcr6 =  NSE:BANKNIFTY26JAN60100PE   0.23    9.43 CALL added 1590   PUT added 15000
+pcr7 =  NSE:BANKNIFTY26JAN60000PE   0.57   0.98 CALL added 98550   PUT added 96510
+pcr8 =  NSE:BANKNIFTY26JAN59900PE   0.74   1.27 CALL added 53160   PUT added 67260
+pcr9 =  NSE:BANKNIFTY26JAN59800PE   0.96   0.9 CALL added 83640   PUT added 75630
+pcr10 =  NSE:BANKNIFTY26JAN59700PE   1.22   2.61 CALL added 56700   PUT added 148080
+pcr11 =  NSE:BANKNIFTY26JAN59600PE   1.37   -11.53 CALL unwind -7230   PUT added 83340
+pcr12 =  NSE:BANKNIFTY26JAN59500CE   1.29   -6.43 CALL unwind -15390   PUT added 99030
+pcr13 =  NSE:BANKNIFTY26JAN59400PE   2.05   -33.9 CALL unwind -600   PUT added 20340
+pcr14 =  NSE:BANKNIFTY26JAN59300PE   3.43   5.19 CALL added 2370   PUT added 12300
+pcr15 =  NSE:BANKNIFTY26JAN59200PE   2.83   8.58 CALL added 570   PUT added 4890
+pcr16 =  NSE:BANKNIFTY26JAN59100PE   6.9   31.83 CALL added 180   PUT added 5730
+pcr17 =  NSE:BANKNIFTY26JAN59000PE   3.42   47.75 CALL added 1530   PUT added 73050
+pcrSummation= 6.81  result =  ['NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE', 'NSE:BANKNIFTY26JAN59500CE']
+PCRSUM== 26.53
+pcrSummation== 6.81
+VOLPCRSUM== 3.2800000000000002
+spotLTP =  59788.75  ATM_STRIKE =  59800
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59800: 59800}
+avgOiPcrList2 = [np.float64(1.54), np.float64(1.55), np.float64(1.56)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 60000
+CEoich val =  98550.0  PEoich val =  96510.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 61.56
+RSI_VAL2== 61.56
+isPcrInc = True
+newSynthFut =  59900
+ATMStrike =  59800
+AVG_OIPCR= 0.76
+avgoiPCROld=  1.56
+SUPP_RES = 60000
+FUT LTP = 59916.6
+====================================
+totalOIPCR = 0.93
+AVG_VOLPCR= 0.36
+atmPCR= 0.28  belowATM  0.23
+atmVolPCR= 0.17  belowATM  0.33
+False   59916.6   60000   True   False   61.56
+no trade yet = [np.float64(1.54), np.float64(1.55), np.float64(1.56)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59900PE  curr candle vol pcr = 0.76  PE= 18150  CE= 23820      cpr =  1.31
+NSE:BANKNIFTY26JAN59800PE  prev candle vol pcr = 0.76  PE= 69540  CE= 91260      cpr =  1.31
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60100PE   0.23
+oipcr2 =  NSE:BANKNIFTY26JAN60000PE   0.57
+oipcr3 =  NSE:BANKNIFTY26JAN59900PE   0.74
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.96    1.22
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:45:00.000006
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60600PE   0.56   0.53 CALL added 4500   PUT added 2400
+pcr2 =  NSE:BANKNIFTY26JAN60500PE   0.25   0.07 CALL added 20760   PUT added 1500
+pcr3 =  NSE:BANKNIFTY26JAN60400PE   0.29   -1.08 CALL added 1110   PUT unwind -1200
+pcr4 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.1 CALL added 13020   PUT added 1320
+pcr5 =  NSE:BANKNIFTY26JAN60200PE   0.28   0.24 CALL added 14460   PUT added 3420
+pcr6 =  NSE:BANKNIFTY26JAN60100PE   0.24    9.02 CALL added 1950   PUT added 17580
+pcr7 =  NSE:BANKNIFTY26JAN60000PE   0.58   1.06 CALL added 92640   PUT added 97980
+pcr8 =  NSE:BANKNIFTY26JAN59900PE   0.75   1.32 CALL added 52980   PUT added 69750
+pcr9 =  NSE:BANKNIFTY26JAN59800PE   0.96   0.91 CALL added 90360   PUT added 81990
+pcr10 =  NSE:BANKNIFTY26JAN59700PE   1.26   2.9 CALL added 54570   PUT added 158280
+pcr11 =  NSE:BANKNIFTY26JAN59600PE   1.4   -7.74 CALL unwind -10920   PUT added 84510
+pcr12 =  NSE:BANKNIFTY26JAN59500CE   1.3   -6.56 CALL unwind -17370   PUT added 114030
+pcr13 =  NSE:BANKNIFTY26JAN59400PE   2.07   -8.27 CALL unwind -2340   PUT added 19350
+pcr14 =  NSE:BANKNIFTY26JAN59300PE   3.46   6.09 CALL added 2250   PUT added 13710
+pcr15 =  NSE:BANKNIFTY26JAN59200PE   2.78   1.05 CALL added 600   PUT added 630
+pcr16 =  NSE:BANKNIFTY26JAN59100PE   6.91   34.67 CALL added 180   PUT added 6240
+pcr17 =  NSE:BANKNIFTY26JAN59000PE   3.44   45.59 CALL added 1770   PUT added 80700
+pcrSummation= 5.91  result =  ['NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE']
+PCRSUM== 26.68
+pcrSummation== 5.91
+VOLPCRSUM== 3.1999999999999997
+spotLTP =  59849.65  ATM_STRIKE =  59800
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59800: 59800}
+avgOiPcrList2 = [np.float64(1.55), np.float64(1.56), np.float64(1.57)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 60000
+CEoich val =  92640.0  PEoich val =  97980.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 68.15
+RSI_VAL2== 67.47
+isPcrInc = True
+newSynthFut =  60000
+ATMStrike =  59800
+AVG_OIPCR= 0.66
+avgoiPCROld=  1.57
+SUPP_RES = 60000
+FUT LTP = 59977.2
+====================================
+totalOIPCR = 0.93
+AVG_VOLPCR= 0.36
+atmPCR= 0.28  belowATM  0.24
+atmVolPCR= 0.18  belowATM  0.35
+False   59977.2   60000   True   False   67.47
+no trade yet = /home/ubuntu/trading-bot/Strategy_Jul_2025.py:166: RuntimeWarning: divide by zero encountered in scalar divide
+  option_type[index1] == 'PE' else round(oich[index2] / oich[index1],
+[np.float64(1.55), np.float64(1.56), np.float64(1.57)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59900PE  curr candle vol pcr = 0.81  PE= 27570  CE= 34140      cpr =  1.24
+NSE:BANKNIFTY26JAN59900PE  prev candle vol pcr = 0.76  PE= 18150  CE= 23820      cpr =  1.31
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60200PE   0.28
+oipcr2 =  NSE:BANKNIFTY26JAN60100PE   0.24
+oipcr3 =  NSE:BANKNIFTY26JAN60000PE   0.58
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.75    0.96
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:48:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60700PE   0.09   0.2 CALL unwind -600   PUT unwind -120
+pcr2 =  NSE:BANKNIFTY26JAN60600PE   0.51   0.15 CALL added 14700   PUT added 2250
+pcr3 =  NSE:BANKNIFTY26JAN60500PE   0.25   0.2 CALL added 18540   PUT added 3780
+pcr4 =  NSE:BANKNIFTY26JAN60400PE   0.28   -0.31 CALL added 3960   PUT unwind -1230
+pcr5 =  NSE:BANKNIFTY26JAN60300PE   0.15   0.16 CALL added 12600   PUT added 1980
+pcr6 =  NSE:BANKNIFTY26JAN60200PE   0.29    0.34 CALL added 13980   PUT added 4770
+pcr7 =  NSE:BANKNIFTY26JAN60100PE   0.27   6.78 CALL added 3870   PUT added 26250
+pcr8 =  NSE:BANKNIFTY26JAN60000PE   0.59   1.24 CALL added 97500   PUT added 121350
+pcr9 =  NSE:BANKNIFTY26JAN59900PE   0.74   1.1 CALL added 75810   PUT added 83580
+pcr10 =  NSE:BANKNIFTY26JAN59800PE   1.05   1.33 CALL added 77010   PUT added 102690
+pcr11 =  NSE:BANKNIFTY26JAN59700PE   1.36   4.84 CALL added 33900   PUT added 164040
+pcr12 =  NSE:BANKNIFTY26JAN59600PE   1.49   -4.31 CALL unwind -20610   PUT added 88830
+pcr13 =  NSE:BANKNIFTY26JAN59500CE   1.31   -7.2 CALL unwind -18900   PUT added 136020
+pcr14 =  NSE:BANKNIFTY26JAN59400PE   2.16   -3.27 CALL unwind -6330   PUT added 20670
+pcr15 =  NSE:BANKNIFTY26JAN59300PE   3.54   inf CALL unwind 0   PUT added 13170
+pcr16 =  NSE:BANKNIFTY26JAN59200PE   3.07   -0.44 CALL unwind -6120   PUT added 2670
+pcr17 =  NSE:BANKNIFTY26JAN59100PE   6.93   -23.83 CALL unwind -180   PUT added 4290
+pcrSummation= 6.220000000000001  result =  ['NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE', 'NSE:BANKNIFTY26JAN59600PE']
+PCRSUM== 24.08
+pcrSummation== 6.22
+VOLPCRSUM== 2.17
+spotLTP =  59889.35  ATM_STRIKE =  59900
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {59900: 59900}
+avgOiPcrList2 = [np.float64(1.42)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  97500.0  PEoich val =  121350.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 71.34
+RSI_VAL2== 70.28
+newSynthFut =  60000
+ATMStrike =  59900
+AVG_OIPCR= 0.69
+avgoiPCROld=  1.42
+SUPP_RES = 60000
+FUT LTP = 60011.8
+====================================
+totalOIPCR = 0.94
+AVG_VOLPCR= 0.24
+atmPCR= 0.15  belowATM  0.29
+atmVolPCR= 0.13  belowATM  0.21
+False   60011.8   60000   False   False   70.28
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN59900PE  curr candle vol pcr = 0.47  PE= 56370  CE= 120180      cpr =  2.13
+NSE:BANKNIFTY26JAN59900PE  prev candle vol pcr = 0.81  PE= 27570  CE= 34140      cpr =  1.24
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60200PE   0.29
+oipcr2 =  NSE:BANKNIFTY26JAN60100PE   0.27
+oipcr3 =  NSE:BANKNIFTY26JAN60000PE   0.59
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.74    1.05
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:51:00.000002
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60700PE   0.09   0.01 CALL unwind -5280   PUT unwind -30
+pcr2 =  NSE:BANKNIFTY26JAN60600PE   0.48   0.12 CALL added 21660   PUT added 2700
+pcr3 =  NSE:BANKNIFTY26JAN60500PE   0.25   0.37 CALL added 18870   PUT added 7020
+pcr4 =  NSE:BANKNIFTY26JAN60400PE   0.29   -0.04 CALL added 4830   PUT unwind -180
+pcr5 =  NSE:BANKNIFTY26JAN60300PE   0.16   0.47 CALL added 10890   PUT added 5070
+pcr6 =  NSE:BANKNIFTY26JAN60200PE   0.29    0.39 CALL added 12630   PUT added 4920
+pcr7 =  NSE:BANKNIFTY26JAN60100PE   0.3   19.82 CALL added 1830   PUT added 36270
+pcr8 =  NSE:BANKNIFTY26JAN60000PE   0.61   1.49 CALL added 99090   PUT added 147990
+pcr9 =  NSE:BANKNIFTY26JAN59900PE   0.81   1.42 CALL added 68550   PUT added 97620
+pcr10 =  NSE:BANKNIFTY26JAN59800PE   1.13   1.85 CALL added 60630   PUT added 112050
+pcr11 =  NSE:BANKNIFTY26JAN59700PE   1.54   -217.0 CALL unwind -780   PUT added 169260
+pcr12 =  NSE:BANKNIFTY26JAN59600PE   1.54   -3.38 CALL unwind -27000   PUT added 91230
+pcr13 =  NSE:BANKNIFTY26JAN59500CE   1.32   -6.21 CALL unwind -22620   PUT added 140400
+pcr14 =  NSE:BANKNIFTY26JAN59400PE   2.21   -1.72 CALL unwind -10170   PUT added 17460
+pcr15 =  NSE:BANKNIFTY26JAN59300PE   3.55   -4.17 CALL unwind -1800   PUT added 7500
+pcr16 =  NSE:BANKNIFTY26JAN59200PE   3.27   -0.59 CALL unwind -9420   PUT added 5520
+pcr17 =  NSE:BANKNIFTY26JAN59100PE   7.12   -6.03 CALL unwind -1050   PUT added 6330
+pcrSummation= 5.38  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 24.96
+pcrSummation== 5.38
+VOLPCRSUM== 2.1
+spotLTP =  59927.1  ATM_STRIKE =  59900
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59900: 59900}
+avgOiPcrList2 = [np.float64(1.42), np.float64(1.47)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  99090.0  PEoich val =  147990.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 74.31
+RSI_VAL2== 75.14
+newSynthFut =  60100
+ATMStrike =  59900
+AVG_OIPCR= 0.6
+avgoiPCROld=  1.47
+SUPP_RES = 60000
+FUT LTP = 60084.6
+====================================
+totalOIPCR = 0.95
+AVG_VOLPCR= 0.23
+atmPCR= 0.16  belowATM  0.29
+atmVolPCR= 0.16  belowATM  0.22
+True   60084.6   60000   False   False   75.14
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60000PE  curr candle vol pcr = 0.31  PE= 123630  CE= 398550      cpr =  3.22
+NSE:BANKNIFTY26JAN59900PE  prev candle vol pcr = 0.47  PE= 56370  CE= 120180      cpr =  2.13
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60200PE   0.29
+oipcr2 =  NSE:BANKNIFTY26JAN60100PE   0.3
+oipcr3 =  NSE:BANKNIFTY26JAN60000PE   0.61
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.81    1.13
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:54:00.000003
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.14   0.12 CALL added 6090   PUT added 720
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.09   -0.0 CALL unwind -10350   PUT unwind 0
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.5   0.15 CALL added 17640   PUT added 2640
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.26   0.51 CALL added 24810   PUT added 12600
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.28   0.08 CALL added 11310   PUT added 930
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.17    0.62 CALL added 10650   PUT added 6630
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.31   1.03 CALL added 7920   PUT added 8130
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.34   6.03 CALL added 8670   PUT added 52260
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.62   1.51 CALL added 127380   PUT added 191850
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   0.86   1.74 CALL added 60030   PUT added 104160
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   1.26   3.88 CALL added 30270   PUT added 117330
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   1.76   -5.22 CALL unwind -33480   PUT added 174630
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.62   -3.06 CALL unwind -32280   PUT added 98700
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.33   -6.34 CALL unwind -23880   PUT added 151470
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.21   -1.53 CALL unwind -10620   PUT added 16290
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   3.51   -0.29 CALL unwind -2790   PUT added 810
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.28   -0.54 CALL unwind -9690   PUT added 5250
+pcrSummation= 5.859999999999999  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 18.54
+pcrSummation== 5.86
+VOLPCRSUM== 1.5699999999999998
+spotLTP =  59957.7  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.09)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  127380.0  PEoich val =  191850.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 76.6
+RSI_VAL2== 76.31
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 0.65
+avgoiPCROld=  1.09
+SUPP_RES = 60000
+FUT LTP = 60107.0
+====================================
+totalOIPCR = 0.97
+AVG_VOLPCR= 0.17
+atmPCR= 0.28  belowATM  0.17
+atmVolPCR= 0.09  belowATM  0.16
+True   60107.0   60000   False   False   76.31
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60000PE  curr candle vol pcr = 0.38  PE= 130740  CE= 344490      cpr =  2.63
+NSE:BANKNIFTY26JAN60000PE  prev candle vol pcr = 0.31  PE= 123630  CE= 398550      cpr =  3.22
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.17
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.31
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.34
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.62    0.86
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 09:57:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.16 CALL unwind -11700   PUT added 1920
+pcr2 =  NSE:BANKNIFTY26JAN60600PE   0.51   0.17 CALL added 15960   PUT added 2700
+pcr3 =  NSE:BANKNIFTY26JAN60500PE   0.27   0.69 CALL added 23340   PUT added 16080
+pcr4 =  NSE:BANKNIFTY26JAN60400PE   0.28   0.08 CALL added 16470   PUT added 1260
+pcr5 =  NSE:BANKNIFTY26JAN60300PE   0.18   0.62 CALL added 14010   PUT added 8670
+pcr6 =  NSE:BANKNIFTY26JAN60200PE   0.32    1.11 CALL added 12090   PUT added 13440
+pcr7 =  NSE:BANKNIFTY26JAN60100PE   0.37   3.71 CALL added 17910   PUT added 66480
+pcr8 =  NSE:BANKNIFTY26JAN60000PE   0.65   1.73 CALL added 135510   PUT added 234900
+pcr9 =  NSE:BANKNIFTY26JAN59900PE   0.9   2.13 CALL added 48780   PUT added 104070
+pcr10 =  NSE:BANKNIFTY26JAN59800PE   1.29   4.91 CALL added 24150   PUT added 118620
+pcr11 =  NSE:BANKNIFTY26JAN59700PE   1.89   -3.71 CALL unwind -48240   PUT added 179190
+pcr12 =  NSE:BANKNIFTY26JAN59600PE   1.64   -2.97 CALL unwind -33480   PUT added 99570
+pcr13 =  NSE:BANKNIFTY26JAN59500CE   1.35   -5.26 CALL unwind -32370   PUT added 170220
+pcr14 =  NSE:BANKNIFTY26JAN59400PE   2.2   -1.13 CALL unwind -11610   PUT added 13140
+pcr15 =  NSE:BANKNIFTY26JAN59300PE   3.5   0.58 CALL unwind -3150   PUT unwind -1830
+pcr16 =  NSE:BANKNIFTY26JAN59200PE   3.24   -0.15 CALL unwind -9960   PUT added 1470
+pcr17 =  NSE:BANKNIFTY26JAN59100PE   7.29   -2.86 CALL unwind -2100   PUT added 6000
+pcrSummation= 6.1499999999999995  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 25.98
+pcrSummation== 6.15
+VOLPCRSUM== 2.21
+spotLTP =  59945.8  ATM_STRIKE =  59900
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {59900: 59900}
+avgOiPcrList2 = [np.float64(1.53)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  135510.0  PEoich val =  234900.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 71.88
+RSI_VAL2== 71.88
+newSynthFut =  60100
+ATMStrike =  59900
+AVG_OIPCR= 0.68
+avgoiPCROld=  1.53
+SUPP_RES = 60000
+FUT LTP = 60080.2
+====================================
+totalOIPCR = 0.97
+AVG_VOLPCR= 0.25
+atmPCR= 0.18  belowATM  0.32
+atmVolPCR= 0.17  belowATM  0.24
+True   60080.2   60000   False   False   71.88
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.68  PE= 30180  CE= 44460      cpr =  1.47
+NSE:BANKNIFTY26JAN60000PE  prev candle vol pcr = 0.38  PE= 130740  CE= 344490      cpr =  2.63
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60200PE   0.32
+oipcr2 =  NSE:BANKNIFTY26JAN60100PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60000PE   0.65
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.9    1.29
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:00:00.000005
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.24 CALL unwind -10170   PUT added 2460
+pcr2 =  NSE:BANKNIFTY26JAN60600PE   0.51   0.19 CALL added 16770   PUT added 3270
+pcr3 =  NSE:BANKNIFTY26JAN60500PE   0.27   1.06 CALL added 16020   PUT added 16950
+pcr4 =  NSE:BANKNIFTY26JAN60400PE   0.27   0.07 CALL added 18360   PUT added 1200
+pcr5 =  NSE:BANKNIFTY26JAN60300PE   0.18   0.65 CALL added 15420   PUT added 9960
+pcr6 =  NSE:BANKNIFTY26JAN60200PE   0.33    1.9 CALL added 8280   PUT added 15750
+pcr7 =  NSE:BANKNIFTY26JAN60100PE   0.39   3.54 CALL added 21180   PUT added 75060
+pcr8 =  NSE:BANKNIFTY26JAN60000PE   0.65   1.67 CALL added 154590   PUT added 258390
+pcr9 =  NSE:BANKNIFTY26JAN59900PE   0.93   2.27 CALL added 49860   PUT added 113100
+pcr10 =  NSE:BANKNIFTY26JAN59800PE   1.32   5.56 CALL added 22290   PUT added 123900
+pcr11 =  NSE:BANKNIFTY26JAN59700PE   1.93   -3.4 CALL unwind -52950   PUT added 179880
+pcr12 =  NSE:BANKNIFTY26JAN59600PE   1.67   -3.1 CALL unwind -34020   PUT added 105570
+pcr13 =  NSE:BANKNIFTY26JAN59500CE   1.35   -5.18 CALL unwind -33270   PUT added 172470
+pcr14 =  NSE:BANKNIFTY26JAN59400PE   2.16   -0.79 CALL unwind -11730   PUT added 9270
+pcr15 =  NSE:BANKNIFTY26JAN59300PE   3.54   -0.08 CALL unwind -3600   PUT added 270
+pcr16 =  NSE:BANKNIFTY26JAN59200PE   3.26   -0.27 CALL unwind -10140   PUT added 2730
+pcr17 =  NSE:BANKNIFTY26JAN59100PE   7.3   -2.99 CALL unwind -2100   PUT added 6270
+pcrSummation= 6.27  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 26.16
+pcrSummation== 6.27
+VOLPCRSUM== 2.26
+spotLTP =  59936.4  ATM_STRIKE =  59900
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {59900: 59900}
+avgOiPcrList2 = [np.float64(1.53), np.float64(1.54)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  154590.0  PEoich val =  258390.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 70.94
+RSI_VAL2== 71.06
+newSynthFut =  60100
+ATMStrike =  59900
+AVG_OIPCR= 0.7
+avgoiPCROld=  1.54
+SUPP_RES = 60000
+FUT LTP = 60075.6
+====================================
+totalOIPCR = 0.98
+AVG_VOLPCR= 0.25
+atmPCR= 0.18  belowATM  0.33
+atmVolPCR= 0.17  belowATM  0.24
+True   60075.6   60000   False   False   71.06
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60000PE  curr candle vol pcr = 0.64  PE= 75330  CE= 118590      cpr =  1.57
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.68  PE= 30180  CE= 44460      cpr =  1.47
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60200PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60100PE   0.39
+oipcr3 =  NSE:BANKNIFTY26JAN60000PE   0.65
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.93    1.32
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:03:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.14   0.05 CALL added 12630   PUT added 690
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.24 CALL unwind -8460   PUT added 2040
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.5   0.15 CALL added 18360   PUT added 2790
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.27   1.06 CALL added 17430   PUT added 18510
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.27   0.06 CALL added 19500   PUT added 1140
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.18    0.63 CALL added 15360   PUT added 9720
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.33   1.56 CALL added 10320   PUT added 16080
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.38   2.29 CALL added 34470   PUT added 78840
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.65   1.54 CALL added 179970   PUT added 276900
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   0.96   2.35 CALL added 52290   PUT added 122910
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   1.33   5.93 CALL added 21270   PUT added 126150
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   1.93   -3.44 CALL unwind -52800   PUT added 181470
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.67   -3.1 CALL unwind -33990   PUT added 105420
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.36   -5.49 CALL unwind -34200   PUT added 187920
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.23   -0.67 CALL unwind -14580   PUT added 9720
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   3.57   -0.22 CALL unwind -3990   PUT added 870
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.26   -0.21 CALL unwind -10230   PUT added 2160
+pcrSummation= 6.3  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 19.13
+pcrSummation== 6.3
+VOLPCRSUM== 1.7
+spotLTP =  59970.5  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.13)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  179970.0  PEoich val =  276900.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 72.84
+RSI_VAL2== 72.84
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 0.7
+avgoiPCROld=  1.13
+SUPP_RES = 60000
+FUT LTP = 60100.0
+====================================
+totalOIPCR = 0.98
+AVG_VOLPCR= 0.19
+atmPCR= 0.27  belowATM  0.18
+atmVolPCR= 0.09  belowATM  0.19
+True   60100.0   60000   False   False   72.84
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60000PE  curr candle vol pcr = 0.5  PE= 65040  CE= 130710      cpr =  2.01
+NSE:BANKNIFTY26JAN60000PE  prev candle vol pcr = 0.64  PE= 75330  CE= 118590      cpr =  1.57
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.18
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.33
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.38
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.65    0.96
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:06:00.000001
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.23 CALL unwind -8850   PUT added 2040
+pcr2 =  NSE:BANKNIFTY26JAN60600PE   0.5   0.19 CALL added 19110   PUT added 3660
+pcr3 =  NSE:BANKNIFTY26JAN60500PE   0.28   1.2 CALL added 16950   PUT added 20370
+pcr4 =  NSE:BANKNIFTY26JAN60400PE   0.27   0.06 CALL added 24420   PUT added 1560
+pcr5 =  NSE:BANKNIFTY26JAN60300PE   0.18   0.7 CALL added 15870   PUT added 11040
+pcr6 =  NSE:BANKNIFTY26JAN60200PE   0.33    1.12 CALL added 15840   PUT added 17820
+pcr7 =  NSE:BANKNIFTY26JAN60100PE   0.41   2.12 CALL added 44250   PUT added 93900
+pcr8 =  NSE:BANKNIFTY26JAN60000PE   0.67   1.73 CALL added 169170   PUT added 292680
+pcr9 =  NSE:BANKNIFTY26JAN59900PE   0.96   2.15 CALL added 60120   PUT added 129450
+pcr10 =  NSE:BANKNIFTY26JAN59800PE   1.36   6.64 CALL added 20400   PUT added 135450
+pcr11 =  NSE:BANKNIFTY26JAN59700PE   1.93   -3.52 CALL unwind -51960   PUT added 183090
+pcr12 =  NSE:BANKNIFTY26JAN59600PE   1.65   -3.28 CALL unwind -32010   PUT added 105000
+pcr13 =  NSE:BANKNIFTY26JAN59500CE   1.36   -5.62 CALL unwind -33840   PUT added 190260
+pcr14 =  NSE:BANKNIFTY26JAN59400PE   2.24   -0.63 CALL unwind -15180   PUT added 9570
+pcr15 =  NSE:BANKNIFTY26JAN59300PE   3.59   -0.77 CALL unwind -3900   PUT added 3000
+pcr16 =  NSE:BANKNIFTY26JAN59200PE   3.32   -0.35 CALL unwind -10860   PUT added 3840
+pcr17 =  NSE:BANKNIFTY26JAN59100PE   7.55   -0.84 CALL unwind -3840   PUT added 3210
+pcrSummation= 6.39  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 26.7
+pcrSummation== 6.39
+VOLPCRSUM== 2.39
+spotLTP =  59931.3  ATM_STRIKE =  59900
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {59900: 59900}
+avgOiPcrList2 = [np.float64(1.57)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  169170.0  PEoich val =  292680.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 69.52
+RSI_VAL2== 69.52
+newSynthFut =  60100
+ATMStrike =  59900
+AVG_OIPCR= 0.71
+avgoiPCROld=  1.57
+SUPP_RES = 60000
+FUT LTP = 60082.4
+====================================
+totalOIPCR = 0.98
+AVG_VOLPCR= 0.27
+atmPCR= 0.18  belowATM  0.33
+atmVolPCR= 0.19  belowATM  0.28
+True   60082.4   60000   False   False   69.52
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.69  PE= 22140  CE= 32160      cpr =  1.45
+NSE:BANKNIFTY26JAN60000PE  prev candle vol pcr = 0.5  PE= 65040  CE= 130710      cpr =  2.01
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60200PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60100PE   0.41
+oipcr3 =  NSE:BANKNIFTY26JAN60000PE   0.67
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.96    1.36
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:09:00.000001
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.14   0.03 CALL added 10110   PUT added 300
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.16 CALL unwind -8940   PUT added 1470
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.51   0.2 CALL added 17790   PUT added 3570
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.28   1.15 CALL added 18540   PUT added 21300
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.27   0.07 CALL added 24930   PUT added 1740
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.19    0.74 CALL added 17670   PUT added 13110
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.37   1.39 CALL added 21660   PUT added 30090
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.44   2.16 CALL added 48090   PUT added 104100
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.67   1.67 CALL added 184740   PUT added 308490
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   0.98   2.23 CALL added 61320   PUT added 136740
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   1.37   7.03 CALL added 19500   PUT added 137160
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   1.94   -3.55 CALL unwind -51990   PUT added 184410
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.67   -3.26 CALL unwind -32670   PUT added 106380
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.36   -5.88 CALL unwind -32400   PUT added 190620
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.24   -0.58 CALL unwind -15300   PUT added 8850
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   3.64   -0.93 CALL unwind -4590   PUT added 4290
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.32   -0.37 CALL unwind -10800   PUT added 4020
+pcrSummation= 6.51  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 19.49
+pcrSummation== 6.51
+VOLPCRSUM== 1.8
+spotLTP =  59961.85  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.15)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  184740.0  PEoich val =  308490.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 70.47
+RSI_VAL2== 70.47
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 0.72
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60094.0
+====================================
+totalOIPCR = 0.99
+AVG_VOLPCR= 0.2
+atmPCR= 0.27  belowATM  0.19
+atmVolPCR= 0.1  belowATM  0.19
+True   60094.0   60000   False   False   70.47
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60000PE  curr candle vol pcr = 0.48  PE= 40500  CE= 84870      cpr =  2.1
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.69  PE= 22140  CE= 32160      cpr =  1.45
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.19
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.44
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.67    0.98
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:12:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.14   0.03 CALL added 10320   PUT added 300
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.18 CALL unwind -8820   PUT added 1560
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.5   0.16 CALL added 18840   PUT added 3060
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.28   1.26 CALL added 16470   PUT added 20760
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.26   0.06 CALL added 26370   PUT added 1710
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.19    0.69 CALL added 18810   PUT added 13020
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.37   1.17 CALL added 27300   PUT added 31920
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.44   2.14 CALL added 49980   PUT added 106830
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.67   1.69 CALL added 185790   PUT added 314280
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   0.99   2.21 CALL added 63360   PUT added 140130
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   1.39   8.36 CALL added 16410   PUT added 137220
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   1.98   -3.53 CALL unwind -54090   PUT added 190830
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.67   -3.16 CALL unwind -33420   PUT added 105750
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.36   -5.57 CALL unwind -34380   PUT added 191400
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.25   -0.54 CALL unwind -15870   PUT added 8580
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   3.64   -1.01 CALL unwind -4560   PUT added 4620
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.33   -0.45 CALL unwind -10740   PUT added 4830
+pcrSummation= 6.57  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 19.56
+pcrSummation== 6.57
+VOLPCRSUM== 1.82
+spotLTP =  59967.15  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.15)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  185790.0  PEoich val =  314280.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 71.1
+RSI_VAL2== 71.74
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 0.73
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60109.4
+====================================
+totalOIPCR = 0.99
+AVG_VOLPCR= 0.2
+atmPCR= 0.26  belowATM  0.19
+atmVolPCR= 0.1  belowATM  0.19
+True   60109.4   60000   False   False   71.74
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60000PE  curr candle vol pcr = 0.63  PE= 54960  CE= 87300      cpr =  1.59
+NSE:BANKNIFTY26JAN60000PE  prev candle vol pcr = 0.48  PE= 40500  CE= 84870      cpr =  2.1
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.19
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.44
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.67    0.99
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:15:00.000002
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.13   0.02 CALL added 10770   PUT added 210
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.13 CALL unwind -11010   PUT added 1440
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.52   0.26 CALL added 18690   PUT added 4860
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.28   1.4 CALL added 15810   PUT added 22140
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.27   0.09 CALL added 26940   PUT added 2340
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.19    0.78 CALL added 17040   PUT added 13350
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.38   1.23 CALL added 28110   PUT added 34470
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.45   2.07 CALL added 53310   PUT added 110370
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.69   1.86 CALL added 176160   PUT added 328470
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.03   2.37 CALL added 63150   PUT added 149940
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   1.42   15.77 CALL added 8580   PUT added 135300
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.16   -3.67 CALL unwind -59940   PUT added 219900
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.7   -3.14 CALL unwind -34920   PUT added 109620
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.36   -5.85 CALL unwind -33510   PUT added 196170
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.27   -0.6 CALL unwind -16260   PUT added 9690
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   3.64   -0.97 CALL unwind -4650   PUT added 4500
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.33   -0.38 CALL unwind -10980   PUT added 4200
+pcrSummation= 6.87  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 19.92
+pcrSummation== 6.87
+VOLPCRSUM== 1.81
+spotLTP =  60006.85  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.15), np.float64(1.17)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 60000
+CEoich val =  176160.0  PEoich val =  328470.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 74.11
+RSI_VAL2== 74.2
+recent two = [np.float64(1.15), np.float64(1.17)]
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 0.76
+avgoiPCROld=  1.17
+SUPP_RES = 60000
+FUT LTP = 60141.2
+====================================
+totalOIPCR = 1.0
+AVG_VOLPCR= 0.2
+atmPCR= 0.27  belowATM  0.19
+atmVolPCR= 0.1  belowATM  0.19
+True   60141.2   60000   False   False   74.2
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.27  PE= 24540  CE= 91140      cpr =  3.71
+NSE:BANKNIFTY26JAN60000PE  prev candle vol pcr = 0.63  PE= 54960  CE= 87300      cpr =  1.59
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.19
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.38
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.45
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.69    1.03
+No Entry Yet
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:18:00.000004
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.13   0.02 CALL added 17850   PUT added 270
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.14 CALL unwind -14790   PUT added 2070
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.46   0.03 CALL added 23130   PUT added 660
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.29   1.97 CALL added 13230   PUT added 26010
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.27   0.12 CALL added 26430   PUT added 3120
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.2    1.46 CALL added 10710   PUT added 15630
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.42   1.66 CALL added 29190   PUT added 48600
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.49   2.29 CALL added 56760   PUT added 130020
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.73   2.7 CALL added 142530   PUT added 384480
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.13   3.49 CALL added 44850   PUT added 156330
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   1.47   -14.65 CALL unwind -8520   PUT added 124830
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.25   -3.22 CALL unwind -68550   PUT added 220740
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.77   -2.57 CALL unwind -42540   PUT added 109320
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.37   -5.54 CALL unwind -36690   PUT added 203310
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.37   -0.85 CALL unwind -18150   PUT added 15390
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   3.69   -0.33 CALL unwind -6210   PUT added 2040
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.34   -0.13 CALL unwind -11940   PUT added 1590
+pcrSummation= 5.46  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 20.48
+pcrSummation== 5.46
+VOLPCRSUM== 1.9100000000000001
+spotLTP =  60049.25  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.17), np.float64(1.2)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 60000
+CEoich val =  142530.0  PEoich val =  384480.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 75.86
+RSI_VAL2== 75.86
+isPcrInc = True
+newSynthFut =  60200
+ATMStrike =  60000
+AVG_OIPCR= 0.61
+avgoiPCROld=  1.2
+SUPP_RES = 60000
+FUT LTP = 60164.6
+====================================
+totalOIPCR = 1.02
+AVG_VOLPCR= 0.21
+atmPCR= 0.27  belowATM  0.2
+atmVolPCR= 0.1  belowATM  0.2
+True   60164.6   60000   True   False   75.86
+In Bull trade, slCount =  0
+qty === 280
+26JAN
+closest_Strike =  60000
+syntheticATMStrike =  60214.25
+26JAN
+intExpiry== 26JAN
+closestPrimium fun LTP 60047.6
+[58600, 58700, 58800, 58900, 59000, 59100, 59200, 59300, 59400, 59500, 59600, 59700, 59800]
+closest CE 
+closest PE 59500
+NSE:BANKNIFTY26JANCE
+NSE:BANKNIFTY26JAN59500PE
+=atmPE= NSE:BANKNIFTY26JAN60200PE
+=otmPE== NSE:BANKNIFTY26JAN59500PE   249.75    499.5
+hedge_entry_price = 236.75
+10 : 18 : 7  =>  BUY   BANKNIFTY26JAN59500PE   280   MARKET
+10 : 18 : 7  =>  BANKNIFTY26JAN59500PE {'code': -50, 'message': '280 not a multiple of minimum lot size 30', 's': 'error'}
+entryPrice== 499.5 Target = 440  NSE:BANKNIFTY26JAN60200PE  SL = 550
+10 : 18 : 7  =>  SELL   BANKNIFTY26JAN60200PE   280   MARKET
+10 : 18 : 7  =>  BANKNIFTY26JAN60200PE {'code': -50, 'message': '280 not a multiple of minimum lot size 30', 's': 'error'}
+atmPE= NSE:BANKNIFTY26JAN60200PE   NSE:BANKNIFTY26JAN60200PE
+Exit OID:  {'code': -50, 'message': '280 not a multiple of minimum lot size 30', 's': 'error'}   {'code': -50, 'message': '280 not a multiple of minimum lot size 30', 's': 'error'}
+after entry atmPE tradeATMOption = NSE:BANKNIFTY26JAN60200PE
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.3  PE= 33570  CE= 110970      cpr =  3.31
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.27  PE= 24540  CE= 91140      cpr =  3.71
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.27
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.2
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.42
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.49    0.73
+No Entry Yet
+Waiting for first 1min candle to form. Current Second ==  9    0
+Waiting for first 1min candle to form. Current Second ==  10    0
+Waiting for first 1min candle to form. Current Second ==  11    0
+Waiting for first 1min candle to form. Current Second ==  12    0
+Waiting for first 1min candle to form. Current Second ==  13    0
+Waiting for first 1min candle to form. Current Second ==  14    0
+Waiting for first 1min candle to form. Current Second ==  15    0
+Waiting for first 1min candle to form. Current Second ==  16    0
+Waiting for first 1min candle to form. Current Second ==  17    0
+Waiting for first 1min candle to form. Current Second ==  18    0
+Waiting for first 1min candle to form. Current Second ==  19    0
+Waiting for first 1min candle to form. Current Second ==  20    0
+Waiting for first 1min candle to form. Current Second ==  21    0
+Waiting for first 1min candle to form. Current Second ==  22    0
+Waiting for first 1min candle to form. Current Second ==  23    0
+Waiting for first 1min candle to form. Current Second ==  24    0
+Waiting for first 1min candle to form. Current Second ==  25    0
+Waiting for first 1min candle to form. Current Second ==  26    0
+Waiting for first 1min candle to form. Current Second ==  27    0
+Waiting for first 1min candle to form. Current Second ==  28    0
+Waiting for first 1min candle to form. Current Second ==  29    0
+Waiting for first 1min candle to form. Current Second ==  30    0
+Waiting for first 1min candle to form. Current Second ==  31    0
+Waiting for first 1min candle to form. Current Second ==  32    0
+Waiting for first 1min candle to form. Current Second ==  33    0
+Waiting for first 1min candle to form. Current Second ==  34    0
+Waiting for first 1min candle to form. Current Second ==  35    0
+Waiting for first 1min candle to form. Current Second ==  36    0
+Waiting for first 1min candle to form. Current Second ==  37    0
+Waiting for first 1min candle to form. Current Second ==  38    0
+Waiting for first 1min candle to form. Current Second ==  39    0
+Waiting for first 1min candle to form. Current Second ==  40    0
+Waiting for first 1min candle to form. Current Second ==  41    0
+Waiting for first 1min candle to form. Current Second ==  42    0
+Waiting for first 1min candle to form. Current Second ==  43    0
+Waiting for first 1min candle to form. Current Second ==  44    0
+Waiting for first 1min candle to form. Current Second ==  45    0
+Waiting for first 1min candle to form. Current Second ==  46    0
+Waiting for first 1min candle to form. Current Second ==  47    0
+Waiting for first 1min candle to form. Current Second ==  48    0
+Waiting for first 1min candle to form. Current Second ==  49    0
+Waiting for first 1min candle to form. Current Second ==  50    0
+Waiting for first 1min candle to form. Current Second ==  51    0
+Waiting for first 1min candle to form. Current Second ==  52    0
+Waiting for first 1min candle to form. Current Second ==  53    0
+Waiting for first 1min candle to form. Current Second ==  54    0
+Waiting for first 1min candle to form. Current Second ==  55    0
+Waiting for first 1min candle to form. Current Second ==  56    0
+Waiting for first 1min candle to form. Current Second ==  57    0
+Waiting for first 1min candle to form. Current Second ==  58    0
+Waiting for first 1min candle to form. Current Second ==  59    0
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  497.75  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  496.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  497.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  492.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  489.4  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:21:01.992093
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.39   4.58 CALL added 2790   PUT added 12780
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.13   0.01 CALL added 18030   PUT added 150
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.16 CALL unwind -14190   PUT added 2310
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.31   -0.77 CALL added 21960   PUT unwind -16920
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.29   2.31 CALL added 13380   PUT added 30930
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.28    0.19 CALL added 22650   PUT added 4230
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.21   1.31 CALL added 15780   PUT added 20610
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.44   1.74 CALL added 31560   PUT added 54900
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.5   2.38 CALL added 55770   PUT added 132900
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.77   4.08 CALL added 99690   PUT added 406650
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.19   4.52 CALL added 35580   PUT added 160800
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   1.49   -11.58 CALL unwind -10980   PUT added 127170
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.27   -3.19 CALL unwind -69870   PUT added 223020
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.78   -2.41 CALL unwind -44850   PUT added 108030
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.37   -4.76 CALL unwind -41610   PUT added 198090
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.4   -0.93 CALL unwind -18660   PUT added 17370
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   3.84   -0.3 CALL unwind -9060   PUT added 2730
+pcrSummation= 5.48  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 17.76
+pcrSummation== 5.48
+VOLPCRSUM== 1.7799999999999998
+spotLTP =  60063.9  ATM_STRIKE =  60100
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.04)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 60000
+CEoich val =  99690.0  PEoich val =  406650.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 78.08
+RSI_VAL2== 77.56
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.61
+avgoiPCROld=  1.04
+SUPP_RES = 60000
+FUT LTP = 60189.2
+====================================
+totalOIPCR = 1.02
+AVG_VOLPCR= 0.2
+atmPCR= 0.29  belowATM  0.28
+atmVolPCR= 0.15  belowATM  0.11
+True   60189.2   60000   False   False   77.56
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.5  PE= 35850  CE= 72420      cpr =  2.02
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.3  PE= 33570  CE= 110970      cpr =  3.31
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.28
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.21
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.44
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.5    0.77
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  492.35  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  487.15  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  486.4  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  491.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  491.6  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:24:01.040446
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.28   -0.53 CALL added 1470   PUT unwind -780
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.13   0.01 CALL added 17970   PUT added 150
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.16 CALL unwind -14700   PUT added 2310
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.31   -0.63 CALL added 25920   PUT unwind -16380
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.31   4.38 CALL added 8430   PUT added 36960
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.29    0.23 CALL added 23700   PUT added 5340
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.22   1.26 CALL added 19500   PUT added 24540
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.46   1.67 CALL added 37680   PUT added 62940
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.53   2.53 CALL added 56400   PUT added 142590
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.8   6.03 CALL added 72330   PUT added 435930
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.22   5.61 CALL added 28470   PUT added 159810
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   1.56   -5.21 CALL unwind -23940   PUT added 124800
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.32   -3.23 CALL unwind -71220   PUT added 230070
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.82   -2.23 CALL unwind -48450   PUT added 108120
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.38   -4.78 CALL unwind -43170   PUT added 206190
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.4   -0.9 CALL unwind -18750   PUT added 16920
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.0   -0.27 CALL unwind -11880   PUT added 3150
+pcrSummation= 5.699999999999999  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 18.13
+pcrSummation== 5.7
+VOLPCRSUM== 1.83
+spotLTP =  60071.75  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.04), np.float64(1.07)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  72330.0  PEoich val =  435930.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 77.49
+RSI_VAL2== 77.88
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.63
+avgoiPCROld=  1.07
+SUPP_RES = 60000
+FUT LTP = 60194.0
+====================================
+totalOIPCR = 1.03
+AVG_VOLPCR= 0.2
+atmPCR= 0.31  belowATM  0.29
+atmVolPCR= 0.16  belowATM  0.11
+True   60194.0   60000   False   False   77.88
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.47  PE= 30150  CE= 63810      cpr =  2.12
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.5  PE= 35850  CE= 72420      cpr =  2.02
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.29
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.22
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.46
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.53    0.8
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  492.4  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  487.95  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  486.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.2  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  486.2  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:27:01.083405
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.25   -1.62 CALL added 2280   PUT unwind -3690
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.12   0.01 CALL added 31320   PUT added 180
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.11   -0.18 CALL unwind -15270   PUT added 2760
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.3   -0.67 CALL added 26100   PUT unwind -17520
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.32   5.18 CALL added 9150   PUT added 47400
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.29    0.23 CALL added 19080   PUT added 4380
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.23   1.31 CALL added 20820   PUT added 27270
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.49   1.81 CALL added 40530   PUT added 73410
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.54   2.58 CALL added 58230   PUT added 150300
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.81   6.29 CALL added 72270   PUT added 454440
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.27   7.19 CALL added 22620   PUT added 162660
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   1.61   -3.53 CALL unwind -34440   PUT added 121680
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.33   -3.16 CALL unwind -72300   PUT added 228450
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.83   -2.25 CALL unwind -48780   PUT added 109710
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.39   -4.44 CALL unwind -47520   PUT added 210810
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.26   -1.39 CALL unwind -12510   PUT added 17400
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   3.99   -0.27 CALL unwind -11850   PUT added 3150
+pcrSummation= 5.86  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 18.14
+pcrSummation== 5.86
+VOLPCRSUM== 1.83
+spotLTP =  60108.75  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.04), np.float64(1.07), np.float64(1.07)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 79.8
+RSI_VAL2== 79.8
+neither = [np.float64(1.07)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.65
+avgoiPCROld=  1.07
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60225.0
+====================================
+totalOIPCR = 1.03
+AVG_VOLPCR= 0.2
+atmPCR= 0.32  belowATM  0.29
+atmVolPCR= 0.16  belowATM  0.11
+True   60225.0   NOTRADEZONE   False   False   79.8
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.36  PE= 23160  CE= 63540      cpr =  2.74
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.47  PE= 30150  CE= 63810      cpr =  2.12
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.29
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.23
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.49
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.54    0.81
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  479.75  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  473.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  471.9  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  470.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  470.0  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:30:01.044883
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.25   -1.17 CALL added 3240   PUT unwind -3780
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.0 CALL added 36840   PUT unwind -60
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.16 CALL unwind -15090   PUT added 2370
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.33   -0.81 CALL added 20040   PUT unwind -16170
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.33   4.61 CALL added 11370   PUT added 52470
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.3    0.28 CALL added 22140   PUT added 6180
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.25   1.7 CALL added 17700   PUT added 30120
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.55   3.03 CALL added 28200   PUT added 85380
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.56   2.93 CALL added 53100   PUT added 155640
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.83   7.41 CALL added 64950   PUT added 481260
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.34   12.28 CALL added 13560   PUT added 166500
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   1.67   -2.85 CALL unwind -42960   PUT added 122460
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.33   -2.95 CALL unwind -75540   PUT added 222480
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.8   -2.05 CALL unwind -49620   PUT added 101910
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.39   -4.3 CALL unwind -48660   PUT added 209220
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.31   -1.54 CALL unwind -13560   PUT added 20820
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   3.97   0.01 CALL unwind -12300   PUT unwind -120
+pcrSummation= 4.59  result =  ['NSE:BANKNIFTY26JAN60700PE', 'NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE']
+PCRSUM== 18.42
+pcrSummation== 4.59
+VOLPCRSUM== 1.8499999999999999
+spotLTP =  60146.15  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.07), np.float64(1.08)] atmStrikeNotShiftedCount= 4
+False   4   2
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 82.19
+RSI_VAL2== 81.86
+newSynthFut =  60300
+ATMStrike =  60100
+AVG_OIPCR= 0.51
+avgoiPCROld=  1.08
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60271.0
+====================================
+totalOIPCR = 1.04
+AVG_VOLPCR= 0.21
+atmPCR= 0.33  belowATM  0.3
+atmVolPCR= 0.17  belowATM  0.11
+True   60271.0   NOTRADEZONE   False   False   81.86
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.62  PE= 38970  CE= 62460      cpr =  1.6
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.36  PE= 23160  CE= 63540      cpr =  2.74
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.3
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.25
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.55
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.56    0.83
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  457.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  460.95  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  460.7  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  466.8  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:33:01.038324
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.27   -0.45 CALL added 2850   PUT unwind -1290
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   0.0 CALL added 36720   PUT added 90
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.11   -0.18 CALL unwind -15780   PUT added 2790
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.32   -0.62 CALL added 25290   PUT unwind -15750
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   7.52 CALL added 7440   PUT added 55950
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.31    0.4 CALL added 23010   PUT added 9240
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.34   1.39 CALL added 48660   PUT added 67770
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.59   2.86 CALL added 34710   PUT added 99180
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.62   3.74 CALL added 46950   PUT added 175380
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.86   11.76 CALL added 42870   PUT added 504270
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.36   21.69 CALL added 7500   PUT added 162690
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   1.71   -2.39 CALL unwind -49650   PUT added 118500
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.3   -2.73 CALL unwind -77310   PUT added 211170
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.8   -1.86 CALL unwind -52680   PUT added 97770
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.6 CALL unwind -60420   PUT added 217590
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.31   -1.48 CALL unwind -13740   PUT added 20370
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.04   0.11 CALL unwind -13860   PUT unwind -1470
+pcrSummation= 6.45  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 18.79
+pcrSummation== 6.45
+VOLPCRSUM== 2.0100000000000002
+spotLTP =  60125.8  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.07), np.float64(1.08), np.float64(1.11)] atmStrikeNotShiftedCount= 5
+False   5   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 76.47
+RSI_VAL2== 77.97
+isPcrInc = True
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.72
+avgoiPCROld=  1.11
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60245.0
+====================================
+totalOIPCR = 1.05
+AVG_VOLPCR= 0.22
+atmPCR= 0.34  belowATM  0.31
+atmVolPCR= 0.17  belowATM  0.14
+True   60245.0   NOTRADEZONE   True   False   77.97
+no trade yet = [np.float64(1.07), np.float64(1.08), np.float64(1.11)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.94  PE= 64560  CE= 69030      cpr =  1.07
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.62  PE= 38970  CE= 62460      cpr =  1.6
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.31
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.34
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.59
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.62    0.86
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  462.95  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  465.4  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  465.05  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  470.55  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:36:01.020071
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.27   -0.3 CALL added 4350   PUT unwind -1290
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   0.0 CALL added 37890   PUT added 90
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.3 CALL unwind -8160   PUT added 2430
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.31   -0.65 CALL added 24990   PUT unwind -16170
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.33   6.31 CALL added 8700   PUT added 54870
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.35    0.7 CALL added 22500   PUT added 15720
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.37   1.5 CALL added 52830   PUT added 79140
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.66   3.42 CALL added 34830   PUT added 119220
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.65   4.05 CALL added 45660   PUT added 184980
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.88   14.54 CALL added 36300   PUT added 527880
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.4   44.21 CALL added 3750   PUT added 165780
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   1.78   -2.51 CALL unwind -52350   PUT added 131550
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.28   -2.49 CALL unwind -80520   PUT added 200730
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.82   -1.86 CALL unwind -53250   PUT added 99150
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.5 CALL unwind -63330   PUT added 221940
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.34   -1.35 CALL unwind -14820   PUT added 20040
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.15   0.17 CALL unwind -15840   PUT unwind -2670
+pcrSummation= 6.7299999999999995  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.21
+pcrSummation== 6.73
+VOLPCRSUM== 2.08
+spotLTP =  60129.55  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.08), np.float64(1.11), np.float64(1.13)] atmStrikeNotShiftedCount= 6
+False   6   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 77.52
+RSI_VAL2== 76.79
+isPcrInc = True
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.75
+avgoiPCROld=  1.13
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60250.0
+====================================
+totalOIPCR = 1.06
+AVG_VOLPCR= 0.23
+atmPCR= 0.33  belowATM  0.35
+atmVolPCR= 0.18  belowATM  0.15
+True   60250.0   NOTRADEZONE   True   False   76.79
+no trade yet = [np.float64(1.08), np.float64(1.11), np.float64(1.13)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.68  PE= 35460  CE= 52350      cpr =  1.48
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.94  PE= 64560  CE= 69030      cpr =  1.07
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.35
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.65    0.88
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  462.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  458.85  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  458.85  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  464.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  464.35  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:39:01.081479
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.26   -0.4 CALL added 4230   PUT unwind -1680
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   0.0 CALL added 37710   PUT added 90
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.11   -0.18 CALL unwind -14730   PUT added 2640
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.32   -0.63 CALL added 24690   PUT unwind -15540
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.42 CALL added 13050   PUT added 57720
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.35    0.67 CALL added 23430   PUT added 15780
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.37   1.48 CALL added 55200   PUT added 81810
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.66   2.67 CALL added 48210   PUT added 128700
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.64   3.68 CALL added 50520   PUT added 186120
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.9   19.0 CALL added 28890   PUT added 548820
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.42   167.67 CALL added 990   PUT added 165990
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.04   -3.28 CALL unwind -55770   PUT added 182790
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.32   -2.53 CALL unwind -81300   PUT added 205770
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.82 CALL unwind -53550   PUT added 97230
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.29 CALL unwind -64080   PUT added 211080
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.36   -1.4 CALL unwind -15300   PUT added 21480
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.14   0.18 CALL unwind -15840   PUT unwind -2820
+pcrSummation= 7.04  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.55
+pcrSummation== 7.04
+VOLPCRSUM== 2.08
+spotLTP =  60125.35  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.11), np.float64(1.13), np.float64(1.15)] atmStrikeNotShiftedCount= 7
+False   7   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 76.7
+RSI_VAL2== 76.87
+isPcrInc = True
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.78
+avgoiPCROld=  1.15
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60241.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.23
+atmPCR= 0.34  belowATM  0.35
+atmVolPCR= 0.18  belowATM  0.15
+True   60241.0   NOTRADEZONE   True   False   76.87
+no trade yet = [np.float64(1.11), np.float64(1.13), np.float64(1.15)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.49  PE= 21720  CE= 44190      cpr =  2.03
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.68  PE= 35460  CE= 52350      cpr =  1.48
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.35
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.64    0.9
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  468.4  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  469.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  469.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  470.7  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:42:01.055316
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.26   -0.46 CALL added 3600   PUT unwind -1650
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   0.0 CALL added 38340   PUT added 180
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.11   -0.2 CALL unwind -15120   PUT added 3000
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.32   -0.63 CALL added 24660   PUT unwind -15450
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   3.92 CALL added 15240   PUT added 59670
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.33    0.49 CALL added 32760   PUT added 16020
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.37   1.45 CALL added 57390   PUT added 83190
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.65   2.3 CALL added 58260   PUT added 133770
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.65   3.61 CALL added 52530   PUT added 189420
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.89   16.55 CALL added 32880   PUT added 544050
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.44   562.9 CALL added 300   PUT added 168870
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.1   -3.56 CALL unwind -55350   PUT added 197130
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.3   -2.58 CALL unwind -79710   PUT added 205980
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.82 CALL unwind -53520   PUT added 97320
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.34 CALL unwind -63150   PUT added 210870
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.36   -1.27 CALL unwind -15930   PUT added 20280
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.2   0.22 CALL unwind -16980   PUT unwind -3780
+pcrSummation= 7.09  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.64
+pcrSummation== 7.09
+VOLPCRSUM== 2.08
+spotLTP =  60110.35  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.13), np.float64(1.15), np.float64(1.16)] atmStrikeNotShiftedCount= 8
+False   8   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 73.02
+RSI_VAL2== 72.45
+isPcrInc = True
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.79
+avgoiPCROld=  1.16
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60229.6
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.23
+atmPCR= 0.34  belowATM  0.33
+atmVolPCR= 0.18  belowATM  0.15
+True   60229.6   NOTRADEZONE   True   False   72.45
+no trade yet = [np.float64(1.13), np.float64(1.15), np.float64(1.16)]
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.61  PE= 26280  CE= 43200      cpr =  1.64
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.49  PE= 21720  CE= 44190      cpr =  2.03
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.65
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.65    0.89
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  474.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  487.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  489.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  489.55  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:45:01.041225
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.27   -0.63 CALL added 2610   PUT unwind -1650
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 37260   PUT unwind -630
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.27 CALL unwind -8790   PUT added 2340
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.32   -0.65 CALL added 23340   PUT unwind -15270
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   7.14 CALL added 8430   PUT added 60210
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.33    0.45 CALL added 38520   PUT added 17280
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.38   1.47 CALL added 56970   PUT added 83790
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.7   3.76 CALL added 34770   PUT added 130650
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.65   3.62 CALL added 51660   PUT added 187260
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.9   25.19 CALL added 21330   PUT added 537330
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.42   -140.36 CALL unwind -1170   PUT added 164220
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.11   -3.36 CALL unwind -57570   PUT added 193290
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.33   -2.51 CALL unwind -82230   PUT added 206100
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.8   -1.78 CALL unwind -53820   PUT added 95730
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.39 CALL unwind -63480   PUT added 214980
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.23   -2.19 CALL unwind -9510   PUT added 20820
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.2   0.22 CALL unwind -17010   PUT unwind -3810
+pcrSummation= 7.15  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.59
+pcrSummation== 7.15
+VOLPCRSUM== 2.15
+spotLTP =  60050.35  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.16), np.float64(1.15)] atmStrikeNotShiftedCount= 9
+False   9   3
+SUPP_RES=== 60000
+CEoich val =  21330.0  PEoich val =  537330.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 61.54
+RSI_VAL2== 61.54
+recent two = [np.float64(1.16), np.float64(1.15)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.79
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60173.8
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.24
+atmPCR= 0.34  belowATM  0.33
+atmVolPCR= 0.18  belowATM  0.16
+True   60173.8   60000   False   False   61.54
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.99  PE= 51150  CE= 51900      cpr =  1.01
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.61  PE= 26280  CE= 43200      cpr =  1.64
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.7
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.65    0.9
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  496.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.9  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  487.2  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  484.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  484.35  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:48:01.079758
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.26   -0.62 CALL added 4140   PUT unwind -2580
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.01 CALL added 38490   PUT unwind -510
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.3 CALL unwind -7500   PUT added 2220
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.33   -0.61 CALL added 24330   PUT unwind -14880
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   8.59 CALL added 6960   PUT added 59760
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.48 CALL added 39810   PUT added 19170
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.38   1.5 CALL added 57210   PUT added 85950
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.66   3.02 CALL added 40860   PUT added 123480
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.64   3.45 CALL added 53700   PUT added 185040
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.89   26.05 CALL added 20520   PUT added 534600
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.45   -161.17 CALL unwind -1050   PUT added 169230
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.11   -3.42 CALL unwind -57240   PUT added 195570
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.34   -2.53 CALL unwind -82110   PUT added 207930
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.7 CALL unwind -55170   PUT added 93840
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.45 CALL unwind -65850   PUT added 227190
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.23   -2.13 CALL unwind -9600   PUT added 20490
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.18   0.3 CALL unwind -17010   PUT unwind -5160
+pcrSummation= 7.140000000000001  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.58
+pcrSummation== 7.14
+VOLPCRSUM== 2.19
+spotLTP =  60090.35  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.16), np.float64(1.15), np.float64(1.15)] atmStrikeNotShiftedCount= 10
+False   10   3
+SUPP_RES=== 60000
+CEoich val =  20520.0  PEoich val =  534600.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 65.64
+RSI_VAL2== 65.0
+neither = [np.float64(1.15)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.79
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60210.0
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.24
+atmPCR= 0.34  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.16
+True   60210.0   60000   False   False   65.0
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.76  PE= 24360  CE= 32040      cpr =  1.32
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.99  PE= 51150  CE= 51900      cpr =  1.01
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.64    0.89
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  481.65  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.45  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  487.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  484.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  485.0  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:51:01.314605
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.26   -0.61 CALL added 4260   PUT unwind -2580
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.01 CALL added 38340   PUT unwind -510
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.26 CALL unwind -8310   PUT added 2130
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.33   -0.59 CALL added 24180   PUT unwind -14280
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   7.47 CALL added 8040   PUT added 60060
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.49 CALL added 39960   PUT added 19530
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.38   1.47 CALL added 59250   PUT added 87390
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.65   2.67 CALL added 46830   PUT added 125130
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.63   3.13 CALL added 60090   PUT added 187860
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.89   17.78 CALL added 30300   PUT added 538680
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.44   88.15 CALL added 1950   PUT added 171900
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.11   -3.48 CALL unwind -56520   PUT added 196560
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.34   -2.55 CALL unwind -82080   PUT added 208920
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.69 CALL unwind -55350   PUT added 93420
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.36 CALL unwind -66450   PUT added 223020
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.22   -2.24 CALL unwind -9210   PUT added 20670
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.19   0.27 CALL unwind -17010   PUT unwind -4590
+pcrSummation= 7.109999999999999  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.55
+pcrSummation== 7.11
+VOLPCRSUM== 2.1799999999999997
+spotLTP =  60079.35  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.15)] atmStrikeNotShiftedCount= 11
+False   11   2
+SUPP_RES=== 60000
+CEoich val =  30300.0  PEoich val =  538680.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 64.15
+RSI_VAL2== 64.15
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.79
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60200.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.24
+atmPCR= 0.34  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.16
+True   60200.0   60000   False   False   64.15
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.61  PE= 10290  CE= 16770      cpr =  1.63
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.76  PE= 24360  CE= 32040      cpr =  1.32
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.65
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.63    0.89
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  488.7  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  488.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  488.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  483.45  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  482.95  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:54:01.473780
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.26   -0.61 CALL added 4260   PUT unwind -2580
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 38310   PUT unwind -600
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.24 CALL unwind -8760   PUT added 2130
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.54 CALL added 24390   PUT unwind -13230
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   10.86 CALL added 5550   PUT added 60270
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.49 CALL added 40440   PUT added 19710
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.39   1.48 CALL added 59970   PUT added 88680
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.66   2.63 CALL added 49290   PUT added 129780
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.64   3.09 CALL added 61530   PUT added 190290
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.9   18.76 CALL added 29280   PUT added 549270
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.45   93.34 CALL added 1860   PUT added 173610
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.13   -3.34 CALL unwind -58710   PUT added 195990
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.36   -2.57 CALL unwind -82290   PUT added 211680
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.8   -1.69 CALL unwind -55080   PUT added 93360
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.45 CALL unwind -64950   PUT added 223860
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.22   -1.94 CALL unwind -9810   PUT added 19050
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.19   0.25 CALL unwind -16980   PUT unwind -4320
+pcrSummation= 7.19  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.64
+pcrSummation== 7.19
+VOLPCRSUM== 2.1799999999999997
+spotLTP =  60097.3  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.15), np.float64(1.16)] atmStrikeNotShiftedCount= 12
+False   12   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 67.05
+RSI_VAL2== 67.05
+recent two = [np.float64(1.15), np.float64(1.16)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.8
+avgoiPCROld=  1.16
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60226.0
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.24
+atmPCR= 0.34  belowATM  0.34
+atmVolPCR= 0.18  belowATM  0.16
+True   60226.0   NOTRADEZONE   False   False   67.05
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.68  PE= 13410  CE= 19680      cpr =  1.47
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.61  PE= 10290  CE= 16770      cpr =  1.63
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.64    0.9
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  472.55  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  479.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  479.15  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  473.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  473.1  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 10:57:01.489018
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.25   -0.58 CALL added 4590   PUT unwind -2640
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 38580   PUT unwind -720
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.19 CALL unwind -10650   PUT added 2040
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.51 CALL added 24930   PUT unwind -12630
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   10.59 CALL added 5790   PUT added 61290
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.33    0.47 CALL added 42180   PUT added 19680
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.39   1.44 CALL added 61710   PUT added 89070
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.66   2.62 CALL added 49260   PUT added 128880
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.65   3.29 CALL added 58950   PUT added 193920
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.91   25.21 CALL added 22050   PUT added 555960
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.44   58.33 CALL added 2970   PUT added 173250
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.13   -3.33 CALL unwind -58860   PUT added 195750
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.57 CALL unwind -82080   PUT added 210570
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.7 CALL unwind -55380   PUT added 94140
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.4 CALL unwind -65040   PUT added 220950
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.25   -1.68 CALL unwind -11400   PUT added 19140
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.18   0.31 CALL unwind -16950   PUT unwind -5220
+pcrSummation= 7.19  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.65
+pcrSummation== 7.19
+VOLPCRSUM== 2.2
+spotLTP =  60097.45  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.15), np.float64(1.16), np.float64(1.16)] atmStrikeNotShiftedCount= 13
+False   13   3
+SUPP_RES=== NOTRADEZONE
+not found
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 66.55
+RSI_VAL2== 66.6
+neither = [np.float64(1.16)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.8
+avgoiPCROld=  1.16
+SUPP_RES = NOTRADEZONE
+FUT LTP = 60223.8
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.24
+atmPCR= 0.34  belowATM  0.33
+atmVolPCR= 0.19  belowATM  0.16
+True   60223.8   NOTRADEZONE   False   False   66.6
+26JAN
+curr Doji True
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 0.61  PE= 10770  CE= 17520      cpr =  1.63
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.68  PE= 13410  CE= 19680      cpr =  1.47
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.65    0.91
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  480.8  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  480.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  480.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  495.9  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  495.55  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:00:01.464920
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.25   -0.63 CALL added 4260   PUT unwind -2670
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 38910   PUT unwind -720
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.18 CALL unwind -10350   PUT added 1860
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.35   -0.48 CALL added 25050   PUT unwind -12090
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.35   11.61 CALL added 5400   PUT added 62670
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.48 CALL added 42090   PUT added 20070
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.39   1.46 CALL added 61830   PUT added 90180
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.64   2.33 CALL added 53970   PUT added 125940
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.67   3.47 CALL added 58350   PUT added 202350
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.91   23.4 CALL added 24000   PUT added 561480
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.43   39.96 CALL added 4350   PUT added 173820
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.1   -3.53 CALL unwind -55410   PUT added 195810
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.36   -2.56 CALL unwind -82410   PUT added 211350
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.69 CALL unwind -55350   PUT added 93330
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.4 CALL unwind -65160   PUT added 221310
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.26   -1.74 CALL unwind -11490   PUT added 20010
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.17   0.34 CALL unwind -16980   PUT unwind -5820
+pcrSummation= 7.18  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.65
+pcrSummation== 7.18
+VOLPCRSUM== 2.29
+spotLTP =  60050.55  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.16), np.float64(1.16)] atmStrikeNotShiftedCount= 14
+False   14   2
+SUPP_RES=== 60000
+CEoich val =  24000.0  PEoich val =  561480.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 54.19
+RSI_VAL2== 54.19
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.8
+avgoiPCROld=  1.16
+SUPP_RES = 60000
+FUT LTP = 60160.2
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.25
+atmPCR= 0.35  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.16
+True   60160.2   60000   False   False   54.19
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60200PE  curr candle vol pcr = 1.31  PE= 41100  CE= 31290      cpr =  0.76
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 0.61  PE= 10770  CE= 17520      cpr =  1.63
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.64
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.67
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.91    1.43
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  501.75  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  493.7  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  495.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  492.8  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  492.8  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:03:01.546574
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.24   -0.58 CALL added 6720   PUT unwind -3900
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 38700   PUT unwind -750
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.13 CALL unwind -10410   PUT added 1380
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.35   -0.48 CALL added 24900   PUT unwind -11880
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.44 CALL added 14130   PUT added 62670
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.33    0.46 CALL added 41970   PUT added 19260
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.39   1.45 CALL added 62070   PUT added 89790
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.65   2.49 CALL added 51480   PUT added 128430
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.7   3.57 CALL added 59370   PUT added 211830
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.9   25.51 CALL added 21540   PUT added 549570
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.4   27.07 CALL added 6270   PUT added 169710
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.19   -3.1 CALL unwind -63660   PUT added 197310
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.39   -2.67 CALL unwind -82230   PUT added 219420
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.81   -1.71 CALL unwind -55380   PUT added 94500
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.41   -3.36 CALL unwind -65340   PUT added 219600
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.26   -1.76 CALL unwind -11400   PUT added 20100
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.17   0.33 CALL unwind -16980   PUT unwind -5640
+pcrSummation= 7.25  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.74
+pcrSummation== 7.25
+VOLPCRSUM== 2.32
+spotLTP =  60074.7  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.16), np.float64(1.16), np.float64(1.16)] atmStrikeNotShiftedCount= 15
+False   15   3
+SUPP_RES=== 60000
+CEoich val =  21540.0  PEoich val =  549570.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 59.24
+RSI_VAL2== 59.24
+neither = [np.float64(1.16)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.81
+avgoiPCROld=  1.16
+SUPP_RES = 60000
+FUT LTP = 60199.6
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.26
+atmPCR= 0.34  belowATM  0.33
+atmVolPCR= 0.19  belowATM  0.17
+True   60199.6   60000   False   False   59.24
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 1.9  PE= 38790  CE= 20430      cpr =  0.53
+NSE:BANKNIFTY26JAN60200PE  prev candle vol pcr = 1.31  PE= 41100  CE= 31290      cpr =  0.76
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.65
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.7    0.9
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  491.05  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  501.45  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  503.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  500.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  500.0  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:06:01.578279
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.24   -0.56 CALL added 6750   PUT unwind -3780
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 39150   PUT unwind -750
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.11 CALL unwind -11430   PUT added 1290
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.35   -0.43 CALL added 25590   PUT unwind -10980
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.28 CALL added 14640   PUT added 62610
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.33    0.45 CALL added 42900   PUT added 19500
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.39   1.43 CALL added 62790   PUT added 89910
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.64   2.32 CALL added 54240   PUT added 126060
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.7   3.57 CALL added 60300   PUT added 215460
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.9   19.62 CALL added 28050   PUT added 550380
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.39   24.12 CALL added 7050   PUT added 170040
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.19   -3.14 CALL unwind -63420   PUT added 198900
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.38   -2.67 CALL unwind -81780   PUT added 218190
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.8   -1.67 CALL unwind -55080   PUT added 92220
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.24 CALL unwind -64410   PUT added 208770
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.24   -1.55 CALL unwind -11340   PUT added 17580
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.18   0.32 CALL unwind -16980   PUT unwind -5490
+pcrSummation= 7.23  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.68
+pcrSummation== 7.23
+VOLPCRSUM== 2.33
+spotLTP =  60051.4  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.16), np.float64(1.16)] atmStrikeNotShiftedCount= 16
+False   16   2
+SUPP_RES=== 60000
+CEoich val =  28050.0  PEoich val =  550380.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 57.75
+RSI_VAL2== 57.75
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.8
+avgoiPCROld=  1.16
+SUPP_RES = 60000
+FUT LTP = 60191.0
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.26
+atmPCR= 0.34  belowATM  0.33
+atmVolPCR= 0.19  belowATM  0.17
+True   60191.0   60000   False   False   57.75
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 1.16  PE= 26490  CE= 22770      cpr =  0.86
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 1.9  PE= 38790  CE= 20430      cpr =  0.53
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.64
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.7    0.9
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  492.8  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  495.45  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  495.45  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  497.65  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  497.65  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:09:01.580047
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.24   -0.52 CALL added 7500   PUT unwind -3870
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 39810   PUT unwind -750
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.11 CALL unwind -11970   PUT added 1260
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.35 CALL added 30240   PUT unwind -10620
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.45 CALL added 14100   PUT added 62700
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.33    0.44 CALL added 44700   PUT added 19770
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.39   1.43 CALL added 63300   PUT added 90540
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.62   2.11 CALL added 59010   PUT added 124260
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.71   3.73 CALL added 57990   PUT added 216510
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.9   19.42 CALL added 28560   PUT added 554610
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.39   22.61 CALL added 7470   PUT added 168900
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.19   -3.16 CALL unwind -62970   PUT added 198690
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.62 CALL unwind -81150   PUT added 212910
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.78   -1.67 CALL unwind -54450   PUT added 90990
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.24 CALL unwind -64560   PUT added 209070
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.24   -1.48 CALL unwind -11700   PUT added 17340
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.2   0.24 CALL unwind -16980   PUT unwind -4110
+pcrSummation= 7.209999999999999  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.63
+pcrSummation== 7.21
+VOLPCRSUM== 2.33
+spotLTP =  60057.0  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.16), np.float64(1.16), np.float64(1.15)] atmStrikeNotShiftedCount= 17
+False   17   3
+SUPP_RES=== 60000
+CEoich val =  28560.0  PEoich val =  554610.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 53.8
+RSI_VAL2== 54.64
+recent two = [np.float64(1.16), np.float64(1.15)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.8
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60168.2
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.26
+atmPCR= 0.34  belowATM  0.33
+atmVolPCR= 0.19  belowATM  0.17
+True   60168.2   60000   False   False   54.64
+26JAN
+curr Doji True
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.91  PE= 13590  CE= 15000      cpr =  1.1
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 1.16  PE= 26490  CE= 22770      cpr =  0.86
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.33
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.62
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.71    0.9
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  494.8  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  498.95  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  498.95  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  498.65  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  498.65  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:12:01.605407
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.11   -0.02 CALL added 39750   PUT unwind -870
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.11 CALL unwind -10920   PUT added 1230
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.36 CALL added 29700   PUT unwind -10680
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.56 CALL added 13800   PUT added 62910
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.32   0.39 CALL added 50460   PUT added 19770
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.39    1.42 CALL added 63360   PUT added 89970
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.63   2.27 CALL added 54780   PUT added 124200
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.71   3.61 CALL added 60060   PUT added 216780
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.9   16.23 CALL added 33990   PUT added 551670
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.38   22.55 CALL added 7410   PUT added 167070
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.18   -3.14 CALL unwind -62880   PUT added 197610
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.62 CALL unwind -81060   PUT added 212580
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.78   -1.62 CALL unwind -54960   PUT added 89280
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.18 CALL unwind -65490   PUT added 208230
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.23   -1.45 CALL unwind -11610   PUT added 16830
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.2   0.24 CALL unwind -16980   PUT unwind -4110
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.56   -0.15 CALL unwind -15660   PUT added 2370
+pcrSummation= 7.1899999999999995  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 22.92
+pcrSummation== 7.19
+VOLPCRSUM== 2.77
+spotLTP =  60043.0  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.35)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  33990.0  PEoich val =  551670.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 52.31
+RSI_VAL2== 52.31
+newSynthFut =  60200
+ATMStrike =  60000
+AVG_OIPCR= 0.8
+avgoiPCROld=  1.35
+SUPP_RES = 60000
+FUT LTP = 60159.2
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.31
+atmPCR= 0.32  belowATM  0.39
+atmVolPCR= 0.16  belowATM  0.36
+True   60159.2   60000   False   False   52.31
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 1.29  PE= 23940  CE= 18570      cpr =  0.78
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.91  PE= 13590  CE= 15000      cpr =  1.1
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.39
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.63
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.71
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.9    1.38
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  504.85  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  508.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  508.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  516.35  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  516.4  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:15:01.621984
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 39510   PUT unwind -1320
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.02 CALL unwind -11970   PUT added 180
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.33 CALL added 32370   PUT unwind -10770
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.34   3.98 CALL added 15480   PUT added 61590
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.33   0.42 CALL added 46200   PUT added 19410
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.38    1.41 CALL added 62940   PUT added 88530
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.63   2.38 CALL added 51120   PUT added 121530
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.68   3.47 CALL added 59760   PUT added 207600
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.89   17.29 CALL added 31470   PUT added 544140
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.35   20.58 CALL added 7860   PUT added 161730
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.17   -3.02 CALL unwind -64110   PUT added 193560
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.36   -2.57 CALL unwind -82350   PUT added 211860
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.78   -1.61 CALL unwind -55440   PUT added 89460
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.4   -3.08 CALL unwind -66270   PUT added 203790
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.2   -1.39 CALL unwind -10770   PUT added 15000
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.17   0.36 CALL unwind -17100   PUT unwind -6180
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.55   -0.11 CALL unwind -15720   PUT added 1710
+pcrSummation= 9.13  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 22.77
+pcrSummation== 9.13
+VOLPCRSUM== 2.82
+spotLTP =  60015.65  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.35), np.float64(1.34)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  31470.0  PEoich val =  544140.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 47.57
+RSI_VAL2== 49.64
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 1.01
+avgoiPCROld=  1.34
+SUPP_RES = 60000
+FUT LTP = 60130.2
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 0.31
+atmPCR= 0.33  belowATM  0.38
+atmVolPCR= 0.17  belowATM  0.37
+True   60130.2   60000   False   False   49.64
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.95  PE= 40920  CE= 43200      cpr =  1.06
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 1.29  PE= 23940  CE= 18570      cpr =  0.78
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.63
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.68
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.89    1.35
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  512.35  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  504.05  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  504.05  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  506.7  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  506.7  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:18:01.672044
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 46860   PUT unwind -1320
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.0 CALL unwind -11250   PUT unwind 0
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.38 CALL added 29250   PUT unwind -11160
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.03 CALL added 15210   PUT added 61230
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.34   0.47 CALL added 46050   PUT added 21450
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.38    1.38 CALL added 63780   PUT added 87900
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.62   2.26 CALL added 53490   PUT added 121140
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.67   3.22 CALL added 63690   PUT added 205290
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.88   13.63 CALL added 39450   PUT added 537570
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.35   23.9 CALL added 6690   PUT added 159900
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.15   -3.04 CALL unwind -62970   PUT added 191490
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.36   -2.55 CALL unwind -82740   PUT added 211170
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.77   -1.58 CALL unwind -55530   PUT added 87480
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.4   -2.97 CALL unwind -67050   PUT added 199080
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.17   -1.09 CALL unwind -10770   PUT added 11700
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.12   0.55 CALL unwind -17100   PUT unwind -9390
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.54   -0.08 CALL unwind -15720   PUT added 1230
+pcrSummation= 9.09  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 22.63
+pcrSummation== 9.09
+VOLPCRSUM== 2.8200000000000003
+spotLTP =  60018.4  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.35), np.float64(1.34), np.float64(1.33)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 60000
+CEoich val =  39450.0  PEoich val =  537570.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 48.96
+RSI_VAL2== 49.14
+isPcrDecr = True
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 1.01
+avgoiPCROld=  1.33
+SUPP_RES = 60000
+FUT LTP = 60140.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.31
+atmPCR= 0.34  belowATM  0.38
+atmVolPCR= 0.17  belowATM  0.36
+True   60140.0   60000   False   True   49.14
+no trade yet = [np.float64(1.35), np.float64(1.34), np.float64(1.33)]
+26JAN
+curr Doji True
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.65  PE= 19590  CE= 30030      cpr =  1.53
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.95  PE= 40920  CE= 43200      cpr =  1.06
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.62
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.67
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.88    1.35
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  511.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  512.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  512.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  508.9  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  506.05  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:21:01.664695
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 47220   PUT unwind -1530
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.09   -0.0 CALL unwind -10200   PUT added 30
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.38 CALL added 29580   PUT unwind -11190
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.05 CALL added 15300   PUT added 61890
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.34   0.46 CALL added 46620   PUT added 21600
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.38    1.37 CALL added 64500   PUT added 88440
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.63   2.5 CALL added 48210   PUT added 120540
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.68   3.24 CALL added 64170   PUT added 207870
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.89   14.23 CALL added 38190   PUT added 543420
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.35   20.91 CALL added 7680   PUT added 160560
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.15   -3.08 CALL unwind -62310   PUT added 192000
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.57 CALL unwind -82050   PUT added 211260
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.78   -1.56 CALL unwind -55890   PUT added 87360
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.4   -2.95 CALL unwind -67140   PUT added 198360
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.17   -1.09 CALL unwind -10680   PUT added 11640
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.12   0.57 CALL unwind -17190   PUT unwind -9720
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.54   -0.08 CALL unwind -15690   PUT added 1290
+pcrSummation= 9.11  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 22.65
+pcrSummation== 9.11
+VOLPCRSUM== 2.85
+spotLTP =  60031.45  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.34), np.float64(1.33), np.float64(1.33)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 60000
+CEoich val =  38190.0  PEoich val =  543420.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 50.74
+RSI_VAL2== 50.74
+neither = [np.float64(1.33)]
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 1.01
+avgoiPCROld=  1.33
+SUPP_RES = 60000
+FUT LTP = 60149.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.32
+atmPCR= 0.34  belowATM  0.38
+atmVolPCR= 0.17  belowATM  0.37
+True   60149.0   60000   False   False   50.74
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 2.18  PE= 26610  CE= 12210      cpr =  0.46
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.65  PE= 19590  CE= 30030      cpr =  1.53
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.63
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.68
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.89    1.35
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  506.4  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  499.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  498.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  500.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  500.0  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:24:01.674088
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 48000   PUT unwind -1530
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.09   0.0 CALL unwind -10890   PUT unwind -30
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.38 CALL added 30000   PUT unwind -11280
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.38 CALL added 14130   PUT added 61860
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.34   0.46 CALL added 46350   PUT added 21300
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.38    1.34 CALL added 64920   PUT added 86820
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.62   2.3 CALL added 52170   PUT added 119820
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.66   3.07 CALL added 66000   PUT added 202800
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.88   11.65 CALL added 46500   PUT added 541800
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.35   28.53 CALL added 5580   PUT added 159180
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.17   -3.02 CALL unwind -63990   PUT added 193410
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.34   -2.57 CALL unwind -81630   PUT added 210030
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.76   -1.54 CALL unwind -55140   PUT added 84870
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.39   -2.97 CALL unwind -66240   PUT added 196920
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.18   -0.9 CALL unwind -11820   PUT added 10620
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.15   0.47 CALL unwind -17220   PUT unwind -8160
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.53   -0.05 CALL unwind -15720   PUT added 720
+pcrSummation= 9.08  result =  ['NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE', 'NSE:BANKNIFTY26JAN59700PE']
+PCRSUM== 22.62
+pcrSummation== 9.08
+VOLPCRSUM== 2.86
+spotLTP =  60019.05  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.33), np.float64(1.33)] atmStrikeNotShiftedCount= 5
+False   5   2
+SUPP_RES=== 60000
+CEoich val =  46500.0  PEoich val =  541800.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 48.92
+RSI_VAL2== 49.07
+newSynthFut =  60100
+ATMStrike =  60000
+AVG_OIPCR= 1.01
+avgoiPCROld=  1.33
+SUPP_RES = 60000
+FUT LTP = 60140.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.32
+atmPCR= 0.34  belowATM  0.38
+atmVolPCR= 0.18  belowATM  0.36
+True   60140.0   60000   False   False   49.07
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.99  PE= 21810  CE= 22140      cpr =  1.02
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 2.18  PE= 26610  CE= 12210      cpr =  0.46
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.62
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.88    1.35
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  506.85  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  505.9  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  505.9  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  500.4  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  498.95  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:27:01.731599
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.18   -0.75 CALL added 12600   PUT unwind -9480
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 47370   PUT unwind -1530
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.09   -0.0 CALL unwind -9540   PUT added 30
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.37 CALL added 30570   PUT unwind -11190
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.17 CALL added 14850   PUT added 61890
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.46 CALL added 46320   PUT added 21480
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.37   1.31 CALL added 65850   PUT added 86580
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.64   2.62 CALL added 46110   PUT added 120960
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.68   3.09 CALL added 67770   PUT added 209490
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.89   10.98 CALL added 50100   PUT added 550080
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.35   25.15 CALL added 6360   PUT added 159960
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.16   -3.07 CALL unwind -63120   PUT added 193500
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.33   -2.6 CALL unwind -80640   PUT added 209370
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.77   -1.53 CALL unwind -55980   PUT added 85890
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.39   -2.97 CALL unwind -66000   PUT added 195750
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.18   -0.89 CALL unwind -11820   PUT added 10560
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.15   0.48 CALL unwind -17310   PUT unwind -8280
+pcrSummation= 7.110000000000001  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.3
+pcrSummation== 7.11
+VOLPCRSUM== 2.3999999999999995
+spotLTP =  60052.45  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.14)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  50100.0  PEoich val =  550080.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 54.91
+RSI_VAL2== 52.86
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.79
+avgoiPCROld=  1.14
+SUPP_RES = 60000
+FUT LTP = 60172.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.27
+atmPCR= 0.34  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.18
+True   60172.0   60000   False   False   52.86
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 1.26  PE= 25950  CE= 20580      cpr =  0.79
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.99  PE= 21810  CE= 22140      cpr =  1.02
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.64
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.68    0.89
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  497.8  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.0  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  486.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.3  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  486.3  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:30:01.748617
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.19   -1.66 CALL added 5790   PUT unwind -9630
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 47010   PUT unwind -1530
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.09   -0.0 CALL unwind -9090   PUT added 30
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.37 CALL added 30570   PUT unwind -11280
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.34   4.22 CALL added 14850   PUT added 62640
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.46 CALL added 46950   PUT added 21420
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.37   1.3 CALL added 66900   PUT added 86940
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.63   2.46 CALL added 49620   PUT added 122160
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.68   3.04 CALL added 69330   PUT added 210870
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.89   10.72 CALL added 51840   PUT added 555750
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.35   21.83 CALL added 7350   PUT added 160440
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.18   -3.02 CALL unwind -64440   PUT added 194340
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.33   -2.57 CALL unwind -81300   PUT added 209280
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.75   -1.53 CALL unwind -55200   PUT added 84510
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.39   -2.98 CALL unwind -66510   PUT added 198510
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.18   -0.84 CALL unwind -12090   PUT added 10170
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.16   0.47 CALL unwind -17340   PUT unwind -8190
+pcrSummation= 7.120000000000001  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.31
+pcrSummation== 7.12
+VOLPCRSUM== 2.3999999999999995
+spotLTP =  60089.2  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.14), np.float64(1.14)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  51840.0  PEoich val =  555750.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 58.89
+RSI_VAL2== 58.77
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.79
+avgoiPCROld=  1.14
+SUPP_RES = 60000
+FUT LTP = 60197.2
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.27
+atmPCR= 0.34  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.18
+True   60197.2   60000   False   False   58.77
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.68  PE= 18090  CE= 26490      cpr =  1.46
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 1.26  PE= 25950  CE= 20580      cpr =  0.79
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.37
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.63
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.68    0.89
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  483.05  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  469.6  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  469.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  476.1  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  476.7  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:33:01.794801
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.19   -1.45 CALL added 6630   PUT unwind -9600
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 47220   PUT unwind -1290
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.09   -0.01 CALL unwind -9630   PUT added 90
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.36 CALL added 31230   PUT unwind -11100
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.35   8.34 CALL added 7860   PUT added 65520
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.5 CALL added 44250   PUT added 22050
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.38   1.31 CALL added 66930   PUT added 87780
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.64   2.47 CALL added 51000   PUT added 126030
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.69   2.96 CALL added 74790   PUT added 221250
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.91   11.49 CALL added 50490   PUT added 580380
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.38   56.14 CALL added 2880   PUT added 161670
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.23   -2.82 CALL unwind -69150   PUT added 194880
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.51 CALL unwind -83130   PUT added 208350
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.78   -1.54 CALL unwind -56370   PUT added 86850
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -2.97 CALL unwind -67230   PUT added 199500
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.19   -0.81 CALL unwind -12480   PUT added 10170
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.19   0.43 CALL unwind -17730   PUT unwind -7650
+pcrSummation= 7.26  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.55
+pcrSummation== 7.26
+VOLPCRSUM== 2.4099999999999997
+spotLTP =  60066.65  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.14), np.float64(1.14), np.float64(1.15)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 60000
+CEoich val =  50490.0  PEoich val =  580380.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 55.38
+RSI_VAL2== 55.38
+recent two = [np.float64(1.14), np.float64(1.15)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.81
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60180.4
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.27
+atmPCR= 0.35  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.18
+True   60180.4   60000   False   False   55.38
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.87  PE= 54270  CE= 62310      cpr =  1.15
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.68  PE= 18090  CE= 26490      cpr =  1.46
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.64
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.69    0.91
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  493.15  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  486.7  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  486.3  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  493.8  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  493.8  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:36:01.844489
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60900PE   0.19   -1.3 CALL added 7380   PUT unwind -9600
+pcr2 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 48990   PUT unwind -1290
+pcr3 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.02 CALL unwind -9810   PUT added 180
+pcr4 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.33 CALL added 31470   PUT unwind -10410
+pcr5 =  NSE:BANKNIFTY26JAN60500PE   0.35   25.8 CALL added 2580   PUT added 66570
+pcr6 =  NSE:BANKNIFTY26JAN60400PE   0.34    0.5 CALL added 43800   PUT added 21900
+pcr7 =  NSE:BANKNIFTY26JAN60300PE   0.38   1.3 CALL added 67350   PUT added 87390
+pcr8 =  NSE:BANKNIFTY26JAN60200PE   0.66   2.65 CALL added 48420   PUT added 128160
+pcr9 =  NSE:BANKNIFTY26JAN60100PE   0.69   3.0 CALL added 73770   PUT added 221580
+pcr10 =  NSE:BANKNIFTY26JAN60000PE   0.91   11.15 CALL added 52350   PUT added 583920
+pcr11 =  NSE:BANKNIFTY26JAN59900PE   1.36   25.96 CALL added 6240   PUT added 162000
+pcr12 =  NSE:BANKNIFTY26JAN59800PE   2.23   -2.8 CALL unwind -69540   PUT added 194580
+pcr13 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.51 CALL unwind -82980   PUT added 208290
+pcr14 =  NSE:BANKNIFTY26JAN59600PE   1.79   -1.54 CALL unwind -57060   PUT added 87600
+pcr15 =  NSE:BANKNIFTY26JAN59500CE   1.4   -2.97 CALL unwind -67290   PUT added 200160
+pcr16 =  NSE:BANKNIFTY26JAN59400PE   2.2   -0.85 CALL unwind -12600   PUT added 10710
+pcr17 =  NSE:BANKNIFTY26JAN59300PE   4.23   0.28 CALL unwind -17730   PUT unwind -5040
+pcrSummation= 7.26  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 19.62
+pcrSummation== 7.26
+VOLPCRSUM== 2.4099999999999997
+spotLTP =  60064.95  ATM_STRIKE =  60100
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60100: 60100}
+avgOiPcrList2 = [np.float64(1.14), np.float64(1.15), np.float64(1.15)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 60000
+CEoich val =  52350.0  PEoich val =  583920.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 55.29
+RSI_VAL2== 55.29
+neither = [np.float64(1.15)]
+newSynthFut =  60200
+ATMStrike =  60100
+AVG_OIPCR= 0.81
+avgoiPCROld=  1.15
+SUPP_RES = 60000
+FUT LTP = 60180.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.27
+atmPCR= 0.35  belowATM  0.34
+atmVolPCR= 0.19  belowATM  0.18
+True   60180.0   60000   False   False   55.29
+26JAN
+curr Doji True
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.82  PE= 17040  CE= 20790      cpr =  1.22
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.87  PE= 54270  CE= 62310      cpr =  1.15
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60400PE   0.34
+oipcr2 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr3 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.69    0.91
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  492.2  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  494.5  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  493.05  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  494.75  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  496.85  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:39:01.897620
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.02 CALL added 50130   PUT unwind -1230
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.03 CALL unwind -9840   PUT added 270
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.33 CALL added 31740   PUT unwind -10470
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.36   22.11 CALL added 3030   PUT added 66990
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.34   0.5 CALL added 43770   PUT added 21930
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.38    1.3 CALL added 67710   PUT added 87780
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.66   2.59 CALL added 50130   PUT added 129720
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.7   2.97 CALL added 75210   PUT added 223530
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.91   11.01 CALL added 53550   PUT added 589770
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.37   30.01 CALL added 5430   PUT added 162960
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.23   -2.86 CALL unwind -68550   PUT added 196350
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.35   -2.52 CALL unwind -82770   PUT added 208710
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.8   -1.56 CALL unwind -57270   PUT added 89160
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.4   -2.95 CALL unwind -67830   PUT added 200070
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.2   -0.89 CALL unwind -12570   PUT added 11190
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.23   0.23 CALL unwind -17400   PUT unwind -3960
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.58   -0.07 CALL unwind -16380   PUT added 1110
+pcrSummation= 7.290000000000001  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 23.05
+pcrSummation== 7.29
+VOLPCRSUM== 2.92
+spotLTP =  60038.8  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.36)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 60000
+CEoich val =  53550.0  PEoich val =  589770.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 49.33
+RSI_VAL2== 49.33
+newSynthFut =  60200
+ATMStrike =  60000
+AVG_OIPCR= 0.81
+avgoiPCROld=  1.36
+SUPP_RES = 60000
+FUT LTP = 60150.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.32
+atmPCR= 0.34  belowATM  0.38
+atmVolPCR= 0.18  belowATM  0.37
+True   60150.0   60000   False   False   49.33
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 0.72  PE= 17490  CE= 24330      cpr =  1.39
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.82  PE= 17040  CE= 20790      cpr =  1.22
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.7
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.91    1.37
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  504.15  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  504.15  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  504.15  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  499.25  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  499.5  SL= 547.75  target 437.75
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+===
+====after 3 min ochain==== 2026-01-16 11:42:01.938019
+26JAN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JAN60800PE   0.1   -0.03 CALL added 49920   PUT unwind -1380
+pcr2 =  NSE:BANKNIFTY26JAN60700PE   0.1   -0.01 CALL unwind -9750   PUT added 120
+pcr3 =  NSE:BANKNIFTY26JAN60600PE   0.34   -0.33 CALL added 31800   PUT unwind -10530
+pcr4 =  NSE:BANKNIFTY26JAN60500PE   0.36   33.37 CALL added 2010   PUT added 67080
+pcr5 =  NSE:BANKNIFTY26JAN60400PE   0.34   0.51 CALL added 43110   PUT added 21810
+pcr6 =  NSE:BANKNIFTY26JAN60300PE   0.38    1.3 CALL added 67530   PUT added 87780
+pcr7 =  NSE:BANKNIFTY26JAN60200PE   0.66   2.6 CALL added 49470   PUT added 128640
+pcr8 =  NSE:BANKNIFTY26JAN60100PE   0.69   3.03 CALL added 72960   PUT added 221160
+pcr9 =  NSE:BANKNIFTY26JAN60000PE   0.91   10.81 CALL added 54810   PUT added 592740
+pcr10 =  NSE:BANKNIFTY26JAN59900PE   1.4   77.93 CALL added 2100   PUT added 163650
+pcr11 =  NSE:BANKNIFTY26JAN59800PE   2.24   -2.86 CALL unwind -68820   PUT added 196530
+pcr12 =  NSE:BANKNIFTY26JAN59700PE   2.33   -2.56 CALL unwind -81360   PUT added 208410
+pcr13 =  NSE:BANKNIFTY26JAN59600PE   1.79   -1.52 CALL unwind -57060   PUT added 86820
+pcr14 =  NSE:BANKNIFTY26JAN59500CE   1.4   -2.85 CALL unwind -70170   PUT added 200280
+pcr15 =  NSE:BANKNIFTY26JAN59400PE   2.2   -0.91 CALL unwind -12600   PUT added 11490
+pcr16 =  NSE:BANKNIFTY26JAN59300PE   4.21   0.26 CALL unwind -17250   PUT unwind -4410
+pcr17 =  NSE:BANKNIFTY26JAN59200PE   3.58   -0.08 CALL unwind -16380   PUT added 1230
+pcrSummation= 7.32  result =  ['NSE:BANKNIFTY26JAN60600PE', 'NSE:BANKNIFTY26JAN60500PE', 'NSE:BANKNIFTY26JAN60400PE', 'NSE:BANKNIFTY26JAN60300PE', 'NSE:BANKNIFTY26JAN60200PE', 'NSE:BANKNIFTY26JAN60100PE', 'NSE:BANKNIFTY26JAN60000PE', 'NSE:BANKNIFTY26JAN59900PE', 'NSE:BANKNIFTY26JAN59800PE']
+PCRSUM== 23.03
+pcrSummation== 7.32
+VOLPCRSUM== 2.94
+spotLTP =  60042.7  ATM_STRIKE =  60000
+check containskey22
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {60000: 60000}
+avgOiPcrList2 = [np.float64(1.36), np.float64(1.35)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 60000
+CEoich val =  54810.0  PEoich val =  592740.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 52.66
+RSI_VAL2== 51.22
+newSynthFut =  60200
+ATMStrike =  60000
+AVG_OIPCR= 0.81
+avgoiPCROld=  1.35
+SUPP_RES = 60000
+FUT LTP = 60160.0
+====================================
+totalOIPCR = 1.07
+AVG_VOLPCR= 0.33
+atmPCR= 0.34  belowATM  0.38
+atmVolPCR= 0.18  belowATM  0.37
+True   60160.0   60000   False   False   51.22
+26JAN
+curr Doji False
+NSE:BANKNIFTY26JAN60100PE  curr candle vol pcr = 1.49  PE= 23040  CE= 15450      cpr =  0.67
+NSE:BANKNIFTY26JAN60100PE  prev candle vol pcr = 0.72  PE= 17490  CE= 24330      cpr =  1.39
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x75cf8bc40650>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JAN60300PE   0.38
+oipcr2 =  NSE:BANKNIFTY26JAN60200PE   0.66
+oipcr3 =  NSE:BANKNIFTY26JAN60100PE   0.69
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.91    1.4
+No Entry Yet
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  499.3  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  503.2  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 0
+ curr closing  503.2  SL= 547.75  target 437.75
+In Bull Trade. No Exit Yet. Current Second 1
+ curr closing  502.5 
