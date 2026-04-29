@@ -207,6 +207,10 @@ def getIVRegime(fyers_client):
     sl_pts = round(raw_sl * 1.10)  # 10% buffer for wicks
     target_pts = sl_pts  # 1:1 R:R
 
+    # Also calculate percentage-based SL/target (10% of ATM premium)
+    # This kicks in near expiry when premiums are low
+    sl_pct_of_premium = 0.10  # 10% of entry premium
+
     # Step 5: Spread width — roughly 2x the daily range / 4 (quarter of daily move)
     # In low vol keep tighter, in high vol keep wider
     spread_width = round(daily_range / 4.0 / 100) * 100  # round to nearest 100
@@ -240,6 +244,7 @@ def getIVRegime(fyers_client):
         "atm_option_move": round(atm_option_move, 1),
         "sl_point": sl_pts,
         "target_point": target_pts,
+        "sl_pct_of_premium": sl_pct_of_premium,
         "trail_trigger": round(atm_option_move),  # trail SL to breakeven after 1 candle move in favor
         "spread_width": spread_width,
         "hedge_premium_divisor": hedge_premium_divisor,
@@ -1201,15 +1206,20 @@ while x == 1:
                 # high = data1minFUT['high'].to_numpy()
                 # low = data1minFUT['low'].to_numpy()
                 close = data1minFUT['close'].to_numpy()
-                # Dynamic SL/target from IV regime
+                # Dynamic SL/target from IV regime — use min of IV-based or 10% of premium
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
-                sl = float(close[-1]) + dynamic_sl_pt
-                target = float(close[-1]) - dynamic_tgt_pt
+                pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
+                # Use the smaller of IV-based or percentage-based (near expiry, pct is smaller)
+                effective_sl = min(dynamic_sl_pt, pct_based_pts)
+                effective_tgt = effective_sl
+                sl = float(close[-1]) + effective_sl
+                target = float(close[-1]) - effective_tgt
                 entryPremium = float(close[-1])  # track for trailing SL
                 slTrailed = False
                 slConfirmCount = 0
-                print("IV-Dynamic Bull SL=", sl, " Target=", target, " (sl_pts=", dynamic_sl_pt, " tgt_pts=", dynamic_tgt_pt, ")")
+                print("IV-Dynamic Bull SL=", sl, " Target=", target,
+                      " (iv_pts=", dynamic_sl_pt, " pct_pts=", pct_based_pts, " used=", effective_sl, ")")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                 mapStrike.clear()
@@ -1230,15 +1240,20 @@ while x == 1:
                 # high = data1minFUT['high'].to_numpy()
                 # low = data1minFUT['low'].to_numpy()
                 close = data1minFUT['close'].to_numpy()
-                # Dynamic SL/target from IV regime
+                # Dynamic SL/target from IV regime — use min of IV-based or 10% of premium
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
-                sl = float(close[-1]) + dynamic_sl_pt
-                target = float(close[-1]) - dynamic_tgt_pt
+                pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
+                # Use the smaller of IV-based or percentage-based (near expiry, pct is smaller)
+                effective_sl = min(dynamic_sl_pt, pct_based_pts)
+                effective_tgt = effective_sl
+                sl = float(close[-1]) + effective_sl
+                target = float(close[-1]) - effective_tgt
                 entryPremium = float(close[-1])  # track for trailing SL
                 slTrailed = False
                 slConfirmCount = 0
-                print("IV-Dynamic Bear SL=", sl, " Target=", target, " (sl_pts=", dynamic_sl_pt, " tgt_pts=", dynamic_tgt_pt, ")")
+                print("IV-Dynamic Bear SL=", sl, " Target=", target,
+                      " (iv_pts=", dynamic_sl_pt, " pct_pts=", pct_based_pts, " used=", effective_sl, ")")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                 mapStrike.clear()
