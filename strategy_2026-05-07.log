@@ -1,0 +1,121 @@
+26MAY
+checkInstrument =  NSE:NIFTYBANK-INDEX
+bnExpDate =  26MAY
+BNFut (auto) = NSE:BANKNIFTY26MAYFUT
+Waiting for first candle to form. Current Second ==  12    2
+Waiting for first candle to form. Current Second ==  13    2
+Waiting for first candle to form. Current Second ==  14    2
+Waiting for first candle to form. Current Second ==  15    2
+Waiting for first candle to form. Current Second ==  16    2
+Waiting for first candle to form. Current Second ==  17    2
+Waiting for first candle to form. Current Second ==  18    2
+Waiting for first candle to form. Current Second ==  20    2
+Waiting for first candle to form. Current Second ==  21    2
+Waiting for first candle to form. Current Second ==  22    2
+Waiting for first candle to form. Current Second ==  23    2
+Waiting for first candle to form. Current Second ==  24    2
+Waiting for first candle to form. Current Second ==  25    2
+Waiting for first candle to form. Current Second ==  26    2
+Waiting for first candle to form. Current Second ==  27    2
+Waiting for first candle to form. Current Second ==  28    2
+Waiting for first candle to form. Current Second ==  29    2
+Waiting for first candle to form. Current Second ==  30    2
+Waiting for first candle to form. Current Second ==  31    2
+Waiting for first candle to form. Current Second ==  32    2
+Waiting for first candle to form. Current Second ==  33    2
+Waiting for first candle to form. Current Second ==  34    2
+Waiting for first candle to form. Current Second ==  35    2
+Waiting for first candle to form. Current Second ==  36    2
+Waiting for first candle to form. Current Second ==  37    2
+Waiting for first candle to form. Current Second ==  38    2
+Waiting for first candle to form. Current Second ==  39    2
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 16.62  BN Price = 56047.4
+IV Regime = NORMAL | DailyRange = 1330.7 | 3minCandleRange = 116.7 | ATMoptionMove = 52.5 | SL = 116 | Target = 116 | TrailTrigger = 53 | Spread = 300 | HedgeDiv = 2.5
+IV Params refreshed: {'vix': 16.62, 'bn_price': 56047.4, 'regime': 'NORMAL', 'daily_range': 1330.7, 'candle_range': 116.7, 'atm_option_move': 52.5, 'sl_point': 116, 'target_point': 116, 'sl_pct_of_premium': 0.1, 'trail_trigger': 53, 'spread_width': 300, 'hedge_premium_divisor': 2.5, 'support_resistance_buffer': 30}
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x72578ab14680>
+===
+====after 3 min ochain==== 2026-05-07 16:15:00.007611
+26MAY
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26MAY56800PE   0.6   0.1 CALL added 17280   PUT added 1740
+pcr2 =  NSE:BANKNIFTY26MAY56700PE   0.58   3.27 CALL added 2190   PUT added 7170
+pcr3 =  NSE:BANKNIFTY26MAY56600PE   0.4   0.28 CALL added 13860   PUT added 3840
+pcr4 =  NSE:BANKNIFTY26MAY56500PE   0.75   0.32 CALL added 62280   PUT added 19950
+pcr5 =  NSE:BANKNIFTY26MAY56400PE   0.51   0.04 CALL added 32760   PUT added 1290
+pcr6 =  NSE:BANKNIFTY26MAY56300PE   0.65    0.26 CALL added 37710   PUT added 9750
+pcr7 =  NSE:BANKNIFTY26MAY56200PE   0.74   0.43 CALL added 35730   PUT added 15330
+pcr8 =  NSE:BANKNIFTY26MAY56100PE   0.65   0.58 CALL added 36660   PUT added 21210
+pcr9 =  NSE:BANKNIFTY26MAY56000PE   1.03   13.7 CALL added 2670   PUT added 36570
+pcr10 =  NSE:BANKNIFTY26MAY55900PE   1.13   -0.01 CALL unwind -5970   PUT added 60
+pcr11 =  NSE:BANKNIFTY26MAY55800PE   1.13   0.8 CALL unwind -18570   PUT unwind -14880
+pcr12 =  NSE:BANKNIFTY26MAY55700CE   1.66   0.47 CALL unwind -14790   PUT unwind -6900
+pcr13 =  NSE:BANKNIFTY26MAY55600PE   0.83   -0.47 CALL added 17760   PUT unwind -8280
+pcr14 =  NSE:BANKNIFTY26MAY55500PE   1.38   -0.17 CALL added 18630   PUT unwind -3090
+pcr15 =  NSE:BANKNIFTY26MAY55400PE   1.16   -0.51 CALL unwind -1890   PUT added 960
+pcr16 =  NSE:BANKNIFTY26MAY55300PE   1.15   2.8 CALL unwind -2070   PUT unwind -5790
+pcr17 =  NSE:BANKNIFTY26MAY55200PE   1.28   -1.43 CALL added 3540   PUT unwind -5070
+pcrSummation= 6.44  result =  ['NSE:BANKNIFTY26MAY56700PE', 'NSE:BANKNIFTY26MAY56600PE', 'NSE:BANKNIFTY26MAY56500PE', 'NSE:BANKNIFTY26MAY56400PE', 'NSE:BANKNIFTY26MAY56300PE', 'NSE:BANKNIFTY26MAY56200PE', 'NSE:BANKNIFTY26MAY56100PE', 'NSE:BANKNIFTY26MAY56000PE', 'NSE:BANKNIFTY26MAY55900PE']
+PCRSUM== 15.63
+pcrSummation== 6.44
+VOLPCRSUM== 4.3999999999999995
+spotLTP =  56047.4  ATM_STRIKE =  56000
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {56000: 56000}
+avgOiPcrList2 = [np.float64(0.92)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 56500  Buffer= 30
+CEoich val =  62280.0  PEoich val =  19950.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 53.98
+RSI_VAL2== 56.66
+FUT_3m_OHLC O= 56315.0  H= 56340.0  L= 56300.0  C= 56340.0  Range= 40.0
+newSynthFut =  56300
+ATMStrike =  56000
+AVG_OIPCR= 0.72
+avgoiPCROld=  0.92
+SUPP_RES = 56500
+FUT LTP = 56310.0
+CEchoi  PechOi = 62280.0    19950.0
+====================================
+totalOIPCR = 0.91
+AVG_VOLPCR= 0.49
+atmPCR= 0.51  belowATM  0.65
+atmVolPCR= 0.49  belowATM  0.55
+True   56310.0   56500   False   False   56.66
+26MAY
+curr Doji False
+NSE:BANKNIFTY26MAY56300PE  curr candle vol pcr = 0.36  PE= 1920  CE= 5310      cpr =  2.77
+NSE:BANKNIFTY26MAY56300PE  prev candle vol pcr = 0.5  PE= 1950  CE= 3930      cpr =  2.02
+ATM_CE_premium= 932.55  ATM_PE_premium= 883.8
+CE_PremChg= 1.2  PE_PremChg= -16.4
+CandleBody= 25.0  PrevBody= -9.0  CandleRange= 40.0  Bullish
+TotalVol= 7230  PrevTotalVol= 5880  VolSpike= 1.23 x 
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x72578ab14680>
+======================================
+oipcr1 =  NSE:BANKNIFTY26MAY56300PE   0.65
+oipcr2 =  NSE:BANKNIFTY26MAY56200PE   0.74
+oipcr3 =  NSE:BANKNIFTY26MAY56100PE   0.65
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.03    1.13
+No Entry Yet
+End Of the Day
