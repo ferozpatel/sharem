@@ -1057,10 +1057,30 @@ def checkCriteriaAndTakeTrade():
     elif currCPR >= 2 or prevCPR >= 2:
         print("VOL_PRESSURE_WATCH: SINGLE_CANDLE_CALL_PRESSURE | currCPR=", currCPR, " prevCPR=", prevCPR)
 
+    # ATM option premiums
+    currCEclose = currOptiondataCE['close'].to_numpy()
+    currPEclose = currOptiondataPE['close'].to_numpy()
+    print("ATM_CE_premium=", round(currCEclose[-2], 2), " ATM_PE_premium=", round(currPEclose[-2], 2))
+
+    ce_premium_change = round(currCEclose[-2] - currCEclose[-3], 2) if len(currCEclose) >= 3 else 0
+    pe_premium_change = round(currPEclose[-2] - currPEclose[-3], 2) if len(currPEclose) >= 3 else 0
+    print("CE_PremChg=", ce_premium_change, " PE_PremChg=", pe_premium_change)
+
+    candleBody = round(close[-2] - opens[-2], 1)
+    prevCandleBody = round(close[-3] - opens[-3], 1)
+    candleRange = round(high[-2] - low[-2], 1)
+    print("CandleBody=", candleBody, " PrevBody=", prevCandleBody,
+          " CandleRange=", candleRange,
+          " Bullish" if candleBody > 0 else " Bearish" if candleBody < 0 else " Doji")
+
+    currTotalVol = currVolumeCE[-2] + currVolumePE[-2]
+    prevTotalVol = prevVolumeCE[-3] + prevVolumePE[-3]
+    volSpike = round(currTotalVol / prevTotalVol, 2) if prevTotalVol > 0 else 0
+    print("TotalVol=", round(currTotalVol), " PrevTotalVol=", round(prevTotalVol),
+          " VolSpike=", volSpike, "x", " SPIKE!" if volSpike >= 2.0 else "")
+
     # === SCALPING OPPORTUNITY SCORE ===
     # Combines multiple data points for high-conviction directional signal
-    # Score ≥ 5 = strong opportunity (target 80%+ accuracy)
-    # Each factor adds +1 to bull or bear score based on proven edge
     bull_score = 0
     bear_score = 0
     bull_reasons = []
@@ -1068,7 +1088,7 @@ def checkCriteriaAndTakeTrade():
 
     # Factor 1: Volume PCR pressure (both candles confirm direction)
     if currPCR >= 2 and prevPCR >= 2:
-        bull_score += 2  # heavy PE volume = bullish (2 pts for double confirmation)
+        bull_score += 2
         bull_reasons.append("VolPCR_2candle_bull")
     elif currPCR >= 1.5:
         bull_score += 1
@@ -1098,9 +1118,8 @@ def checkCriteriaAndTakeTrade():
         bear_score += 1
         bear_reasons.append("2ConsecBearCandles")
 
-    # Factor 4: Volume spike (≥ 1.5x prev candle = institutional activity)
+    # Factor 4: Volume spike
     if volSpike >= 2.0:
-        # Direction depends on candle body
         if candleBody > 0:
             bull_score += 1
             bull_reasons.append(f"VolSpike({volSpike}x)_bull")
@@ -1115,7 +1134,7 @@ def checkCriteriaAndTakeTrade():
             bear_score += 1
             bear_reasons.append(f"VolRise({volSpike}x)_bear")
 
-    # Factor 5: Premium momentum (CE dropping + PE dropping = directional)
+    # Factor 5: Premium momentum
     if ce_premium_change < -10 and pe_premium_change > 10:
         bull_score += 1
         bull_reasons.append(f"PremMomentum_bull(CE{ce_premium_change},PE+{pe_premium_change})")
@@ -1123,7 +1142,7 @@ def checkCriteriaAndTakeTrade():
         bear_score += 1
         bear_reasons.append(f"PremMomentum_bear(PE{pe_premium_change},CE+{ce_premium_change})")
 
-    # Factor 6: Candle range vs expected range (breakout candle > 1.2x expected)
+    # Factor 6: Candle range vs expected range
     expected_candle_range = iv_params.get('candle_range', 100) if iv_params else 100
     if expected_candle_range > 0:
         range_ratio = candleRange / expected_candle_range
@@ -1135,7 +1154,6 @@ def checkCriteriaAndTakeTrade():
                 bear_score += 1
                 bear_reasons.append(f"BreakoutCandle({round(range_ratio, 1)}x)")
 
-    # Log the score
     max_score = max(bull_score, bear_score)
     direction = "BULL" if bull_score > bear_score else "BEAR" if bear_score > bull_score else "NEUTRAL"
     confidence = "HIGH" if max_score >= 5 else "MEDIUM" if max_score >= 3 else "LOW"
@@ -1149,12 +1167,7 @@ def checkCriteriaAndTakeTrade():
     if max_score >= 5:
         print("  *** SCALP_HIGH_CONVICTION:", direction, "OPPORTUNITY ***")
 
-    # === STRUCTURED DATA LOG (for future pattern mining) ===
-    # Single line with all data points — grep "DATAPOINT|" to extract all rows
-    # Later: parse these into CSV, find which combos predict 100+ pt moves
-    # Fields: timestamp, FUT_close, candleBody, prevBody, candleRange, rangeRatio,
-    #         currVolPCR, prevVolPCR, currCPR, prevCPR, volSpike,
-    #         CE_premChg, PE_premChg, bullScore, bearScore, direction
+    # === STRUCTURED DATA LOG ===
     range_ratio_val = round(candleRange / expected_candle_range, 2) if expected_candle_range > 0 else 0
     print(f"DATAPOINT|{datetime.now().strftime('%H:%M')}|FUT={round(close[-2],1)}"
           f"|Body={candleBody}|PrevBody={prevCandleBody}|Range={candleRange}"
@@ -1165,28 +1178,6 @@ def checkCriteriaAndTakeTrade():
           f"|CE_PremChg={ce_premium_change}|PE_PremChg={pe_premium_change}"
           f"|BullScore={bull_score}|BearScore={bear_score}"
           f"|Dir={direction}|Conf={confidence}")
-
-    # ATM option premiums
-    currCEclose = currOptiondataCE['close'].to_numpy()
-    currPEclose = currOptiondataPE['close'].to_numpy()
-    print("ATM_CE_premium=", round(currCEclose[-2], 2), " ATM_PE_premium=", round(currPEclose[-2], 2))
-
-    ce_premium_change = round(currCEclose[-2] - currCEclose[-3], 2) if len(currCEclose) >= 3 else 0
-    pe_premium_change = round(currPEclose[-2] - currPEclose[-3], 2) if len(currPEclose) >= 3 else 0
-    print("CE_PremChg=", ce_premium_change, " PE_PremChg=", pe_premium_change)
-
-    candleBody = round(close[-2] - opens[-2], 1)
-    prevCandleBody = round(close[-3] - opens[-3], 1)
-    candleRange = round(high[-2] - low[-2], 1)
-    print("CandleBody=", candleBody, " PrevBody=", prevCandleBody,
-          " CandleRange=", candleRange,
-          " Bullish" if candleBody > 0 else " Bearish" if candleBody < 0 else " Doji")
-
-    currTotalVol = currVolumeCE[-2] + currVolumePE[-2]
-    prevTotalVol = prevVolumeCE[-3] + prevVolumePE[-3]
-    volSpike = round(currTotalVol / prevTotalVol, 2) if prevTotalVol > 0 else 0
-    print("TotalVol=", round(currTotalVol), " PrevTotalVol=", round(prevTotalVol),
-          " VolSpike=", volSpike, "x", " SPIKE!" if volSpike >= 2.0 else "")
 
     # --- Chart Pattern Detection ---
     log_chart_patterns(opens, high, low, close, iv_params)
