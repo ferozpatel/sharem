@@ -267,8 +267,8 @@ def choose_spread_type(iv_params, atm_premium, fyers_client):
     else:
         reasons.append(f"IVRank={iv_rank}(neutral)")
 
-    # Decision: default CREDIT on conflict
-    if score <= -2:
+    # Decision: majority wins, default CREDIT only when tied or positive
+    if score <= -1:
         spread_type = "DEBIT"
     else:
         spread_type = "CREDIT"
@@ -1270,7 +1270,8 @@ hedgeOrderId = ''
 mainOrderId = ''
 tradeHedgeOption = ''
 tradeATMOption = ''
-entryPremium = 0
+entryPremium = 0  # track entry premium for trailing SL
+trailTriggerPts = 0  # effective_sl / 3 — stored at entry time
 slTrailed = False
 slConfirmCount = 0
 spread_type_decided = False  # flag to decide spread type only once per day
@@ -1586,9 +1587,11 @@ while x == 1:
                 entryPremium = float(close[-1])
                 slTrailed = False
                 slConfirmCount = 0
+                trailTriggerPts = round(effective_sl / 3)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
+                      " TrailTrigger=", trailTriggerPts,
                       " (iv_pts=", dynamic_sl_pt, " pct_pts=", pct_based_pts,
                       " effective_sl=", effective_sl, ")")
 
@@ -1643,9 +1646,11 @@ while x == 1:
                 entryPremium = float(close[-1])
                 slTrailed = False
                 slConfirmCount = 0
+                trailTriggerPts = round(effective_sl / 3)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
+                      " TrailTrigger=", trailTriggerPts,
                       " (iv_pts=", dynamic_sl_pt, " pct_pts=", pct_based_pts,
                       " effective_sl=", effective_sl, ")")
 
@@ -1690,7 +1695,7 @@ while x == 1:
                         if not is_debit:
                             # Credit: premium rising = loss (SL), premium falling = profit (target)
                             if st == 1 or st == 2:
-                                trail_trigger = iv_params.get("trail_trigger", 50)
+                                trail_trigger = trailTriggerPts
                                 if not slTrailed and close2[-1] <= (entryPremium - trail_trigger):
                                     sl = entryPremium
                                     slTrailed = True
@@ -1725,7 +1730,7 @@ while x == 1:
                         else:
                             # Debit: premium falling = loss (SL), premium rising = profit (target)
                             if st == 1 or st == 2:
-                                trail_trigger = iv_params.get("trail_trigger", 50)
+                                trail_trigger = trailTriggerPts
                                 if not slTrailed and close2[-1] >= (entryPremium + trail_trigger):
                                     sl = entryPremium
                                     slTrailed = True
