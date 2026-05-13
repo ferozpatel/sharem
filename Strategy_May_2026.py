@@ -724,11 +724,8 @@ def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
 
 def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
     """
-    DEBIT SPREAD entry: Buy ATM + Sell OTM (reduces cost).
-    Used when DTE > 7, premium is cheap, IV is low.
-    Max profit = spread width - net debit
-    SL = 50% of debit paid
-    Target = 80% of max profit
+    DEBIT SPREAD entry: Buy ATM + Sell OTM hedge.
+    Same logic as credit spread (500-pt interval, 60% premium cap) — only BUY/SELL flipped.
     """
     global hedgeOrderId
     global tradeATMOption
@@ -736,10 +733,13 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
     global mainOrderId
     global iv_params
 
+    dynamic_sl = iv_params.get("sl_point", sl_point)
+    dynamic_target = iv_params.get("target_point", target_point)
     dynamic_spread = iv_params.get("spread_width", 300)
 
     print("DEBIT_ENTRY: qty=", qty)
-    print("IV-Dynamic: Spread=", dynamic_spread)
+    print("IV-Dynamic: SL=", dynamic_sl, " Target=", dynamic_target,
+          " Spread=", dynamic_spread)
 
     name = helper.getIndexSpot(stock)
     ltp = helper.manualLTP(name, fyers)
@@ -756,67 +756,74 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
     atmCEPremium = helper.manualLTP(atmCE, fyers)
     atmPEPremium = helper.manualLTP(atmPE, fyers)
     syntheticATMStrike = ltp + atmCEPremium - atmPEPremium
-    syntheticATMStrike = int(round((syntheticATMStrike / 100), 0) * 100)
     print('syntheticATMStrike = ', syntheticATMStrike)
-
-    # For debit spread: Buy ATM, Sell OTM (200-300 pts away)
-    otm_distance = min(dynamic_spread, 300)  # keep tighter for debit
-    otm_strike_CE = syntheticATMStrike + otm_distance
-    otm_strike_PE = syntheticATMStrike - otm_distance
+    syntheticATMStrike = int(round((syntheticATMStrike / 100), 0) * 100)
 
     atmCE = helper.getOptionFormat(stock, intExpiry, syntheticATMStrike, "CE")
     atmPE = helper.getOptionFormat(stock, intExpiry, syntheticATMStrike, "PE")
-    otmCE = helper.getOptionFormat(stock, intExpiry, otm_strike_CE, "CE")
-    otmPE = helper.getOptionFormat(stock, intExpiry, otm_strike_PE, "PE")
 
     if isBullish:
-        # Bull Call Debit Spread: Buy ATM CE + Sell OTM CE
-        buy_price = helper.manualLTP(atmCE, fyers)
-        sell_price = helper.manualLTP(otmCE, fyers)
-        net_debit = buy_price - sell_price
-        max_profit = otm_distance - net_debit
-        debit_sl = round(net_debit * 0.50)  # SL = 50% of debit
-        debit_target = round(max_profit * 0.80)  # Target = 80% of max profit
+        # Bull Call Debit Spread: Buy ATM CE + Sell OTM CE (500-pt interval, ≤60% of buy premium)
+        entryPrice = helper.manualLTP(atmCE, fyers)
+        max_premium = entryPrice * 0.60
+        hedge_strike = (syntheticATMStrike // 500 + 1) * 500  # snap to next 500-pt multiple above
+        otmCE_found = None
+        for _ in range(6):
+            candidate = helper.getOptionFormat(stock, intExpiry, hedge_strike, "CE")
+            candidate_premium = helper.manualLTP(candidate, fyers)
+            print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
+            if candidate_premium <= max_premium:
+                otmCE_found = candidate
+                break
+            hedge_strike += 500
+        otmCE = otmCE_found if otmCE_found else helper.getOptionFormat(stock, intExpiry, syntheticATMStrike + dynamic_spread, "CE")
+        print("=atmCE=", atmCE)
+        print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
-        print("DEBIT_BULL: Buy", atmCE, "@", buy_price, " Sell", otmCE, "@", sell_price)
-        print("DEBIT_METRICS: NetDebit=", round(net_debit, 2),
-              " MaxProfit=", round(max_profit, 2),
-              " SL=", debit_sl, " Target=", debit_target,
-              " RR=", round(debit_target / debit_sl, 2) if debit_sl > 0 else "inf")
+        hedge_entry_price = helper.manualLTP(otmCE, fyers)
+        print("hedge_entry_price =", hedge_entry_price)
+        print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
 
-        # Place sell leg first (OTM CE sell)
-        hedgeOrderId = helper.placeTargetOrder(otmCE, "SELL", qty, "MARKET", sell_price, 0, 0, fyers, papertrading)
-        tradeHedgeOption = otmCE
+        # BUY ATM CE first (main leg)
+        mainOrderId = helper.placeTargetOrder(atmCE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
+        tradeATMOption = atmCE
         time.sleep(0.5)
 
-        # Place buy leg (ATM CE buy) — this is the main leg we monitor
-        mainOrderId = helper.placeTargetOrder(atmCE, "BUY", qty, "MARKET", buy_price, 0, 0, fyers, papertrading)
-        tradeATMOption = atmCE
+        # SELL OTM CE (hedge leg — gets margin benefit from buy)
+        hedgeOrderId = helper.placeTargetOrder(otmCE, "SELL", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
+        tradeHedgeOption = otmCE
         print("Exit OID: ", mainOrderId, " ", hedgeOrderId)
 
     if isBearish:
-        # Bear Put Debit Spread: Buy ATM PE + Sell OTM PE
-        buy_price = helper.manualLTP(atmPE, fyers)
-        sell_price = helper.manualLTP(otmPE, fyers)
-        net_debit = buy_price - sell_price
-        max_profit = otm_distance - net_debit
-        debit_sl = round(net_debit * 0.50)  # SL = 50% of debit
-        debit_target = round(max_profit * 0.80)  # Target = 80% of max profit
+        # Bear Put Debit Spread: Buy ATM PE + Sell OTM PE (500-pt interval, ≤60% of buy premium)
+        entryPrice = helper.manualLTP(atmPE, fyers)
+        max_premium = entryPrice * 0.60
+        hedge_strike = (syntheticATMStrike // 500) * 500  # snap to nearest 500-pt multiple at or below
+        otmPE_found = None
+        for _ in range(6):
+            candidate = helper.getOptionFormat(stock, intExpiry, hedge_strike, "PE")
+            candidate_premium = helper.manualLTP(candidate, fyers)
+            print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
+            if candidate_premium <= max_premium:
+                otmPE_found = candidate
+                break
+            hedge_strike -= 500
+        otmPE = otmPE_found if otmPE_found else helper.getOptionFormat(stock, intExpiry, syntheticATMStrike - dynamic_spread, "PE")
+        print("=atmPE=", atmPE)
+        print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
-        print("DEBIT_BEAR: Buy", atmPE, "@", buy_price, " Sell", otmPE, "@", sell_price)
-        print("DEBIT_METRICS: NetDebit=", round(net_debit, 2),
-              " MaxProfit=", round(max_profit, 2),
-              " SL=", debit_sl, " Target=", debit_target,
-              " RR=", round(debit_target / debit_sl, 2) if debit_sl > 0 else "inf")
+        hedge_entry_price = helper.manualLTP(otmPE, fyers)
+        print("hedge_entry_price =", hedge_entry_price)
+        print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
 
-        # Place sell leg first (OTM PE sell)
-        hedgeOrderId = helper.placeTargetOrder(otmPE, "SELL", qty, "MARKET", sell_price, 0, 0, fyers, papertrading)
-        tradeHedgeOption = otmPE
+        # BUY ATM PE first (main leg)
+        mainOrderId = helper.placeTargetOrder(atmPE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
+        tradeATMOption = atmPE
         time.sleep(0.5)
 
-        # Place buy leg (ATM PE buy) — this is the main leg we monitor
-        mainOrderId = helper.placeTargetOrder(atmPE, "BUY", qty, "MARKET", buy_price, 0, 0, fyers, papertrading)
-        tradeATMOption = atmPE
+        # SELL OTM PE (hedge leg — gets margin benefit from buy)
+        hedgeOrderId = helper.placeTargetOrder(otmPE, "SELL", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
+        tradeHedgeOption = otmPE
         print("Exit OID: ", mainOrderId, " ", hedgeOrderId)
 
     return mainOrderId
@@ -854,12 +861,13 @@ def exitSpreadPosition(mainATMOption, hedgeOption):
     spread_type = spread_decision.get("type", "CREDIT")
 
     if spread_type == "DEBIT":
-        # Debit: we bought ATM (sell to close) + sold OTM (buy to close)
+        # Debit: close SHORT leg first (buy back OTM), then close LONG leg (sell ATM)
+        # This avoids naked short moment and margin issues
+        oidentry = helper.placeOrder(hedgeOption, "BUY", qty, "MARKET", 0, "regular", fyers, papertrading)
+        print("Exit hedge (BUY back sold leg) OID: ", oidentry)
+        time.sleep(0.5)
         mainOidentry = helper.placeOrder(mainATMOption, "SELL", qty, "MARKET", 0, "regular", fyers, papertrading)
         print("Exit main (SELL bought leg) OID: ", mainOidentry)
-        time.sleep(0.5)
-        oidentry = helper.placeOrder(hedgeOption, "BUY", qty, "MARKET", 0, "regular", fyers, papertrading)
-        print("Exit hedge (BUY sold leg) OID: ", oidentry)
     else:
         # Credit: we sold ATM (buy to close) + bought OTM (sell to close)
         mainOidentry = helper.placeOrder(mainATMOption, "BUY", qty, "MARKET", 0, "regular", fyers, papertrading)
@@ -1572,11 +1580,9 @@ while x == 1:
                 effective_sl = min(dynamic_sl_pt, pct_based_pts)
                 effective_tgt = effective_sl
 
-                # For DEBIT spread: SL/target logic is different
+                # For DEBIT spread: SL/target same as credit (1:1 R:R, min logic)
+                # Only difference: premium rising = profit, premium falling = loss
                 if spread_decision.get("type") == "DEBIT":
-                    # Debit: SL = 50% of premium paid, Target = premium × 1.5
-                    effective_sl = round(float(close[-1]) * 0.50)
-                    effective_tgt = round(float(close[-1]) * 0.80)
                     sl = float(close[-1]) - effective_sl  # premium drops = loss for buyer
                     target = float(close[-1]) + effective_tgt  # premium rises = profit for buyer
                 else:
@@ -1633,12 +1639,10 @@ while x == 1:
                 effective_sl = min(dynamic_sl_pt, pct_based_pts)
                 effective_tgt = effective_sl
 
-                # For DEBIT spread: SL/target logic is different
+                # For DEBIT spread: SL/target same as credit (1:1 R:R, min logic)
                 if spread_decision.get("type") == "DEBIT":
-                    effective_sl = round(float(close[-1]) * 0.50)
-                    effective_tgt = round(float(close[-1]) * 0.80)
-                    sl = float(close[-1]) - effective_sl  # premium drops = loss for buyer
-                    target = float(close[-1]) + effective_tgt  # premium rises = profit for buyer
+                    sl = float(close[-1]) - effective_sl
+                    target = float(close[-1]) + effective_tgt
                 else:
                     sl = float(close[-1]) + effective_sl
                     target = float(close[-1]) - effective_tgt
