@@ -938,22 +938,32 @@ def findStrikePricePremium(optionName, premium, premiumType):
 
 
 def get_support_resistance(futltp, step=500, buffer=None):
-    """Calculate support/resistance with NOTRADEZONE based on FUT_LTP."""
-    if buffer is None:
-        buffer = iv_params.get("support_resistance_buffer", 30) if iv_params else 30
+    """Calculate support/resistance based on FUT_LTP.
+    Buffer/NOTRADEZONE commented out — returning support or resistance directly.
+    Uncomment below to re-enable NOTRADEZONE.
+    """
+    # if buffer is None:
+    #     buffer = iv_params.get("support_resistance_buffer", 30) if iv_params else 30
 
     support = (futltp // step) * step
     resistance = support + step
     middle = (support + resistance) / 2
-    no_trade_low = middle - buffer
-    no_trade_high = middle + buffer
 
-    if futltp <= no_trade_low:
+    # NOTRADEZONE logic — commented out for now
+    # no_trade_low = middle - buffer
+    # no_trade_high = middle + buffer
+    # if futltp <= no_trade_low:
+    #     return support
+    # elif futltp >= no_trade_high:
+    #     return resistance
+    # else:
+    #     return "NOTRADEZONE"
+
+    # Without buffer: simple middle split
+    if futltp < middle:
         return support
-    elif futltp >= no_trade_high:
-        return resistance
     else:
-        return "NOTRADEZONE"
+        return resistance
 
 
 def sum_around_key(my_map, substring, window=4):
@@ -1593,7 +1603,7 @@ while x == 1:
                 entryPremium = float(close[-1])
                 slTrailed = False
                 slConfirmCount = 0
-                trailTriggerPts = round(effective_sl / 3)
+                trailTriggerPts = round(effective_sl * 0.66)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
@@ -1650,7 +1660,7 @@ while x == 1:
                 entryPremium = float(close[-1])
                 slTrailed = False
                 slConfirmCount = 0
-                trailTriggerPts = round(effective_sl / 3)
+                trailTriggerPts = round(effective_sl * 0.66)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
