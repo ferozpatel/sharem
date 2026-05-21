@@ -578,6 +578,46 @@ def log_chart_patterns(opens, high, low, close, iv_params):
 
 
 # ============================================================
+# ATM OPTION CANDLE RANGE — direct measurement
+# Used to compute SL/target as 3 × actual option candle range
+# Falls back to IV formula if insufficient candle data available
+# ============================================================
+
+def get_option_candle_range(option_symbol, fyers_client, n_candles=10):
+    """
+    Measure actual ATM option 3-min candle range from recent history.
+    Uses median of last n_candles to be robust against single-candle outliers.
+
+    Returns:
+        float: median 3-min candle range in points, or None if insufficient data
+    """
+    try:
+        # Fetch today's intraday candles (1 day back is enough for current session ATM option)
+        # helper.getHistorical signature: (ticker, interval_minutes, duration_days, fyers)
+        opt_data = helper.getHistorical(option_symbol, 3, 1, fyers_client)
+        highs = opt_data['high'].to_numpy()
+        lows = opt_data['low'].to_numpy()
+
+        if len(highs) < 5:  # need at least 5 candles for stable median
+            return None
+
+        # Use last n_candles (or all available if fewer)
+        ranges = (highs - lows)[-n_candles:]
+        # Filter out zero-range candles (no trade)
+        ranges = ranges[ranges > 0]
+
+        if len(ranges) < 3:
+            return None
+
+        # Median is robust against spikes
+        median_range = float(np.median(ranges))
+        return round(median_range, 2)
+    except Exception as e:
+        print("OPTION_RANGE_ERROR:", str(e))
+        return None
+
+
+# ============================================================
 # ENTRY FUNCTIONS: CREDIT SPREAD & DEBIT SPREAD
 # ============================================================
 
@@ -1586,12 +1626,20 @@ while x == 1:
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
-                # 10% premium rule commented out — was making SL/target too tight near expiry
-                # pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
-                # effective_sl_target = min(dynamic_sl_pt, pct_based_pts)
 
-                # Use IV-formula SL directly for both SL and target (1:1 R:R)
-                effective_sl_target = dynamic_sl_pt
+                # PRIMARY: Direct ATM option candle range × 3 (most accurate)
+                # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
+                opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
+                if opt_range is not None and opt_range > 0:
+                    measured_sl = round(opt_range * 3.0)
+                    effective_sl_target = measured_sl
+                    sl_source = f"OPTION_RANGE(median={opt_range},×3)"
+                else:
+                    # Fallback to IV formula when insufficient option data
+                    effective_sl_target = dynamic_sl_pt
+                    sl_source = f"IV_FORMULA({dynamic_sl_pt})"
+
+
                 effective_sl = effective_sl_target
                 effective_tgt = effective_sl_target
 
@@ -1613,10 +1661,14 @@ while x == 1:
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
                       " TrailTrigger=", trailTriggerPts,
+                      " SL_Source=", sl_source,
                       " (iv_pts=", dynamic_sl_pt,
                       " effective_sl=", effective_sl, ")")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+
+                effective_sl = effective_sl_target
+                effective_tgt = effective_sl_target
                 mapStrike.clear()
                 IS_ATM_STRIKE_SHIFT = False
                 atmStrikeNotShiftedCount = 1
@@ -1650,12 +1702,19 @@ while x == 1:
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
-                # 10% premium rule commented out — was making SL/target too tight near expiry
-                # pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
-                # effective_sl_target = min(dynamic_sl_pt, pct_based_pts)
 
-                # Use IV-formula SL directly for both SL and target (1:1 R:R)
-                effective_sl_target = dynamic_sl_pt
+                # PRIMARY: Direct ATM option candle range × 3 (most accurate)
+                # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
+                opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
+                if opt_range is not None and opt_range > 0:
+                    measured_sl = round(opt_range * 3.0)
+                    effective_sl_target = measured_sl
+                    sl_source = f"OPTION_RANGE(median={opt_range},×3)"
+                else:
+                    # Fallback to IV formula when insufficient option data
+                    effective_sl_target = dynamic_sl_pt
+                    sl_source = f"IV_FORMULA({dynamic_sl_pt})"
+
                 effective_sl = effective_sl_target
                 effective_tgt = effective_sl_target
 
@@ -1675,6 +1734,7 @@ while x == 1:
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
                       " TrailTrigger=", trailTriggerPts,
+                      " SL_Source=", sl_source,
                       " (iv_pts=", dynamic_sl_pt,
                       " effective_sl=", effective_sl, ")")
 
