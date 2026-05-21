@@ -379,11 +379,11 @@ def getIVRegime(fyers_client):
     # Step 3: ATM option move per candle (delta ≈ 0.45)
     atm_option_move = candle_range * 0.45
 
-    # Step 4: SL = survive 3 adverse candles + 10% buffer for wicks
+    # Step 4: SL = survive 3 adverse candles (2-candle close confirmation handles wicks)
     # 3.0x gives breathing room: with corrected candle_range (~70 pts),
-    # option moves ~31 pts/candle, so SL = ~104 pts = 3+ candles of adverse move
+    # option moves ~31 pts/candle, so SL = ~96 pts = 3 candles of adverse move
     raw_sl = atm_option_move * 3.0
-    sl_pts = round(raw_sl * 1.10)  # 10% buffer for wicks
+    sl_pts = round(raw_sl)  # no wick buffer — 2-candle confirmation already filters wicks
     target_pts = sl_pts  # 1:1 R:R
 
     # Percentage-based SL (kicks in near expiry)
@@ -1586,11 +1586,16 @@ while x == 1:
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
-                pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
-                effective_sl = min(dynamic_sl_pt, pct_based_pts)
-                effective_tgt = effective_sl
+                # 10% premium rule commented out — was making SL/target too tight near expiry
+                # pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
+                # effective_sl_target = min(dynamic_sl_pt, pct_based_pts)
 
-                # For DEBIT spread: SL/target same as credit (1:1 R:R, min logic)
+                # Use IV-formula SL directly for both SL and target (1:1 R:R)
+                effective_sl_target = dynamic_sl_pt
+                effective_sl = effective_sl_target
+                effective_tgt = effective_sl_target
+
+                # For DEBIT spread: SL/target same as credit (1:1 R:R)
                 # Only difference: premium rising = profit, premium falling = loss
                 if spread_decision.get("type") == "DEBIT":
                     sl = float(close[-1]) - effective_sl  # premium drops = loss for buyer
@@ -1608,7 +1613,7 @@ while x == 1:
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
                       " TrailTrigger=", trailTriggerPts,
-                      " (iv_pts=", dynamic_sl_pt, " pct_pts=", pct_based_pts,
+                      " (iv_pts=", dynamic_sl_pt,
                       " effective_sl=", effective_sl, ")")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
@@ -1645,11 +1650,16 @@ while x == 1:
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
-                pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
-                effective_sl = min(dynamic_sl_pt, pct_based_pts)
-                effective_tgt = effective_sl
+                # 10% premium rule commented out — was making SL/target too tight near expiry
+                # pct_based_pts = round(float(close[-1]) * iv_params.get("sl_pct_of_premium", 0.10))
+                # effective_sl_target = min(dynamic_sl_pt, pct_based_pts)
 
-                # For DEBIT spread: SL/target same as credit (1:1 R:R, min logic)
+                # Use IV-formula SL directly for both SL and target (1:1 R:R)
+                effective_sl_target = dynamic_sl_pt
+                effective_sl = effective_sl_target
+                effective_tgt = effective_sl_target
+
+                # For DEBIT spread: SL/target same as credit (1:1 R:R)
                 if spread_decision.get("type") == "DEBIT":
                     sl = float(close[-1]) - effective_sl
                     target = float(close[-1]) + effective_tgt
@@ -1665,7 +1675,7 @@ while x == 1:
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
                       " TrailTrigger=", trailTriggerPts,
-                      " (iv_pts=", dynamic_sl_pt, " pct_pts=", pct_based_pts,
+                      " (iv_pts=", dynamic_sl_pt,
                       " effective_sl=", effective_sl, ")")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
