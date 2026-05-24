@@ -583,35 +583,51 @@ def log_chart_patterns(opens, high, low, close, iv_params):
 # Falls back to IV formula if insufficient candle data available
 # ============================================================
 
-def get_option_candle_range(option_symbol, fyers_client, n_candles=10):
+def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
     """
     Measure actual ATM option 3-min candle range from recent history.
-    Uses median of last n_candles to be robust against single-candle outliers.
+    
+    Method: Take last n_candles from TODAY's session, pick top_k largest ranges,
+    take median of those.
+    
+    - Last 10 candles → covers ~30 min of recent activity
+    - Top 5 of those 10 → ignores consolidation tail, focuses on active candles
+    - Median of top 5 → robust against one freak spike
+
+    No minimum candle threshold — uses whatever data is available.
+    Falls back to IV formula only if zero candles or fetch fails.
 
     Returns:
-        float: median 3-min candle range in points, or None if insufficient data
+        float: representative 3-min candle range in points, or None if no data
     """
     try:
-        # Fetch today's intraday candles (1 day back is enough for current session ATM option)
+        # Fetch last 1 day of intraday candles (returns yesterday + today)
         # helper.getHistorical signature: (ticker, interval_minutes, duration_days, fyers)
         opt_data = helper.getHistorical(option_symbol, 3, 1, fyers_client)
+
+        # Filter to today's session only — yesterday's ATM option is a different strike
+        today_date = datetime.now(timezone('Asia/Kolkata')).date()
+        opt_data = opt_data[opt_data.index.date == today_date]
+
         highs = opt_data['high'].to_numpy()
         lows = opt_data['low'].to_numpy()
-
-        if len(highs) < 5:  # need at least 5 candles for stable median
-            return None
 
         # Use last n_candles (or all available if fewer)
         ranges = (highs - lows)[-n_candles:]
         # Filter out zero-range candles (no trade)
         ranges = ranges[ranges > 0]
 
-        if len(ranges) < 3:
-            return None
+        if len(ranges) == 0:
+            return None  # no usable data
 
-        # Median is robust against spikes
-        median_range = float(np.median(ranges))
-        return round(median_range, 2)
+        # Sort descending, take top_k largest, then median
+        # When fewer than top_k available, uses all available candles
+        sorted_ranges = np.sort(ranges)[::-1]   # descending
+        actual_k = min(top_k, len(sorted_ranges))
+        top_ranges = sorted_ranges[:actual_k]
+        representative_range = float(np.median(top_ranges))
+
+        return round(representative_range, 2)
     except Exception as e:
         print("OPTION_RANGE_ERROR:", str(e))
         return None
