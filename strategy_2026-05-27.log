@@ -1,0 +1,105 @@
+26JUN
+checkInstrument =  NSE:NIFTYBANK-INDEX
+bnExpDate =  26JUN
+BNFut (auto) = NSE:BANKNIFTY26JUNFUT
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 14.98  BN Price = 54853.85
+VIX_PERCENTILES_FETCHED: P25= 16.92  P50= 18.18  P75= 18.57  Min= 15.24  Max= 19.46
+IV Regime = LOW (ADAPTIVE: P25= 16.92  P50= 18.18  P75= 18.57 ) | DailyRange = 1173.9 | 3minCandleRange = 61.8 (theoretical= 103.0 ) | ATMoptionMove = 27.8 | SL = 83 | Target = 83 | TrailTrigger = 28 | Spread = 300 | Buffer = 25
+IV Params refreshed: {'vix': 14.98, 'bn_price': 54853.85, 'regime': 'LOW', 'regime_thresholds': 'P25=16.92 P50=18.18 P75=18.57', 'daily_range': 1173.9, 'candle_range': 61.8, 'atm_option_move': 27.8, 'sl_point': 83, 'target_point': 83, 'sl_pct_of_premium': 0.1, 'trail_trigger': 28, 'spread_width': 300, 'support_resistance_buffer': 25}
+IV_RANK_DATA: VIX_30d_High= 19.46  VIX_30d_Low= 15.24  Current= 15.24  IV_Rank= 0.0
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7b76929a1490>
+===
+====after 3 min ochain==== 2026-05-27 16:24:00.691593
+26JUN
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JUN55700CE   0.46   0.55 CALL added 5640   PUT added 3120
+pcr2 =  NSE:BANKNIFTY26JUN55600CE   0.34   0.2 CALL added 37950   PUT added 7440
+pcr3 =  NSE:BANKNIFTY26JUN55500PE   0.73   0.34 CALL added 156930   PUT added 53100
+pcr4 =  NSE:BANKNIFTY26JUN55400PE   0.8   1.27 CALL added 15300   PUT added 19470
+pcr5 =  NSE:BANKNIFTY26JUN55300PE   0.69   0.65 CALL added 62670   PUT added 40890
+pcr6 =  NSE:BANKNIFTY26JUN55200PE   1.16    0.5 CALL added 36210   PUT added 18000
+pcr7 =  NSE:BANKNIFTY26JUN55100PE   1.11   1.06 CALL added 42960   PUT added 45570
+pcr8 =  NSE:BANKNIFTY26JUN55000CE   0.94   0.64 CALL added 115590   PUT added 74220
+pcr9 =  NSE:BANKNIFTY26JUN54900CE   1.03   0.86 CALL added 48150   PUT added 41520
+pcr10 =  NSE:BANKNIFTY26JUN54800CE   1.32   1.11 CALL added 35250   PUT added 39240
+pcr11 =  NSE:BANKNIFTY26JUN54700PE   0.97   0.9 CALL added 26010   PUT added 23400
+pcr12 =  NSE:BANKNIFTY26JUN54600PE   3.51   7.01 CALL added 2760   PUT added 19350
+pcr13 =  NSE:BANKNIFTY26JUN54500PE   1.57   6.76 CALL added 9600   PUT added 64860
+pcr14 =  NSE:BANKNIFTY26JUN54400CE   3.05   14.79 CALL added 840   PUT added 12420
+pcr15 =  NSE:BANKNIFTY26JUN54300CE   3.57   51.86 CALL added 210   PUT added 10890
+pcr16 =  NSE:BANKNIFTY26JUN54200PE   3.15   -7.12 CALL unwind -720   PUT added 5130
+pcr17 =  NSE:BANKNIFTY26JUN54100PE   3.1   -5.73 CALL unwind -900   PUT added 5160
+pcrSummation= 8.12  result =  ['NSE:BANKNIFTY26JUN55600CE', 'NSE:BANKNIFTY26JUN55500PE', 'NSE:BANKNIFTY26JUN55400PE', 'NSE:BANKNIFTY26JUN55300PE', 'NSE:BANKNIFTY26JUN55200PE', 'NSE:BANKNIFTY26JUN55100PE', 'NSE:BANKNIFTY26JUN55000CE', 'NSE:BANKNIFTY26JUN54900CE', 'NSE:BANKNIFTY26JUN54800CE']
+PCRSUM== 27.5
+pcrSummation== 8.12
+VOLPCRSUM== 7.130000000000001
+spotLTP =  54853.85  ATM_STRIKE =  54900
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {54900: 54900}
+avgOiPcrList2 = [np.float64(1.62)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 55000  Buffer= 25
+CEoich val =  115590.0  PEoich val =  74220.0
+================================================
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 55.81
+RSI_VAL2== 60.37
+FUT_3m_OHLC O= 55256.0  H= 55260.0  L= 55232.0  C= 55256.2  Range= 28.0
+CHART_PATTERN_DETECTED: THREE_WHITE_SOLDIERS | DOUBLE_TOP_FORMING | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 0.2  Range= 28.0  ExpectedRange= 61.8  RangeRatio= 0.45  O= 55256.0  H= 55260.0  L= 55232.0  C= 55256.2
+newSynthFut =  55200
+ATMStrike =  54900
+AVG_OIPCR= 0.9
+avgoiPCROld=  1.62
+SUPP_RES = 55000
+FUT LTP = 55230.0
+CEchoi  PechOi = 115590.0    74220.0
+====================================
+totalOIPCR = 0.98
+AVG_VOLPCR= 0.79
+atmPCR= 0.69  belowATM  1.16
+atmVolPCR= 0.79  belowATM  1.08
+True   55230.0   55000   False   False   60.37
+26JUN
+curr Doji True
+NSE:BANKNIFTY26JUN55200PE  curr candle vol pcr = 0.74  PE= 4560  CE= 6150      cpr =  1.35
+NSE:BANKNIFTY26JUN55200PE  prev candle vol pcr = 0.58  PE= 3240  CE= 5610      cpr =  1.73
+ATM_CE_premium= 1147.55  ATM_PE_premium= 1088.45
+CE_PremChg= -6.8  PE_PremChg= -11.55
+CandleBody= 0.2  PrevBody= 24.8  CandleRange= 28.0  Bullish
+TotalVol= 10710  PrevTotalVol= 8850  VolSpike= 1.21 x 
+SCALP_SCORE: BULL | BullScore= 1  BearScore= 0 | Confidence= LOW
+DATAPOINT|16:24|FUT=55256.2|Body=0.2|PrevBody=24.8|Range=28.0|RangeRatio=0.45|CurrVolPCR=0.74|PrevVolPCR=0.58|CurrCPR=1.35|PrevCPR=1.73|VolSpike=1.21|CE_PremChg=-6.8|PE_PremChg=-11.55|BullScore=1|BearScore=0|Dir=BULL|Conf=LOW
+CHART_PATTERN_DETECTED: THREE_WHITE_SOLDIERS | DOUBLE_TOP_FORMING | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 0.2  Range= 28.0  ExpectedRange= 61.8  RangeRatio= 0.45  O= 55256.0  H= 55260.0  L= 55232.0  C= 55256.2
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7b76929a1490>
+======================================
+oipcr1 =  NSE:BANKNIFTY26JUN55200PE   1.16
+oipcr2 =  NSE:BANKNIFTY26JUN55100PE   1.11
+oipcr3 =  NSE:BANKNIFTY26JUN55000CE   0.94
+oipcrBull = BullTrade  bulcount= 2  bearcount= 1 oipcrBear= NoEntry
+atmpcr5 pcr6= 1.03    1.32
+No Entry Yet
+End Of the Day
+============================================================
+DAILY_SUMMARY: Date= 2026-05-27  SpreadType= N/A  DTE= N/A  IVRank= N/A  PremRatio= N/A  SLCount= 0  TargetCount= 0
+============================================================
