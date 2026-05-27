@@ -40,25 +40,21 @@ RUNNING_ON_EC2 = True
 # NSE HOLIDAYS 2026 (update yearly)
 # ============================================================
 NSE_HOLIDAYS_2026 = {
+    date(2026, 1, 15),   # Municipal Corporation Election - Maharashtra
     date(2026, 1, 26),   # Republic Day
-    date(2026, 2, 17),   # Mahashivratri
-    date(2026, 3, 10),   # Holi
-    date(2026, 3, 31),   # Id-Ul-Fitr (Eid)
-    date(2026, 4, 2),    # Ram Navami
+    date(2026, 3, 3),    # Holi
+    date(2026, 3, 26),   # Shri Ram Navami
+    date(2026, 3, 31),   # Shri Mahavir Jayanti
     date(2026, 4, 3),    # Good Friday
-    date(2026, 4, 14),   # Dr. Ambedkar Jayanti
+    date(2026, 4, 14),   # Dr. Baba Saheb Ambedkar Jayanti
     date(2026, 5, 1),    # Maharashtra Day
-    date(2026, 5, 25),   # Buddha Purnima
-    date(2026, 6, 7),    # Eid-Ul-Adha (Bakri Id)
-    date(2026, 7, 7),    # Muharram
-    date(2026, 8, 15),   # Independence Day
-    date(2026, 8, 19),   # Janmashtami (tentative)
-    date(2026, 9, 5),    # Milad-Un-Nabi
+    date(2026, 5, 28),   # Bakri Id
+    date(2026, 6, 26),   # Muharram
+    date(2026, 9, 14),   # Ganesh Chaturthi
     date(2026, 10, 2),   # Mahatma Gandhi Jayanti
     date(2026, 10, 20),  # Dussehra
-    date(2026, 11, 9),   # Diwali (Laxmi Puja)
-    date(2026, 11, 10),  # Diwali (Balipratipada)
-    date(2026, 11, 30),  # Guru Nanak Jayanti
+    date(2026, 11, 10),  # Diwali - Balipratipada
+    date(2026, 11, 24),  # Prakash Gurpurb Sri Guru Nanak Dev
     date(2026, 12, 25),  # Christmas
 }
 
@@ -154,7 +150,29 @@ def run_command(cmd, description, wait=True):
 
 def run_trading_workflow():
     """Execute the 3-step trading workflow."""
-    today_str = datetime.now(IST).strftime("%Y-%m-%d")
+    # Time guard: skip if started outside market hours or on weekend/holiday
+    now_ist = datetime.now(IST)
+    today = now_ist.date()
+
+    if now_ist.weekday() >= 5:
+        print(f"[{now_ist.strftime('%H:%M:%S')}] Skipping workflow — weekend ({now_ist.strftime('%A')})")
+        return False
+
+    if today in NSE_HOLIDAYS_2026:
+        print(f"[{now_ist.strftime('%H:%M:%S')}] Skipping workflow — NSE holiday ({today})")
+        return False
+
+    # Strategy EOD exit is 3:15 PM IST. Don't start after 3:00 PM (no useful trading window left)
+    if now_ist.hour >= 15:
+        print(f"[{now_ist.strftime('%H:%M:%S')}] Skipping workflow — past market session (after 3:00 PM IST)")
+        return False
+
+    # Don't start before market opens (pre-9:00 AM IST)
+    if now_ist.hour < 9:
+        print(f"[{now_ist.strftime('%H:%M:%S')}] Skipping workflow — before market hours (before 9:00 AM IST)")
+        return False
+
+    today_str = today.strftime("%Y-%m-%d")
     log_file = f"logs/strategy_{today_str}.log"
 
     # Activate virtualenv prefix for all commands
