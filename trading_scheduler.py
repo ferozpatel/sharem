@@ -181,7 +181,7 @@ def run_trading_workflow():
     # Step 3: Start strategy (runs in background with nohup)
     print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: Starting strategy...")
     subprocess.Popen(
-        f"source venv/bin/activate && nohup python3 -u Strategy_May_2026.py > {log_file} 2>&1 &",
+        f"source venv/bin/activate && nohup python3 -u Strategy_May_2026.py >> {log_file} 2>&1 &",
         shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
     )
     print(f"  Strategy started in background")
