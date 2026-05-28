@@ -37,6 +37,12 @@ EC2_USER = "ubuntu"
 RUNNING_ON_EC2 = True
 
 # ============================================================
+# STRATEGY TOGGLES — flip to False to skip launching that strategy for the day
+# ============================================================
+RUN_BANKNIFTY = True   # set False to skip BankNifty strategy
+RUN_SENSEX = True      # set False to skip Sensex strategy
+
+# ============================================================
 # NSE HOLIDAYS 2026 (update yearly)
 # ============================================================
 NSE_HOLIDAYS_2026 = {
@@ -198,21 +204,27 @@ def run_trading_workflow():
     time.sleep(10)  # let data feed initialize
 
     # Step 3: Start BankNifty strategy (runs in background with nohup)
-    print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: Starting BankNifty strategy...")
-    subprocess.Popen(
-        f"source venv/bin/activate && nohup python3 -u Strategy_May_2026.py >> {log_file} 2>&1 &",
-        shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
-    )
-    print(f"  BankNifty strategy started in background")
+    if RUN_BANKNIFTY:
+        print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: Starting BankNifty strategy...")
+        subprocess.Popen(
+            f"source venv/bin/activate && nohup python3 -u Strategy_May_2026.py >> {log_file} 2>&1 &",
+            shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
+        )
+        print(f"  BankNifty strategy started in background")
+    else:
+        print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: BankNifty strategy SKIPPED (RUN_BANKNIFTY=False)")
 
     # Step 4: Start Sensex strategy 1 minute later (so candles align differently if needed)
-    time.sleep(60)
-    print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 4: Starting Sensex strategy...")
-    subprocess.Popen(
-        f"source venv/bin/activate && nohup python3 -u Strategy_Sensex_May_2026.py >> {sensex_log_file} 2>&1 &",
-        shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
-    )
-    print(f"  Sensex strategy started in background")
+    if RUN_SENSEX:
+        time.sleep(60)
+        print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 4: Starting Sensex strategy...")
+        subprocess.Popen(
+            f"source venv/bin/activate && nohup python3 -u Strategy_Sensex_May_2026.py >> {sensex_log_file} 2>&1 &",
+            shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
+        )
+        print(f"  Sensex strategy started in background")
+    else:
+        print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 4: Sensex strategy SKIPPED (RUN_SENSEX=False)")
 
     print(f"Trading workflow started — BN log: {log_file} | Sensex log: {sensex_log_file}")
     return True
