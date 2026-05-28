@@ -230,7 +230,8 @@ def choose_spread_type(iv_params, atm_premium, fyers_client):
     3. IV Rank (30-day) — >0.50 = credit, <0.30 = debit
 
     Scoring: +1 for credit signal, -1 for debit signal, 0 for neutral
-    Score ≤ -2 → DEBIT, else → CREDIT (default)
+    Score ≤ -1 → DEBIT, else → CREDIT (default)
+    Majority wins: any 2 out of 3 parameters favoring debit triggers DEBIT.
     """
     score = 0
     reasons = []

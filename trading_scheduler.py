@@ -174,6 +174,7 @@ def run_trading_workflow():
 
     today_str = today.strftime("%Y-%m-%d")
     log_file = f"logs/strategy_{today_str}.log"
+    sensex_log_file = f"logs/strategy_sensex_{today_str}.log"
 
     # Activate virtualenv prefix for all commands
     venv_prefix = "source venv/bin/activate &&"
@@ -196,15 +197,24 @@ def run_trading_workflow():
 
     time.sleep(10)  # let data feed initialize
 
-    # Step 3: Start strategy (runs in background with nohup)
-    print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: Starting strategy...")
+    # Step 3: Start BankNifty strategy (runs in background with nohup)
+    print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: Starting BankNifty strategy...")
     subprocess.Popen(
         f"source venv/bin/activate && nohup python3 -u Strategy_May_2026.py >> {log_file} 2>&1 &",
         shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
     )
-    print(f"  Strategy started in background")
+    print(f"  BankNifty strategy started in background")
 
-    print(f"Trading workflow started — log: {log_file}")
+    # Step 4: Start Sensex strategy 1 minute later (so candles align differently if needed)
+    time.sleep(60)
+    print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 4: Starting Sensex strategy...")
+    subprocess.Popen(
+        f"source venv/bin/activate && nohup python3 -u Strategy_Sensex_May_2026.py >> {sensex_log_file} 2>&1 &",
+        shell=True, executable="/bin/bash", cwd=TRADING_BOT_DIR
+    )
+    print(f"  Sensex strategy started in background")
+
+    print(f"Trading workflow started — BN log: {log_file} | Sensex log: {sensex_log_file}")
     return True
 
 # ============================================================
