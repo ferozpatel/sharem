@@ -978,6 +978,7 @@ def takeEntry(isBullish, isBearish, qty, fyers, papertrading):
     Wrapper: routes to credit or debit entry based on spread_decision.
     OBSERVATION_MODE: when True, just log what WOULD have been taken — no real entry.
     """
+    global spread_decision
     if OBSERVATION_MODE:
         spread_type = spread_decision.get("type", "CREDIT")
         direction = "BULL" if isBullish else "BEAR"
@@ -990,7 +991,6 @@ def takeEntry(isBullish, isBearish, qty, fyers, papertrading):
         print("=" * 60)
         return  # skip actual entry — st remains unchanged so strategy keeps observing
 
-    global spread_decision
     spread_type = spread_decision.get("type", "CREDIT")
 
     print("ENTRY_ROUTING: spread_type=", spread_type,
