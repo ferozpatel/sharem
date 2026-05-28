@@ -989,7 +989,7 @@ def takeEntry(isBullish, isBearish, qty, fyers, papertrading):
         print("  (OBSERVATION_MODE=True — no real order placed)")
         print("=" * 60)
         return  # skip actual entry — st remains unchanged so strategy keeps observing
-    """
+
     global spread_decision
     spread_type = spread_decision.get("type", "CREDIT")
 
