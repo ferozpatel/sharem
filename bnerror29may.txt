@@ -1,0 +1,102 @@
+
+(venv) ubuntu@ip-172-31-47-198:~/trading-bot$ tail -100 logs/strategy_$(date +%F).log
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 14.92  BN Price = 54983.0
+VIX_PERCENTILES_FETCHED: P25= 16.62  P50= 17.82  P75= 18.57  Min= 14.92  Max= 19.46
+IV Regime = LOW (ADAPTIVE: P25= 16.62  P50= 17.82  P75= 18.57 ) | DailyRange = 1171.9 | 3minCandleRange = 61.7 (theoretical= 102.8 ) | ATMoptionMove = 27.8 | SL = 83 | Target = 83 | TrailTrigger = 28 | Spread = 300 | Buffer = 25
+IV Params refreshed: {'vix': 14.92, 'bn_price': 54983.0, 'regime': 'LOW', 'regime_thresholds': 'P25=16.62 P50=17.82 P75=18.57', 'daily_range': 1171.9, 'candle_range': 61.7, 'atm_option_move': 27.8, 'sl_point': 83, 'target_point': 83, 'sl_pct_of_premium': 0.1, 'trail_trigger': 28, 'spread_width': 300, 'support_resistance_buffer': 25}
+IV_RANK_DATA: VIX_30d_High= 19.46  VIX_30d_Low= 14.91  Current= 14.91  IV_Rank= 0.0
+NSE:NIFTYBANK-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7eda630276e0>
+===
+====after 3 min ochain==== 2026-05-29 09:18:00.587624
+26JUN
+/home/ubuntu/trading-bot/Strategy_May_2026.py:649: RuntimeWarning: divide by zero encountered in scalar divide
+  pcr = round(oich[index1] / oich[index2], 2) if option_type[index1] != '' and option_type[index2] != '' and \
+                                    oipcr   choipcr
+pcr1 =  NSE:BANKNIFTY26JUN55800PE   2.12   -1.44 CALL added 270   PUT unwind -390
+pcr2 =  NSE:BANKNIFTY26JUN55700CE   0.44   -0.03 CALL added 1020   PUT unwind -30
+pcr3 =  NSE:BANKNIFTY26JUN55600CE   0.33   0.07 CALL added 1230   PUT added 90
+pcr4 =  NSE:BANKNIFTY26JUN55500PE   0.7   -0.13 CALL added 14520   PUT unwind -1950
+pcr5 =  NSE:BANKNIFTY26JUN55400PE   0.84   -0.79 CALL unwind -1290   PUT added 1020
+pcr6 =  NSE:BANKNIFTY26JUN55300PE   0.67    -1.31 CALL added 1440   PUT unwind -1890
+pcr7 =  NSE:BANKNIFTY26JUN55200PE   1.11   -0.52 CALL added 1980   PUT unwind -1020
+pcr8 =  NSE:BANKNIFTY26JUN55100PE   1.05   0.64 CALL added 8400   PUT added 5370
+pcr9 =  NSE:BANKNIFTY26JUN55000CE   0.92   0.54 CALL added 25050   PUT added 13440
+pcr10 =  NSE:BANKNIFTY26JUN54900CE   0.96   -0.33 CALL added 3060   PUT unwind -1020
+pcr11 =  NSE:BANKNIFTY26JUN54800CE   1.4   -8.42 CALL unwind -360   PUT added 3030
+pcr12 =  NSE:BANKNIFTY26JUN54700PE   0.98   1.09 CALL added 1920   PUT added 2100
+pcr13 =  NSE:BANKNIFTY26JUN54600PE   3.07   0.72 CALL added 1410   PUT added 1020
+pcr14 =  NSE:BANKNIFTY26JUN54500PE   1.55   -0.31 CALL added 1050   PUT unwind -330
+pcr15 =  NSE:BANKNIFTY26JUN54400CE   3.02   2.4 CALL added 300   PUT added 720
+pcr16 =  NSE:BANKNIFTY26JUN54300CE   3.5   -inf CALL unwind 0   PUT unwind -330
+pcr17 =  NSE:BANKNIFTY26JUN54200PE   3.13   -1.0 CALL added 30   PUT unwind -30
+pcrSummation= 7.02  result =  ['NSE:BANKNIFTY26JUN55700CE', 'NSE:BANKNIFTY26JUN55600CE', 'NSE:BANKNIFTY26JUN55500PE', 'NSE:BANKNIFTY26JUN55400PE', 'NSE:BANKNIFTY26JUN55300PE', 'NSE:BANKNIFTY26JUN55200PE', 'NSE:BANKNIFTY26JUN55100PE', 'NSE:BANKNIFTY26JUN55000CE', 'NSE:BANKNIFTY26JUN54900CE']
+PCRSUM== 25.79
+pcrSummation== 7.02
+VOLPCRSUM== 4.9799999999999995
+spotLTP =  54983.8  ATM_STRIKE =  55000
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {55000: 55000}
+avgOiPcrList2 = [np.float64(1.52)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 55500  Buffer= 25
+CEoich val =  14520.0  PEoich val =  -1950.0
+ Either or both CE PE at suppRes unwinded i.e negative
+================================================
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 66.88
+RSI_VAL2== 66.88
+FUT_3m_OHLC O= 55299.8  H= 55416.8  L= 55260.0  C= 55337.8  Range= 156.8
+CHART_PATTERN: None
+newSynthFut =  55300
+ATMStrike =  55000
+AVG_OIPCR= 0.78
+avgoiPCROld=  1.52
+SUPP_RES = 55500
+FUT LTP = 55344.4
+CEchoi  PechOi = 14520.0    -1950.0
+====================================
+totalOIPCR = 0.97
+AVG_VOLPCR= 0.55
+atmPCR= 0.84  belowATM  0.67
+atmVolPCR= 0.7  belowATM  0.76
+False   55344.4   55500   False   False   66.88
+26JUN
+curr Doji False
+NSE:BANKNIFTY26JUN55200PE  curr candle vol pcr = 0.91  PE= 14490  CE= 15870      cpr =  1.1
+NSE:BANKNIFTY26JUN55200PE  prev candle vol pcr = 0.42  PE= 3960  CE= 9540      cpr =  2.41
+VOL_PRESSURE_WATCH: SINGLE_CANDLE_CALL_PRESSURE | currCPR= 1.1  prevCPR= 2.41
+ATM_CE_premium= 1163.35  ATM_PE_premium= 1049.75
+CE_PremChg= 53.5  PE_PremChg= -73.35
+CandleBody= 38.0  PrevBody= -25.0  CandleRange= 156.8  Bullish
+TotalVol= 30360  PrevTotalVol= 13500  VolSpike= 2.25 x  SPIKE!
+SCALP_SCORE: BULL | BullScore= 2  BearScore= 1 | Confidence= LOW
+DATAPOINT|09:18|FUT=55337.8|Body=38.0|PrevBody=-25.0|Range=156.8|RangeRatio=2.54|CurrVolPCR=0.91|PrevVolPCR=0.42|CurrCPR=1.1|PrevCPR=2.41|VolSpike=2.25|CE_PremChg=53.5|PE_PremChg=-73.35|BullScore=2|BearScore=1|Dir=BULL|Conf=LOW
+CHART_PATTERN: None
+NSE:NIFTYBANK-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7eda630276e0>
+Traceback (most recent call last):
+  File "/home/ubuntu/trading-bot/Strategy_May_2026.py", line 1769, in <module>
+    order_id = checkCriteriaAndTakeTrade()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/trading-bot/Strategy_May_2026.py", line 1264, in checkCriteriaAndTakeTrade
+    symbol = dfochain['symbol'].to_numpy()
+             ~~~~~~~~^^^^^^^^^^
+  File "/home/ubuntu/trading-bot/venv/lib/python3.12/site-packages/pandas/core/frame.py", line 4113, in __getitem__
+    indexer = self.columns.get_loc(key)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/trading-bot/venv/lib/python3.12/site-packages/pandas/core/indexes/range.py", line 417, in get_loc
+    raise KeyError(key)
+KeyError: 'symbol'
+nohup: ignoring input
+python3: can't open file '/home/ubuntu/trading-bot/Strategy_May__2026.py': [Errno 2] No such file or directory
