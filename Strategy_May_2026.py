@@ -638,6 +638,55 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
 # ENTRY FUNCTIONS: CREDIT SPREAD & DEBIT SPREAD
 # ============================================================
 
+
+def fetch_ochain_safe(strikecount, sname, fyers_client, use_closest1=False, retries=2, retry_delay=1.5):
+    """
+    Resilient option chain fetch — handles transient Fyers API failures.
+
+    Returns:
+        tuple: (dfochain DataFrame or None, ochainresponse or None)
+        - On success: both non-None
+        - On failure after retries: both None
+    Caller should skip current cycle when df is None.
+
+    use_closest1 toggles between helper.getClosestOptions and getClosestOptions1.
+    Required cols: 'symbol', 'option_type', 'oi'. ('oich', 'volume' optional but checked.)
+    """
+    required_cols = {'symbol', 'option_type', 'oi'}
+    last_err = None
+
+    for attempt in range(1, retries + 1):
+        try:
+            ochainresponse = helper.getOptionChain(strikecount, sname, fyers_client)
+            if use_closest1:
+                ochain = helper.getClosestOptions1(ochainresponse)
+            else:
+                ochain = helper.getClosestOptions(ochainresponse)
+            df = pd.DataFrame(ochain)
+
+            # Validate response shape
+            if df.empty:
+                last_err = "empty dataframe"
+            elif not required_cols.issubset(df.columns):
+                missing = required_cols - set(df.columns)
+                last_err = f"missing cols={missing}"
+            else:
+                if attempt > 1:
+                    print(f"OCHAIN_FETCH_OK_AFTER_RETRY: attempt={attempt} sname={sname}")
+                return df, ochainresponse
+
+            print(f"OCHAIN_FETCH_BAD_RESPONSE attempt={attempt}/{retries} sname={sname} reason={last_err}")
+        except Exception as e:
+            last_err = f"{type(e).__name__}: {e}"
+            print(f"OCHAIN_FETCH_ERROR attempt={attempt}/{retries} sname={sname} err={last_err}")
+
+        if attempt < retries:
+            time.sleep(retry_delay)
+
+    print(f"OCHAIN_FETCH_FAILED sname={sname} reason={last_err} — skipping this cycle")
+    return None, None
+
+
 def getChangeInOI(dfochain, index1, index2):
     oich = dfochain['oich'].to_numpy()
     chInOI = round(oich[index1])
@@ -1259,9 +1308,10 @@ def checkCriteriaAndTakeTrade():
 
     sname = "NSE:NIFTYBANK-INDEX"
     strikecount = 3
-    ochainresponse = helper.getOptionChain(strikecount, sname, fyers)
-    ochain = helper.getClosestOptions(ochainresponse)
-    dfochain = pd.DataFrame(ochain)
+    dfochain, _ochainresponse = fetch_ochain_safe(strikecount, sname, fyers, use_closest1=False)
+    if dfochain is None:
+        print("checkCriteriaAndTakeTrade: skipping cycle — option chain fetch failed")
+        return None
     symbol = dfochain['symbol'].to_numpy()
     option_type = dfochain['option_type'].to_numpy()
     oi = dfochain['oi'].to_numpy()
@@ -1380,29 +1430,36 @@ while x == 1:
                 get_iv_rank(fyers)  # cache the 30-day VIX data
                 spread_type_decided = True
 
-            # === OPTION CHAIN ANALYSIS (same as original) ===
+            # === OPTION CHAIN ANALYSIS (resilient: retries on bad response) ===
             sname = "NSE:NIFTYBANK-INDEX"
             strikecount = 8
             pcrList = []
             volPcrList = []
             choipcrList = []
             symbolList = []
-            ochainresponse = helper.getOptionChain(strikecount, sname, fyers)
+            dfochain, ochainresponse = fetch_ochain_safe(strikecount, sname, fyers, use_closest1=True)
+            if dfochain is None or ochainresponse is None:
+                print("MAIN_LOOP: skipping cycle — option chain fetch failed")
+                time.sleep(2)
+                continue
             print('===')
             totalOI = helper.getTotalOI(ochainresponse)
             calloi = totalOI.get('callOi')
             putoi = totalOI.get('putOi')
-            totalOIPCR = round((putoi / calloi), 2)
+            try:
+                totalOIPCR = round((putoi / calloi), 2)
+            except (TypeError, ZeroDivisionError):
+                print("MAIN_LOOP: totalOI calc failed, skipping cycle")
+                time.sleep(2)
+                continue
 
-            ochain = helper.getClosestOptions1(ochainresponse)
-            dfochain = pd.DataFrame(ochain)
             print("====after 3 min ochain====", now)
 
             symbol = dfochain['symbol'].to_numpy()
             option_type = dfochain['option_type'].to_numpy()
             oi = dfochain['oi'].to_numpy()
             volume = dfochain['volume'].to_numpy()
-            chInOi = dfochain['oich'].to_numpy()
+            chInOi = dfochain['oich'].to_numpy() if 'oich' in dfochain.columns else None
 
             name = helper.getIndexSpot(stock)
             intExpiry = helper.getBankNiftyExpiryDate()

@@ -214,9 +214,9 @@ def run_trading_workflow():
     else:
         print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 3: BankNifty strategy SKIPPED (RUN_BANKNIFTY=False)")
 
-    # Step 4: Start Sensex strategy 1 minute later (so candles align differently if needed)
+    # Step 4: Start Sensex strategy 90 seconds later (offset to avoid Fyers API contention with BN)
     if RUN_SENSEX:
-        time.sleep(60)
+        time.sleep(90)
         print(f"[{datetime.now(IST).strftime('%H:%M:%S')}] Step 4: Starting Sensex strategy...")
         subprocess.Popen(
             f"source venv/bin/activate && nohup python3 -u Strategy_Sensex_May_2026.py >> {sensex_log_file} 2>&1 &",
