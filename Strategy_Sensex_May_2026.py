@@ -1793,6 +1793,17 @@ while x == 1:
                 if not OBSERVATION_MODE:
                     st = 1
                 takeEntry(isBullTrade, False, qty, fyers, papertrading)
+
+                if OBSERVATION_MODE:
+                    # Reset signal flags so next 3-min cycle can detect fresh signal
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    print("OBSERVATION_MODE: skipping post-entry SL/target setup")
+                    continue  # skip rest of bull entry, wait for next 3-min candle
+
                 print("after entry tradeATMOption =", tradeATMOption)
 
                 data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
@@ -1872,6 +1883,16 @@ while x == 1:
                     st = 2
                 takeEntry(False, isBearTrade, qty, fyers, papertrading)
 
+                if OBSERVATION_MODE:
+                    # Reset signal flags so next 3-min cycle can detect fresh signal
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    print("OBSERVATION_MODE: skipping post-entry SL/target setup")
+                    continue  # skip rest of bear entry, wait for next 3-min candle
+
                 data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
                 opens = data1minFUT['open'].to_numpy()
                 close = data1minFUT['close'].to_numpy()
@@ -1926,7 +1947,12 @@ while x == 1:
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                 avgOiPcrList2 = avgOiPcrList2[1:]
 
-            order_id = checkCriteriaAndTakeTrade()
+            # Commented out — function makes a redundant 2nd ochain call (strikecount=3) which
+            # causes parallel API contention with BN strategy and crashes with KeyError.
+            # Main loop ochain block above (strikecount=8) already provides all PCR/CHOI data
+            # we need for actual trade entry decisions. Uncomment if you need the extra
+            # ATM-strike PCR direction logging.
+            # order_id = checkCriteriaAndTakeTrade()
 
             if tradeCEoption != "":
                 optionInstum = tradeCEoption
