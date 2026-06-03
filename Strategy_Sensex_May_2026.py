@@ -1606,25 +1606,25 @@ while x == 1:
             pcrList = [pcr1, pcr2, pcr3, pcr4, pcr5, pcr6, pcr7, pcr8, pcr9, pcr10, pcr11, pcr12, pcr13, pcr14, pcr15, pcr16, pcr17]
             volPcrList = [volpcr1, volpcr2, volpcr3, volpcr4, volpcr5, volpcr6, volpcr7, volpcr8, volpcr9]
 
-            print("".ljust(35), "oipcr", " ", "choipcr")
-            print("pcr1 = ", symbol[-2], " ", pcr1, " ", changOI)
-            print("pcr2 = ", symbol[-4], " ", pcr2, " ", changOIpcr2)
-            print("pcr3 = ", symbol[-6], " ", pcr3, " ", changOIpcr3)
+            print("".ljust(35), "oipcr", " ", "choipcr", " ", "totalOI")
+            print("pcr1 = ", symbol[-2], " ", pcr1, " ", changOI, " OI=", int(oi[-2]))
+            print("pcr2 = ", symbol[-4], " ", pcr2, " ", changOIpcr2, " OI=", int(oi[-4]))
+            print("pcr3 = ", symbol[-6], " ", pcr3, " ", changOIpcr3, " OI=", int(oi[-6]))
             if strikecount >= 2:
-                print("pcr4 = ", symbol[-8], " ", pcr4, " ", changOIpcr4)
-                print("pcr5 = ", symbol[-10], " ", pcr5, " ", changOIpcr5)
-                print("pcr6 = ", symbol[-12], " ", pcr6, "  ", changOIpcr6)
-                print("pcr7 = ", symbol[-14], " ", pcr7, " ", changOIpcr7)
-                print("pcr8 = ", symbol[-16], " ", pcr8, " ", changOIpcr8)
-                print("pcr9 = ", symbol[-18], " ", pcr9, " ", changOIpcr9)
-                print("pcr10 = ", symbol[-20], " ", pcr10, " ", changOIpcr10)
-                print("pcr11 = ", symbol[-22], " ", pcr11, " ", changOIpcr11)
-                print("pcr12 = ", symbol[-24], " ", pcr12, " ", changOIpcr12)
-                print("pcr13 = ", symbol[-26], " ", pcr13, " ", changOIpcr13)
-                print("pcr14 = ", symbol[-28], " ", pcr14, " ", changOIpcr14)
-                print("pcr15 = ", symbol[-30], " ", pcr15, " ", changOIpcr15)
-                print("pcr16 = ", symbol[-32], " ", pcr16, " ", changOIpcr16)
-                print("pcr17 = ", symbol[-34], " ", pcr17, " ", changOIpcr17)
+                print("pcr4 = ", symbol[-8], " ", pcr4, " ", changOIpcr4, " OI=", int(oi[-8]))
+                print("pcr5 = ", symbol[-10], " ", pcr5, " ", changOIpcr5, " OI=", int(oi[-10]))
+                print("pcr6 = ", symbol[-12], " ", pcr6, "  ", changOIpcr6, " OI=", int(oi[-12]))
+                print("pcr7 = ", symbol[-14], " ", pcr7, " ", changOIpcr7, " OI=", int(oi[-14]))
+                print("pcr8 = ", symbol[-16], " ", pcr8, " ", changOIpcr8, " OI=", int(oi[-16]))
+                print("pcr9 = ", symbol[-18], " ", pcr9, " ", changOIpcr9, " OI=", int(oi[-18]))
+                print("pcr10 = ", symbol[-20], " ", pcr10, " ", changOIpcr10, " OI=", int(oi[-20]))
+                print("pcr11 = ", symbol[-22], " ", pcr11, " ", changOIpcr11, " OI=", int(oi[-22]))
+                print("pcr12 = ", symbol[-24], " ", pcr12, " ", changOIpcr12, " OI=", int(oi[-24]))
+                print("pcr13 = ", symbol[-26], " ", pcr13, " ", changOIpcr13, " OI=", int(oi[-26]))
+                print("pcr14 = ", symbol[-28], " ", pcr14, " ", changOIpcr14, " OI=", int(oi[-28]))
+                print("pcr15 = ", symbol[-30], " ", pcr15, " ", changOIpcr15, " OI=", int(oi[-30]))
+                print("pcr16 = ", symbol[-32], " ", pcr16, " ", changOIpcr16, " OI=", int(oi[-32]))
+                print("pcr17 = ", symbol[-34], " ", pcr17, " ", changOIpcr17, " OI=", int(oi[-34]))
 
                 symbolPcrMap = {
                     symbol[-2]: pcr1, symbol[-4]: pcr2, symbol[-6]: pcr3, symbol[-8]: pcr4,
@@ -1690,12 +1690,23 @@ while x == 1:
 
             row1 = dfochain[dfochain['symbol'] == suppResCE]
             row2 = dfochain[dfochain['symbol'] == suppResPE]
+            # Total OI at SUPP_RES strike (used for morning-window rule when CHOI is too noisy)
+            suppResCeOi_total = 0
+            suppResPeOi_total = 0
             if not row1.empty and not row2.empty:
                 suppResCeChOi = row1.iloc[0]['oich']
                 suppResPeChOi = row2.iloc[0]['oich']
+                suppResCeOi_total = int(row1.iloc[0]['oi'])
+                suppResPeOi_total = int(row2.iloc[0]['oi'])
                 print("CEoich val = ", suppResCeChOi, " PEoich val = ", suppResPeChOi)
+                print("SUPP_RES TOTAL OI: CE=", suppResCeOi_total, " PE=", suppResPeOi_total)
             else:
                 print("not found")
+
+            # Morning rule: 9:15-9:45 IST. CHOI is noisy/zero in first ~10 candles after open.
+            # Use TOTAL OI direction (carried from yesterday's positioning) as the trapped-writers signal.
+            IS_MORNING_WINDOW = (dt1.hour == 9 and dt1.minute < 45)
+            print("IS_MORNING_WINDOW=", IS_MORNING_WINDOW, " (active 9:15-9:45 IST)")
 
             if (suppResCeChOi > 0 and suppResPeChOi > 0):
                 IS_CHOI_DIFF_GT_25PERC = is_difference_greater_than_25(suppResCeChOi, suppResPeChOi)
@@ -1761,9 +1772,25 @@ while x == 1:
                   IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2, " ",
                   IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2, " ", RSI_VAL)
 
+            # === Direction signal — different in morning vs rest of day ===
+            # Morning (9:15-9:45): use TOTAL OI direction at SUPP_RES (yesterday's positioning,
+            #                      since CHOI is too noisy after just one 3-min candle).
+            #                      Skip IS_CHOI_DIFF_GT_25PERC (meaningless when CHOI ≈ 0).
+            # Rest of day: use existing CHOI direction + 25% diff filter.
+            if IS_MORNING_WINDOW:
+                bull_direction_ok = (suppResCeOi_total > suppResPeOi_total)
+                bear_direction_ok = (suppResPeOi_total > suppResCeOi_total)
+                choi_filter_bull = True   # bypass 25% filter in morning
+                choi_filter_bear = True
+            else:
+                bull_direction_ok = (suppResCeChOi > suppResPeChOi)
+                bear_direction_ok = (suppResCeChOi < suppResPeChOi)
+                choi_filter_bull = IS_CHOI_DIFF_GT_25PERC
+                choi_filter_bear = IS_CHOI_DIFF_GT_25PERC
+
             # === BULL ENTRY ===
-            if suppResCeChOi > suppResPeChOi and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and IS_CHOI_DIFF_GT_25PERC and FUT_LTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
-                print("In Bull trade, slCount = ", slCount)
+            if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and FUT_LTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
+                print("In Bull trade, slCount = ", slCount, " (mode=", "MORNING_OI" if IS_MORNING_WINDOW else "NORMAL_CHOI", ")")
 
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = getSensexWeeklyExpiry()
@@ -1807,9 +1834,9 @@ while x == 1:
                 # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
-                    measured_sl = round(opt_range * 3.0)
+                    measured_sl = round(opt_range * 4.0)
                     effective_sl_target = measured_sl
-                    sl_source = f"OPTION_RANGE(median={opt_range},×3)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},x4)"
                 else:
                     # Fallback to IV formula when insufficient option data
                     effective_sl_target = dynamic_sl_pt
@@ -1851,8 +1878,8 @@ while x == 1:
                 avgOiPcrList2 = []
 
             # === BEAR ENTRY ===
-            elif suppResCeChOi < suppResPeChOi and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and IS_CHOI_DIFF_GT_25PERC and FUT_LTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
-                print("In Bear trade, slCount= ", slCount)
+            elif bear_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and FUT_LTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
+                print("In Bear trade, slCount= ", slCount, " (mode=", "MORNING_OI" if IS_MORNING_WINDOW else "NORMAL_CHOI", ")")
 
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = getSensexWeeklyExpiry()
@@ -1894,9 +1921,9 @@ while x == 1:
                 # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
-                    measured_sl = round(opt_range * 3.0)
+                    measured_sl = round(opt_range * 4.0)
                     effective_sl_target = measured_sl
-                    sl_source = f"OPTION_RANGE(median={opt_range},×3)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},x4)"
                 else:
                     # Fallback to IV formula when insufficient option data
                     effective_sl_target = dynamic_sl_pt
