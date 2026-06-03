@@ -187,40 +187,30 @@ targetCount = 0
 
 
 # ============================================================
-# DATA SOURCE DESIGN: Spot Index (not Futures)
+# DATA SOURCE DESIGN: Sensex Futures (auto-generated monthly contract)
 # ============================================================
-# We use BSE:SENSEX-INDEX (spot) instead of Sensex futures because:
+# Switched from spot index to futures because Sensex spot vs futures basis
+# can be 300-700 pts. Option premiums move with futures, so support/resistance
+# levels and FUT_LTP comparisons must use futures for accurate signals.
 #
-# 1. SENSEX FUTURES HAVE LOW LIQUIDITY ON BSE
-#    - Most Sensex derivatives liquidity is in WEEKLY OPTIONS, not futures
-#    - Futures volume is sparse compared to NSE BankNifty futures
-#    - Low-volume futures candles often have missing prints, wide gaps,
-#      and one-off spike prints that distort OHLC
+# Trade-off: Sensex futures may have lower liquidity than spot, so OHLC
+# candles could occasionally have gaps. We accept this for correct S/R alignment.
 #
-# 2. SPOT INDEX = MORE RELIABLE OHLC
-#    - Calculated continuously from 30 constituent stocks
-#    - No missed prints, no gaps — smooth real-time aggregation
-#    - Chart pattern detection works cleanly
-#    - SL/target derived from option candle range (not spot) — so spot's
-#      lack of volume data is irrelevant for our use case
-#
-# 3. SYNTHETIC ATM CORRECTS FOR ANY BASIS
-#    - syntheticATMStrike = spot + atmCEPremium - atmPEPremium
-#    - This put-call parity formula recovers the implied forward price
-#      from option premiums, even when starting from spot
-#    - So entry strike accuracy is preserved
-#
-# Trade-off accepted: spot lacks futures basis info (interest rate/dividend
-# adjustment), but for a 3-min intraday strategy this is negligible.
-#
-# Contrast: BankNifty strategy uses futures (NSE:BANKNIFTY*FUT) because
-# BN futures are highly liquid. Each instrument uses its best data source.
+# Format: BSE:SENSEX{YY}{MMM}FUT (e.g., BSE:SENSEX26JUNFUT)
+# Auto-rolls to next month after last-Thursday expiry.
 # ============================================================
-# Using SPOT INDEX (not futures) — see DATA SOURCE DESIGN comment block above
-# Variable name kept as BNFut for minimal code diff vs BankNifty strategy
-# (semantically: "primary instrument for OHLC and FUT_LTP")
-BNFut = "BSE:SENSEX-INDEX"
-print("BNFut (Sensex spot — futures available but illiquid) =", BNFut)
+_now_sx = datetime.now()
+_expiry_sx = _get_last_thursday(_now_sx.year, _now_sx.month)
+if _now_sx.date() > _expiry_sx:
+    # Past this month's expiry, move to next month
+    _next_sx = _now_sx.replace(day=28) + timedelta(days=4)
+    _yy_sx = _next_sx.strftime("%y")
+    _mmm_sx = _next_sx.strftime("%b").upper()
+else:
+    _yy_sx = _now_sx.strftime("%y")
+    _mmm_sx = _now_sx.strftime("%b").upper()
+BNFut = f"BSE:SENSEX{_yy_sx}{_mmm_sx}FUT"
+print(f"BNFut (Sensex futures auto) = {BNFut}")
 
 indiaVix = "NSE:INDIAVIX-INDEX"
 
