@@ -168,7 +168,7 @@ def run_trading_workflow():
         print(f"[{now_ist.strftime('%H:%M:%S')}] Skipping workflow — NSE holiday ({today})")
         return False
 
-    # Strategy EOD exit is 3:15 PM IST. Don't start after 3:00 PM (no useful trading window left)
+    # Strategy EOD exit is 3:24 PM IST. Don't start after 3:00 PM (no useful trading window left)
     if now_ist.hour >= 15:
         print(f"[{now_ist.strftime('%H:%M:%S')}] Skipping workflow — past market session (after 3:00 PM IST)")
         return False

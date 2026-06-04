@@ -1953,8 +1953,8 @@ while x == 1:
                               dt2.minute % timeFrame2)
                         time.sleep(1)
 
-            # TIME EXIT 3.15 pm
-            if dt1.hour >= 15 and dt1.minute >= 15:
+            # TIME EXIT 3.24 pm
+            if dt1.hour >= 15 and dt1.minute >= 24:
                 if st == 1 or st == 2:
                     print("EOD Exit")
                     oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
