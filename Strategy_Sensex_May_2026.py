@@ -284,57 +284,59 @@ def get_premium_to_move_ratio(atm_premium, daily_range):
 
 def choose_spread_type(iv_params, atm_premium, fyers_client):
     """
-    Decide CREDIT or DEBIT spread based on 2 parameters (Sensex weekly variant):
-    1. Premium-to-Move Ratio — ≥2.0 = credit, <1.5 = debit
-    2. IV Rank (30-day) — >0.50 = credit, <0.30 = debit
+    Decide CREDIT or DEBIT spread for Sensex weekly options.
 
-    DTE excluded for weekly (always ≤7 = constant, no signal).
-    Scoring: +1 for credit signal, -1 for debit signal, 0 for neutral.
-    Decision: BOTH params must agree on DEBIT (score ≤ -2), else CREDIT (default).
+    THETA-DOMINANT WEEKLY LOGIC (Option C):
+    For weekly options, theta decay is the dominant edge. CREDIT collects theta
+    every day; DEBIT pays theta every day. Default to CREDIT unless we have a
+    very strong case to go DEBIT (high IV + cheap premium = expect IV expansion).
+
+    Decision rule:
+        - If IV_Rank > 0.70 AND PremRatio < 1.0 → DEBIT (rare; high IV + cheap)
+        - Otherwise → CREDIT (default; theta favors seller)
+
+    Why this differs from BankNifty:
+        - BankNifty options are monthly (DTE 5-25); the 3-param scoring
+          (DTE+PremRatio+IVRank) suits longer-dated theta dynamics.
+        - Sensex weekly always has DTE ≤7. PremRatio thresholds calibrated
+          for monthly are biased toward DEBIT for weekly's smaller absolute
+          premiums. Adjust by making CREDIT the strong default.
+
+    Logging keeps PremRatio + IV_Rank thresholds for reference (NOT used in
+    this decision, but printed so we can analyze if tuning is needed).
     """
-    score = 0
     reasons = []
 
-    # DTE captured for logging only (not used in scoring for weekly)
+    # DTE captured for logging only (always weekly = ≤7)
     dte = get_dte()
-    reasons.append(f"DTE={dte}(weekly,not_scored)")
+    reasons.append(f"DTE={dte}(weekly)")
 
-    # 1. Premium-to-Move Ratio
+    # Premium-to-Move Ratio (informational)
     daily_range = iv_params.get('daily_range', 1000)
     premium_ratio = get_premium_to_move_ratio(atm_premium, daily_range)
-    if premium_ratio >= 2.0:
-        score += 1
-        reasons.append(f"PremRatio={premium_ratio}(≥2.0:CREDIT)")
-    elif premium_ratio < 1.5:
-        score -= 1
-        reasons.append(f"PremRatio={premium_ratio}(<1.5:DEBIT)")
-    else:
-        reasons.append(f"PremRatio={premium_ratio}(neutral)")
+    reasons.append(f"PremRatio={premium_ratio}")
 
-    # 2. IV Rank
+    # IV Rank (informational)
     iv_rank, vix_high, vix_low = get_iv_rank(fyers_client)
-    if iv_rank > 0.50:
-        score += 1
-        reasons.append(f"IVRank={iv_rank}(>0.50:CREDIT)")
-    elif iv_rank < 0.30:
-        score -= 1
-        reasons.append(f"IVRank={iv_rank}(<0.30:DEBIT)")
-    else:
-        reasons.append(f"IVRank={iv_rank}(neutral)")
+    reasons.append(f"IVRank={iv_rank}")
 
-    # Decision: BOTH params must agree on DEBIT (strict for weekly)
-    if score <= -2:
+    # === THETA-DOMINANT DECISION ===
+    if iv_rank > 0.70 and premium_ratio < 1.0:
         spread_type = "DEBIT"
+        reasons.append("DECISION:DEBIT (IV_Rank>0.70 AND PremRatio<1.0 — high IV, cheap premium)")
     else:
         spread_type = "CREDIT"
+        reasons.append("DECISION:CREDIT (default — theta favors seller for weekly)")
 
     print("=" * 50)
-    print("SPREAD_SELECTION (Sensex): Type=", spread_type, "| Score=", score,
+    print("SPREAD_SELECTION (Sensex weekly): Type=", spread_type,
           "| DTE=", dte, "| PremRatio=", premium_ratio,
           "| IVRank=", iv_rank)
     print("SPREAD_REASONS:", " | ".join(reasons))
     print("=" * 50)
 
+    # score kept in dict for backward-compat with logging code; not used in decision
+    score = 1 if spread_type == "CREDIT" else -1
     return spread_type, {
         "type": spread_type,
         "score": score,
