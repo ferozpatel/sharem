@@ -611,7 +611,10 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
         opt_data = opt_data[opt_data.index.date == today_date]
 
         # Skip the very first 3-min candle (opening volatility distorts range)
-        if len(opt_data) > 1:
+        # AND skip the LAST candle (current in-progress 3-min bin — partial data)
+        if len(opt_data) > 2:
+            opt_data = opt_data.iloc[1:-1]
+        elif len(opt_data) > 1:
             opt_data = opt_data.iloc[1:]
 
         highs = opt_data['high'].to_numpy()
