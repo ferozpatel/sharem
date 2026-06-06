@@ -380,10 +380,10 @@ def getIVRegime(fyers_client):
     # Step 3: ATM option move per candle (delta ≈ 0.45)
     atm_option_move = candle_range * 0.45
 
-    # Step 4: SL = survive 3 adverse candles (2-candle close confirmation handles wicks)
-    # 3.0x gives breathing room: with corrected candle_range (~70 pts),
-    # option moves ~31 pts/candle, so SL = ~96 pts = 3 candles of adverse move
-    raw_sl = atm_option_move * 3.0
+    # Step 4: SL = survive ~3.5 adverse candles (2-candle close confirmation handles wicks)
+    # 3.5x gives breathing room: with corrected candle_range (~65 pts),
+    # option moves ~29 pts/candle, so SL = ~102 pts = 3.5 candles of adverse move
+    raw_sl = atm_option_move * 3.5
     sl_pts = round(raw_sl)  # no wick buffer — 2-candle confirmation already filters wicks
     target_pts = sl_pts  # 1:1 R:R
 
@@ -587,15 +587,16 @@ def log_chart_patterns(opens, high, low, close, iv_params):
 def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
     """
     Measure actual ATM option 3-min candle range from recent history.
-    
-    Method: Take last n_candles from TODAY's session, pick top_k largest ranges,
-    take median of those.
-    
-    - Last 10 candles → covers ~30 min of recent activity
-    - Top 5 of those 10 → ignores consolidation tail, focuses on active candles
-    - Median of top 5 → robust against one freak spike
 
-    No minimum candle threshold — uses whatever data is available.
+    Method: Take last n_candles from TODAY's session (skipping the very first
+    9:15-9:18 candle which is abnormally large due to opening volatility), then
+    return MEDIAN of all valid candle ranges.
+
+    - Last 10 candles (post first candle) covers ~30 min of recent activity
+    - Median of all = balanced view of typical movement (not biased by outliers)
+    - top_k param kept for backward compat but unused (top-K logic removed —
+      was over-weighting active candles and inflating SL)
+
     Falls back to IV formula only if zero candles or fetch fails.
 
     Returns:
@@ -603,30 +604,36 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
     """
     try:
         # Fetch last 1 day of intraday candles (returns yesterday + today)
-        # helper.getHistorical signature: (ticker, interval_minutes, duration_days, fyers)
         opt_data = helper.getHistorical(option_symbol, 3, 1, fyers_client)
 
-        # Filter to today's session only — yesterday's ATM option is a different strike
+        # Filter to today's session only — yesterday's ATM was a different strike
         today_date = datetime.now(timezone('Asia/Kolkata')).date()
         opt_data = opt_data[opt_data.index.date == today_date]
+
+        # Skip the very first 3-min candle (opening volatility distorts range)
+        if len(opt_data) > 1:
+            opt_data = opt_data.iloc[1:]
 
         highs = opt_data['high'].to_numpy()
         lows = opt_data['low'].to_numpy()
 
         # Use last n_candles (or all available if fewer)
         ranges = (highs - lows)[-n_candles:]
-        # Filter out zero-range candles (no trade)
+        # Filter out zero-range candles (no trade in that 3-min)
         ranges = ranges[ranges > 0]
 
         if len(ranges) == 0:
-            return None  # no usable data
+            return None
 
-        # Sort descending, take top_k largest, then median
-        # When fewer than top_k available, uses all available candles
-        sorted_ranges = np.sort(ranges)[::-1]   # descending
-        actual_k = min(top_k, len(sorted_ranges))
-        top_ranges = sorted_ranges[:actual_k]
-        representative_range = float(np.median(top_ranges))
+        # MEDIAN OF ALL valid candle ranges (was top-K median, simplified for stability)
+        representative_range = float(np.median(ranges))
+
+        # Diagnostic logging — audit raw data driving SL calculation
+        all_ranges_rounded = [round(float(r), 2) for r in ranges]
+        print(f"OPT_RANGE_DEBUG: symbol={option_symbol}",
+              f"| total_candles_after_skip1st={len(ranges)}",
+              f"| ranges={all_ranges_rounded}",
+              f"| median_all={round(representative_range, 2)}")
 
         return round(representative_range, 2)
     except Exception as e:
@@ -1732,9 +1739,9 @@ while x == 1:
                 # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
-                    measured_sl = round(opt_range * 4.0)
+                    measured_sl = round(opt_range * 3.5)
                     effective_sl_target = measured_sl
-                    sl_source = f"OPTION_RANGE(median={opt_range},x4)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},x3.5)"
                 else:
                     # Fallback to IV formula when insufficient option data
                     effective_sl_target = dynamic_sl_pt
@@ -1808,9 +1815,9 @@ while x == 1:
                 # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
-                    measured_sl = round(opt_range * 4.0)
+                    measured_sl = round(opt_range * 3.5)
                     effective_sl_target = measured_sl
-                    sl_source = f"OPTION_RANGE(median={opt_range},x4)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},x3.5)"
                 else:
                     # Fallback to IV formula when insufficient option data
                     effective_sl_target = dynamic_sl_pt
