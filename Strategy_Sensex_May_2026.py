@@ -133,7 +133,7 @@ st = 0
 #   - Strategy keeps observing all day → captures every potential entry
 # Set False after validation period to enable real trading.
 # ============================================================
-OBSERVATION_MODE = True
+OBSERVATION_MODE = False
 
 timeFrame = 3  # in minutes
 timeFrame2 = 1  # in minutes
