@@ -1636,7 +1636,12 @@ while x == 1:
             print("================================================")
             print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
 
-            dataFUT = helper.getHistorical(BNFut, timeFrame, 3, fyers)
+            try:
+                dataFUT = helper.getHistorical(BNFut, timeFrame, 3, fyers)
+            except Exception as e:
+                print("MAIN_LOOP_DATA_FETCH_FAILED:", e, "— skipping this candle, will retry next cycle")
+                time.sleep(2)
+                continue
             opens = dataFUT['open'].to_numpy()
             high = dataFUT['high'].to_numpy()
             low = dataFUT['low'].to_numpy()

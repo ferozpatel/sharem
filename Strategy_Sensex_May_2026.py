@@ -133,7 +133,7 @@ st = 0
 #   - Strategy keeps observing all day → captures every potential entry
 # Set False after validation period to enable real trading.
 # ============================================================
-OBSERVATION_MODE = False
+OBSERVATION_MODE = True
 
 timeFrame = 3  # in minutes
 timeFrame2 = 1  # in minutes
@@ -1728,7 +1728,12 @@ while x == 1:
             print("================================================")
             print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
 
-            dataFUT = helper.getHistorical(BNFut, timeFrame, 3, fyers)
+            try:
+                dataFUT = helper.getHistorical(BNFut, timeFrame, 3, fyers)
+            except Exception as e:
+                print("MAIN_LOOP_DATA_FETCH_FAILED:", e, "— skipping this candle, will retry next cycle")
+                time.sleep(2)
+                continue
             opens = dataFUT['open'].to_numpy()
             high = dataFUT['high'].to_numpy()
             low = dataFUT['low'].to_numpy()
