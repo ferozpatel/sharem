@@ -1618,8 +1618,12 @@ while x == 1:
                 suppResPeChOi = row2.iloc[0]['oich']
                 suppResCeOi_total = int(row1.iloc[0]['oi'])
                 suppResPeOi_total = int(row2.iloc[0]['oi'])
-                print("CEoich val = ", suppResCeChOi, " PEoich val = ", suppResPeChOi)
-                print("SUPP_RES TOTAL OI: CE=", suppResCeOi_total, " PE=", suppResPeOi_total)
+                print("CEoich val = ", suppResCeChOi, " PEoich val = ", suppResPeChOi, ",",
+                      f"CE > PE by {round(abs(suppResCeChOi - suppResPeChOi) / max(abs(suppResCeChOi), abs(suppResPeChOi)) * 100, 1)}%" if suppResCeChOi > suppResPeChOi
+                      else f"CE < PE by {round(abs(suppResCeChOi - suppResPeChOi) / max(abs(suppResCeChOi), abs(suppResPeChOi)) * 100, 1)}%")
+                print("SUPP_RES TOTAL OI: CE=", suppResCeOi_total, " PE=", suppResPeOi_total, ",",
+                      f"CE > PE by {round(abs(suppResCeOi_total - suppResPeOi_total) / max(suppResCeOi_total, suppResPeOi_total) * 100, 1)}%" if suppResCeOi_total > suppResPeOi_total
+                      else f"CE < PE by {round(abs(suppResCeOi_total - suppResPeOi_total) / max(suppResCeOi_total, suppResPeOi_total) * 100, 1)}%")
             else:
                 print("not found")
 
@@ -1634,6 +1638,7 @@ while x == 1:
                 print(" Either or both CE PE at suppRes unwinded i.e negative")
                 IS_CHOI_DIFF_GT_25PERC = False
             print("================================================")
+            print("==== signal check time ====", datetime.now())
             print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
 
             try:
