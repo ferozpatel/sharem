@@ -100,6 +100,11 @@ tradeCEoption = ""
 tradePEoption = ""
 papertrading = 1  # 0 = paper trading, 1 = live trade
 
+# ============================================================
+# OBSERVATION_MODE — log signals without placing real orders
+# ============================================================
+OBSERVATION_MODE = True
+
 sl_perc = 9
 target_perc = 6
 
@@ -1737,9 +1742,23 @@ while x == 1:
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
                 isBullTrade = True
-                st = 1
-                takeEntry(isBullTrade, False, qty, fyers, papertrading)
-                print("after entry tradeATMOption =", tradeATMOption)
+                if not OBSERVATION_MODE:
+                    st = 1
+                    takeEntry(isBullTrade, False, qty, fyers, papertrading)
+                    print("after entry tradeATMOption =", tradeATMOption)
+                else:
+                    print(f"WOULD_HAVE_ENTERED: type={spread_decision.get('type','CREDIT')} direction=BULL qty={qty}")
+                    print(f"  spread_decision={spread_decision}")
+                    print(f"  iv_params(SL/Target/Spread)= SL={iv_params.get('sl_point')} Tgt={iv_params.get('target_point')} Width={iv_params.get('spread_width')}")
+                    print("  (OBSERVATION_MODE=True — no real order placed)")
+                    print("=" * 60)
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    print("OBSERVATION_MODE: skipping post-entry SL/target setup")
+                    continue
 
                 data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
                 opens = data1minFUT['open'].to_numpy()
@@ -1814,8 +1833,22 @@ while x == 1:
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
                 isBearTrade = True
-                st = 2
-                takeEntry(False, isBearTrade, qty, fyers, papertrading)
+                if not OBSERVATION_MODE:
+                    st = 2
+                    takeEntry(False, isBearTrade, qty, fyers, papertrading)
+                else:
+                    print(f"WOULD_HAVE_ENTERED: type={spread_decision.get('type','CREDIT')} direction=BEAR qty={qty}")
+                    print(f"  spread_decision={spread_decision}")
+                    print(f"  iv_params(SL/Target/Spread)= SL={iv_params.get('sl_point')} Tgt={iv_params.get('target_point')} Width={iv_params.get('spread_width')}")
+                    print("  (OBSERVATION_MODE=True — no real order placed)")
+                    print("=" * 60)
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    print("OBSERVATION_MODE: skipping post-entry SL/target setup")
+                    continue
 
                 data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
                 opens = data1minFUT['open'].to_numpy()
@@ -1871,7 +1904,7 @@ while x == 1:
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                 avgOiPcrList2 = avgOiPcrList2[1:]
 
-            order_id = checkCriteriaAndTakeTrade()
+            # order_id = checkCriteriaAndTakeTrade()
 
             if tradeCEoption != "":
                 optionInstum = tradeCEoption
