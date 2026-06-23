@@ -1707,25 +1707,54 @@ while x == 1:
                   IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2, " ",
                   IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2, " ", RSI_VAL)
 
-            # === Direction signal — different in morning vs rest of day ===
-            # Morning (9:15-9:45): use TOTAL OI direction at SUPP_RES (yesterday's positioning,
-            #                      since CHOI is too noisy after just one 3-min candle).
-            #                      Skip IS_CHOI_DIFF_GT_25PERC (meaningless when CHOI ≈ 0).
-            # Rest of day: use existing CHOI direction + 25% diff filter.
-            if IS_MORNING_WINDOW:
-                bull_direction_ok = (suppResCeOi_total > suppResPeOi_total)
-                bear_direction_ok = (suppResPeOi_total > suppResCeOi_total)
-                choi_filter_bull = True   # bypass 25% filter in morning
+            # === Direction signal — 3-tier priority system ===
+            # Logic 1: Morning trap (9:15-9:45 only) — Total OI direction + CHOI trapped writers by 15%
+            # Logic 2: Trend convergence (anytime) — CHOI + Total OI both in same direction by 10%
+            # Logic 3: Existing CHOI trap (anytime) — CEchoi > PEchoi for bull + 15% diff
+            # First match wins.
+
+            _larger_ch = max(abs(suppResCeChOi), abs(suppResPeChOi)) if max(abs(suppResCeChOi), abs(suppResPeChOi)) > 0 else 1
+            _choi_pct = round(abs(suppResCeChOi - suppResPeChOi) / _larger_ch * 100, 1)
+            _larger_oi = max(suppResCeOi_total, suppResPeOi_total) if max(suppResCeOi_total, suppResPeOi_total) > 0 else 1
+            _oi_pct = round(abs(suppResCeOi_total - suppResPeOi_total) / _larger_oi * 100, 1)
+
+            # Logic 1: Morning window trap
+            logic1_bull = IS_MORNING_WINDOW and (suppResCeOi_total > suppResPeOi_total) and (suppResPeChOi > suppResCeChOi and _choi_pct >= 15)
+            logic1_bear = IS_MORNING_WINDOW and (suppResPeOi_total > suppResCeOi_total) and (suppResCeChOi > suppResPeChOi and _choi_pct >= 15)
+
+            # Logic 2: Trend convergence — CHOI and Total OI both in same direction by 10%
+            # Bull: PE side dominant in both (put writers building = bullish for underlying)
+            # Bear: CE side dominant in both (call writers building = bearish for underlying)
+            logic2_bull = (suppResPeChOi > suppResCeChOi and _choi_pct >= 10) and (suppResPeOi_total > suppResCeOi_total and _oi_pct >= 10)
+            logic2_bear = (suppResCeChOi > suppResPeChOi and _choi_pct >= 10) and (suppResCeOi_total > suppResPeOi_total and _oi_pct >= 10)
+
+            # Logic 3: Existing CHOI trap (CEchoi > PEchoi for bull, reverse for bear) + 25% diff
+            logic3_bull = (suppResCeChOi > suppResPeChOi) and _choi_pct >= 25
+            logic3_bear = (suppResCeChOi < suppResPeChOi) and _choi_pct >= 25
+
+            # Priority: first match wins
+            if logic1_bull or logic1_bear:
+                bull_direction_ok = logic1_bull
+                bear_direction_ok = logic1_bear
+                choi_filter_bull = True
                 choi_filter_bear = True
+                _entry_mode = "LOGIC1_MORNING_TRAP"
+            elif logic2_bull or logic2_bear:
+                bull_direction_ok = logic2_bull
+                bear_direction_ok = logic2_bear
+                choi_filter_bull = True
+                choi_filter_bear = True
+                _entry_mode = "LOGIC2_TREND_CONVERGENCE"
             else:
-                bull_direction_ok = (suppResCeChOi > suppResPeChOi)
-                bear_direction_ok = (suppResCeChOi < suppResPeChOi)
-                choi_filter_bull = IS_CHOI_DIFF_GT_25PERC
-                choi_filter_bear = IS_CHOI_DIFF_GT_25PERC
+                bull_direction_ok = logic3_bull
+                bear_direction_ok = logic3_bear
+                choi_filter_bull = True
+                choi_filter_bear = True
+                _entry_mode = "LOGIC3_CHOI_25PCT"
 
             # === BULL ENTRY ===
             if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and FUT_LTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
-                print("In Bull trade, slCount = ", slCount, " (mode=", "MORNING_OI" if IS_MORNING_WINDOW else "NORMAL_CHOI", ")")
+                print("In Bull trade, slCount = ", slCount, " (mode=", _entry_mode, ")")
 
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = helper.getBankNiftyExpiryDate()
@@ -1816,7 +1845,7 @@ while x == 1:
 
             # === BEAR ENTRY ===
             elif bear_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and FUT_LTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
-                print("In Bear trade, slCount= ", slCount, " (mode=", "MORNING_OI" if IS_MORNING_WINDOW else "NORMAL_CHOI", ")")
+                print("In Bear trade, slCount= ", slCount, " (mode=", _entry_mode, ")")
 
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = helper.getBankNiftyExpiryDate()
