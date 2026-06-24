@@ -699,8 +699,8 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
         highs = opt_data['high'].to_numpy()
         lows = opt_data['low'].to_numpy()
 
-        # Use last n_candles (or all available if fewer)
-        ranges = (highs - lows)[-n_candles:]
+        # Use abs(close - open) as candle body range (not high-low)
+        ranges = abs(opt_data['close'].to_numpy() - opt_data['open'].to_numpy())[-n_candles:]
         # Filter out zero-range candles (no trade in that 3-min)
         ranges = ranges[ranges > 0]
 
