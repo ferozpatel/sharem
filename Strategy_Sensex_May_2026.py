@@ -1795,31 +1795,36 @@ while x == 1:
                   IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2, " ", RSI_VAL)
 
             # === Direction signal — 3-tier priority system ===
-            # Logic 1: Morning trap (9:15-9:48 only) — Total OI direction + CHOI trapped writers by 15%
-            # Logic 2: Trend convergence (anytime) — CHOI + Total OI both in same direction by 10%
-            # Logic 3: Existing CHOI trap (anytime) — CEchoi > PEchoi for bull + 25% diff
-            # First match wins.
+            # Each logic checks FULL criteria: OI/CHOI direction + FUT vs S/R + PCR trend.
+            # Cascade stops at first logic that produces a tradeable signal.
+            # Logic 1: Morning trap (9:15-9:48 only)
+            # Logic 2: Trend convergence (anytime) — CHOI + Total OI both same direction by 10%
+            # Logic 3: CHOI trap (anytime) — CHOI dominance + 15% diff
 
             _larger_ch = max(abs(suppResCeChOi), abs(suppResPeChOi)) if max(abs(suppResCeChOi), abs(suppResPeChOi)) > 0 else 1
             _choi_pct = round(abs(suppResCeChOi - suppResPeChOi) / _larger_ch * 100, 1)
             _larger_oi = max(suppResCeOi_total, suppResPeOi_total) if max(suppResCeOi_total, suppResPeOi_total) > 0 else 1
             _oi_pct = round(abs(suppResCeOi_total - suppResPeOi_total) / _larger_oi * 100, 1)
 
-            # Logic 1: Morning window trap
-            logic1_bull = IS_MORNING_WINDOW and (suppResCeOi_total > suppResPeOi_total) and (suppResPeChOi > suppResCeChOi and _choi_pct >= 15)
-            logic1_bear = IS_MORNING_WINDOW and (suppResPeOi_total > suppResCeOi_total) and (suppResCeChOi > suppResPeChOi and _choi_pct >= 15)
+            # Mandatory direction gates (FUT position + PCR trend)
+            _bull_mandatory = (FUT_LTP > SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2
+            _bear_mandatory = (FUT_LTP < SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2
 
-            # Logic 2: Trend convergence — CHOI and Total OI both in same direction by 10%
-            # Bull: PE side dominant in both (put writers building = bullish for underlying)
-            # Bear: CE side dominant in both (call writers building = bearish for underlying)
-            logic2_bull = (suppResPeChOi > suppResCeChOi and _choi_pct >= 10) and (suppResPeOi_total > suppResCeOi_total and _oi_pct >= 10)
-            logic2_bear = (suppResCeChOi > suppResPeChOi and _choi_pct >= 10) and (suppResCeOi_total > suppResPeOi_total and _oi_pct >= 10)
+            # Logic 1: Morning window trap (Total OI direction + CHOI trapped writers by 15%)
+            logic1_bull = IS_MORNING_WINDOW and _bull_mandatory and (suppResCeOi_total > suppResPeOi_total) and (suppResPeChOi > suppResCeChOi and _choi_pct >= 15)
+            logic1_bear = IS_MORNING_WINDOW and _bear_mandatory and (suppResPeOi_total > suppResCeOi_total) and (suppResCeChOi > suppResPeChOi and _choi_pct >= 15)
 
-            # Logic 3: Existing CHOI trap (CEchoi > PEchoi for bull, reverse for bear) + 15% diff
-            logic3_bull = (suppResCeChOi > suppResPeChOi) and _choi_pct >= 15
-            logic3_bear = (suppResCeChOi < suppResPeChOi) and _choi_pct >= 15
+            # Logic 2: Trend convergence — CHOI and Total OI both same direction by 10%
+            # Bull: fut>S/R, PCR up, CEchoi>PEchoi by 10%, CE_total>PE_total by 10%
+            # Bear: fut<S/R, PCR down, CEchoi>PEchoi by 10%, CE_total>PE_total by 10%  (wait—mirror)
+            logic2_bull = _bull_mandatory and (suppResPeChOi > suppResCeChOi and _choi_pct >= 10) and (suppResPeOi_total > suppResCeOi_total and _oi_pct >= 10)
+            logic2_bear = _bear_mandatory and (suppResCeChOi > suppResPeChOi and _choi_pct >= 10) and (suppResCeOi_total > suppResPeOi_total and _oi_pct >= 10)
 
-            # Priority: first match wins
+            # Logic 3: CHOI trap — CEchoi > PEchoi for bull, reverse for bear, + 15% diff
+            logic3_bull = _bull_mandatory and (suppResCeChOi > suppResPeChOi) and _choi_pct >= 15
+            logic3_bear = _bear_mandatory and (suppResCeChOi < suppResPeChOi) and _choi_pct >= 15
+
+            # Priority: first logic with a tradeable signal wins
             if logic1_bull or logic1_bear:
                 bull_direction_ok = logic1_bull
                 bear_direction_ok = logic1_bear
@@ -1837,7 +1842,7 @@ while x == 1:
                 bear_direction_ok = logic3_bear
                 choi_filter_bull = True
                 choi_filter_bear = True
-                _entry_mode = "LOGIC3_CHOI_25PCT"
+                _entry_mode = "LOGIC3_CHOI_15PCT"
 
             # === BULL ENTRY ===
             if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and FUT_LTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
