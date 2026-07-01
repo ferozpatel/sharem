@@ -1805,24 +1805,20 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # PRIMARY: Direct ATM option candle range × 3 (most accurate)
+                # SL: median x 3.5, Target: median x 5
                 # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
-                    measured_sl = round(opt_range * 3.5)
-                    effective_sl_target = measured_sl
-                    sl_source = f"OPTION_RANGE(median={opt_range},x3.5)"
+                    effective_sl = round(opt_range * 3.5)
+                    effective_tgt = round(opt_range * 5)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx3.5,Tgtx5)"
                 else:
                     # Fallback to IV formula when insufficient option data
-                    effective_sl_target = dynamic_sl_pt
+                    effective_sl = dynamic_sl_pt
+                    effective_tgt = dynamic_sl_pt
                     sl_source = f"IV_FORMULA({dynamic_sl_pt})"
 
-
-                effective_sl = effective_sl_target
-                effective_tgt = effective_sl_target
-
-                # For DEBIT spread: SL/target same as credit (1:1 R:R)
-                # Only difference: premium rising = profit, premium falling = loss
+                # For DEBIT spread: premium rising = profit, premium falling = loss
                 if spread_decision.get("type") == "DEBIT":
                     sl = float(close[-1]) - effective_sl  # premium drops = loss for buyer
                     target = float(close[-1]) + effective_tgt  # premium rises = profit for buyer
@@ -1895,22 +1891,20 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # PRIMARY: Direct ATM option candle range × 3 (most accurate)
+                # SL: median x 3.5, Target: median x 5
                 # FALLBACK: IV-formula derived sl_point (when option data insufficient, e.g., before 9:24)
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
-                    measured_sl = round(opt_range * 3.5)
-                    effective_sl_target = measured_sl
-                    sl_source = f"OPTION_RANGE(median={opt_range},x3.5)"
+                    effective_sl = round(opt_range * 3.5)
+                    effective_tgt = round(opt_range * 5)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx3.5,Tgtx5)"
                 else:
                     # Fallback to IV formula when insufficient option data
-                    effective_sl_target = dynamic_sl_pt
+                    effective_sl = dynamic_sl_pt
+                    effective_tgt = dynamic_sl_pt
                     sl_source = f"IV_FORMULA({dynamic_sl_pt})"
 
-                effective_sl = effective_sl_target
-                effective_tgt = effective_sl_target
-
-                # For DEBIT spread: SL/target same as credit (1:1 R:R)
+                # For DEBIT spread: premium rising = profit, premium falling = loss
                 if spread_decision.get("type") == "DEBIT":
                     sl = float(close[-1]) - effective_sl
                     target = float(close[-1]) + effective_tgt
