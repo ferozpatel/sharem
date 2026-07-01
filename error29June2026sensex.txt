@@ -1,0 +1,24 @@
+Expanded Security Maintenance for Applications is not enabled.
+
+58 updates can be applied immediately.
+1 of these updates is a standard security update.
+To see these additional updates run: apt list --upgradable
+
+2 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+Last login: Wed Jun 24 11:38:10 2026 from 13.233.177.5
+ubuntu@ip-172-31-47-198:~$ cd trading-bot/
+ubuntu@ip-172-31-47-198:~/trading-bot$ source venv/bin/activate 
+(venv) ubuntu@ip-172-31-47-198:~/trading-bot$ tail -f logs/strategy_sensex_$(date +%F).log
+atmVolPCR= 0.53  belowATM  0.56
+True   77645.0   77500   False   False   nan
+Traceback (most recent call last):
+  File "/home/ubuntu/trading-bot/Strategy_Sensex_May_2026.py", line 2023, in <module>
+    order_id = checkCriteriaAndTakeTrade()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/trading-bot/Strategy_Sensex_May_2026.py", line 1245, in checkCriteriaAndTakeTrade
+    prevCandleStrike = math.floor(opens[-3] / 100) * 100
+                                  ~~~~~^^^^
+IndexError: index -3 is out of bounds for axis 0 with size 2
