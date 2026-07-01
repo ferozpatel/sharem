@@ -1230,6 +1230,12 @@ def checkCriteriaAndTakeTrade():
     low = dataFUT['low'].to_numpy()
     close = dataFUT['close'].to_numpy()
 
+    # Guard: need at least 3 candles (function accesses [-2] and [-3]).
+    # Protects against early-session / post-holiday cases with insufficient candles.
+    if len(opens) < 3:
+        print("checkCriteriaAndTakeTrade: skipping — fewer than 3 candles formed (", len(opens), ")")
+        return None
+
     isCurrCandlHaveWicks = False
     if close[-2] - opens[-2] > 0:
         isCurrCandlHaveWicks = True if high[-2] - close[-2] > 0 and opens[-2] - low[-2] > 0 else False
