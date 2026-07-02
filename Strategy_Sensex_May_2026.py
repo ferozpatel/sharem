@@ -1929,8 +1929,6 @@ while x == 1:
 
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
 
-                effective_sl = effective_sl_target
-                effective_tgt = effective_sl_target
                 mapStrike.clear()
                 IS_ATM_STRIKE_SHIFT = False
                 atmStrikeNotShiftedCount = 1
