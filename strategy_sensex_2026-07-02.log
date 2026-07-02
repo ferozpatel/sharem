@@ -1,0 +1,516 @@
+checkInstrument =  BSE:SENSEX-INDEX
+sensexExpDate =  26702
+BNFut (Sensex futures auto) = BSE:SENSEX26JULFUT
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+Waiting for first candle to form. Current Second ==  0    2
+Waiting for first candle to form. Current Second ==  1    2
+Waiting for first candle to form. Current Second ==  2    2
+Waiting for first candle to form. Current Second ==  3    2
+Waiting for first candle to form. Current Second ==  4    2
+Waiting for first candle to form. Current Second ==  5    2
+Waiting for first candle to form. Current Second ==  6    2
+Waiting for first candle to form. Current Second ==  7    2
+Waiting for first candle to form. Current Second ==  8    2
+Waiting for first candle to form. Current Second ==  9    2
+Waiting for first candle to form. Current Second ==  10    2
+Waiting for first candle to form. Current Second ==  11    2
+Waiting for first candle to form. Current Second ==  12    2
+Waiting for first candle to form. Current Second ==  13    2
+Waiting for first candle to form. Current Second ==  14    2
+Waiting for first candle to form. Current Second ==  15    2
+Waiting for first candle to form. Current Second ==  16    2
+Waiting for first candle to form. Current Second ==  17    2
+Waiting for first candle to form. Current Second ==  18    2
+Waiting for first candle to form. Current Second ==  19    2
+Waiting for first candle to form. Current Second ==  20    2
+Waiting for first candle to form. Current Second ==  21    2
+Waiting for first candle to form. Current Second ==  22    2
+Waiting for first candle to form. Current Second ==  23    2
+Waiting for first candle to form. Current Second ==  24    2
+Waiting for first candle to form. Current Second ==  25    2
+Waiting for first candle to form. Current Second ==  26    2
+Waiting for first candle to form. Current Second ==  27    2
+Waiting for first candle to form. Current Second ==  28    2
+Waiting for first candle to form. Current Second ==  29    2
+Waiting for first candle to form. Current Second ==  30    2
+Waiting for first candle to form. Current Second ==  31    2
+Waiting for first candle to form. Current Second ==  32    2
+Waiting for first candle to form. Current Second ==  33    2
+Waiting for first candle to form. Current Second ==  34    2
+Waiting for first candle to form. Current Second ==  35    2
+Waiting for first candle to form. Current Second ==  36    2
+Waiting for first candle to form. Current Second ==  37    2
+Waiting for first candle to form. Current Second ==  38    2
+Waiting for first candle to form. Current Second ==  39    2
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 13.16  Spot Price = 77176.88
+VIX_PERCENTILES_FETCHED: P25= 13.19  P50= 14.23  P75= 15.6  Min= 12.73  Max= 17.09
+IV Regime = LOW (ADAPTIVE: P25= 13.19  P50= 14.23  P75= 15.6 ) | DailyRange = 1450.9 | 3minCandleRange = 76.4 (theoretical= 127.3 ) | ATMoptionMove = 34.4 | SL = 120 | Target = 120 | TrailTrigger = 34 | Spread = 400 | Buffer = 31
+IV Params refreshed: {'vix': 13.16, 'bn_price': 77176.88, 'regime': 'LOW', 'regime_thresholds': 'P25=13.19 P50=14.23 P75=15.6', 'daily_range': 1450.9, 'candle_range': 76.4, 'atm_option_move': 34.4, 'sl_point': 120, 'target_point': 120, 'sl_pct_of_premium': 0.1, 'trail_trigger': 34, 'spread_width': 400, 'support_resistance_buffer': 31}
+IV_RANK_DATA: VIX_30d_High= 17.09  VIX_30d_Low= 12.73  Current= 13.16  IV_Rank= 0.1
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+===
+====after 3 min ochain==== 2026-07-02 09:18:00.250241
+/home/ubuntu/trading-bot/Strategy_Sensex_May_2026.py:789: RuntimeWarning: divide by zero encountered in scalar divide
+  option_type[index1] == 'PE' else round(oich[index2] / oich[index1], 2)
+/home/ubuntu/trading-bot/Strategy_Sensex_May_2026.py:788: RuntimeWarning: divide by zero encountered in scalar divide
+  pcr = round(oich[index1] / oich[index2], 2) if option_type[index1] != '' and option_type[index2] != '' and \
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX2670278000CE   0.03   0.03 CALL added 456760   PUT added 13140  OI= 2922180
+pcr2 =  BSE:SENSEX2670277900CE   0.02   0.02 CALL added 457840   PUT added 7660  OI= 1105340
+pcr3 =  BSE:SENSEX2670277800CE   0.03   0.02 CALL added 336860   PUT added 5760  OI= 1221720
+pcr4 =  BSE:SENSEX2670277700CE   0.04   0.11 CALL added 137480   PUT added 15260  OI= 1201620
+pcr5 =  BSE:SENSEX2670277600PE   0.03   0.0 CALL added 356240   PUT unwind 0  OI= 34100
+pcr6 =  BSE:SENSEX2670277500PE   0.13    0.12 CALL added 695440   PUT added 83200  OI= 355240
+pcr7 =  BSE:SENSEX2670277400PE   0.07   0.0 CALL added 406260   PUT unwind 0  OI= 78440
+pcr8 =  BSE:SENSEX2670277300PE   0.44   inf CALL unwind 0   PUT added 253840  OI= 378120
+pcr9 =  BSE:SENSEX2670277200CE   0.38   0.6 CALL added 873200   PUT added 528040  OI= 1989100
+pcr10 =  BSE:SENSEX2670277100CE   1.17   inf CALL unwind 0   PUT added 655420  OI= 869960
+pcr11 =  BSE:SENSEX2670277000PE   1.14   -10.68 CALL unwind -74340   PUT added 793640  OI= 2246960
+pcr12 =  BSE:SENSEX2670276900PE   2.19   -8.06 CALL unwind -38060   PUT added 306580  OI= 1241260
+pcr13 =  BSE:SENSEX2670276800CE   4.83   -19.57 CALL unwind -13120   PUT added 256780  OI= 339520
+pcr14 =  BSE:SENSEX2670276700PE   4.03   inf CALL unwind 0   PUT added 156240  OI= 1432260
+pcr15 =  BSE:SENSEX2670276600PE   5.08   -23.59 CALL unwind -6640   PUT added 156620  OI= 1313000
+pcr16 =  BSE:SENSEX2670276500PE   8.03   -17.18 CALL unwind -27000   PUT added 463820  OI= 2745940
+pcr17 =  BSE:SENSEX2670276400CE   14.97   -18.94 CALL unwind -5140   PUT added 97340  OI= 71980
+pcrSummation= 1.17  result =  ['BSE:SENSEX2670278000CE', 'BSE:SENSEX2670277900CE', 'BSE:SENSEX2670277800CE', 'BSE:SENSEX2670277700CE', 'BSE:SENSEX2670277600PE', 'BSE:SENSEX2670277500PE', 'BSE:SENSEX2670277400PE', 'BSE:SENSEX2670277300PE', 'BSE:SENSEX2670277200CE']
+PCRSUM== 42.61
+pcrSummation== 1.17
+VOLPCRSUM== 1.2799999999999998
+spotLTP =  77176.04  ATM_STRIKE =  77200
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77200: 77200}
+avgOiPcrList2 = [np.float64(2.51)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 77500  Buffer= 31
+CEoich val =  695440.0  PEoich val =  83200.0 , CE > PE by 88.0%
+SUPP_RES TOTAL OI: CE= 2746340  PE= 355240 , CE > PE by 87.1%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-07-02 09:18:02.077590
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 64.7
+RSI_VAL2== 63.77
+FUT_3m_OHLC O= 77650.0  H= 77676.0  L= 77520.5  C= 77584.1  Range= 155.4
+CHART_PATTERN_DETECTED: DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= -65.9  Range= 155.4  ExpectedRange= 76.4  RangeRatio= 2.03  O= 77650.0  H= 77676.0  L= 77520.5  C= 77584.1
+newSynthFut =  77600
+ATMStrike =  77200
+AVG_OIPCR= 0.13
+avgoiPCROld=  2.51
+SUPP_RES = 77500
+FUT LTP = 77600.0
+CEchoi  PechOi = 695440.0    83200.0
+====================================
+totalOIPCR = 1.19
+AVG_VOLPCR= 0.14
+atmPCR= 0.03  belowATM  0.13
+atmVolPCR= 0.03  belowATM  0.08
+True   77600.0   77500   False   False   63.77
+curr Doji False
+BSE:SENSEX2670277600PE  curr candle vol pcr = 0.03  PE= 103320  CE= 3141640      cpr =  30.41
+BSE:SENSEX2670277400PE  prev candle vol pcr = 0.03  PE= 17560  CE= 655940      cpr =  37.35
+VOL_PRESSURE_ALERT: STRONG_CALL_PRESSURE | currCPR= 30.41  prevCPR= 37.35  Direction=BEARISH_SIGNAL (heavy CE buying = expecting down move)
+ATM_CE_premium= 43.05  ATM_PE_premium= 443.85
+CE_PremChg= 9.4  PE_PremChg= -240.85
+CandleBody= -65.9  PrevBody= -39.7  CandleRange= 155.4  Bearish
+TotalVol= 3244960  PrevTotalVol= 673500  VolSpike= 4.82 x  SPIKE!
+SCALP_SCORE: BEAR | BullScore= 0  BearScore= 5 | Confidence= HIGH
+  SCALP_BEAR_REASONS: VolCPR_2candle_bear + 2ConsecBearCandles + VolSpike(4.82x)_bear + BreakoutCandle(2.0x)
+  *** SCALP_HIGH_CONVICTION: BEAR OPPORTUNITY ***
+DATAPOINT|09:18|FUT=77584.1|Body=-65.9|PrevBody=-39.7|Range=155.4|RangeRatio=2.03|CurrVolPCR=0.03|PrevVolPCR=0.03|CurrCPR=30.41|PrevCPR=37.35|VolSpike=4.82|CE_PremChg=9.4|PE_PremChg=-240.85|BullScore=0|BearScore=5|Dir=BEAR|Conf=HIGH
+CHART_PATTERN_DETECTED: DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= -65.9  Range= 155.4  ExpectedRange= 76.4  RangeRatio= 2.03  O= 77650.0  H= 77676.0  L= 77520.5  C= 77584.1
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+======================================
+oipcr1 =  BSE:SENSEX2670277500PE   0.13
+oipcr2 =  BSE:SENSEX2670277400PE   0.07
+oipcr3 =  BSE:SENSEX2670277300PE   0.44
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.38    1.17
+No Entry Yet
+India VIX = 13.04  Spot Price = 77274.63
+IV Regime = LOW (ADAPTIVE: P25= 13.19  P50= 14.23  P75= 15.6 ) | DailyRange = 1439.5 | 3minCandleRange = 75.8 (theoretical= 126.3 ) | ATMoptionMove = 34.1 | SL = 119 | Target = 119 | TrailTrigger = 34 | Spread = 400 | Buffer = 30
+IV Params refreshed: {'vix': 13.04, 'bn_price': 77274.63, 'regime': 'LOW', 'regime_thresholds': 'P25=13.19 P50=14.23 P75=15.6', 'daily_range': 1439.5, 'candle_range': 75.8, 'atm_option_move': 34.1, 'sl_point': 119, 'target_point': 119, 'sl_pct_of_premium': 0.1, 'trail_trigger': 34, 'spread_width': 400, 'support_resistance_buffer': 30}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+===
+====after 3 min ochain==== 2026-07-02 09:21:00.000002
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX2670278100PE   0.01   0.0 CALL added 278620   PUT added 1180  OI= 7180
+pcr2 =  BSE:SENSEX2670278000CE   0.03   0.08 CALL added 456760   PUT added 35200  OI= 2922180
+pcr3 =  BSE:SENSEX2670277900CE   0.02   0.01 CALL added 660780   PUT added 5560  OI= 1308280
+pcr4 =  BSE:SENSEX2670277800CE   0.02   0.01 CALL added 1007020   PUT added 6740  OI= 1891880
+pcr5 =  BSE:SENSEX2670277700CE   0.04   0.06 CALL added 469120   PUT added 29500  OI= 1533260
+pcr6 =  BSE:SENSEX2670277600PE   0.04    0.04 CALL added 878540   PUT added 38140  OI= 72240
+pcr7 =  BSE:SENSEX2670277500PE   0.11   0.09 CALL added 1964260   PUT added 174040  OI= 446080
+pcr8 =  BSE:SENSEX2670277400PE   0.11   0.12 CALL added 1155640   PUT added 137900  OI= 216340
+pcr9 =  BSE:SENSEX2670277300PE   0.31   0.47 CALL added 974580   PUT added 454400  OI= 578680
+pcr10 =  BSE:SENSEX2670277200CE   0.53   0.7 CALL added 2096080   PUT added 1471900  OI= 3211980
+pcr11 =  BSE:SENSEX2670277100CE   1.11   1.84 CALL added 829640   PUT added 1530660  OI= 1699600
+pcr12 =  BSE:SENSEX2670277000PE   1.57   9.2 CALL added 230780   PUT added 2122820  OI= 3576140
+pcr13 =  BSE:SENSEX2670276900PE   2.34   -4.18 CALL unwind -73420   PUT added 306580  OI= 1241260
+pcr14 =  BSE:SENSEX2670276800CE   6.51   -62.95 CALL unwind -13120   PUT added 825900  OI= 339520
+pcr15 =  BSE:SENSEX2670276700PE   4.42   -5.01 CALL unwind -31180   PUT added 156240  OI= 1432260
+pcr16 =  BSE:SENSEX2670276600PE   6.64   -84.72 CALL unwind -6640   PUT added 562560  OI= 1718940
+pcr17 =  BSE:SENSEX2670276500PE   10.6   -51.87 CALL unwind -26100   PUT added 1353720  OI= 3635840
+pcrSummation= 0.69  result =  ['BSE:SENSEX2670278100PE', 'BSE:SENSEX2670278000CE', 'BSE:SENSEX2670277900CE', 'BSE:SENSEX2670277800CE', 'BSE:SENSEX2670277700CE', 'BSE:SENSEX2670277600PE', 'BSE:SENSEX2670277500PE', 'BSE:SENSEX2670277400PE', 'BSE:SENSEX2670277300PE']
+PCRSUM== 34.41
+pcrSummation== 0.69
+VOLPCRSUM== 0.7
+spotLTP =  77271.32  ATM_STRIKE =  77300
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {77300: 77300}
+avgOiPcrList2 = [np.float64(2.02)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 77500  Buffer= 30
+CEoich val =  1964260.0  PEoich val =  174040.0 , CE > PE by 91.1%
+SUPP_RES TOTAL OI: CE= 4015160  PE= 446080 , CE > PE by 88.9%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-07-02 09:21:01.427297
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 67.83
+RSI_VAL2== 67.83
+FUT_3m_OHLC O= 77600.0  H= 77663.0  L= 77581.0  C= 77660.0  Range= 82.0
+CHART_PATTERN_DETECTED: INSIDE_BAR | DOUBLE_TOP_FORMING | STRONG_MOMENTUM_BULL
+  PATTERN_CONTEXT: Body= 60.0  Range= 82.0  ExpectedRange= 75.8  RangeRatio= 1.08  O= 77600.0  H= 77663.0  L= 77581.0  C= 77660.0
+newSynthFut =  77700
+ATMStrike =  77300
+AVG_OIPCR= 0.08
+avgoiPCROld=  2.02
+SUPP_RES = 77500
+FUT LTP = 77660.0
+CEchoi  PechOi = 1964260.0    174040.0
+====================================
+totalOIPCR = 1.1
+AVG_VOLPCR= 0.08
+atmPCR= 0.04  belowATM  0.04
+atmVolPCR= 0.03  belowATM  0.04
+True   77660.0   77500   False   False   67.83
+curr Doji False
+BSE:SENSEX2670277600PE  curr candle vol pcr = 0.04  PE= 97040  CE= 2488380      cpr =  25.64
+BSE:SENSEX2670277600PE  prev candle vol pcr = 0.03  PE= 103320  CE= 3141640      cpr =  30.41
+VOL_PRESSURE_ALERT: STRONG_CALL_PRESSURE | currCPR= 25.64  prevCPR= 30.41  Direction=BEARISH_SIGNAL (heavy CE buying = expecting down move)
+ATM_CE_premium= 53.2  ATM_PE_premium= 391.15
+CE_PremChg= 10.15  PE_PremChg= -52.7
+CandleBody= 60.0  PrevBody= -65.9  CandleRange= 82.0  Bullish
+TotalVol= 2585420  PrevTotalVol= 3244960  VolSpike= 0.8 x 
+SCALP_SCORE: BEAR | BullScore= 1  BearScore= 3 | Confidence= MEDIUM
+  SCALP_BEAR_REASONS: VolCPR_2candle_bear + PremMomentum_bear(PE-52.7,CE+10.15)
+DATAPOINT|09:21|FUT=77660.0|Body=60.0|PrevBody=-65.9|Range=82.0|RangeRatio=1.08|CurrVolPCR=0.04|PrevVolPCR=0.03|CurrCPR=25.64|PrevCPR=30.41|VolSpike=0.8|CE_PremChg=10.15|PE_PremChg=-52.7|BullScore=1|BearScore=3|Dir=BEAR|Conf=MEDIUM
+CHART_PATTERN_DETECTED: INSIDE_BAR | DOUBLE_TOP_FORMING | STRONG_MOMENTUM_BULL
+  PATTERN_CONTEXT: Body= 60.0  Range= 82.0  ExpectedRange= 75.8  RangeRatio= 1.08  O= 77600.0  H= 77663.0  L= 77581.0  C= 77660.0
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+======================================
+oipcr1 =  BSE:SENSEX2670277600PE   0.04
+oipcr2 =  BSE:SENSEX2670277500PE   0.11
+oipcr3 =  BSE:SENSEX2670277400PE   0.11
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.31    0.53
+No Entry Yet
+India VIX = 12.94  Spot Price = 77291.33
+IV Regime = LOW (ADAPTIVE: P25= 13.19  P50= 14.23  P75= 15.6 ) | DailyRange = 1428.8 | 3minCandleRange = 75.2 (theoretical= 125.3 ) | ATMoptionMove = 33.8 | SL = 118 | Target = 118 | TrailTrigger = 34 | Spread = 400 | Buffer = 30
+IV Params refreshed: {'vix': 12.94, 'bn_price': 77291.33, 'regime': 'LOW', 'regime_thresholds': 'P25=13.19 P50=14.23 P75=15.6', 'daily_range': 1428.8, 'candle_range': 75.2, 'atm_option_move': 33.8, 'sl_point': 118, 'target_point': 118, 'sl_pct_of_premium': 0.1, 'trail_trigger': 34, 'spread_width': 400, 'support_resistance_buffer': 30}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+===
+====after 3 min ochain==== 2026-07-02 09:24:00.000003
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX2670278100PE   0.01   0.01 CALL added 278620   PUT added 2740  OI= 8740
+pcr2 =  BSE:SENSEX2670278000CE   0.04   0.07 CALL added 1088000   PUT added 74840  OI= 3553420
+pcr3 =  BSE:SENSEX2670277900CE   0.02   0.01 CALL added 660780   PUT added 7040  OI= 1308280
+pcr4 =  BSE:SENSEX2670277800CE   0.02   0.01 CALL added 1160740   PUT added 6740  OI= 2045600
+pcr5 =  BSE:SENSEX2670277700CE   0.06   0.12 CALL added 469120   PUT added 54460  OI= 1533260
+pcr6 =  BSE:SENSEX2670277600PE   0.07    0.08 CALL added 1051900   PUT added 87820  OI= 121920
+pcr7 =  BSE:SENSEX2670277500PE   0.15   0.17 CALL added 1964260   PUT added 334420  OI= 606460
+pcr8 =  BSE:SENSEX2670277400PE   0.2   0.27 CALL added 1296400   PUT added 348180  OI= 426620
+pcr9 =  BSE:SENSEX2670277300PE   0.44   0.62 CALL added 1481920   PUT added 915960  OI= 1040240
+pcr10 =  BSE:SENSEX2670277200CE   0.9   1.29 CALL added 1958940   PUT added 2535260  OI= 3074840
+pcr11 =  BSE:SENSEX2670277100CE   1.75   3.73 CALL added 585180   PUT added 2184540  OI= 1455140
+pcr12 =  BSE:SENSEX2670277000PE   1.97   13.2 CALL added 230780   PUT added 3045580  OI= 4498900
+pcr13 =  BSE:SENSEX2670276900PE   4.44   -9.25 CALL unwind -127360   PUT added 1178040  OI= 2112720
+pcr14 =  BSE:SENSEX2670276800CE   7.06   -20.9 CALL unwind -39520   PUT added 825900  OI= 313120
+pcr15 =  BSE:SENSEX2670276700PE   7.98   -9.8 CALL unwind -87700   PUT added 859120  OI= 2135140
+pcr16 =  BSE:SENSEX2670276600PE   8.07   -10.77 CALL unwind -52240   PUT added 562560  OI= 1718940
+pcr17 =  BSE:SENSEX2670276500PE   11.5   -63.64 CALL unwind -26100   PUT added 1661060  OI= 3943180
+pcrSummation= 1.01  result =  ['BSE:SENSEX2670278100PE', 'BSE:SENSEX2670278000CE', 'BSE:SENSEX2670277900CE', 'BSE:SENSEX2670277800CE', 'BSE:SENSEX2670277700CE', 'BSE:SENSEX2670277600PE', 'BSE:SENSEX2670277500PE', 'BSE:SENSEX2670277400PE', 'BSE:SENSEX2670277300PE']
+PCRSUM== 44.68
+pcrSummation== 1.01
+VOLPCRSUM== 0.75
+spotLTP =  77293.12  ATM_STRIKE =  77300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77300: 77300}
+avgOiPcrList2 = [np.float64(2.02), np.float64(2.63)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 77500  Buffer= 30
+CEoich val =  1964260.0  PEoich val =  334420.0 , CE > PE by 83.0%
+SUPP_RES TOTAL OI: CE= 4015160  PE= 606460 , CE > PE by 84.9%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-07-02 09:24:01.393879
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 69.29
+RSI_VAL2== 69.29
+FUT_3m_OHLC O= 77651.0  H= 77690.0  L= 77631.6  C= 77690.0  Range= 58.4
+CHART_PATTERN_DETECTED: DOUBLE_TOP_FORMING
+  PATTERN_CONTEXT: Body= 39.0  Range= 58.4  ExpectedRange= 75.2  RangeRatio= 0.78  O= 77651.0  H= 77690.0  L= 77631.6  C= 77690.0
+newSynthFut =  77700
+ATMStrike =  77300
+AVG_OIPCR= 0.11
+avgoiPCROld=  2.63
+SUPP_RES = 77500
+FUT LTP = 77690.0
+CEchoi  PechOi = 1964260.0    334420.0
+====================================
+totalOIPCR = 1.17
+AVG_VOLPCR= 0.08
+atmPCR= 0.06  belowATM  0.07
+atmVolPCR= 0.03  belowATM  0.04
+True   77690.0   77500   False   False   69.29
+curr Doji False
+BSE:SENSEX2670277600PE  curr candle vol pcr = 0.05  PE= 160800  CE= 3140740      cpr =  19.53
+BSE:SENSEX2670277600PE  prev candle vol pcr = 0.04  PE= 97040  CE= 2488380      cpr =  25.64
+VOL_PRESSURE_ALERT: STRONG_CALL_PRESSURE | currCPR= 19.53  prevCPR= 25.64  Direction=BEARISH_SIGNAL (heavy CE buying = expecting down move)
+ATM_CE_premium= 62.95  ATM_PE_premium= 361.45
+CE_PremChg= 9.75  PE_PremChg= -29.7
+CandleBody= 39.0  PrevBody= 60.0  CandleRange= 58.4  Bullish
+TotalVol= 3301540  PrevTotalVol= 2585420  VolSpike= 1.28 x 
+SCALP_SCORE: NEUTRAL | BullScore= 2  BearScore= 2 | Confidence= LOW
+DATAPOINT|09:24|FUT=77690.0|Body=39.0|PrevBody=60.0|Range=58.4|RangeRatio=0.78|CurrVolPCR=0.05|PrevVolPCR=0.04|CurrCPR=19.53|PrevCPR=25.64|VolSpike=1.28|CE_PremChg=9.75|PE_PremChg=-29.7|BullScore=2|BearScore=2|Dir=NEUTRAL|Conf=LOW
+CHART_PATTERN_DETECTED: DOUBLE_TOP_FORMING
+  PATTERN_CONTEXT: Body= 39.0  Range= 58.4  ExpectedRange= 75.2  RangeRatio= 0.78  O= 77651.0  H= 77690.0  L= 77631.6  C= 77690.0
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+======================================
+oipcr1 =  BSE:SENSEX2670277600PE   0.07
+oipcr2 =  BSE:SENSEX2670277500PE   0.15
+oipcr3 =  BSE:SENSEX2670277400PE   0.2
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 0.44    0.9
+No Entry Yet
+India VIX = 12.88  Spot Price = 77296.73
+IV Regime = LOW (ADAPTIVE: P25= 13.19  P50= 14.23  P75= 15.6 ) | DailyRange = 1422.3 | 3minCandleRange = 74.8 (theoretical= 124.7 ) | ATMoptionMove = 33.7 | SL = 118 | Target = 118 | TrailTrigger = 34 | Spread = 400 | Buffer = 30
+IV Params refreshed: {'vix': 12.88, 'bn_price': 77296.73, 'regime': 'LOW', 'regime_thresholds': 'P25=13.19 P50=14.23 P75=15.6', 'daily_range': 1422.3, 'candle_range': 74.8, 'atm_option_move': 33.7, 'sl_point': 118, 'target_point': 118, 'sl_pct_of_premium': 0.1, 'trail_trigger': 34, 'spread_width': 400, 'support_resistance_buffer': 30}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7e6c8ff0b1d0>
+===
+====after 3 min ochain==== 2026-07-02 09:27:00.000005
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX2670278100PE   0.01   0.01 CALL added 366300   PUT added 3940  OI= 9940
+pcr2 =  BSE:SENSEX2670278000CE   0.05   0.11 CALL added 1087800   PUT added 118740  OI= 3553220
+pcr3 =  BSE:SENSEX2670277900CE   0.02   0.02 CALL added 660780   PUT added 12980  OI= 1308280
+pcr4 =  BSE:SENSEX2670277800CE   0.03   0.03 CALL added 1350240   PUT added 38560  OI= 2235100
+pcr5 =  BSE:SENSEX2670277700CE   0.07   0.16 CALL added 469120   PUT added 77380  OI= 1533260
+pcr6 =  BSE:SENSEX2670277600PE   0.09    0.11 CALL added 1202140   PUT added 137680  OI= 171780
+pcr7 =  BSE:SENSEX2670277500PE   0.17   0.21 CALL added 2271420   PUT added 482740  OI= 754780
+pcr8 =  BSE:SENSEX2670277400PE   0.28   0.38 CALL added 1353500   PUT added 518520  OI= 596960
+pcr9 =  BSE:SENSEX2670277300PE   0.61   0.83 CALL added 1817600   PUT added 1517120  OI= 1641400
+pcr10 =  BSE:SENSEX2670277200CE   1.23   1.89 CALL added 1730300   PUT added 3276340  OI= 2846200
+pcr11 =  BSE:SENSEX2670277100CE   2.17   5.52 CALL added 456860   PUT added 2522600  OI= 1326820
+pcr12 =  BSE:SENSEX2670277000PE   2.24   15.86 CALL added 230780   PUT added 3660300  OI= 5113620
+pcr13 =  BSE:SENSEX2670276900PE   5.51   -8.07 CALL unwind -176260   PUT added 1421620  OI= 2356300
+pcr14 =  BSE:SENSEX2670276800CE   8.17   -97.75 CALL unwind -14140   PUT added 1382220  OI= 338500
+pcr15 =  BSE:SENSEX2670276700PE   9.42   -8.12 CALL unwind -117900   PUT added 957920  OI= 2233940
+pcr16 =  BSE:SENSEX2670276600PE   9.2   -13.24 CALL unwind -57260   PUT added 757960  OI= 1914340
+pcr17 =  BSE:SENSEX2670276500PE   14.03   -24.21 CALL unwind -75680   PUT added 1832260  OI= 4114380
+pcrSummation= 1.33  result =  ['BSE:SENSEX2670278100PE', 'BSE:SENSEX2670278000CE', 'BSE:SENSEX2670277900CE', 'BSE:SENSEX2670277800CE', 'BSE:SENSEX2670277700CE', 'BSE:SENSEX2670277600PE', 'BSE:SENSEX2670277500PE', 'BSE:SENSEX2670277400PE', 'BSE:SENSEX2670277300PE']
+PCRSUM== 53.3
+pcrSummation== 1.33
+VOLPCRSUM== 0.85
+spotLTP =  77296.73  ATM_STRIKE =  77300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77300: 77300}
+avgOiPcrList2 = [np.float64(2.02), np.float64(2.63), np.float64(3.14)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 77500  Buffer= 30
+CEoich val =  2271420.0  PEoich val =  482740.0 , CE > PE by 78.7%
+SUPP_RES TOTAL OI: CE= 4322320  PE= 754780 , CE > PE by 82.5%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-07-02 09:27:01.359688
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 68.18
+RSI_VAL2== 68.18
+FUT_3m_OHLC O= 77686.0  H= 77740.0  L= 77680.0  C= 77680.0  Range= 60.0
+CHART_PATTERN_DETECTED: SHOOTING_STAR
+  PATTERN_CONTEXT: Body= -6.1  Range= 60.0  ExpectedRange= 74.8  RangeRatio= 0.8  O= 77686.0  H= 77740.0  L= 77680.0  C= 77680.0
+isPcrInc = True
+newSynthFut =  77700
+ATMStrike =  77300
+AVG_OIPCR= 0.15
+avgoiPCROld=  3.14
+SUPP_RES = 77500
+FUT LTP = 77680.0
+CEchoi  PechOi = 2271420.0    482740.0
+====================================
+totalOIPCR = 1.25
+AVG_VOLPCR= 0.09
+atmPCR= 0.07  belowATM  0.09
+atmVolPCR= 0.03  belowATM  0.05
+True   77680.0   77500   True   False   68.18
+In Bull trade, slCount =  0  (mode= LOGIC3_CHOI_15PCT )
+SPREAD_CALC_AT_ENTRY: ATM_PE= 167.95  ATM_CE= 175.7  AvgATM= 171.82
+==================================================
+SPREAD_SELECTION (Sensex weekly): Type= CREDIT | DTE= 0 | PremRatio= 0.27 | IVRank= 0.1
+SPREAD_REASONS: DTE=0(weekly) | PremRatio=0.27 | IVRank=0.1 | DECISION:CREDIT (default — theta favors seller for weekly)
+==================================================
+SPREAD_DECISION_AT_ENTRY: {'type': 'CREDIT', 'score': 1, 'dte': 0, 'premium_ratio': 0.27, 'iv_rank': 0.1, 'vix_30d_high': 17.09, 'vix_30d_low': 12.73, 'reasons': ['DTE=0(weekly)', 'PremRatio=0.27', 'IVRank=0.1', 'DECISION:CREDIT (default — theta favors seller for weekly)']}
+ENTRY_ROUTING: spread_type= CREDIT  isBullish= True  isBearish= False
+CREDIT_ENTRY: qty= 40
+IV-Dynamic: SL= 118  Target= 118  Spread= 400
+closest_Strike =  77300
+syntheticATMStrike =  77308.15999999999
+  Checking hedge BSE:SENSEX2670277000PE: premium=67.35 (max=101.55)
+=atmPE= BSE:SENSEX2670277300PE
+=otmPE== BSE:SENSEX2670277000PE  entryPrice= 169.25  maxHedgePremium= 101.55
+hedge_entry_price = 67.85
+CREDIT_NET_CREDIT= 101.4
+9 : 27 : 4  =>  BUY   SENSEX2670277000PE   40   MARKET
+9 : 27 : 4  =>  SENSEX2670277000PE {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '04ccc0c5-6e46-4822-9873-454087da48b9', 'id': '26070200034535'}
+entryPrice== 169.25 Target = 51  BSE:SENSEX2670277300PE  SL = 287
+9 : 27 : 4  =>  SELL   SENSEX2670277300PE   40   MARKET
+9 : 27 : 4  =>  SENSEX2670277300PE {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '13e7c292-c84f-4bf6-bba2-5a526825a807', 'id': '26070200034550'}
+Exit OID:  {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '13e7c292-c84f-4bf6-bba2-5a526825a807', 'id': '26070200034550'}   {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '04ccc0c5-6e46-4822-9873-454087da48b9', 'id': '26070200034535'}
+after entry tradeATMOption = BSE:SENSEX2670277300PE
+OPT_RANGE_DEBUG: symbol=BSE:SENSEX2670277300PE | total_candles_after_skip1st=3 | ranges=[42.4, 17.5, 1.5] | median_all=17.5
+ENTRY_SL_TGT: spread= CREDIT  SL= 239.05  Target= 81.05000000000001  EntryPrem= 169.05  TrailTrigger= 46  SL_Source= OPTION_RANGE(median=17.5,SLx4,Tgtx5)  (iv_pts= 118  effective_sl= 70 )
+Traceback (most recent call last):
+  File "/home/ubuntu/trading-bot/Strategy_Sensex_May_2026.py", line 1932, in <module>
+    effective_sl = effective_sl_target
+                   ^^^^^^^^^^^^^^^^^^^
+NameError: name 'effective_sl_target' is not defined
