@@ -150,9 +150,10 @@ target_point = 60
 # effective_sl (option candle median x multiplier) stays untouched — sizing only.
 LOT_SIZE = 20                    # Sensex lot size
 FIXED_RISK_PER_TRADE = 4000      # ₹ risk per trade if SL hits
-# Capital ceiling: ~₹4,00,000 available. Hedged spread margin ~₹25k/lot (conservative),
-# so 4L / 25k ≈ 16 lots. Set 15 to keep a buffer for margin spikes / premium variation.
-MAX_LOTS = 15                    # hard safety ceiling (capital-bound for ~4 lacs)
+# Capital ceiling from REAL Fyers basket check: 10-lot hedged spread ≈ ₹7,70,000 margin
+# (~₹77k/lot). With ~₹4,00,000 capital: 4L / 77k ≈ 5 lots. Set 5 as hard ceiling.
+# NOTE: per-lot margin varies with premium/strikes; wire getSpreadMargin() for exact check.
+MAX_LOTS = 5                     # hard safety ceiling (capital-bound for ~4 lacs)
 MIN_LOTS = 1                     # minimum position
 
 def calc_lots_by_risk(effective_sl_points):
