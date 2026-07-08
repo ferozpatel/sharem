@@ -300,6 +300,46 @@ def manualLTP(symbol, fyers):
             time.sleep(0.3 * (2 ** attempt))
     raise KeyError(f"fyers.quotes returned no LTP for {symbol} after 3 retries. last_response={last_err}")
 
+def getSpreadMargin(legs, fyers):
+    """
+    Calculate the actual broker margin required for a basket of orders (spread).
+    Uses Fyers v3 multiorder/margin API which accounts for hedge benefit.
+
+    Args:
+        legs: list of dicts, each with keys: symbol, qty, side (1=buy,-1=sell), type (2=market)
+        fyers: FyersModel instance
+
+    Returns:
+        float: total margin required for the basket (margin_total), or None on failure.
+    """
+    order_data = []
+    for leg in legs:
+        order_data.append({
+            "symbol": leg["symbol"],
+            "qty": leg["qty"],
+            "side": leg["side"],
+            "type": leg.get("type", 2),          # 2 = market
+            "productType": leg.get("productType", "MARGIN"),
+            "limitPrice": leg.get("limitPrice", 0.0),
+            "stopLoss": 0.0,
+            "stopPrice": 0.0,
+            "takeProfit": 0.0
+        })
+    data = {"data": order_data}
+    last_err = None
+    for attempt in range(3):
+        try:
+            resp = fyers.multiorder_margin(data)
+            if isinstance(resp, dict) and resp.get('data') and resp['data'].get('margin_total') is not None:
+                return float(resp['data']['margin_total'])
+            last_err = resp
+        except Exception as e:
+            last_err = e
+        if attempt < 2:
+            time.sleep(0.3 * (2 ** attempt))
+    print("getSpreadMargin: failed to fetch margin. last_response=", last_err)
+    return None
+
 def exitAll(orderId,fyres):
     data =  {}
     # data = {

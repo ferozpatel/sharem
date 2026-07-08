@@ -138,9 +138,31 @@ OBSERVATION_MODE = False
 timeFrame = 3  # in minutes
 timeFrame2 = 1  # in minutes
 
-qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20)
+qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
 target_point = 60
+
+# ============================================================
+# RISK-BASED POSITION SIZING
+# ============================================================
+# Lots are sized so a SL-hit loses ~FIXED_RISK_PER_TRADE rupees.
+# Formula: lots = FIXED_RISK_PER_TRADE / (effective_sl_points * LOT_SIZE)
+# effective_sl (option candle median x multiplier) stays untouched — sizing only.
+LOT_SIZE = 20                    # Sensex lot size
+FIXED_RISK_PER_TRADE = 4000      # ₹ risk per trade if SL hits
+# Capital ceiling: ~₹4,00,000 available. Hedged spread margin ~₹25k/lot (conservative),
+# so 4L / 25k ≈ 16 lots. Set 15 to keep a buffer for margin spikes / premium variation.
+MAX_LOTS = 15                    # hard safety ceiling (capital-bound for ~4 lacs)
+MIN_LOTS = 1                     # minimum position
+
+def calc_lots_by_risk(effective_sl_points):
+    """Return qty (lots x LOT_SIZE) sized so SL-hit loss ~= FIXED_RISK_PER_TRADE."""
+    if effective_sl_points is None or effective_sl_points <= 0:
+        return MIN_LOTS * LOT_SIZE
+    loss_per_lot = effective_sl_points * LOT_SIZE
+    lots = int(FIXED_RISK_PER_TRADE / loss_per_lot)  # floor — never exceed risk budget
+    lots = max(MIN_LOTS, min(lots, MAX_LOTS))
+    return lots * LOT_SIZE
 
 bullBar = False
 bearBar = False
@@ -1854,6 +1876,19 @@ while x == 1:
             if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and FUT_LTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
                 print("In Bull trade, slCount = ", slCount, " (mode=", _entry_mode, ")")
 
+                # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
+                if _entry_mode == "LOGIC3_CHOI_15PCT":
+                    print("=" * 60)
+                    print(f"LOGIC3_OBSERVE: WOULD_HAVE_ENTERED BULL (no real order — LOGIC3 is observation-only)")
+                    print(f"  FUT={FUT_LTP} SUPP_RES={SUPP_RES} CEchoi={suppResCeChOi} PEchoi={suppResPeChOi}")
+                    print("=" * 60)
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    continue
+
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = getSensexWeeklyExpiry()
                 bn_ltp_tmp = helper.manualLTP(helper.getIndexSpot(stock), fyers)
@@ -1867,6 +1902,14 @@ while x == 1:
                       " AvgATM=", round(avg_atm_premium, 2))
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
+
+                # === RISK-BASED LOT SIZING (pre-entry) ===
+                # Size lots so SL-hit loss ~= FIXED_RISK_PER_TRADE. Uses ATM PE candle median x4
+                # (same SL basis used post-entry). SL/Target logic itself is untouched.
+                _opt_range_pre = get_option_candle_range(atmPE_tmp, fyers, n_candles=10)
+                _sl_pre = round(_opt_range_pre * 4) if (_opt_range_pre and _opt_range_pre > 0) else iv_params.get("sl_point", sl_point)
+                qty = calc_lots_by_risk(_sl_pre)
+                print(f"RISK_SIZING: effective_sl_pre={_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
 
                 isBullTrade = True
                 if not OBSERVATION_MODE:
@@ -1897,8 +1940,8 @@ while x == 1:
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 4)
-                    effective_tgt = round(opt_range * 5)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx5)"
+                    effective_tgt = round(opt_range * 7)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx7)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -1938,6 +1981,19 @@ while x == 1:
             elif bear_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and FUT_LTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
                 print("In Bear trade, slCount= ", slCount, " (mode=", _entry_mode, ")")
 
+                # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
+                if _entry_mode == "LOGIC3_CHOI_15PCT":
+                    print("=" * 60)
+                    print(f"LOGIC3_OBSERVE: WOULD_HAVE_ENTERED BEAR (no real order — LOGIC3 is observation-only)")
+                    print(f"  FUT={FUT_LTP} SUPP_RES={SUPP_RES} CEchoi={suppResCeChOi} PEchoi={suppResPeChOi}")
+                    print("=" * 60)
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    continue
+
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = getSensexWeeklyExpiry()
                 bn_ltp_tmp = helper.manualLTP(helper.getIndexSpot(stock), fyers)
@@ -1951,6 +2007,13 @@ while x == 1:
                       " AvgATM=", round(avg_atm_premium, 2))
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
+
+                # === RISK-BASED LOT SIZING (pre-entry) ===
+                # Size lots so SL-hit loss ~= FIXED_RISK_PER_TRADE. Uses ATM CE candle median x4.
+                _opt_range_pre = get_option_candle_range(atmCE_tmp, fyers, n_candles=10)
+                _sl_pre = round(_opt_range_pre * 4) if (_opt_range_pre and _opt_range_pre > 0) else iv_params.get("sl_point", sl_point)
+                qty = calc_lots_by_risk(_sl_pre)
+                print(f"RISK_SIZING: effective_sl_pre={_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
 
                 isBearTrade = True
                 if not OBSERVATION_MODE:
@@ -1979,8 +2042,8 @@ while x == 1:
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 4)
-                    effective_tgt = round(opt_range * 5)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx5)"
+                    effective_tgt = round(opt_range * 7)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx7)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
