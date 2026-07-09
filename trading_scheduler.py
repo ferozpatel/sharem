@@ -39,7 +39,7 @@ RUNNING_ON_EC2 = True
 # ============================================================
 # STRATEGY TOGGLES — flip to False to skip launching that strategy for the day
 # ============================================================
-RUN_BANKNIFTY = True   # set False to skip BankNifty strategy
+RUN_BANKNIFTY = False  # set False to skip BankNifty strategy (running Sensex only)
 RUN_SENSEX = True      # set False to skip Sensex strategy
 
 # ============================================================

@@ -88,11 +88,11 @@ target_point = 60
 # Formula: lots = FIXED_RISK_PER_TRADE / (effective_sl_points * LOT_SIZE)
 # effective_sl (option candle median x multiplier) stays untouched — sizing only.
 LOT_SIZE = 30                    # Bank Nifty lot size
-FIXED_RISK_PER_TRADE = 4000      # ₹ risk per trade if SL hits
+FIXED_RISK_PER_TRADE = 8000      # ₹ risk per trade if SL hits
 # Capital ceiling for ~₹4,00,000. NOTE: BN per-lot margin NOT yet verified in Fyers UI
 # (Sensex real check showed ~₹77k/lot for its 20-lot size). BN lot=30 differs — set 5
 # conservatively until a real BN basket check is done. Wire getSpreadMargin() for exact.
-MAX_LOTS = 5                     # hard safety ceiling (capital-bound, unverified for BN)
+MAX_LOTS = 6                     # hard safety ceiling (capital-bound, unverified for BN)
 MIN_LOTS = 1                     # minimum position
 
 def calc_lots_by_risk(effective_sl_points):

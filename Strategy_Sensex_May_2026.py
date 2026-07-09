@@ -149,11 +149,11 @@ target_point = 60
 # Formula: lots = FIXED_RISK_PER_TRADE / (effective_sl_points * LOT_SIZE)
 # effective_sl (option candle median x multiplier) stays untouched — sizing only.
 LOT_SIZE = 20                    # Sensex lot size
-FIXED_RISK_PER_TRADE = 4000      # ₹ risk per trade if SL hits
+FIXED_RISK_PER_TRADE = 8000      # ₹ risk per trade if SL hits
 # Capital ceiling from REAL Fyers basket check: 10-lot hedged spread ≈ ₹7,70,000 margin
 # (~₹77k/lot). With ~₹4,00,000 capital: 4L / 77k ≈ 5 lots. Set 5 as hard ceiling.
 # NOTE: per-lot margin varies with premium/strikes; wire getSpreadMargin() for exact check.
-MAX_LOTS = 5                     # hard safety ceiling (capital-bound for ~4 lacs)
+MAX_LOTS = 6                     # hard safety ceiling (capital-bound for ~4 lacs)
 MIN_LOTS = 1                     # minimum position
 
 def calc_lots_by_risk(effective_sl_points):
@@ -1939,13 +1939,13 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 4, Target: median x 5
+                # SL: median x 4, Target: median x 6
                 # Use whatever candles are available (skip 1st), no IV fallback
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 4)
-                    effective_tgt = round(opt_range * 7)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx7)"
+                    effective_tgt = round(opt_range * 6)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx6)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -2044,13 +2044,13 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 4, Target: median x 5
+                # SL: median x 4, Target: median x 6
                 # Use whatever candles are available (skip 1st), no IV fallback
                 opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 4)
-                    effective_tgt = round(opt_range * 7)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx7)"
+                    effective_tgt = round(opt_range * 6)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx6)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -2130,18 +2130,13 @@ while x == 1:
                                     print("TRAILING SL activated! SL moved to breakeven =", sl)
 
                                 if close2[-1] >= sl:
-                                    slConfirmCount += 1
-                                    if slConfirmCount >= 2:
-                                        print('SL Hit (confirmed 2 candles)')
-                                        st = 0
-                                        slCount += 1
-                                        print('slCount =', slCount)
-                                        oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                        break
-                                    else:
-                                        print("SL breached candle", slConfirmCount, "of 2. close=", close2[-1], " SL=", sl)
-                                        time.sleep(1)
-                                        break
+                                    # Quick exit on first 1-min close beyond SL (same as target — no 2-candle wait)
+                                    print('SL Hit')
+                                    st = 0
+                                    slCount += 1
+                                    print('slCount =', slCount)
+                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                    break
                                 elif close2[-1] <= target:
                                     print('Target hit')
                                     st = -1
@@ -2165,18 +2160,13 @@ while x == 1:
                                     print("DEBIT TRAILING SL activated! SL moved to breakeven =", sl)
 
                                 if close2[-1] <= sl:
-                                    slConfirmCount += 1
-                                    if slConfirmCount >= 2:
-                                        print('DEBIT SL Hit (confirmed 2 candles)')
-                                        st = 0
-                                        slCount += 1
-                                        print('slCount =', slCount)
-                                        oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                        break
-                                    else:
-                                        print("DEBIT SL breached candle", slConfirmCount, "of 2. close=", close2[-1], " SL=", sl)
-                                        time.sleep(1)
-                                        break
+                                    # Quick exit on first 1-min close beyond SL (same as target — no 2-candle wait)
+                                    print('DEBIT SL Hit')
+                                    st = 0
+                                    slCount += 1
+                                    print('slCount =', slCount)
+                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                    break
                                 elif close2[-1] >= target:
                                     print('DEBIT Target hit')
                                     st = -1
