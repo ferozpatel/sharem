@@ -1794,9 +1794,14 @@ while x == 1:
                     print(f"LOGIC3_OBSERVE: WOULD_HAVE_ENTERED BULL (no real order — LOGIC3 is observation-only)")
                     print(f"  FUT={FUT_LTP} SUPP_RES={SUPP_RES} CEchoi={suppResCeChOi} PEchoi={suppResPeChOi}")
                     print("=" * 60)
-                    # NOTE: do NOT reset PCR/strike state here — those flags are shared with
-                    # LOGIC1/LOGIC2. Resetting would block a real entry for ~9 min while PCR
-                    # history rebuilds. Just log and skip the order.
+                    # No trade taken — mirror the "no trade yet" block so avgOiPcrList2 stays in
+                    # sync: reset PCR flags and slide window by one (so next cycle re-checks with 3).
+                    # Do NOT clear to [] (would need 3 cycles to rebuild) and do NOT leave untouched
+                    # (list would grow past 3 and PCR detection would stop firing).
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    if len(avgOiPcrList2) == 3:
+                        avgOiPcrList2 = avgOiPcrList2[1:]
                     continue
 
                 # Decide spread type at entry time (real-time premium)
@@ -1898,9 +1903,14 @@ while x == 1:
                     print(f"LOGIC3_OBSERVE: WOULD_HAVE_ENTERED BEAR (no real order — LOGIC3 is observation-only)")
                     print(f"  FUT={FUT_LTP} SUPP_RES={SUPP_RES} CEchoi={suppResCeChOi} PEchoi={suppResPeChOi}")
                     print("=" * 60)
-                    # NOTE: do NOT reset PCR/strike state here — those flags are shared with
-                    # LOGIC1/LOGIC2. Resetting would block a real entry for ~9 min while PCR
-                    # history rebuilds. Just log and skip the order.
+                    # No trade taken — mirror the "no trade yet" block so avgOiPcrList2 stays in
+                    # sync: reset PCR flags and slide window by one (so next cycle re-checks with 3).
+                    # Do NOT clear to [] (would need 3 cycles to rebuild) and do NOT leave untouched
+                    # (list would grow past 3 and PCR detection would stop firing).
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    if len(avgOiPcrList2) == 3:
+                        avgOiPcrList2 = avgOiPcrList2[1:]
                     continue
 
                 # Decide spread type at entry time (real-time premium)
