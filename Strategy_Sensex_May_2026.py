@@ -149,12 +149,12 @@ target_point = 60
 # Formula: lots = FIXED_RISK_PER_TRADE / (effective_sl_points * LOT_SIZE)
 # effective_sl (option candle median x multiplier) stays untouched — sizing only.
 LOT_SIZE = 20                    # Sensex lot size
-FIXED_RISK_PER_TRADE = 8000      # ₹ risk per trade if SL hits
-# Capital ceiling from REAL Fyers basket check: 10-lot hedged spread ≈ ₹7,70,000 margin
-# (~₹77k/lot). With ~₹4,00,000 capital: 4L / 77k ≈ 5 lots. Set 5 as hard ceiling.
-# NOTE: per-lot margin varies with premium/strikes; wire getSpreadMargin() for exact check.
-MAX_LOTS = 6                     # hard safety ceiling (capital-bound for ~4 lacs)
+FIXED_RISK_PER_TRADE = 20000     # ₹ risk per trade if SL hits
+# MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
+# margin check (apply_margin_cap) against MAX_DEPLOYABLE_CAPITAL below.
+MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
 MIN_LOTS = 1                     # minimum position
+MAX_DEPLOYABLE_CAPITAL = 1000000  # ₹ — real capital ceiling checked via getSpreadMargin()
 
 def calc_lots_by_risk(effective_sl_points):
     """Return qty (lots x LOT_SIZE) sized so SL-hit loss ~= FIXED_RISK_PER_TRADE."""
@@ -164,6 +164,36 @@ def calc_lots_by_risk(effective_sl_points):
     lots = int(FIXED_RISK_PER_TRADE / loss_per_lot)  # floor — never exceed risk budget
     lots = max(MIN_LOTS, min(lots, MAX_LOTS))
     return lots * LOT_SIZE
+
+
+def apply_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyers_client):
+    """
+    Check REAL broker margin for the (main leg + hedge leg) basket at the given qty.
+    main_side/hedge_side: 1=BUY, -1=SELL (matches Fyers multiorder_margin API).
+    Steps qty down in lot increments until margin fits within MAX_DEPLOYABLE_CAPITAL.
+    - If even MIN_LOTS exceeds capital, keeps MIN_LOTS (never blocks the trade) and warns.
+    - If the margin API call fails, fails OPEN (returns qty unchanged) so an API hiccup
+      never stalls trading — logs a warning instead.
+    """
+    candidate_qty = qty
+    while candidate_qty >= LOT_SIZE:
+        legs = [
+            {"symbol": main_symbol, "qty": candidate_qty, "side": main_side},
+            {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side},
+        ]
+        margin = helper.getSpreadMargin(legs, fyers_client)
+        if margin is None:
+            print(f"MARGIN_CHECK: margin API failed - using qty={candidate_qty} as-is (fail-open)")
+            return candidate_qty
+        print(f"MARGIN_CHECK: qty={candidate_qty} ({candidate_qty // LOT_SIZE} lots) "
+              f"margin_required={round(margin, 2)} capital_limit={MAX_DEPLOYABLE_CAPITAL}")
+        if margin <= MAX_DEPLOYABLE_CAPITAL:
+            return candidate_qty
+        candidate_qty -= LOT_SIZE
+
+    print(f"MARGIN_CHECK: even MIN_LOTS margin exceeds capital_limit={MAX_DEPLOYABLE_CAPITAL} "
+          f"- using MIN_LOTS={MIN_LOTS} anyway (increase deployable capital to raise lots)")
+    return MIN_LOTS * LOT_SIZE
 
 bullBar = False
 bearBar = False
@@ -889,6 +919,9 @@ def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
+        # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
+        qty = apply_margin_cap(qty, atmPE, -1, otmPE, 1, fyers)
+
         hedge_entry_price = helper.manualLTP(otmPE, fyers)
         print("hedge_entry_price =", hedge_entry_price)
         print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
@@ -921,6 +954,9 @@ def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
             otmCE = otmCE_found
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
+
+        # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
+        qty = apply_margin_cap(qty, atmCE, -1, otmCE, 1, fyers)
 
         hedge_entry_price = helper.manualLTP(otmCE, fyers)
         print("hedge_entry_price =", hedge_entry_price)
@@ -998,6 +1034,9 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
+        # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
+        qty = apply_margin_cap(qty, atmCE, 1, otmCE, -1, fyers)
+
         hedge_entry_price = helper.manualLTP(otmCE, fyers)
         print("hedge_entry_price =", hedge_entry_price)
         print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
@@ -1029,6 +1068,9 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
         otmPE = otmPE_found if otmPE_found else getOptionFormatSensex(intExpiry, syntheticATMStrike - dynamic_spread, "PE")
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
+
+        # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
+        qty = apply_margin_cap(qty, atmPE, 1, otmPE, -1, fyers)
 
         hedge_entry_price = helper.manualLTP(otmPE, fyers)
         print("hedge_entry_price =", hedge_entry_price)
@@ -1896,13 +1938,24 @@ while x == 1:
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = getSensexWeeklyExpiry()
                 bn_ltp_tmp = helper.manualLTP(helper.getIndexSpot(stock), fyers)
-                atm_strike_tmp = int(round((bn_ltp_tmp / 100), 0) * 100)
-                atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, atm_strike_tmp, "PE")
-                atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, atm_strike_tmp, "CE")
+                # NOTE: use SYNTHETIC ATM (spot + CE prem - PE prem), same formula takeEntry()
+                # uses, so the strike priced here for risk sizing matches the strike actually
+                # traded. A plain spot-based ATM can land one strike off synthetic ATM and
+                # measure the wrong option's volatility for lot sizing.
+                spot_strike_tmp = int(round((bn_ltp_tmp / 100), 0) * 100)
+                spot_atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "PE")
+                spot_atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "CE")
+                spot_atm_pe_prem = helper.manualLTP(spot_atmPE_tmp, fyers)
+                spot_atm_ce_prem = helper.manualLTP(spot_atmCE_tmp, fyers)
+                synthetic_atm_strike_tmp = bn_ltp_tmp + spot_atm_ce_prem - spot_atm_pe_prem
+                synthetic_atm_strike_tmp = int(round((synthetic_atm_strike_tmp / 100), 0) * 100)
+                atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, synthetic_atm_strike_tmp, "PE")
+                atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, synthetic_atm_strike_tmp, "CE")
                 atm_pe_prem = helper.manualLTP(atmPE_tmp, fyers)
                 atm_ce_prem = helper.manualLTP(atmCE_tmp, fyers)
                 avg_atm_premium = (atm_pe_prem + atm_ce_prem) / 2.0
-                print("SPREAD_CALC_AT_ENTRY: ATM_PE=", atm_pe_prem, " ATM_CE=", atm_ce_prem,
+                print("SPREAD_CALC_AT_ENTRY: SyntheticATMStrike=", synthetic_atm_strike_tmp,
+                      " ATM_PE=", atm_pe_prem, " ATM_CE=", atm_ce_prem,
                       " AvgATM=", round(avg_atm_premium, 2))
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
@@ -1910,6 +1963,7 @@ while x == 1:
                 # === RISK-BASED LOT SIZING (pre-entry) ===
                 # Size lots so SL-hit loss ~= FIXED_RISK_PER_TRADE. Uses ATM PE candle median x4
                 # (same SL basis used post-entry). SL/Target logic itself is untouched.
+                # Uses synthetic-ATM PE (atmPE_tmp) so this matches the strike takeEntry() trades.
                 _opt_range_pre = get_option_candle_range(atmPE_tmp, fyers, n_candles=10)
                 _sl_pre = round(_opt_range_pre * 4) if (_opt_range_pre and _opt_range_pre > 0) else iv_params.get("sl_point", sl_point)
                 qty = calc_lots_by_risk(_sl_pre)
@@ -2004,19 +2058,31 @@ while x == 1:
                 # Decide spread type at entry time (real-time premium)
                 intExpiry_tmp = getSensexWeeklyExpiry()
                 bn_ltp_tmp = helper.manualLTP(helper.getIndexSpot(stock), fyers)
-                atm_strike_tmp = int(round((bn_ltp_tmp / 100), 0) * 100)
-                atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, atm_strike_tmp, "PE")
-                atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, atm_strike_tmp, "CE")
+                # NOTE: use SYNTHETIC ATM (spot + CE prem - PE prem), same formula takeEntry()
+                # uses, so the strike priced here for risk sizing matches the strike actually
+                # traded. A plain spot-based ATM can land one strike off synthetic ATM and
+                # measure the wrong option's volatility for lot sizing.
+                spot_strike_tmp = int(round((bn_ltp_tmp / 100), 0) * 100)
+                spot_atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "PE")
+                spot_atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "CE")
+                spot_atm_pe_prem = helper.manualLTP(spot_atmPE_tmp, fyers)
+                spot_atm_ce_prem = helper.manualLTP(spot_atmCE_tmp, fyers)
+                synthetic_atm_strike_tmp = bn_ltp_tmp + spot_atm_ce_prem - spot_atm_pe_prem
+                synthetic_atm_strike_tmp = int(round((synthetic_atm_strike_tmp / 100), 0) * 100)
+                atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, synthetic_atm_strike_tmp, "PE")
+                atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, synthetic_atm_strike_tmp, "CE")
                 atm_pe_prem = helper.manualLTP(atmPE_tmp, fyers)
                 atm_ce_prem = helper.manualLTP(atmCE_tmp, fyers)
                 avg_atm_premium = (atm_pe_prem + atm_ce_prem) / 2.0
-                print("SPREAD_CALC_AT_ENTRY: ATM_PE=", atm_pe_prem, " ATM_CE=", atm_ce_prem,
+                print("SPREAD_CALC_AT_ENTRY: SyntheticATMStrike=", synthetic_atm_strike_tmp,
+                      " ATM_PE=", atm_pe_prem, " ATM_CE=", atm_ce_prem,
                       " AvgATM=", round(avg_atm_premium, 2))
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
                 # === RISK-BASED LOT SIZING (pre-entry) ===
                 # Size lots so SL-hit loss ~= FIXED_RISK_PER_TRADE. Uses ATM CE candle median x4.
+                # Uses synthetic-ATM CE (atmCE_tmp) so this matches the strike takeEntry() trades.
                 _opt_range_pre = get_option_candle_range(atmCE_tmp, fyers, n_candles=10)
                 _sl_pre = round(_opt_range_pre * 4) if (_opt_range_pre and _opt_range_pre > 0) else iv_params.get("sl_point", sl_point)
                 qty = calc_lots_by_risk(_sl_pre)
