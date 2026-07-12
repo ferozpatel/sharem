@@ -177,9 +177,12 @@ def apply_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyer
     """
     candidate_qty = qty
     while candidate_qty >= LOT_SIZE:
+        # productType=INTRADAY to match the actual order placement (placeTargetOrder
+        # uses INTRADAY since all trades are same-day exit) - MARGIN/positional would
+        # overstate the real margin requirement (no intraday discount).
         legs = [
-            {"symbol": main_symbol, "qty": candidate_qty, "side": main_side},
-            {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side},
+            {"symbol": main_symbol, "qty": candidate_qty, "side": main_side, "productType": "INTRADAY"},
+            {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side, "productType": "INTRADAY"},
         ]
         margin = helper.getSpreadMargin(legs, fyers_client)
         if margin is None:

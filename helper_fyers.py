@@ -393,7 +393,7 @@ def placeOrder(inst ,t_type,qty,order_type,price,variety,fyers,papertrading=0):
         "qty":qty,
         "type":type1,
         "side":side1,
-        "productType":"MARGIN",  #MARGIN  -for positional
+        "productType":"INTRADAY",  # same-day exit only, no overnight carry -> intraday margin discount
         "limitPrice":0,
         "stopPrice":0,
         "validity":"DAY",
@@ -492,7 +492,7 @@ def placeTargetOrder(inst ,t_type,qty,order_type,executedPrice,sl,target,fyers,p
         "qty":qty,
         "type":type1,
         "side":side1,
-        "productType":"MARGIN",  #MARGIN  -for positional, INTRADAY
+        "productType":"INTRADAY",  # same-day exit only, no overnight carry -> intraday margin discount
         "limitPrice":limitPrice,
         "stopPrice":stopPrice,
         "validity":"DAY",
