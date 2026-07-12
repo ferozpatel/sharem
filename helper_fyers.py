@@ -305,9 +305,14 @@ def getSpreadMargin(legs, fyers):
     Calculate the actual broker margin required for a basket of orders (spread).
     Uses Fyers v3 multiorder/margin API which accounts for hedge benefit.
 
+    NOTE: The fyers_apiv3 Python SDK does NOT wrap this endpoint (no
+    fyers.multiorder_margin method exists) - it must be called directly via
+    the REST API. We reuse the same auth header format the SDK itself uses
+    internally: "{client_id}:{token}".
+
     Args:
         legs: list of dicts, each with keys: symbol, qty, side (1=buy,-1=sell), type (2=market)
-        fyers: FyersModel instance
+        fyers: FyersModel instance (used only to read client_id/token for auth header)
 
     Returns:
         float: total margin required for the basket (margin_total), or None on failure.
@@ -326,13 +331,17 @@ def getSpreadMargin(legs, fyers):
             "takeProfit": 0.0
         })
     data = {"data": order_data}
+    url = "https://api-t1.fyers.in/api/v3/multiorder/margin"
+    header = "{}:{}".format(fyers.client_id, fyers.token)
+    headers = {"Authorization": header, "Content-Type": "application/json"}
     last_err = None
     for attempt in range(3):
         try:
-            resp = fyers.multiorder_margin(data)
-            if isinstance(resp, dict) and resp.get('data') and resp['data'].get('margin_total') is not None:
-                return float(resp['data']['margin_total'])
-            last_err = resp
+            resp = requests.post(url, json=data, headers=headers, timeout=10)
+            resp_json = resp.json()
+            if isinstance(resp_json, dict) and resp_json.get('data') and resp_json['data'].get('margin_total') is not None:
+                return float(resp_json['data']['margin_total'])
+            last_err = resp_json
         except Exception as e:
             last_err = e
         if attempt < 2:
