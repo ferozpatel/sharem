@@ -180,9 +180,13 @@ def apply_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyer
         # productType=INTRADAY to match the actual order placement (placeTargetOrder
         # uses INTRADAY since all trades are same-day exit) - MARGIN/positional would
         # overstate the real margin requirement (no intraday discount).
+        # NOTE: hedge (BUY) leg MUST be listed first. Per Fyers docs, the hedge-benefit
+        # netting is applied when the long/hedge leg is evaluated before the short leg —
+        # sending the short leg first computes standalone (unhedged) margin, which is
+        # what was happening here and matched the sell-leg-only Fyers UI number.
         legs = [
-            {"symbol": main_symbol, "qty": candidate_qty, "side": main_side, "productType": "INTRADAY"},
             {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side, "productType": "INTRADAY"},
+            {"symbol": main_symbol, "qty": candidate_qty, "side": main_side, "productType": "INTRADAY"},
         ]
         margin = helper.getSpreadMargin(legs, fyers_client)
         if margin is None:
