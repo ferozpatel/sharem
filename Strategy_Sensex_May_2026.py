@@ -1802,11 +1802,21 @@ while x == 1:
             IS_MORNING_WINDOW = (dt1.hour == 9 and dt1.minute < 48)
             print("IS_MORNING_WINDOW=", IS_MORNING_WINDOW, " (active 9:15-9:48 IST)")
 
-            if (suppResCeChOi > 0 and suppResPeChOi > 0):
+            # CHOI % diff is only meaningful when BOTH sides are fresh OI additions (positive).
+            # If either side is negative (unwinding), subtracting a negative artificially
+            # inflates the % diff (e.g. CE=-20000, PE=10000 -> abs(10000-(-20000))/20000=150%)
+            # even though unwinding doesn't carry the same trapped-writer conviction as buildup.
+            _choi_valid = (suppResCeChOi > 0 and suppResPeChOi > 0)
+            if _choi_valid:
                 IS_CHOI_DIFF_GT_25PERC = is_difference_greater_than_25(suppResCeChOi, suppResPeChOi)
             else:
-                print(" Either or both CE PE at suppRes unwinded i.e negative")
                 IS_CHOI_DIFF_GT_25PERC = False
+                if suppResCeChOi <= 0 and suppResPeChOi <= 0:
+                    print(f"CHOI_UNWIND: both sides unwinding at SUPP_RES (CEchoi={suppResCeChOi}, PEchoi={suppResPeChOi}) - CHOI-based logic skipped this cycle")
+                elif suppResCeChOi <= 0:
+                    print(f"CHOI_UNWIND: CE side unwinding at SUPP_RES (CEchoi={suppResCeChOi}) - CHOI-based logic skipped this cycle")
+                else:
+                    print(f"CHOI_UNWIND: PE side unwinding at SUPP_RES (PEchoi={suppResPeChOi}) - CHOI-based logic skipped this cycle")
             print("================================================")
             print("==== signal check time ====", datetime.now())
             print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
@@ -1879,8 +1889,15 @@ while x == 1:
             # Logic 2: Trend convergence (anytime) — CHOI + Total OI both same direction by 10%
             # Logic 3: CHOI trap (anytime) — CHOI dominance + 15% diff
 
-            _larger_ch = max(abs(suppResCeChOi), abs(suppResPeChOi)) if max(abs(suppResCeChOi), abs(suppResPeChOi)) > 0 else 1
-            _choi_pct = round(abs(suppResCeChOi - suppResPeChOi) / _larger_ch * 100, 1)
+            # _choi_pct is only valid when both sides are positive (fresh buildup) - see
+            # _choi_valid check above. If either side is unwinding, force _choi_pct to 0 so
+            # all Logic 1/2/3 CHOI-diff gates (>=10%, >=15%) correctly fail closed instead of
+            # acting on a distorted/inflated percentage.
+            if _choi_valid:
+                _larger_ch = max(abs(suppResCeChOi), abs(suppResPeChOi)) if max(abs(suppResCeChOi), abs(suppResPeChOi)) > 0 else 1
+                _choi_pct = round(abs(suppResCeChOi - suppResPeChOi) / _larger_ch * 100, 1)
+            else:
+                _choi_pct = 0
             _larger_oi = max(suppResCeOi_total, suppResPeOi_total) if max(suppResCeOi_total, suppResPeOi_total) > 0 else 1
             _oi_pct = round(abs(suppResCeOi_total - suppResPeOi_total) / _larger_oi * 100, 1)
 
