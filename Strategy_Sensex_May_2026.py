@@ -143,24 +143,55 @@ sl_point = 50
 target_point = 60
 
 # ============================================================
-# RISK-BASED POSITION SIZING
+# RISK-BASED POSITION SIZING (NET-OF-HEDGE)
 # ============================================================
-# Lots are sized so a SL-hit loses ~FIXED_RISK_PER_TRADE rupees.
-# Formula: lots = FIXED_RISK_PER_TRADE / (effective_sl_points * LOT_SIZE)
-# effective_sl (option candle median x multiplier) stays untouched — sizing only.
+# Lots are sized so a SL-hit loses ~FIXED_RISK_PER_TRADE rupees NET of the hedge.
+# The SL is on the SHORT leg (effective_sl points), but the hedge offsets part of
+# that loss. How much it offsets depends on the hedge's premium relative to the sold
+# leg (a proxy for its delta): a closer/costlier hedge offsets more, a far/cheaper
+# hedge offsets less. Using both premiums keeps the NET rupee risk consistent across
+# days even though the spread width (and hedge premium) varies.
+#
+#   hedge_offset_ratio = hedge_premium / main_premium
+#   net_sl_points      = effective_sl * (1 - hedge_offset_ratio)
+#   lots               = FIXED_RISK_PER_TRADE / (net_sl_points * LOT_SIZE)
+#
+# NOTE: premium-ratio is an APPROXIMATION of hedge delta — accurate for normal SL
+# exits, but a violent gap can still overshoot (hedge relationship shifts on fast moves).
+# effective_sl (option candle median x multiplier) itself stays untouched — sizing only.
 LOT_SIZE = 20                    # Sensex lot size
-FIXED_RISK_PER_TRADE = 20000     # ₹ risk per trade if SL hits
+FIXED_RISK_PER_TRADE = 10000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against MAX_DEPLOYABLE_CAPITAL below.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
 MIN_LOTS = 1                     # minimum position
 MAX_DEPLOYABLE_CAPITAL = 1000000  # ₹ — real capital ceiling checked via getSpreadMargin()
 
-def calc_lots_by_risk(effective_sl_points):
-    """Return qty (lots x LOT_SIZE) sized so SL-hit loss ~= FIXED_RISK_PER_TRADE."""
+def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None):
+    """
+    Return qty (lots x LOT_SIZE) sized so a SL-hit loses ~= FIXED_RISK_PER_TRADE NET of hedge.
+
+    Args:
+        effective_sl_points: SL distance on the SHORT leg (option candle median x multiplier).
+        main_premium: sold (short) leg premium at entry.
+        hedge_premium: bought (hedge) leg premium at entry.
+
+    If premiums are missing/invalid, falls back to short-leg-only sizing (no hedge credit).
+    """
     if effective_sl_points is None or effective_sl_points <= 0:
         return MIN_LOTS * LOT_SIZE
-    loss_per_lot = effective_sl_points * LOT_SIZE
+
+    # Net-of-hedge SL points: discount the short-leg SL by the hedge's offset share.
+    net_sl_points = effective_sl_points
+    if (main_premium and hedge_premium and main_premium > 0
+            and 0 < hedge_premium < main_premium):
+        hedge_offset_ratio = hedge_premium / main_premium
+        net_sl_points = effective_sl_points * (1 - hedge_offset_ratio)
+
+    if net_sl_points <= 0:
+        return MIN_LOTS * LOT_SIZE
+
+    loss_per_lot = net_sl_points * LOT_SIZE
     lots = int(FIXED_RISK_PER_TRADE / loss_per_lot)  # floor — never exceed risk budget
     lots = max(MIN_LOTS, min(lots, MAX_LOTS))
     return lots * LOT_SIZE
@@ -913,20 +944,22 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
-        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        # Fetch hedge premium BEFORE sizing so net-of-hedge lot calc can use it.
+        hedge_entry_price = helper.manualLTP(otmPE, fyers)
+        print("hedge_entry_price =", hedge_entry_price)
+        print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
+
+        # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre)
-        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("CREDIT_ENTRY: qty=", qty)
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, -1, otmPE, 1, fyers)
-
-        hedge_entry_price = helper.manualLTP(otmPE, fyers)
-        print("hedge_entry_price =", hedge_entry_price)
-        print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
 
         hedgeOrderId = helper.placeTargetOrder(otmPE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmPE
@@ -957,20 +990,22 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
-        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        # Fetch hedge premium BEFORE sizing so net-of-hedge lot calc can use it.
+        hedge_entry_price = helper.manualLTP(otmCE, fyers)
+        print("hedge_entry_price =", hedge_entry_price)
+        print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
+
+        # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre)
-        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("CREDIT_ENTRY: qty=", qty)
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, -1, otmCE, 1, fyers)
-
-        hedge_entry_price = helper.manualLTP(otmCE, fyers)
-        print("hedge_entry_price =", hedge_entry_price)
-        print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
 
         hedgeOrderId = helper.placeTargetOrder(otmCE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmCE
@@ -1032,20 +1067,22 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
-        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        # Fetch hedge premium BEFORE sizing so net-of-hedge lot calc can use it.
+        hedge_entry_price = helper.manualLTP(otmCE, fyers)
+        print("hedge_entry_price =", hedge_entry_price)
+        print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
+
+        # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre)
-        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("DEBIT_ENTRY: qty=", qty)
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, 1, otmCE, -1, fyers)
-
-        hedge_entry_price = helper.manualLTP(otmCE, fyers)
-        print("hedge_entry_price =", hedge_entry_price)
-        print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
 
         # BUY ATM CE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmCE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
@@ -1075,20 +1112,22 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
-        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        # Fetch hedge premium BEFORE sizing so net-of-hedge lot calc can use it.
+        hedge_entry_price = helper.manualLTP(otmPE, fyers)
+        print("hedge_entry_price =", hedge_entry_price)
+        print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
+
+        # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre)
-        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("DEBIT_ENTRY: qty=", qty)
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, 1, otmPE, -1, fyers)
-
-        hedge_entry_price = helper.manualLTP(otmPE, fyers)
-        print("hedge_entry_price =", hedge_entry_price)
-        print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
 
         # BUY ATM PE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmPE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
