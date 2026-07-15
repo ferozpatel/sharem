@@ -861,49 +861,36 @@ def getChangeInOI(dfochain, index1, index2):
     return changOI
 
 
-def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
+def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, papertrading):
     """
     CREDIT SPREAD entry: Sell ATM + Buy OTM hedge.
     Same as original strategy — proven edge.
+
+    syntheticATMStrike/intExpiry are passed in from the caller (computed ONCE, right
+    before this call) instead of being recomputed here. This guarantees the strike
+    used for qty/SL sizing is the exact same strike actually traded — no separate live
+    API round-trip that could tick the price/premium between calc and entry.
     """
     global hedgeOrderId
     global tradeATMOption
     global tradeHedgeOption
     global mainOrderId
+    global tradeOptRange
     global iv_params
+    global qty  # exitPosition/exitSpreadPosition read module-level qty on exit — must
+                # update it here so exits close the ACTUAL traded quantity, not stale default.
 
     dynamic_sl = iv_params.get("sl_point", sl_point)
     dynamic_target = iv_params.get("target_point", target_point)
     dynamic_spread = iv_params.get("spread_width", 300)
 
-    print("CREDIT_ENTRY: qty=", qty)
     print("IV-Dynamic: SL=", dynamic_sl, " Target=", dynamic_target,
           " Spread=", dynamic_spread)
 
-    name = helper.getIndexSpot(stock)
-    ltp = helper.manualLTP(name, fyers)
-    if stock == 'SENSEX':
-        intExpiry = getSensexWeeklyExpiry()
-        closest_Strike = int(round((ltp / 100), 0) * 100)
-    elif stock == 'NIFTY':
-        intExpiry = helper.getNiftyExpiryDate()
-        closest_Strike = int(round((ltp / 50), 0) * 50)
-    print('closest_Strike = ', closest_Strike)
-
-    atmCE = getOptionFormatSensex(intExpiry, closest_Strike, "CE")
-    atmPE = getOptionFormatSensex(intExpiry, closest_Strike, "PE")
-    atmCEPremium = helper.manualLTP(atmCE, fyers)
-    atmPEPremium = helper.manualLTP(atmPE, fyers)
-    syntheticATMStrike = ltp + atmCEPremium - atmPEPremium
-    print('syntheticATMStrike = ', syntheticATMStrike)
-    syntheticATMStrike = int(round((syntheticATMStrike / 100), 0) * 100)
-
     Hedge_Strike_CE_OTMBuy = syntheticATMStrike + dynamic_spread
     Hedge_Strike_PE_OTMBuy = syntheticATMStrike - dynamic_spread
-    closest_Strike_CE = syntheticATMStrike
-    closest_Strike_PE = syntheticATMStrike
-    atmCE = getOptionFormatSensex(intExpiry, closest_Strike_CE, "CE")
-    atmPE = getOptionFormatSensex(intExpiry, closest_Strike_PE, "PE")
+    atmCE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "CE")
+    atmPE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "PE")
 
     otmCE = getOptionFormatSensex(intExpiry, Hedge_Strike_CE_OTMBuy, "CE")
     otmPE = getOptionFormatSensex(intExpiry, Hedge_Strike_PE_OTMBuy, "PE")
@@ -925,6 +912,14 @@ def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
             otmPE = otmPE_found
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
+
+        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
+        tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        qty = calc_lots_by_risk(effective_sl_pre)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        print("CREDIT_ENTRY: qty=", qty)
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, -1, otmPE, 1, fyers)
@@ -962,6 +957,14 @@ def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
+        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
+        tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        qty = calc_lots_by_risk(effective_sl_pre)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        print("CREDIT_ENTRY: qty=", qty)
+
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, -1, otmCE, 1, fyers)
 
@@ -983,42 +986,30 @@ def takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading):
     return mainOrderId
 
 
-def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
+def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, papertrading):
     """
     DEBIT SPREAD entry: Buy ATM + Sell OTM hedge.
     Same logic as credit spread (500-pt interval, 60% premium cap) — only BUY/SELL flipped.
+
+    syntheticATMStrike/intExpiry are passed in from the caller (computed ONCE, right
+    before this call) instead of being recomputed here — same fix as takeEntryCredit,
+    guarantees qty/SL sizing uses the exact strike actually traded.
     """
     global hedgeOrderId
     global tradeATMOption
     global tradeHedgeOption
     global mainOrderId
+    global tradeOptRange
     global iv_params
+    global qty  # exitPosition/exitSpreadPosition read module-level qty on exit — must
+                # update it here so exits close the ACTUAL traded quantity, not stale default.
 
     dynamic_sl = iv_params.get("sl_point", sl_point)
     dynamic_target = iv_params.get("target_point", target_point)
     dynamic_spread = iv_params.get("spread_width", 300)
 
-    print("DEBIT_ENTRY: qty=", qty)
     print("IV-Dynamic: SL=", dynamic_sl, " Target=", dynamic_target,
           " Spread=", dynamic_spread)
-
-    name = helper.getIndexSpot(stock)
-    ltp = helper.manualLTP(name, fyers)
-    if stock == 'SENSEX':
-        intExpiry = getSensexWeeklyExpiry()
-        closest_Strike = int(round((ltp / 100), 0) * 100)
-    elif stock == 'NIFTY':
-        intExpiry = helper.getNiftyExpiryDate()
-        closest_Strike = int(round((ltp / 50), 0) * 50)
-    print('closest_Strike = ', closest_Strike)
-
-    atmCE = getOptionFormatSensex(intExpiry, closest_Strike, "CE")
-    atmPE = getOptionFormatSensex(intExpiry, closest_Strike, "PE")
-    atmCEPremium = helper.manualLTP(atmCE, fyers)
-    atmPEPremium = helper.manualLTP(atmPE, fyers)
-    syntheticATMStrike = ltp + atmCEPremium - atmPEPremium
-    print('syntheticATMStrike = ', syntheticATMStrike)
-    syntheticATMStrike = int(round((syntheticATMStrike / 100), 0) * 100)
 
     atmCE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "CE")
     atmPE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "PE")
@@ -1040,6 +1031,14 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
         otmCE = otmCE_found if otmCE_found else getOptionFormatSensex(intExpiry, syntheticATMStrike + dynamic_spread, "CE")
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
+
+        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
+        tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        qty = calc_lots_by_risk(effective_sl_pre)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        print("DEBIT_ENTRY: qty=", qty)
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, 1, otmCE, -1, fyers)
@@ -1076,6 +1075,14 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
+        # === RISK-BASED LOT SIZING (computed ONCE, on the exact strike being traded) ===
+        opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
+        tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        qty = calc_lots_by_risk(effective_sl_pre)
+        print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
+        print("DEBIT_ENTRY: qty=", qty)
+
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, 1, otmPE, -1, fyers)
 
@@ -1096,17 +1103,20 @@ def takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading):
     return mainOrderId
 
 
-def takeEntry(isBullish, isBearish, qty, fyers, papertrading):
+def takeEntry(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, papertrading):
     """
     Wrapper: routes to credit or debit entry based on spread_decision.
     OBSERVATION_MODE: when True, just log what WOULD have been taken — no real entry.
+
+    qty is no longer a parameter — takeEntryCredit/takeEntryDebit compute it internally
+    right after the strike is locked in, so sizing always matches the exact traded strike.
     """
     global spread_decision
     if OBSERVATION_MODE:
         spread_type = spread_decision.get("type", "CREDIT")
         direction = "BULL" if isBullish else "BEAR"
         print("=" * 60)
-        print(f"WOULD_HAVE_ENTERED: type={spread_type} direction={direction} qty={qty}")
+        print(f"WOULD_HAVE_ENTERED: type={spread_type} direction={direction} strike={syntheticATMStrike}")
         print(f"  spread_decision={spread_decision}")
         print(f"  iv_params(SL/Target/Spread)= SL={iv_params.get('sl_point')} "
               f"Tgt={iv_params.get('target_point')} Width={iv_params.get('spread_width')}")
@@ -1120,9 +1130,9 @@ def takeEntry(isBullish, isBearish, qty, fyers, papertrading):
           " isBullish=", isBullish, " isBearish=", isBearish)
 
     if spread_type == "DEBIT":
-        return takeEntryDebit(isBullish, isBearish, qty, fyers, papertrading)
+        return takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, papertrading)
     else:
-        return takeEntryCredit(isBullish, isBearish, qty, fyers, papertrading)
+        return takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, papertrading)
 
 
 # ============================================================
@@ -1575,6 +1585,9 @@ hedgeOrderId = ''
 mainOrderId = ''
 tradeHedgeOption = ''
 tradeATMOption = ''
+tradeOptRange = None  # option candle-range median computed ONCE on the final traded strike,
+                       # reused for both qty sizing and post-entry SL/Target so both use the
+                       # exact same snapshot (fixes qty/SL mismatch from separate live calls).
 entryPremium = 0  # track entry premium for trailing SL
 trailTriggerPts = 0  # effective_sl / 3 — stored at entry time
 slTrailed = False
@@ -1960,12 +1973,11 @@ while x == 1:
                     continue
 
                 # Decide spread type at entry time (real-time premium)
+                # This synthetic ATM strike is resolved ONCE here and passed straight into
+                # takeEntry() -> takeEntryCredit/Debit, which use it directly (no recompute).
+                # That's what guarantees qty/SL sizing matches the exact strike traded.
                 intExpiry_tmp = getSensexWeeklyExpiry()
                 bn_ltp_tmp = helper.manualLTP(helper.getIndexSpot(stock), fyers)
-                # NOTE: use SYNTHETIC ATM (spot + CE prem - PE prem), same formula takeEntry()
-                # uses, so the strike priced here for risk sizing matches the strike actually
-                # traded. A plain spot-based ATM can land one strike off synthetic ATM and
-                # measure the wrong option's volatility for lot sizing.
                 spot_strike_tmp = int(round((bn_ltp_tmp / 100), 0) * 100)
                 spot_atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "PE")
                 spot_atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "CE")
@@ -1984,19 +1996,10 @@ while x == 1:
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
-                # === RISK-BASED LOT SIZING (pre-entry) ===
-                # Size lots so SL-hit loss ~= FIXED_RISK_PER_TRADE. Uses ATM PE candle median x4
-                # (same SL basis used post-entry). SL/Target logic itself is untouched.
-                # Uses synthetic-ATM PE (atmPE_tmp) so this matches the strike takeEntry() trades.
-                _opt_range_pre = get_option_candle_range(atmPE_tmp, fyers, n_candles=10)
-                _sl_pre = round(_opt_range_pre * 4) if (_opt_range_pre and _opt_range_pre > 0) else iv_params.get("sl_point", sl_point)
-                qty = calc_lots_by_risk(_sl_pre)
-                print(f"RISK_SIZING: effective_sl_pre={_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
-
                 isBullTrade = True
                 if not OBSERVATION_MODE:
                     st = 1
-                takeEntry(isBullTrade, False, qty, fyers, papertrading)
+                takeEntry(isBullTrade, False, synthetic_atm_strike_tmp, intExpiry_tmp, fyers, papertrading)
 
                 if OBSERVATION_MODE:
                     # Reset signal flags so next 3-min cycle can detect fresh signal
@@ -2018,8 +2021,10 @@ while x == 1:
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
                 # SL: median x 4, Target: median x 6
-                # Use whatever candles are available (skip 1st), no IV fallback
-                opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
+                # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
+                # traded strike, right before qty/margin sizing. No second live API call here,
+                # so SL/Target and qty sizing always agree on the same volatility snapshot.
+                opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 4)
                     effective_tgt = round(opt_range * 6)
@@ -2080,12 +2085,11 @@ while x == 1:
                     continue
 
                 # Decide spread type at entry time (real-time premium)
+                # This synthetic ATM strike is resolved ONCE here and passed straight into
+                # takeEntry() -> takeEntryCredit/Debit, which use it directly (no recompute).
+                # That's what guarantees qty/SL sizing matches the exact strike traded.
                 intExpiry_tmp = getSensexWeeklyExpiry()
                 bn_ltp_tmp = helper.manualLTP(helper.getIndexSpot(stock), fyers)
-                # NOTE: use SYNTHETIC ATM (spot + CE prem - PE prem), same formula takeEntry()
-                # uses, so the strike priced here for risk sizing matches the strike actually
-                # traded. A plain spot-based ATM can land one strike off synthetic ATM and
-                # measure the wrong option's volatility for lot sizing.
                 spot_strike_tmp = int(round((bn_ltp_tmp / 100), 0) * 100)
                 spot_atmPE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "PE")
                 spot_atmCE_tmp = getOptionFormatSensex(intExpiry_tmp, spot_strike_tmp, "CE")
@@ -2104,18 +2108,10 @@ while x == 1:
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
-                # === RISK-BASED LOT SIZING (pre-entry) ===
-                # Size lots so SL-hit loss ~= FIXED_RISK_PER_TRADE. Uses ATM CE candle median x4.
-                # Uses synthetic-ATM CE (atmCE_tmp) so this matches the strike takeEntry() trades.
-                _opt_range_pre = get_option_candle_range(atmCE_tmp, fyers, n_candles=10)
-                _sl_pre = round(_opt_range_pre * 4) if (_opt_range_pre and _opt_range_pre > 0) else iv_params.get("sl_point", sl_point)
-                qty = calc_lots_by_risk(_sl_pre)
-                print(f"RISK_SIZING: effective_sl_pre={_sl_pre} FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
-
                 isBearTrade = True
                 if not OBSERVATION_MODE:
                     st = 2
-                takeEntry(False, isBearTrade, qty, fyers, papertrading)
+                takeEntry(False, isBearTrade, synthetic_atm_strike_tmp, intExpiry_tmp, fyers, papertrading)
 
                 if OBSERVATION_MODE:
                     # Reset signal flags so next 3-min cycle can detect fresh signal
@@ -2135,8 +2131,9 @@ while x == 1:
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
                 # SL: median x 4, Target: median x 6
-                # Use whatever candles are available (skip 1st), no IV fallback
-                opt_range = get_option_candle_range(tradeATMOption, fyers, n_candles=10)
+                # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
+                # traded strike, right before qty/margin sizing. No second live API call here.
+                opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 4)
                     effective_tgt = round(opt_range * 6)
