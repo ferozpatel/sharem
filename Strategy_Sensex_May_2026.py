@@ -138,6 +138,15 @@ OBSERVATION_MODE = False
 timeFrame = 3  # in minutes
 timeFrame2 = 1  # in minutes
 
+# === REAL-TIME LTP-BASED SL/TARGET MONITORING ===
+# Poll the short-leg LTP every LTP_POLL_INTERVAL seconds (instead of waiting for the
+# 1-min candle close) so a fast adverse move is caught in seconds, not up to a minute.
+# Require SL_CONFIRM_TICKS consecutive breached polls before exiting — filters out a
+# single jumpy/stale option quote that instantly reverts (fake-spike whipsaw).
+LTP_POLL_INTERVAL = 3   # seconds between live LTP checks
+SL_CONFIRM_TICKS = 2    # consecutive breached polls needed to trigger SL exit
+TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
+
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
 target_point = 60
@@ -160,7 +169,7 @@ target_point = 60
 # exits, but a violent gap can still overshoot (hedge relationship shifts on fast moves).
 # effective_sl (option candle median x multiplier) itself stays untouched — sizing only.
 LOT_SIZE = 20                    # Sensex lot size
-FIXED_RISK_PER_TRADE = 10000     # ₹ NET risk per trade if SL hits (after hedge offset)
+FIXED_RISK_PER_TRADE = 5000      # ₹ NET risk per trade if SL hits (after hedge offset) — reduced for testing period
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against MAX_DEPLOYABLE_CAPITAL below.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -2231,88 +2240,120 @@ while x == 1:
 
         elif candle_formed == 1:
             if st == 1 or st == 2:
-                data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
-                opens2 = data1minFUT['open'].to_numpy()
-                high2 = data1minFUT['high'].to_numpy()
-                low2 = data1minFUT['low'].to_numpy()
-                close2 = data1minFUT['close'].to_numpy()
+                is_debit = spread_decision.get("type") == "DEBIT"
+                # Reset per-trade LTP confirmation counters at the start of monitoring.
+                ltpSlConfirm = 0
+                ltpTgtConfirm = 0
                 while y == 1:
                     dt2 = datetime.now()
-                    if dt2.second <= 1 and dt2.minute % timeFrame2 == 0:
-                        oneMinCandle_Formed = 1
-                        data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
-                        close2 = data1minFUT['close'].to_numpy()
 
-                        is_debit = spread_decision.get("type") == "DEBIT"
+                    # EOD: stop LTP monitoring; let the time-exit block below square off.
+                    if dt2.hour >= 15 and dt2.minute >= 24:
+                        break
 
-                        # === CREDIT SPREAD EXIT LOGIC ===
+                    # === REAL-TIME LTP SL/TARGET (primary) — poll every LTP_POLL_INTERVAL sec ===
+                    # Fast detection: catches adverse moves in seconds instead of waiting for
+                    # the 1-min candle to close. SL/target need SL_CONFIRM_TICKS consecutive
+                    # breached polls to fire (fake-spike filter). manualLTP has its own retry;
+                    # wrap in try/except so a transient quote failure just skips this cycle.
+                    try:
+                        ltp_now = helper.manualLTP(tradeATMOption, fyers)
+                    except Exception as _e:
+                        ltp_now = None
+                        print("LTP_POLL_FAILED:", _e, "— skipping this cycle")
+
+                    if ltp_now is not None and (st == 1 or st == 2):
                         if not is_debit:
-                            # Credit: premium rising = loss (SL), premium falling = profit (target)
-                            if st == 1 or st == 2:
-                                trail_trigger = trailTriggerPts
-                                if not slTrailed and close2[-1] <= (entryPremium - trail_trigger):
-                                    sl = entryPremium
-                                    slTrailed = True
-                                    print("TRAILING SL activated! SL moved to breakeven =", sl)
-
-                                if close2[-1] >= sl:
-                                    # Quick exit on first 1-min close beyond SL (same as target — no 2-candle wait)
-                                    print('SL Hit')
-                                    st = 0
-                                    slCount += 1
-                                    print('slCount =', slCount)
-                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                    break
-                                elif close2[-1] <= target:
-                                    print('Target hit')
-                                    st = -1
-                                    targetCount += 1
-                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                    break
-                                else:
-                                    slConfirmCount = 0
-                                    print("In Trade (CREDIT). No Exit. close=", close2[-1], " SL=", sl, " target=", target)
-                                    time.sleep(1)
-                                    break
-
-                        # === DEBIT SPREAD EXIT LOGIC ===
+                            # Credit: premium rising = loss (SL), falling = profit (target)
+                            if not slTrailed and ltp_now <= (entryPremium - trailTriggerPts):
+                                sl = entryPremium
+                                slTrailed = True
+                                print("TRAILING SL activated! SL moved to breakeven =", sl)
+                            sl_breach = ltp_now >= sl
+                            tgt_reached = ltp_now <= target
                         else:
-                            # Debit: premium falling = loss (SL), premium rising = profit (target)
-                            if st == 1 or st == 2:
-                                trail_trigger = trailTriggerPts
-                                if not slTrailed and close2[-1] >= (entryPremium + trail_trigger):
-                                    sl = entryPremium
-                                    slTrailed = True
-                                    print("DEBIT TRAILING SL activated! SL moved to breakeven =", sl)
+                            # Debit: premium falling = loss (SL), rising = profit (target)
+                            if not slTrailed and ltp_now >= (entryPremium + trailTriggerPts):
+                                sl = entryPremium
+                                slTrailed = True
+                                print("DEBIT TRAILING SL activated! SL moved to breakeven =", sl)
+                            sl_breach = ltp_now <= sl
+                            tgt_reached = ltp_now >= target
 
-                                if close2[-1] <= sl:
-                                    # Quick exit on first 1-min close beyond SL (same as target — no 2-candle wait)
-                                    print('DEBIT SL Hit')
-                                    st = 0
-                                    slCount += 1
-                                    print('slCount =', slCount)
-                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                    break
-                                elif close2[-1] >= target:
-                                    print('DEBIT Target hit')
-                                    st = -1
-                                    targetCount += 1
-                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                    break
-                                else:
-                                    slConfirmCount = 0
-                                    print("In Trade (DEBIT). No Exit. close=", close2[-1], " SL=", sl, " target=", target)
-                                    time.sleep(1)
-                                    break
+                        if sl_breach:
+                            ltpSlConfirm += 1
+                            print(f"LTP_SL_WATCH: ltp={ltp_now} SL={sl} confirm={ltpSlConfirm}/{SL_CONFIRM_TICKS}")
+                            if ltpSlConfirm >= SL_CONFIRM_TICKS:
+                                print('SL Hit (LTP)')
+                                st = 0
+                                slCount += 1
+                                print('slCount =', slCount)
+                                oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                break
+                        else:
+                            ltpSlConfirm = 0
 
-                    elif oneMinCandle_Formed == 1:
-                        time.sleep(1)
-                    else:
-                        print("Waiting for first 1min candle to form. Current Second == ", dt2.second, "  ",
-                              dt2.minute % timeFrame2)
-                        time.sleep(1)
+                        if tgt_reached:
+                            ltpTgtConfirm += 1
+                            print(f"LTP_TGT_WATCH: ltp={ltp_now} target={target} confirm={ltpTgtConfirm}/{TGT_CONFIRM_TICKS}")
+                            if ltpTgtConfirm >= TGT_CONFIRM_TICKS:
+                                print('Target hit (LTP)')
+                                st = -1
+                                targetCount += 1
+                                oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                break
+                        else:
+                            ltpTgtConfirm = 0
+
+                        # Routine heartbeat throttled to ~once/min (near top of minute) so the
+                        # 3s poll doesn't flood the log — breach lines above still log every poll.
+                        if not sl_breach and not tgt_reached and dt2.second < LTP_POLL_INTERVAL:
+                            print("In Trade (", spread_decision.get("type"), "). No Exit. ltp=", ltp_now,
+                                  " SL=", sl, " target=", target)
+
+                    elif ltp_now is None and (st == 1 or st == 2):
+                        # === FALLBACK: LTP unavailable → use last completed 1-min candle close ===
+                        # Only runs when the live quote failed (rate-limit / outage). getHistorical
+                        # hits a different endpoint than quotes, so it may still succeed. Exits
+                        # immediately on breach (no confirmation) since we're already degraded —
+                        # guarantees we're never blind to the SL for more than ~1 candle.
+                        try:
+                            _fb = helper.getHistorical(tradeATMOption, 1, 3, fyers)
+                            _fb_close = float(_fb['close'].to_numpy()[-1])
+                        except Exception as _e2:
+                            _fb_close = None
+                            print("CANDLE_FALLBACK_FAILED:", _e2)
+                        if _fb_close is not None:
+                            if not is_debit:
+                                fb_sl = _fb_close >= sl
+                                fb_tgt = _fb_close <= target
+                            else:
+                                fb_sl = _fb_close <= sl
+                                fb_tgt = _fb_close >= target
+                            if fb_sl:
+                                print("SL Hit (CANDLE FALLBACK) close=", _fb_close, " SL=", sl)
+                                st = 0
+                                slCount += 1
+                                print('slCount =', slCount)
+                                oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                break
+                            elif fb_tgt:
+                                print("Target hit (CANDLE FALLBACK) close=", _fb_close, " target=", target)
+                                st = -1
+                                targetCount += 1
+                                oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                break
+                            else:
+                                print("LTP_FALLBACK: quotes down, using candle close=", _fb_close,
+                                      " SL=", sl, " target=", target)
+
+                    time.sleep(LTP_POLL_INTERVAL)
 
             # TIME EXIT 3.24 pm
+            # Refresh dt1 — the LTP monitor loop above runs continuously (no longer breaks
+            # every minute like the old candle loop), so dt1 from the outer loop top is stale
+            # after being in a trade. Re-read now so EOD square-off actually triggers.
+            dt1 = datetime.now()
             if dt1.hour >= 15 and dt1.minute >= 24:
                 if st == 1 or st == 2:
                     print("EOD Exit")
