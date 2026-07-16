@@ -315,7 +315,10 @@ def getSpreadMargin(legs, fyers):
         fyers: FyersModel instance (used only to read client_id/token for auth header)
 
     Returns:
-        float: total margin required for the basket (margin_total), or None on failure.
+        tuple (margin_total, margin_avail): required margin for the basket AND the account's
+        real available funds (both floats), or (None, None) on failure. margin_avail is the
+        same live "Available" balance the broker enforces — use it (not a hardcoded cap) to
+        size within actual funds.
     """
     order_data = []
     for leg in legs:
@@ -340,14 +343,17 @@ def getSpreadMargin(legs, fyers):
             resp = requests.post(url, json=data, headers=headers, timeout=10)
             resp_json = resp.json()
             if isinstance(resp_json, dict) and resp_json.get('data') and resp_json['data'].get('margin_total') is not None:
-                return float(resp_json['data']['margin_total'])
+                _total = float(resp_json['data']['margin_total'])
+                _avail = resp_json['data'].get('margin_avail')
+                _avail = float(_avail) if _avail is not None else None
+                return (_total, _avail)
             last_err = resp_json
         except Exception as e:
             last_err = e
         if attempt < 2:
             time.sleep(0.3 * (2 ** attempt))
     print("getSpreadMargin: failed to fetch margin. last_response=", last_err)
-    return None
+    return (None, None)
 
 def exitAll(orderId,fyres):
     data =  {}

@@ -171,10 +171,17 @@ target_point = 60
 LOT_SIZE = 20                    # Sensex lot size
 FIXED_RISK_PER_TRADE = 5000      # ₹ NET risk per trade if SL hits (after hedge offset) — reduced for testing period
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
-# margin check (apply_margin_cap) against MAX_DEPLOYABLE_CAPITAL below.
+# margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
 MIN_LOTS = 1                     # minimum position
-MAX_DEPLOYABLE_CAPITAL = 1000000  # ₹ — real capital ceiling checked via getSpreadMargin()
+# Fraction of available funds usable for a trade. Applied to REAL available funds
+# (margin_avail from the broker, fetched live) when available; else to FALLBACK_CAPITAL.
+# 0.90 leaves a 10% buffer so we never hit a broker margin-shortfall rejection
+# (which previously left a naked leg — see 2026-07-16).
+DEPLOYABLE_CAPITAL_FRACTION = 0.90
+# Used ONLY when the broker's live available-funds figure (margin_avail) can't be fetched.
+# Keep at/below your real account balance so a fallback never over-sizes.
+FALLBACK_CAPITAL = 800000        # ₹ — hardcoded deployable capital fallback
 
 def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None):
     """
@@ -206,12 +213,27 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
     return lots * LOT_SIZE
 
 
+def _order_ok(resp):
+    """
+    True if an order response indicates success.
+    - papertrading=0 path returns 0 (no real order placed) -> treat as ok so paper mode flows.
+    - live path returns Fyers dict: success = s=='ok' or code==1101.
+    - anything else (error dict code=-99, None from exception) -> failure.
+    """
+    if resp == 0:
+        return True
+    if isinstance(resp, dict):
+        return resp.get('s') == 'ok' or resp.get('code') == 1101
+    return False
+
+
 def apply_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyers_client):
     """
-    Check REAL broker margin for the (main leg + hedge leg) basket at the given qty.
+    Check REAL broker margin for the (main leg + hedge leg) basket at the given qty and
+    step qty down until it fits within DEPLOYABLE_CAPITAL_FRACTION of the account's REAL
+    available funds (margin_avail, fetched live — no hardcoded capital number).
     main_side/hedge_side: 1=BUY, -1=SELL (matches Fyers multiorder_margin API).
-    Steps qty down in lot increments until margin fits within MAX_DEPLOYABLE_CAPITAL.
-    - If even MIN_LOTS exceeds capital, keeps MIN_LOTS (never blocks the trade) and warns.
+    - If even MIN_LOTS exceeds the usable balance, keeps MIN_LOTS (never blocks) and warns.
     - If the margin API call fails, fails OPEN (returns qty unchanged) so an API hiccup
       never stalls trading — logs a warning instead.
     """
@@ -222,24 +244,35 @@ def apply_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyer
         # overstate the real margin requirement (no intraday discount).
         # NOTE: hedge (BUY) leg MUST be listed first. Per Fyers docs, the hedge-benefit
         # netting is applied when the long/hedge leg is evaluated before the short leg —
-        # sending the short leg first computes standalone (unhedged) margin, which is
-        # what was happening here and matched the sell-leg-only Fyers UI number.
+        # sending the short leg first computes standalone (unhedged) margin.
         legs = [
             {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side, "productType": "INTRADAY"},
             {"symbol": main_symbol, "qty": candidate_qty, "side": main_side, "productType": "INTRADAY"},
         ]
-        margin = helper.getSpreadMargin(legs, fyers_client)
-        if margin is None:
-            print(f"MARGIN_CHECK: margin API failed - using qty={candidate_qty} as-is (fail-open)")
-            return candidate_qty
+        margin_required, margin_avail = helper.getSpreadMargin(legs, fyers_client)
+        if margin_required is None:
+            # Whole margin API failed — no required-margin figure exists to size against,
+            # so a capital cap can't be applied at all. Safest: MIN_LOTS (1 lot fits any
+            # realistic balance) rather than blindly pushing the full risk-based qty.
+            print(f"MARGIN_CHECK: margin API fully failed - falling back to MIN_LOTS (cannot verify)")
+            return MIN_LOTS * LOT_SIZE
+        # Usable capital: prefer the broker's REAL available funds; if that field is
+        # missing (partial response), fall back to hardcoded FALLBACK_CAPITAL.
+        if margin_avail is not None:
+            usable = margin_avail * DEPLOYABLE_CAPITAL_FRACTION
+            _cap_src = f"avail={round(margin_avail, 2)}"
+        else:
+            usable = FALLBACK_CAPITAL * DEPLOYABLE_CAPITAL_FRACTION
+            _cap_src = f"FALLBACK_CAPITAL={FALLBACK_CAPITAL}"
         print(f"MARGIN_CHECK: qty={candidate_qty} ({candidate_qty // LOT_SIZE} lots) "
-              f"margin_required={round(margin, 2)} capital_limit={MAX_DEPLOYABLE_CAPITAL}")
-        if margin <= MAX_DEPLOYABLE_CAPITAL:
+              f"margin_required={round(margin_required, 2)} {_cap_src} "
+              f"usable({int(DEPLOYABLE_CAPITAL_FRACTION*100)}%)={round(usable, 2)}")
+        if margin_required <= usable:
             return candidate_qty
         candidate_qty -= LOT_SIZE
 
-    print(f"MARGIN_CHECK: even MIN_LOTS margin exceeds capital_limit={MAX_DEPLOYABLE_CAPITAL} "
-          f"- using MIN_LOTS={MIN_LOTS} anyway (increase deployable capital to raise lots)")
+    print(f"MARGIN_CHECK: even MIN_LOTS margin exceeds usable funds "
+          f"- using MIN_LOTS={MIN_LOTS} anyway (add funds to raise lots)")
     return MIN_LOTS * LOT_SIZE
 
 bullBar = False
@@ -917,6 +950,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     global mainOrderId
     global tradeOptRange
     global iv_params
+    global entry_ok
     global qty  # exitPosition/exitSpreadPosition read module-level qty on exit — must
                 # update it here so exits close the ACTUAL traded quantity, not stale default.
 
@@ -972,6 +1006,10 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         hedgeOrderId = helper.placeTargetOrder(otmPE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmPE
+        if not _order_ok(hedgeOrderId):
+            print("ENTRY_ABORT: CREDIT bull hedge BUY leg failed — no position taken. resp=", hedgeOrderId)
+            entry_ok = False
+            return None
         time.sleep(0.5)
 
         ceTarget = round(entryPrice - dynamic_target)
@@ -980,6 +1018,11 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         mainOrderId = helper.placeTargetOrder(atmPE, "SELL", qty, "MARKET", entryPrice, ceSL, ceTarget, fyers, papertrading)
         tradeATMOption = atmPE
         print("Exit OID: ", mainOrderId, " ", hedgeOrderId)
+        if not _order_ok(mainOrderId):
+            print("ENTRY_ABORT: CREDIT bull main SELL leg failed — squaring off orphaned hedge BUY. resp=", mainOrderId)
+            helper.placeOrder(otmPE, "SELL", qty, "MARKET", 0, "regular", fyers, papertrading)
+            entry_ok = False
+            return None
 
     if isBearish:
         entryPrice = helper.manualLTP(atmCE, fyers)
@@ -1018,6 +1061,10 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         hedgeOrderId = helper.placeTargetOrder(otmCE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmCE
+        if not _order_ok(hedgeOrderId):
+            print("ENTRY_ABORT: CREDIT bear hedge BUY leg failed — no position taken. resp=", hedgeOrderId)
+            entry_ok = False
+            return None
         time.sleep(0.5)
 
         ceTarget = round(entryPrice - dynamic_target)
@@ -1026,6 +1073,11 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         mainOrderId = helper.placeTargetOrder(atmCE, "SELL", qty, "MARKET", entryPrice, ceSL, ceTarget, fyers, papertrading)
         tradeATMOption = atmCE
         print("Exit OID: ", mainOrderId, " ", hedgeOrderId)
+        if not _order_ok(mainOrderId):
+            print("ENTRY_ABORT: CREDIT bear main SELL leg failed — squaring off orphaned hedge BUY. resp=", mainOrderId)
+            helper.placeOrder(otmCE, "SELL", qty, "MARKET", 0, "regular", fyers, papertrading)
+            entry_ok = False
+            return None
 
     return mainOrderId
 
@@ -1045,6 +1097,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
     global mainOrderId
     global tradeOptRange
     global iv_params
+    global entry_ok
     global qty  # exitPosition/exitSpreadPosition read module-level qty on exit — must
                 # update it here so exits close the ACTUAL traded quantity, not stale default.
 
@@ -1096,12 +1149,21 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # BUY ATM CE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmCE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
         tradeATMOption = atmCE
+        if not _order_ok(mainOrderId):
+            print("ENTRY_ABORT: DEBIT bull main BUY leg failed — no position taken. resp=", mainOrderId)
+            entry_ok = False
+            return None
         time.sleep(0.5)
 
         # SELL OTM CE (hedge leg — gets margin benefit from buy)
         hedgeOrderId = helper.placeTargetOrder(otmCE, "SELL", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmCE
         print("Exit OID: ", mainOrderId, " ", hedgeOrderId)
+        if not _order_ok(hedgeOrderId):
+            print("ENTRY_ABORT: DEBIT bull hedge SELL leg failed — squaring off orphaned main BUY. resp=", hedgeOrderId)
+            helper.placeOrder(atmCE, "SELL", qty, "MARKET", 0, "regular", fyers, papertrading)
+            entry_ok = False
+            return None
 
     if isBearish:
         # Bear Put Debit Spread: Buy ATM PE + Sell OTM PE (500-pt interval, ≤60% of buy premium)
@@ -1141,12 +1203,21 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # BUY ATM PE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmPE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
         tradeATMOption = atmPE
+        if not _order_ok(mainOrderId):
+            print("ENTRY_ABORT: DEBIT bear main BUY leg failed — no position taken. resp=", mainOrderId)
+            entry_ok = False
+            return None
         time.sleep(0.5)
 
         # SELL OTM PE (hedge leg — gets margin benefit from buy)
         hedgeOrderId = helper.placeTargetOrder(otmPE, "SELL", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmPE
         print("Exit OID: ", mainOrderId, " ", hedgeOrderId)
+        if not _order_ok(hedgeOrderId):
+            print("ENTRY_ABORT: DEBIT bear hedge SELL leg failed — squaring off orphaned main BUY. resp=", hedgeOrderId)
+            helper.placeOrder(atmPE, "SELL", qty, "MARKET", 0, "regular", fyers, papertrading)
+            entry_ok = False
+            return None
 
     return mainOrderId
 
@@ -1160,6 +1231,8 @@ def takeEntry(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, papert
     right after the strike is locked in, so sizing always matches the exact traded strike.
     """
     global spread_decision
+    global entry_ok
+    entry_ok = True  # reset each entry; credit/debit set False on a leg rejection
     if OBSERVATION_MODE:
         spread_type = spread_decision.get("type", "CREDIT")
         direction = "BULL" if isBullish else "BEAR"
@@ -1636,6 +1709,8 @@ tradeATMOption = ''
 tradeOptRange = None  # option candle-range median computed ONCE on the final traded strike,
                        # reused for both qty sizing and post-entry SL/Target so both use the
                        # exact same snapshot (fixes qty/SL mismatch from separate live calls).
+entry_ok = True  # set False by takeEntryCredit/Debit if a leg is rejected (orphaned leg is
+                  # squared off); caller checks it to reset state and skip monitoring.
 entryPremium = 0  # track entry premium for trailing SL
 trailTriggerPts = 0  # effective_sl / 3 — stored at entry time
 slTrailed = False
@@ -2049,6 +2124,19 @@ while x == 1:
                     st = 1
                 takeEntry(isBullTrade, False, synthetic_atm_strike_tmp, intExpiry_tmp, fyers, papertrading)
 
+                # Entry safety: if a leg was rejected, entry_ok is False and any orphaned leg
+                # was already squared off inside takeEntry. Reset state and skip monitoring so
+                # we don't manage a phantom/naked position (see 2026-07-16 margin-shortfall).
+                if not OBSERVATION_MODE and not entry_ok:
+                    print("ENTRY_ABORT: bull entry failed — no position held, resetting state")
+                    st = 0
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    continue
+
                 if OBSERVATION_MODE:
                     # Reset signal flags so next 3-min cycle can detect fresh signal
                     IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
@@ -2160,6 +2248,19 @@ while x == 1:
                 if not OBSERVATION_MODE:
                     st = 2
                 takeEntry(False, isBearTrade, synthetic_atm_strike_tmp, intExpiry_tmp, fyers, papertrading)
+
+                # Entry safety: if a leg was rejected, entry_ok is False and any orphaned leg
+                # was already squared off inside takeEntry. Reset state and skip monitoring so
+                # we don't manage a phantom/naked position (see 2026-07-16 margin-shortfall).
+                if not OBSERVATION_MODE and not entry_ok:
+                    print("ENTRY_ABORT: bear entry failed — no position held, resetting state")
+                    st = 0
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    continue
 
                 if OBSERVATION_MODE:
                     # Reset signal flags so next 3-min cycle can detect fresh signal
