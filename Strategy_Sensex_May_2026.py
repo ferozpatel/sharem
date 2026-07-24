@@ -242,13 +242,18 @@ def apply_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyer
         # productType=INTRADAY to match the actual order placement (placeTargetOrder
         # uses INTRADAY since all trades are same-day exit) - MARGIN/positional would
         # overstate the real margin requirement (no intraday discount).
-        # NOTE: hedge (BUY) leg MUST be listed first. Per Fyers docs, the hedge-benefit
-        # netting is applied when the long/hedge leg is evaluated before the short leg —
-        # sending the short leg first computes standalone (unhedged) margin.
-        legs = [
-            {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side, "productType": "INTRADAY"},
+        # NOTE: the BUY (long) leg MUST be listed first. Per Fyers docs the hedge-benefit
+        # netting is applied only when the long/protective leg is evaluated before the
+        # short leg; short-first computes near-standalone (unhedged) margin.
+        # This ordering must key off SIDE, not the main/hedge label: for CREDIT the hedge
+        # is the BUY leg, but for DEBIT the MAIN is the BUY leg — so we sort by side so the
+        # long leg is always first, correct for both spread types.
+        _legs_raw = [
             {"symbol": main_symbol, "qty": candidate_qty, "side": main_side, "productType": "INTRADAY"},
+            {"symbol": hedge_symbol, "qty": candidate_qty, "side": hedge_side, "productType": "INTRADAY"},
         ]
+        # BUY (side=1) before SELL (side=-1)
+        legs = sorted(_legs_raw, key=lambda l: l["side"], reverse=True)
         margin_required, margin_avail = helper.getSpreadMargin(legs, fyers_client)
         if margin_required is None:
             # Whole margin API failed — no required-margin figure exists to size against,
