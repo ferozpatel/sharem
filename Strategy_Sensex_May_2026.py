@@ -143,7 +143,7 @@ timeFrame2 = 1  # in minutes
 # 1-min candle close) so a fast adverse move is caught in seconds, not up to a minute.
 # Require SL_CONFIRM_TICKS consecutive breached polls before exiting — filters out a
 # single jumpy/stale option quote that instantly reverts (fake-spike whipsaw).
-LTP_POLL_INTERVAL = 3   # seconds between live LTP checks
+LTP_POLL_INTERVAL = 2   # seconds between live LTP checks
 SL_CONFIRM_TICKS = 2    # consecutive breached polls needed to trigger SL exit
 TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
 
@@ -837,8 +837,12 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
         highs = opt_data['high'].to_numpy()
         lows = opt_data['low'].to_numpy()
 
-        # Use abs(close - open) as candle body range (not high-low)
-        ranges = abs(opt_data['close'].to_numpy() - opt_data['open'].to_numpy())[-n_candles:]
+        # Use HIGH-LOW range (full intra-candle movement), NOT close-open body.
+        # We monitor exits via real-time LTP, which travels the full high-low path each
+        # candle (including wicks). Sizing SL off the body understated real movement and
+        # caused whipsaw stop-outs on normal wicks (see 2026-07-27 morning trade: body
+        # median 3.7 -> 15pt SL -> stopped in 1 min). High-low reflects what LTP actually sees.
+        ranges = (opt_data['high'].to_numpy() - opt_data['low'].to_numpy())[-n_candles:]
         # Filter out zero-range candles (no trade in that 3-min)
         ranges = ranges[ranges > 0]
 
@@ -854,6 +858,26 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
               f"| total_candles_after_skip1st={len(ranges)}",
               f"| ranges={all_ranges_rounded}",
               f"| median_all={round(representative_range, 2)}")
+
+        # === MAIN-LEG OPTION CHART OHLC (single line at entry) — kept for future analysis ===
+        # Full open/high/low/close of the exact traded (main/ATM) leg at entry time, so we can
+        # later reconstruct the median calc and re-tune SL/target sizing logic offline.
+        # One consolidated line (not per-candle) covering the candles that fed the median.
+        try:
+            ohlc_candles = opt_data.iloc[-n_candles:]
+            o_list = [round(float(x), 2) for x in ohlc_candles['open'].to_numpy()]
+            h_list = [round(float(x), 2) for x in ohlc_candles['high'].to_numpy()]
+            l_list = [round(float(x), 2) for x in ohlc_candles['low'].to_numpy()]
+            c_list = [round(float(x), 2) for x in ohlc_candles['close'].to_numpy()]
+            print(f"OPT_OHLC_ENTRY: symbol={option_symbol}",
+                  f"| candles={len(ohlc_candles)}",
+                  f"| open={o_list}",
+                  f"| high={h_list}",
+                  f"| low={l_list}",
+                  f"| close={c_list}",
+                  f"| median_range={round(representative_range, 2)}")
+        except Exception as ohlc_err:
+            print("OPT_OHLC_LOG_ERROR:", str(ohlc_err))
 
         return round(representative_range, 2)
     except Exception as e:
@@ -1000,7 +1024,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
-        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1055,7 +1079,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
-        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1142,7 +1166,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
-        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1196,7 +1220,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
-        effective_sl_pre = round(opt_range * 4) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -2161,15 +2185,15 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 4, Target: median x 6
+                # SL: median x 2, Target: median x 4 (R:R 1:2). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here,
                 # so SL/Target and qty sizing always agree on the same volatility snapshot.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 4)
-                    effective_tgt = round(opt_range * 6)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx6)"
+                    effective_sl = round(opt_range * 2)
+                    effective_tgt = round(opt_range * 4)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx4)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -2284,14 +2308,14 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 4, Target: median x 6
+                # SL: median x 2, Target: median x 4 (R:R 1:2). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 4)
-                    effective_tgt = round(opt_range * 6)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx4,Tgtx6)"
+                    effective_sl = round(opt_range * 2)
+                    effective_tgt = round(opt_range * 4)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx4)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
