@@ -147,6 +147,12 @@ LTP_POLL_INTERVAL = 2   # seconds between live LTP checks
 SL_CONFIRM_TICKS = 2    # consecutive breached polls needed to trigger SL exit
 TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
 
+# Trailing SL: once the trade is TRAIL_TRIGGER_TARGET_FRACTION * effective_tgt in profit
+# (i.e. 60% of the way to target), move the SL to breakeven (one-shot, no incremental
+# trailing). Refuses to let a solid winner that has covered most of the distance to target
+# turn back into a loss, while still giving the trade room in the first half of the move.
+TRAIL_TRIGGER_TARGET_FRACTION = 0.60
+
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
 target_point = 60
@@ -2185,15 +2191,15 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 2, Target: median x 4 (R:R 1:2). Median is HIGH-LOW range.
+                # SL: median x 2, Target: median x 3.5 (R:R 1:1.75). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here,
                 # so SL/Target and qty sizing always agree on the same volatility snapshot.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 2)
-                    effective_tgt = round(opt_range * 4)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx4)"
+                    effective_tgt = round(opt_range * 3.5)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx3.5)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -2213,7 +2219,7 @@ while x == 1:
                 entryPremium = float(close[-1])
                 slTrailed = False
                 slConfirmCount = 0
-                trailTriggerPts = round(effective_sl * 0.66)
+                trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
@@ -2308,14 +2314,14 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 2, Target: median x 4 (R:R 1:2). Median is HIGH-LOW range.
+                # SL: median x 2, Target: median x 3.5 (R:R 1:1.75). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 2)
-                    effective_tgt = round(opt_range * 4)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx4)"
+                    effective_tgt = round(opt_range * 3.5)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx3.5)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -2334,7 +2340,7 @@ while x == 1:
                 entryPremium = float(close[-1])
                 slTrailed = False
                 slConfirmCount = 0
-                trailTriggerPts = round(effective_sl * 0.66)
+                trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
