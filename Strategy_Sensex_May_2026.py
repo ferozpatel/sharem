@@ -1747,7 +1747,7 @@ tradeOptRange = None  # option candle-range median computed ONCE on the final tr
 entry_ok = True  # set False by takeEntryCredit/Debit if a leg is rejected (orphaned leg is
                   # squared off); caller checks it to reset state and skip monitoring.
 entryPremium = 0  # track entry premium for trailing SL
-trailTriggerPts = 0  # effective_sl / 3 — stored at entry time
+trailTriggerPts = 0  # effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION — set at entry time
 slTrailed = False
 slConfirmCount = 0
 spread_type_decided = False  # flag to decide spread type only once per day
@@ -2442,7 +2442,7 @@ while x == 1:
                             ltpTgtConfirm = 0
 
                         # Routine heartbeat throttled to ~once/min (near top of minute) so the
-                        # 3s poll doesn't flood the log — breach lines above still log every poll.
+                        # 2s poll doesn't flood the log — breach lines above still log every poll.
                         if not sl_breach and not tgt_reached and dt2.second < LTP_POLL_INTERVAL:
                             print("In Trade (", spread_decision.get("type"), "). No Exit. ltp=", ltp_now,
                                   " SL=", sl, " target=", target)
