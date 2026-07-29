@@ -167,14 +167,25 @@ target_point = 60
 # hedge offsets less. Using both premiums keeps the NET rupee risk consistent across
 # days even though the spread width (and hedge premium) varies.
 #
-#   hedge_offset_ratio = hedge_premium / main_premium
+#   hedge_offset_ratio = hedge_median_range / main_median_range   (preferred)
 #   net_sl_points      = effective_sl * (1 - hedge_offset_ratio)
 #   lots               = FIXED_RISK_PER_TRADE / (net_sl_points * LOT_SIZE)
 #
-# NOTE: premium-ratio is an APPROXIMATION of hedge delta — accurate for normal SL
-# exits, but a violent gap can still overshoot (hedge relationship shifts on fast moves).
+# OFFSET RATIO SOURCE (why range, not premium):
+# The offset that actually hits P&L is how far the hedge MOVES when the main leg moves
+# (i.e. the delta ratio) — not how much the hedge is WORTH. Premium ratio systematically
+# understates it and therefore systematically UNDER-sizes the position:
+#   2026-07-29: premium ratio 99/318 = 0.311, but realized offset was 36.89/85.0 = 0.434.
+#   Result: intended risk 5000 -> actual risk only ~3800, profit 6735 instead of ~8660.
+# Both legs share one underlying, so median high-low range over the same candles is an
+# empirical delta proxy (no Greeks needed from the API).
+# Fallback chain: hedge range -> premium ratio -> short-leg-only (no offset).
 # effective_sl (option candle median x multiplier) itself stays untouched — sizing only.
 LOT_SIZE = 20                    # Sensex lot size
+# Deep-OTM hedge candles can be thin/stale, making the range ratio noisy. Clamp it so a
+# bad data point can never collapse net_sl_points toward zero and over-size the position.
+HEDGE_OFFSET_RATIO_MIN = 0.10
+HEDGE_OFFSET_RATIO_MAX = 0.75
 FIXED_RISK_PER_TRADE = 5000      # ₹ NET risk per trade if SL hits (after hedge offset) — reduced for testing period
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
@@ -189,7 +200,8 @@ DEPLOYABLE_CAPITAL_FRACTION = 0.90
 # Keep at/below your real account balance so a fallback never over-sizes.
 FALLBACK_CAPITAL = 800000        # ₹ — hardcoded deployable capital fallback
 
-def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None):
+def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None,
+                      main_range=None, hedge_range=None):
     """
     Return qty (lots x LOT_SIZE) sized so a SL-hit loses ~= FIXED_RISK_PER_TRADE NET of hedge.
 
@@ -197,18 +209,46 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
         effective_sl_points: SL distance on the SHORT leg (option candle median x multiplier).
         main_premium: sold (short) leg premium at entry.
         hedge_premium: bought (hedge) leg premium at entry.
+        main_range: main leg median high-low 3-min range (preferred offset numerator source).
+        hedge_range: hedge leg median high-low 3-min range.
 
-    If premiums are missing/invalid, falls back to short-leg-only sizing (no hedge credit).
+    Offset ratio priority:
+      1) RANGE  — hedge_range / main_range (empirical delta proxy; most accurate)
+      2) PREMIUM — hedge_premium / main_premium (fallback when hedge candles unavailable)
+      3) NONE   — short-leg-only sizing (no hedge credit) if both are unusable
     """
     if effective_sl_points is None or effective_sl_points <= 0:
         return MIN_LOTS * LOT_SIZE
 
+    # --- Determine hedge offset ratio (how far the hedge moves per point of main move) ---
+    hedge_offset_ratio = None
+    ratio_source = "NONE"
+
+    # 1) Preferred: realized movement ratio from option candles (delta proxy).
+    if (main_range and hedge_range and main_range > 0 and hedge_range > 0):
+        raw_ratio = hedge_range / main_range
+        hedge_offset_ratio = max(HEDGE_OFFSET_RATIO_MIN,
+                                 min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
+        ratio_source = (f"RANGE(hedge={hedge_range}/main={main_range}"
+                        f"=raw{round(raw_ratio, 3)})")
+
+    # 2) Fallback: premium ratio (hedge candle data missing/failed).
+    elif (main_premium and hedge_premium and main_premium > 0
+            and 0 < hedge_premium < main_premium):
+        raw_ratio = hedge_premium / main_premium
+        hedge_offset_ratio = max(HEDGE_OFFSET_RATIO_MIN,
+                                 min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
+        ratio_source = (f"PREMIUM(hedge={hedge_premium}/main={main_premium}"
+                        f"=raw{round(raw_ratio, 3)})")
+
     # Net-of-hedge SL points: discount the short-leg SL by the hedge's offset share.
     net_sl_points = effective_sl_points
-    if (main_premium and hedge_premium and main_premium > 0
-            and 0 < hedge_premium < main_premium):
-        hedge_offset_ratio = hedge_premium / main_premium
+    if hedge_offset_ratio is not None:
         net_sl_points = effective_sl_points * (1 - hedge_offset_ratio)
+
+    print(f"HEDGE_OFFSET: source={ratio_source}"
+          f" used_ratio={round(hedge_offset_ratio, 3) if hedge_offset_ratio is not None else None}"
+          f" effective_sl={effective_sl_points} -> net_sl_points={round(net_sl_points, 2)}")
 
     if net_sl_points <= 0:
         return MIN_LOTS * LOT_SIZE
@@ -1030,9 +1070,14 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
+        # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
+        hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+                                main_range=opt_range, hedge_range=hedge_opt_range)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("CREDIT_ENTRY: qty=", qty)
 
@@ -1085,9 +1130,14 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
+        # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
+        hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+                                main_range=opt_range, hedge_range=hedge_opt_range)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("CREDIT_ENTRY: qty=", qty)
 
@@ -1172,9 +1222,14 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
+        # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
+        hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+                                main_range=opt_range, hedge_range=hedge_opt_range)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("DEBIT_ENTRY: qty=", qty)
 
@@ -1226,9 +1281,14 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
+        # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
+        # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
+        hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price)
+        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+                                main_range=opt_range, hedge_range=hedge_opt_range)
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
+              f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
         print("DEBIT_ENTRY: qty=", qty)
 
