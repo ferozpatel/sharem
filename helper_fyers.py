@@ -616,7 +616,11 @@ def getHistorical(ticker,interval,duration,fyers):
         # any extra trailing fields are ignored so future schema additions don't break us again.
         df = pd.DataFrame(response)
         expected_cols = ['Timestamp', 'open', 'high', 'low', 'close', 'volume']
-        df = df.iloc[:, :len(expected_cols)]
+        # .copy() matters: a bare .iloc slice is a VIEW, and that "slice of a DataFrame"
+        # lineage propagates downstream, making the later filtered_df column assignment emit
+        # SettingWithCopyWarning (floods the log) with no guarantee the write propagates.
+        # Copying restores the standalone-DataFrame ownership the old constructor gave us.
+        df = df.iloc[:, :len(expected_cols)].copy()
         df.columns = expected_cols
 
         # Convert Timestamp to datetime in UTC
@@ -628,8 +632,11 @@ def getHistorical(ticker,interval,duration,fyers):
 
         # =====
         # Filter rows where 'Timestamp2' is less than 15:30
-        filtered_df = df[df['Timestamp2'].dt.time < pd.to_datetime('15:30').time()]
-        filtered_df['datetime2'] = filtered_df['Timestamp2'].copy()
+        # .copy() so this is an owned DataFrame, not a filtered view — the column assignment
+        # and inplace set_index below are both writes, which on a view emit
+        # SettingWithCopyWarning and are not guaranteed to propagate.
+        filtered_df = df[df['Timestamp2'].dt.time < pd.to_datetime('15:30').time()].copy()
+        filtered_df['datetime2'] = filtered_df['Timestamp2']
         # =====
         # Set 'Timestamp2' as the index
         filtered_df.set_index('Timestamp2', inplace=True)
