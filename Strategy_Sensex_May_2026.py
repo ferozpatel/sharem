@@ -931,6 +931,44 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
         return None
 
 
+def get_entry_anchor_premium(option_symbol, fyers_client):
+    """
+    Resolve the premium used to anchor SL/Target immediately AFTER a spread is filled.
+
+    This runs with a LIVE position open, so it must never raise and must never silently
+    leave SL/Target anchored to stale globals from a previous trade (which is what a bare
+    try/except would do — sl/target/entryPremium are module-level and would still hold the
+    prior trade's values, monitoring a real position against unrelated levels).
+
+    Fallback chain (each source is an independent endpoint):
+      1) last completed 1-min candle close  (fyers.history)
+      2) live quote                          (fyers.quotes — different endpoint, so it can
+                                              succeed when history is broken/rate-limited)
+      3) None -> caller MUST square off; we cannot manage what we cannot measure.
+
+    Returns:
+        tuple: (premium or None, source_label)
+    """
+    try:
+        d = helper.getHistorical(option_symbol, 1, 3, fyers_client)
+        c = d['close'].to_numpy()
+        if len(c) > 0 and float(c[-1]) > 0:
+            return float(c[-1]), "CANDLE_CLOSE"
+        print("ANCHOR_CANDLE_EMPTY: no usable close for", option_symbol)
+    except Exception as e:
+        print("ANCHOR_CANDLE_FAILED:", e)
+
+    try:
+        ltp = helper.manualLTP(option_symbol, fyers_client)
+        if ltp and float(ltp) > 0:
+            print(f"ANCHOR_LTP_FALLBACK: using live LTP {ltp} for {option_symbol}")
+            return float(ltp), "LIVE_LTP"
+    except Exception as e:
+        print("ANCHOR_LTP_FAILED:", e)
+
+    return None, "NONE"
+
+
 # ============================================================
 # ENTRY FUNCTIONS: CREDIT SPREAD & DEBIT SPREAD
 # ============================================================
@@ -1051,9 +1089,18 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         otmPE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
-            candidate_premium = helper.manualLTP(candidate, fyers)
+            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+            try:
+                candidate_premium = helper.manualLTP(candidate, fyers)
+            except Exception as _hedge_err:
+                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                hedge_strike -= 500
+                continue
             print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            if candidate_premium <= max_premium:
+            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+            # untraded, illiquid strike as the hedge.
+            if 0 < candidate_premium <= max_premium:
                 otmPE_found = candidate
                 break
             hedge_strike -= 500
@@ -1111,9 +1158,18 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         otmCE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
-            candidate_premium = helper.manualLTP(candidate, fyers)
+            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+            try:
+                candidate_premium = helper.manualLTP(candidate, fyers)
+            except Exception as _hedge_err:
+                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                hedge_strike += 500
+                continue
             print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            if candidate_premium <= max_premium:
+            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+            # untraded, illiquid strike as the hedge.
+            if 0 < candidate_premium <= max_premium:
                 otmCE_found = candidate
                 break
             hedge_strike += 500
@@ -1204,9 +1260,18 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         otmCE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
-            candidate_premium = helper.manualLTP(candidate, fyers)
+            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+            try:
+                candidate_premium = helper.manualLTP(candidate, fyers)
+            except Exception as _hedge_err:
+                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                hedge_strike += 500
+                continue
             print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            if candidate_premium <= max_premium:
+            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+            # untraded, illiquid strike as the hedge.
+            if 0 < candidate_premium <= max_premium:
                 otmCE_found = candidate
                 break
             hedge_strike += 500
@@ -1263,9 +1328,18 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         otmPE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
-            candidate_premium = helper.manualLTP(candidate, fyers)
+            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+            try:
+                candidate_premium = helper.manualLTP(candidate, fyers)
+            except Exception as _hedge_err:
+                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                hedge_strike -= 500
+                continue
             print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            if candidate_premium <= max_premium:
+            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+            # untraded, illiquid strike as the hedge.
+            if 0 < candidate_premium <= max_premium:
                 otmPE_found = candidate
                 break
             hedge_strike -= 500
@@ -2244,9 +2318,21 @@ while x == 1:
 
                 print("after entry tradeATMOption =", tradeATMOption)
 
-                data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
-                opens = data1minFUT['open'].to_numpy()
-                close = data1minFUT['close'].to_numpy()
+                # Position is already FILLED here. Resolve the SL/Target anchor via a fallback
+                # chain that cannot raise; if no price can be obtained at all we square off
+                # rather than hold a position we cannot monitor.
+                anchorPremium, anchorSrc = get_entry_anchor_premium(tradeATMOption, fyers)
+                if anchorPremium is None:
+                    print("ANCHOR_UNAVAILABLE: cannot establish SL/Target for a LIVE position —"
+                          " squaring off immediately to avoid an unmonitored trade.")
+                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                    st = 0
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    continue
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
@@ -2269,20 +2355,21 @@ while x == 1:
 
                 # For DEBIT spread: premium rising = profit, premium falling = loss
                 if spread_decision.get("type") == "DEBIT":
-                    sl = float(close[-1]) - effective_sl  # premium drops = loss for buyer
-                    target = float(close[-1]) + effective_tgt  # premium rises = profit for buyer
+                    sl = anchorPremium - effective_sl  # premium drops = loss for buyer
+                    target = anchorPremium + effective_tgt  # premium rises = profit for buyer
                 else:
                     # Credit: premium rising = loss, premium falling = profit
-                    sl = float(close[-1]) + effective_sl
-                    target = float(close[-1]) - effective_tgt
+                    sl = anchorPremium + effective_sl
+                    target = anchorPremium - effective_tgt
 
-                entryPremium = float(close[-1])
+                entryPremium = anchorPremium
                 slTrailed = False
                 slConfirmCount = 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
+                      " AnchorSrc=", anchorSrc,
                       " TrailTrigger=", trailTriggerPts,
                       " SL_Source=", sl_source,
                       " (iv_pts=", dynamic_sl_pt,
@@ -2367,9 +2454,21 @@ while x == 1:
                     print("OBSERVATION_MODE: skipping post-entry SL/target setup")
                     continue  # skip rest of bear entry, wait for next 3-min candle
 
-                data1minFUT = helper.getHistorical(tradeATMOption, 1, 3, fyers)
-                opens = data1minFUT['open'].to_numpy()
-                close = data1minFUT['close'].to_numpy()
+                # Position is already FILLED here. Resolve the SL/Target anchor via a fallback
+                # chain that cannot raise; if no price can be obtained at all we square off
+                # rather than hold a position we cannot monitor.
+                anchorPremium, anchorSrc = get_entry_anchor_premium(tradeATMOption, fyers)
+                if anchorPremium is None:
+                    print("ANCHOR_UNAVAILABLE: cannot establish SL/Target for a LIVE position —"
+                          " squaring off immediately to avoid an unmonitored trade.")
+                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                    st = 0
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []
+                    continue
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
@@ -2391,19 +2490,20 @@ while x == 1:
 
                 # For DEBIT spread: premium rising = profit, premium falling = loss
                 if spread_decision.get("type") == "DEBIT":
-                    sl = float(close[-1]) - effective_sl
-                    target = float(close[-1]) + effective_tgt
+                    sl = anchorPremium - effective_sl
+                    target = anchorPremium + effective_tgt
                 else:
-                    sl = float(close[-1]) + effective_sl
-                    target = float(close[-1]) - effective_tgt
+                    sl = anchorPremium + effective_sl
+                    target = anchorPremium - effective_tgt
 
-                entryPremium = float(close[-1])
+                entryPremium = anchorPremium
                 slTrailed = False
                 slConfirmCount = 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
                       " EntryPrem=", entryPremium,
+                      " AnchorSrc=", anchorSrc,
                       " TrailTrigger=", trailTriggerPts,
                       " SL_Source=", sl_source,
                       " (iv_pts=", dynamic_sl_pt,
@@ -2425,7 +2525,15 @@ while x == 1:
             # causes parallel API contention with BN strategy and crashes with KeyError.
             # Main loop ochain block above (strikecount=8) already provides all PCR/CHOI data
             # we need for actual trade entry decisions.
-            order_id = checkCriteriaAndTakeTrade()
+            # Diagnostic-only (doNotTrade=True) — must NEVER be allowed to crash live trading.
+            # On 2026-08-03 an unhandled exception here (Fyers added a 7th candle field)
+            # propagated up and killed the whole process for the rest of the day with no
+            # position open at the time, but it could just as easily happen mid-trade.
+            try:
+                order_id = checkCriteriaAndTakeTrade()
+            except Exception as _cctt_err:
+                print("CHECK_CRITERIA_DIAGNOSTIC_FAILED (non-fatal, diagnostic-only):", _cctt_err)
+                order_id = None
 
             if tradeCEoption != "":
                 optionInstum = tradeCEoption

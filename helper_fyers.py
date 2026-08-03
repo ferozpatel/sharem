@@ -284,16 +284,61 @@ def getLTP(instrument):
     data = resp.json()
     return data
 
+# Small throttle after each successful quote call. Was 0.25s, which added ~1.5s to the entry
+# path (manualLTP is called 6+ times per entry) and stretched the 2s LTP monitoring poll to
+# ~2.25s+. Only Sensex runs now (no parallel BN), and we sit far below Fyers' rate limit
+# (~26 req/min while monitoring), so a lighter throttle is safe and tightens both entry
+# slippage and SL/target detection latency.
+QUOTE_THROTTLE_SEC = 0.05
+
+
 def manualLTP(symbol, fyers):
+    """
+    Return the live price for `symbol`.
+
+    Prefers 'lp' (last traded price). IMPORTANT: 'lp' is 0 for a strike that has not traded
+    yet today — common on deep-OTM hedge strikes, which is exactly where our hedge search
+    walks. Returning 0 as if it were a real price would let the hedge search accept an
+    untraded/illiquid strike (0 <= max_premium is True) and would also zero out the hedge
+    offset in risk sizing. So a 0/missing 'lp' falls back to the bid/ask midpoint, and if
+    that is unusable too the call is retried and ultimately raises rather than lying.
+    """
     data = {'symbols' : symbol}
     last_err = None
     for attempt in range(3):
         try:
             temp = fyers.quotes(data=data)
-            time.sleep(0.25)
-            if isinstance(temp, dict) and temp.get('d') and temp['d'][0].get('v', {}).get('lp') is not None:
-                return float(temp['d'][0]['v']['lp'])
-            last_err = temp
+            time.sleep(QUOTE_THROTTLE_SEC)
+            if isinstance(temp, dict) and temp.get('d'):
+                v = temp['d'][0].get('v', {}) or {}
+                lp = v.get('lp')
+
+                # Normal path: a genuine traded price.
+                if lp is not None and float(lp) > 0:
+                    return float(lp)
+
+                # No trade yet today -> derive a fair price from the live book.
+                bid = v.get('bid')
+                ask = v.get('ask')
+                try:
+                    bid = float(bid) if bid is not None else 0.0
+                    ask = float(ask) if ask is not None else 0.0
+                except (TypeError, ValueError):
+                    bid = ask = 0.0
+
+                if bid > 0 and ask > 0:
+                    mid = round((bid + ask) / 2.0, 2)
+                    print(f"MANUAL_LTP_MID_FALLBACK: {symbol} lp={lp} (untraded) -> "
+                          f"bid={bid} ask={ask} mid={mid}")
+                    return mid
+                if ask > 0:
+                    print(f"MANUAL_LTP_ASK_FALLBACK: {symbol} lp={lp} bid={bid} -> ask={ask}")
+                    return ask
+
+                # lp==0 and no usable book — treat as no price, retry.
+                last_err = f"no usable price (lp={lp}, bid={bid}, ask={ask})"
+            else:
+                last_err = temp
         except Exception as e:
             last_err = e
         if attempt < 2:
@@ -554,14 +599,25 @@ def getHistorical(ticker,interval,duration,fyers):
             "date_format":"1",
             "range_from":from_date_string,
             "range_to":to_date_string,
-            "cont_flag":"1"
+            "cont_flag":"1",
+            # Pin OI off explicitly. We previously omitted oi_flag and relied on the Fyers
+            # default; on 2026-08-03 that default changed and candles started arriving with a
+            # 7th field (open interest), which crashed DataFrame construction. Setting it
+            # explicitly makes the response shape deterministic instead of vendor-default.
+            "oi_flag":0
         }
 
         response = _fyers_history_with_retry(fyers, data)
 
-        # Create a DataFrame
-        columns = ['Timestamp','open','high','low','close','volume']
-        df = pd.DataFrame(response, columns=columns)
+        # Create a DataFrame. Fyers candle rows are [timestamp, open, high, low, close, volume, ...]
+        # — build without forcing column count (broke on 2026-08-03 when Fyers started returning
+        # a 7th field, e.g. open interest, on F&O symbols: "6 columns passed, had 7 columns" ->
+        # unhandled ValueError that crashed the whole process). Only the first 6 fields are used;
+        # any extra trailing fields are ignored so future schema additions don't break us again.
+        df = pd.DataFrame(response)
+        expected_cols = ['Timestamp', 'open', 'high', 'low', 'close', 'volume']
+        df = df.iloc[:, :len(expected_cols)]
+        df.columns = expected_cols
 
         # Convert Timestamp to datetime in UTC
         df['Timestamp2'] = pd.to_datetime(df['Timestamp'],unit='s').dt.tz_localize(pytz.utc)
