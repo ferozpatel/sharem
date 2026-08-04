@@ -186,6 +186,18 @@ LOT_SIZE = 20                    # Sensex lot size
 # bad data point can never collapse net_sl_points toward zero and over-size the position.
 HEDGE_OFFSET_RATIO_MIN = 0.10
 HEDGE_OFFSET_RATIO_MAX = 0.75
+
+# Max hedge premium as a fraction of the main-leg premium. The hedge search walks the 500-pt
+# grid outward until a candidate is at/below this; a cheaper hedge means a wider spread.
+# Lowered 0.60 -> 0.50 after 2026-08-04 Trade 2: the hedge (79000CE @ 191.80 vs main
+# 78700CE @ 327.15) came in at 58.6% — just under the old 0.60 cap — so it was accepted on
+# the FIRST candidate, only 300 pts away. A near hedge tracks the main leg closely
+# (offset_ratio 0.653), which shrinks net_sl_points to 13.2 and sized 18 lots (96% of
+# deployable margin). Because qty scales as 1/(1-ratio), any error in the estimated ratio is
+# amplified ~1/(1-ratio)^2 — so a wrong ratio blows through FIXED_RISK badly at that size.
+# Rejecting an expensive near hedge pushes the search 500 further out, which lowers the ratio
+# structurally instead of us artificially discounting a hedge we know is tight.
+HEDGE_MAX_PREMIUM_FRACTION = 0.50
 FIXED_RISK_PER_TRADE = 5000      # ₹ NET risk per trade if SL hits (after hedge offset) — reduced for testing period
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
@@ -1084,7 +1096,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
     if isBullish:
         entryPrice = helper.manualLTP(atmPE, fyers)
-        max_premium = entryPrice * 0.60
+        max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
         hedge_strike = (syntheticATMStrike // 500) * 500
         otmPE_found = None
         for _ in range(6):
@@ -1153,7 +1165,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
     if isBearish:
         entryPrice = helper.manualLTP(atmCE, fyers)
-        max_premium = entryPrice * 0.60
+        max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
         hedge_strike = (syntheticATMStrike // 500 + 1) * 500
         otmCE_found = None
         for _ in range(6):
@@ -1253,9 +1265,10 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
     atmPE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "PE")
 
     if isBullish:
-        # Bull Call Debit Spread: Buy ATM CE + Sell OTM CE (500-pt interval, ≤60% of buy premium)
+        # Bull Call Debit Spread: Buy ATM CE + Sell OTM CE
+        # (500-pt interval, hedge <= HEDGE_MAX_PREMIUM_FRACTION of buy premium)
         entryPrice = helper.manualLTP(atmCE, fyers)
-        max_premium = entryPrice * 0.60
+        max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
         hedge_strike = (syntheticATMStrike // 500 + 1) * 500  # snap to next 500-pt multiple above
         otmCE_found = None
         for _ in range(6):
@@ -1321,9 +1334,10 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
             return None
 
     if isBearish:
-        # Bear Put Debit Spread: Buy ATM PE + Sell OTM PE (500-pt interval, ≤60% of buy premium)
+        # Bear Put Debit Spread: Buy ATM PE + Sell OTM PE
+        # (500-pt interval, hedge <= HEDGE_MAX_PREMIUM_FRACTION of buy premium)
         entryPrice = helper.manualLTP(atmPE, fyers)
-        max_premium = entryPrice * 0.60
+        max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
         hedge_strike = (syntheticATMStrike // 500) * 500  # snap to nearest 500-pt multiple at or below
         otmPE_found = None
         for _ in range(6):
