@@ -207,11 +207,14 @@ HEDGE_MAX_PREMIUM_FRACTION = 0.50
 # net_sl_points and over-sizes the position (2026-08-04 T2: 300 apart -> ratio 0.653 -> 18
 # lots -> 96% of deployable margin; 2026-07-30 T1: 200 apart -> assumed 0.578 vs realized
 # 0.353 -> lost 7,096 against a 5,000 budget).
-# Starting the search at least this far out makes the gap deterministic (500-999) instead of
+# Starting the search at least this far out makes the gap deterministic (400-800) instead of
 # 100-500, so the ratio is structurally low rather than us discounting a hedge we know is tight.
+# 400 rejects the 100/200/300 cases that caused the damage while still allowing the adjacent
+# 500-grid strike when it is 400+ away (e.g. main 78600CE -> hedge 79000CE). A larger minimum
+# would push the hedge needlessly far, making it cheaper, offsetting less and cutting lots.
 # HEDGE_MAX_PREMIUM_FRACTION stays as a secondary guard for high-IV days where even a distant
 # hedge is expensive.
-HEDGE_MIN_DISTANCE = 500
+HEDGE_MIN_DISTANCE = 400
 FIXED_RISK_PER_TRADE = 5000      # ₹ NET risk per trade if SL hits (after hedge offset) — reduced for testing period
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
