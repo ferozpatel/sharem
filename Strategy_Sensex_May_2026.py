@@ -198,6 +198,20 @@ HEDGE_OFFSET_RATIO_MAX = 0.75
 # Rejecting an expensive near hedge pushes the search 500 further out, which lowers the ratio
 # structurally instead of us artificially discounting a hedge we know is tight.
 HEDGE_MAX_PREMIUM_FRACTION = 0.50
+
+# Minimum distance (points) between the main leg and the hedge.
+# The search used to start at the ADJACENT 500-grid strike, so the actual gap was an accident
+# of grid alignment: ATM 78500 -> 500 away, ATM 78700 -> 300, ATM 78800 -> 200, ATM 78900 ->
+# 100, and on the PE side an ATM sitting exactly on a 500 multiple produced the SAME strike as
+# the main leg. A near hedge tracks the main leg closely, which inflates offset_ratio, shrinks
+# net_sl_points and over-sizes the position (2026-08-04 T2: 300 apart -> ratio 0.653 -> 18
+# lots -> 96% of deployable margin; 2026-07-30 T1: 200 apart -> assumed 0.578 vs realized
+# 0.353 -> lost 7,096 against a 5,000 budget).
+# Starting the search at least this far out makes the gap deterministic (500-999) instead of
+# 100-500, so the ratio is structurally low rather than us discounting a hedge we know is tight.
+# HEDGE_MAX_PREMIUM_FRACTION stays as a secondary guard for high-IV days where even a distant
+# hedge is expensive.
+HEDGE_MIN_DISTANCE = 500
 FIXED_RISK_PER_TRADE = 5000      # ₹ NET risk per trade if SL hits (after hedge offset) — reduced for testing period
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
@@ -1097,7 +1111,8 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     if isBullish:
         entryPrice = helper.manualLTP(atmPE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        hedge_strike = (syntheticATMStrike // 500) * 500
+        # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
+        hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
         otmPE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
@@ -1166,7 +1181,8 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     if isBearish:
         entryPrice = helper.manualLTP(atmCE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        hedge_strike = (syntheticATMStrike // 500 + 1) * 500
+        # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
+        hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
         otmCE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
@@ -1269,7 +1285,8 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # (500-pt interval, hedge <= HEDGE_MAX_PREMIUM_FRACTION of buy premium)
         entryPrice = helper.manualLTP(atmCE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        hedge_strike = (syntheticATMStrike // 500 + 1) * 500  # snap to next 500-pt multiple above
+        # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
+        hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
         otmCE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
@@ -1338,7 +1355,8 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # (500-pt interval, hedge <= HEDGE_MAX_PREMIUM_FRACTION of buy premium)
         entryPrice = helper.manualLTP(atmPE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        hedge_strike = (syntheticATMStrike // 500) * 500  # snap to nearest 500-pt multiple at or below
+        # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
+        hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
         otmPE_found = None
         for _ in range(6):
             candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
