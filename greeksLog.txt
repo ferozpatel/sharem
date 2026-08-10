@@ -1,0 +1,231 @@
+C:\Users\feroz\AppData\Local\Programs\Python\Python310\python.exe C:\Users\feroz\Documents\Python\Strategy_Sensex_May_2026.py 
+checkInstrument =  BSE:SENSEX-INDEX
+sensexExpDate =  26813
+BNFut (Sensex futures auto) = BSE:SENSEX26AUGFUT
+Waiting for first candle to form. Current Second ==  40    0
+Waiting for first candle to form. Current Second ==  41    0
+Waiting for first candle to form. Current Second ==  42    0
+Waiting for first candle to form. Current Second ==  43    0
+Waiting for first candle to form. Current Second ==  44    0
+Waiting for first candle to form. Current Second ==  45    0
+Waiting for first candle to form. Current Second ==  46    0
+Waiting for first candle to form. Current Second ==  47    0
+Waiting for first candle to form. Current Second ==  48    0
+Waiting for first candle to form. Current Second ==  49    0
+Waiting for first candle to form. Current Second ==  50    0
+Waiting for first candle to form. Current Second ==  51    0
+Waiting for first candle to form. Current Second ==  52    0
+Waiting for first candle to form. Current Second ==  53    0
+Waiting for first candle to form. Current Second ==  54    0
+Waiting for first candle to form. Current Second ==  55    0
+Waiting for first candle to form. Current Second ==  56    0
+Waiting for first candle to form. Current Second ==  57    0
+Waiting for first candle to form. Current Second ==  58    0
+Waiting for first candle to form. Current Second ==  59    0
+Waiting for first candle to form. Current Second ==  0    1
+Waiting for first candle to form. Current Second ==  1    1
+Waiting for first candle to form. Current Second ==  2    1
+Waiting for first candle to form. Current Second ==  3    1
+Waiting for first candle to form. Current Second ==  4    1
+Waiting for first candle to form. Current Second ==  5    1
+Waiting for first candle to form. Current Second ==  6    1
+Waiting for first candle to form. Current Second ==  7    1
+Waiting for first candle to form. Current Second ==  8    1
+Waiting for first candle to form. Current Second ==  9    1
+Waiting for first candle to form. Current Second ==  10    1
+Waiting for first candle to form. Current Second ==  11    1
+Waiting for first candle to form. Current Second ==  12    1
+Waiting for first candle to form. Current Second ==  13    1
+Waiting for first candle to form. Current Second ==  14    1
+Waiting for first candle to form. Current Second ==  15    1
+Waiting for first candle to form. Current Second ==  16    1
+Waiting for first candle to form. Current Second ==  17    1
+Waiting for first candle to form. Current Second ==  18    1
+Waiting for first candle to form. Current Second ==  19    1
+Waiting for first candle to form. Current Second ==  20    1
+Waiting for first candle to form. Current Second ==  21    1
+Waiting for first candle to form. Current Second ==  22    1
+Waiting for first candle to form. Current Second ==  23    1
+Waiting for first candle to form. Current Second ==  24    1
+Waiting for first candle to form. Current Second ==  25    1
+Waiting for first candle to form. Current Second ==  26    1
+Waiting for first candle to form. Current Second ==  27    1
+Waiting for first candle to form. Current Second ==  28    1
+Waiting for first candle to form. Current Second ==  29    1
+Waiting for first candle to form. Current Second ==  31    1
+Waiting for first candle to form. Current Second ==  32    1
+Waiting for first candle to form. Current Second ==  33    1
+Waiting for first candle to form. Current Second ==  34    1
+Waiting for first candle to form. Current Second ==  35    1
+Waiting for first candle to form. Current Second ==  36    1
+Waiting for first candle to form. Current Second ==  37    1
+Waiting for first candle to form. Current Second ==  38    1
+Waiting for first candle to form. Current Second ==  39    1
+Waiting for first candle to form. Current Second ==  40    1
+Waiting for first candle to form. Current Second ==  41    1
+Waiting for first candle to form. Current Second ==  42    1
+Waiting for first candle to form. Current Second ==  43    1
+Waiting for first candle to form. Current Second ==  44    1
+Waiting for first candle to form. Current Second ==  45    1
+Waiting for first candle to form. Current Second ==  46    1
+Waiting for first candle to form. Current Second ==  47    1
+Waiting for first candle to form. Current Second ==  48    1
+Waiting for first candle to form. Current Second ==  49    1
+Waiting for first candle to form. Current Second ==  50    1
+Waiting for first candle to form. Current Second ==  51    1
+Waiting for first candle to form. Current Second ==  52    1
+Waiting for first candle to form. Current Second ==  53    1
+Waiting for first candle to form. Current Second ==  54    1
+Waiting for first candle to form. Current Second ==  55    1
+Waiting for first candle to form. Current Second ==  56    1
+Waiting for first candle to form. Current Second ==  57    1
+Waiting for first candle to form. Current Second ==  58    1
+Waiting for first candle to form. Current Second ==  59    1
+Waiting for first candle to form. Current Second ==  0    2
+Waiting for first candle to form. Current Second ==  1    2
+Waiting for first candle to form. Current Second ==  2    2
+Waiting for first candle to form. Current Second ==  3    2
+Waiting for first candle to form. Current Second ==  4    2
+Waiting for first candle to form. Current Second ==  5    2
+Waiting for first candle to form. Current Second ==  6    2
+Waiting for first candle to form. Current Second ==  7    2
+Waiting for first candle to form. Current Second ==  8    2
+Waiting for first candle to form. Current Second ==  9    2
+Waiting for first candle to form. Current Second ==  10    2
+Waiting for first candle to form. Current Second ==  11    2
+Waiting for first candle to form. Current Second ==  12    2
+Waiting for first candle to form. Current Second ==  13    2
+Waiting for first candle to form. Current Second ==  14    2
+Waiting for first candle to form. Current Second ==  15    2
+Waiting for first candle to form. Current Second ==  16    2
+Waiting for first candle to form. Current Second ==  17    2
+Waiting for first candle to form. Current Second ==  18    2
+Waiting for first candle to form. Current Second ==  19    2
+Waiting for first candle to form. Current Second ==  20    2
+Waiting for first candle to form. Current Second ==  21    2
+Waiting for first candle to form. Current Second ==  22    2
+Waiting for first candle to form. Current Second ==  23    2
+Waiting for first candle to form. Current Second ==  24    2
+Waiting for first candle to form. Current Second ==  25    2
+Waiting for first candle to form. Current Second ==  26    2
+Waiting for first candle to form. Current Second ==  27    2
+Waiting for first candle to form. Current Second ==  28    2
+Waiting for first candle to form. Current Second ==  29    2
+Waiting for first candle to form. Current Second ==  30    2
+Waiting for first candle to form. Current Second ==  31    2
+Waiting for first candle to form. Current Second ==  32    2
+Waiting for first candle to form. Current Second ==  33    2
+Waiting for first candle to form. Current Second ==  34    2
+Waiting for first candle to form. Current Second ==  35    2
+Waiting for first candle to form. Current Second ==  36    2
+Waiting for first candle to form. Current Second ==  37    2
+Waiting for first candle to form. Current Second ==  38    2
+Waiting for first candle to form. Current Second ==  39    2
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 12.25  Spot Price = 78542.44
+VIX_PERCENTILES_FETCHED: P25= 12.14  P50= 12.54  P75= 13.27  Min= 11.81  Max= 13.9
+IV Regime = NORMAL (ADAPTIVE: P25= 12.14  P50= 12.54  P75= 13.27 ) | DailyRange = 1374.5 | 3minCandleRange = 72.3 (theoretical= 120.6 ) | ATMoptionMove = 32.5 | SL = 114 | Target = 114 | TrailTrigger = 33 | Spread = 300 | Buffer = 36
+IV Params refreshed: {'vix': 12.25, 'bn_price': 78542.44, 'regime': 'NORMAL', 'regime_thresholds': 'P25=12.14 P50=12.54 P75=13.27', 'daily_range': 1374.5, 'candle_range': 72.3, 'atm_option_move': 32.5, 'sl_point': 114, 'target_point': 114, 'sl_pct_of_premium': 0.1, 'trail_trigger': 33, 'spread_width': 300, 'support_resistance_buffer': 36}
+IV_RANK_DATA: VIX_30d_High= 13.9  VIX_30d_Low= 11.81  Current= 12.21  IV_Rank= 0.19
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x0000016A9475EE00>
+===
+====after 3 min ochain==== 2026-08-10 20:30:00.829325
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX2681379300PE   0.13   -0.07 CALL unwind -50680   PUT added 3360  OI= 24080
+pcr2 =  BSE:SENSEX2681379200PE   0.08   0.03 CALL added 114280   PUT added 3760  OI= 21160
+pcr3 =  BSE:SENSEX2681379100PE   0.17   0.02 CALL added 25580   PUT added 520  OI= 26320
+pcr4 =  BSE:SENSEX2681379000PE   0.37   0.13 CALL added 232940   PUT added 30800  OI= 276480
+pcr5 =  BSE:SENSEX2681378900CE   0.36   0.13 CALL added 98260   PUT added 13140  OI= 289740
+pcr6 =  BSE:SENSEX2681378800PE   0.67    0.43 CALL added 128600   PUT added 54700  OI= 264040
+pcr7 =  BSE:SENSEX2681378700PE   0.88   1.95 CALL added 93380   PUT added 182260  OI= 372520
+pcr8 =  BSE:SENSEX2681378600CE   0.88   1.46 CALL added 165480   PUT added 241100  OI= 518060
+pcr9 =  BSE:SENSEX2681378500CE   1.09   2.9 CALL added 98900   PUT added 286820  OI= 724960
+pcr10 =  BSE:SENSEX2681378400PE   1.7   3.59 CALL added 61920   PUT added 222380  OI= 398800
+pcr11 =  BSE:SENSEX2681378300PE   3.64   6.05 CALL added 36280   PUT added 219600  OI= 334080
+pcr12 =  BSE:SENSEX2681378200CE   5.97   11.62 CALL added 14660   PUT added 170320  OI= 48180
+pcr13 =  BSE:SENSEX2681378100PE   9.62   14.15 CALL added 4880   PUT added 69060  OI= 216140
+pcr14 =  BSE:SENSEX2681378000CE   5.15   -8.59 CALL unwind -20080   PUT added 172420  OI= 106080
+pcr15 =  BSE:SENSEX2681377900PE   9.97   -84.21 CALL unwind -580   PUT added 48840  OI= 104320
+pcr16 =  BSE:SENSEX2681377800CE   9.35   0.12 CALL unwind -3840   PUT unwind -460  OI= 13620
+pcr17 =  BSE:SENSEX2681377700PE   31.55   -57.08 CALL unwind -780   PUT added 44520  OI= 146380
+pcrSummation= 4.63  result =  ['BSE:SENSEX2681379300PE', 'BSE:SENSEX2681379200PE', 'BSE:SENSEX2681379100PE', 'BSE:SENSEX2681379000PE', 'BSE:SENSEX2681378900CE', 'BSE:SENSEX2681378800PE', 'BSE:SENSEX2681378700PE', 'BSE:SENSEX2681378600CE', 'BSE:SENSEX2681378500CE']
+PCRSUM== 81.58
+pcrSummation== 4.63
+VOLPCRSUM== 4.68
+spotLTP =  78542.44  ATM_STRIKE =  78500
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {78500: 78500}
+avgOiPcrList2 = [4.8] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 79000  Buffer= 36
+CEoich val =  232940.0  PEoich val =  30800.0 , CE > PE by 86.8%
+SUPP_RES TOTAL OI: CE= 751740  PE= 276480 , CE > PE by 63.2%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-08-10 20:30:11.392125
+DELTA_CHECK: main=BSE:SENSEX2681378700CE -> {'delta': 0.48, 'gamma': 0.0004, 'theta': -66.5, 'vega': 28.45, 'iv': 14.06}
+DELTA_CHECK: hedge=BSE:SENSEX2681379500CE -> {'delta': 0.19, 'gamma': 0.0003, 'theta': -44.89, 'vega': 19.68, 'iv': 13.72}
+DELTA_CHECK: delta_ratio (hedge/main) = 0.396  (main_delta=0.48, hedge_delta=0.19)
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 56.08
+RSI_VAL2== 56.08
+FUT_3m_OHLC O= 78870.2  H= 78918.2  L= 78870.2  C= 78918.2  Range= 47.9
+CHART_PATTERN_DETECTED: BULLISH_ENGULFING | DOUBLE_TOP_FORMING | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 47.9  Range= 47.9  ExpectedRange= 72.3  RangeRatio= 0.66  O= 78870.2  H= 78918.2  L= 78870.2  C= 78918.2
+newSynthFut =  78900
+ATMStrike =  78500
+AVG_OIPCR= 0.51
+avgoiPCROld=  4.8
+SUPP_RES = 79000
+FUT LTP = 78879.4
+CEchoi  PechOi = 232940.0    30800.0
+====================================
+totalOIPCR = 0.91
+AVG_VOLPCR= 0.52
+atmPCR= 0.36  belowATM  0.67
+atmVolPCR= 0.29  belowATM  0.47
+True   78879.4   79000   False   False   56.08
+curr Doji False
+BSE:SENSEX2681378800PE  curr candle vol pcr = 0.52  PE= 44040  CE= 84840      cpr =  1.93
+BSE:SENSEX2681378900PE  prev candle vol pcr = 0.25  PE= 14640  CE= 59000      cpr =  4.03
+VOL_PRESSURE_WATCH: SINGLE_CANDLE_CALL_PRESSURE | currCPR= 1.93  prevCPR= 4.03
+ATM_CE_premium= 340.9  ATM_PE_premium= 448.55
+CE_PremChg= -4.3  PE_PremChg= -8.45
+CandleBody= 47.9  PrevBody= -47.8  CandleRange= 47.9  Bullish
+TotalVol= 128880  PrevTotalVol= 73640  VolSpike= 1.75 x 
+SCALP_SCORE: BULL | BullScore= 2  BearScore= 1 | Confidence= LOW
+DATAPOINT|20:30|FUT=78918.2|Body=47.9|PrevBody=-47.8|Range=47.9|RangeRatio=0.66|CurrVolPCR=0.52|PrevVolPCR=0.25|CurrCPR=1.93|PrevCPR=4.03|VolSpike=1.75|CE_PremChg=-4.3|PE_PremChg=-8.45|BullScore=2|BearScore=1|Dir=BULL|Conf=LOW
+CHART_PATTERN_DETECTED: BULLISH_ENGULFING | DOUBLE_TOP_FORMING | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 47.9  Range= 47.9  ExpectedRange= 72.3  RangeRatio= 0.66  O= 78870.2  H= 78918.2  L= 78870.2  C= 78918.2
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x0000016A9475EE00>
+======================================
+oipcr1 =  BSE:SENSEX2681378800PE   0.67
+oipcr2 =  BSE:SENSEX2681378700PE   0.88
+oipcr3 =  BSE:SENSEX2681378600CE   0.88
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.09    1.7
+No Entry Yet
+End Of the Day
+============================================================
+DAILY_SUMMARY: Date= 2026-08-10  SpreadType= N/A  DTE= N/A  IVRank= N/A  PremRatio= N/A  SLCount= 0  TargetCount= 0
+============================================================
+
+Process finished with exit code 0
