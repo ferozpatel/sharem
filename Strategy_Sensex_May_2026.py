@@ -230,7 +230,7 @@ DEPLOYABLE_CAPITAL_FRACTION = 0.90
 FALLBACK_CAPITAL = 800000        # ₹ — hardcoded deployable capital fallback
 
 def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None,
-                      main_range=None, hedge_range=None):
+                      main_range=None, hedge_range=None, main_delta=None, hedge_delta=None):
     """
     Return qty (lots x LOT_SIZE) sized so a SL-hit loses ~= FIXED_RISK_PER_TRADE NET of hedge.
 
@@ -238,13 +238,22 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
         effective_sl_points: SL distance on the SHORT leg (option candle median x multiplier).
         main_premium: sold (short) leg premium at entry.
         hedge_premium: bought (hedge) leg premium at entry.
-        main_range: main leg median high-low 3-min range (preferred offset numerator source).
+        main_range: main leg median high-low 3-min range.
         hedge_range: hedge leg median high-low 3-min range.
+        main_delta: main leg option delta at entry (from live greeks).
+        hedge_delta: hedge leg option delta at entry (from live greeks).
 
     Offset ratio priority:
-      1) RANGE  — hedge_range / main_range (empirical delta proxy; most accurate)
-      2) PREMIUM — hedge_premium / main_premium (fallback when hedge candles unavailable)
-      3) NONE   — short-leg-only sizing (no hedge credit) if both are unusable
+      1) DELTA   — |hedge_delta| / |main_delta|  (most principled: delta IS d(optionprice)/
+                   d(underlying), so this is the true instantaneous P&L offset. PE deltas are
+                   negative, hence abs() — both legs are the same option type so signs match.)
+      2) RANGE   — hedge_range / main_range (empirical proxy; fallback if greeks unavailable)
+      3) PREMIUM — hedge_premium / main_premium (last-resort fallback)
+      4) NONE    — short-leg-only sizing (no hedge credit) if none available
+
+    All three candidate ratios are logged every time (even the ones not used for sizing) so we
+    keep comparing DELTA vs RANGE vs the realized ratio (REALIZED_OFFSET at exit) — the old
+    range approach stays visible for validation.
 
     Returns:
         tuple: (qty, used_offset_ratio) — used_offset_ratio is None if sizing fell back to
@@ -254,34 +263,54 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
     if effective_sl_points is None or effective_sl_points <= 0:
         return MIN_LOTS * LOT_SIZE, None
 
-    # --- Determine hedge offset ratio (how far the hedge moves per point of main move) ---
-    hedge_offset_ratio = None
-    ratio_source = "NONE"
+    # --- Compute every candidate ratio (for logging + fallback), then pick by priority ---
+    delta_ratio = None
+    if (main_delta is not None and hedge_delta is not None
+            and abs(main_delta) > 0 and abs(hedge_delta) > 0):
+        delta_ratio = abs(hedge_delta) / abs(main_delta)
 
-    # 1) Preferred: realized movement ratio from option candles (delta proxy).
+    range_ratio = None
     if (main_range and hedge_range and main_range > 0 and hedge_range > 0):
-        raw_ratio = hedge_range / main_range
-        hedge_offset_ratio = max(HEDGE_OFFSET_RATIO_MIN,
-                                 min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
-        ratio_source = (f"RANGE(hedge={hedge_range}/main={main_range}"
-                        f"=raw{round(raw_ratio, 3)})")
+        range_ratio = hedge_range / main_range
 
-    # 2) Fallback: premium ratio (hedge candle data missing/failed).
-    elif (main_premium and hedge_premium and main_premium > 0
+    premium_ratio = None
+    if (main_premium and hedge_premium and main_premium > 0
             and 0 < hedge_premium < main_premium):
-        raw_ratio = hedge_premium / main_premium
+        premium_ratio = hedge_premium / main_premium
+
+    # Priority: DELTA -> RANGE -> PREMIUM -> NONE
+    hedge_offset_ratio = None
+    if delta_ratio is not None:
+        raw_ratio = delta_ratio
+        ratio_source = "DELTA"
+    elif range_ratio is not None:
+        raw_ratio = range_ratio
+        ratio_source = "RANGE"
+    elif premium_ratio is not None:
+        raw_ratio = premium_ratio
+        ratio_source = "PREMIUM"
+    else:
+        raw_ratio = None
+        ratio_source = "NONE"
+
+    if raw_ratio is not None:
         hedge_offset_ratio = max(HEDGE_OFFSET_RATIO_MIN,
                                  min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
-        ratio_source = (f"PREMIUM(hedge={hedge_premium}/main={main_premium}"
-                        f"=raw{round(raw_ratio, 3)})")
 
     # Net-of-hedge SL points: discount the short-leg SL by the hedge's offset share.
     net_sl_points = effective_sl_points
     if hedge_offset_ratio is not None:
         net_sl_points = effective_sl_points * (1 - hedge_offset_ratio)
 
+    def _r(x):
+        return round(x, 3) if x is not None else None
+
     print(f"HEDGE_OFFSET: source={ratio_source}"
-          f" used_ratio={round(hedge_offset_ratio, 3) if hedge_offset_ratio is not None else None}"
+          f" used_ratio={_r(hedge_offset_ratio)} raw={_r(raw_ratio)}"
+          f" | delta_ratio={_r(delta_ratio)} range_ratio={_r(range_ratio)}"
+          f" premium_ratio={_r(premium_ratio)}"
+          f" | (main_delta={main_delta} hedge_delta={hedge_delta}"
+          f" main_range={main_range} hedge_range={hedge_range})"
           f" effective_sl={effective_sl_points} -> net_sl_points={round(net_sl_points, 2)}")
 
     if net_sl_points <= 0:
@@ -291,6 +320,36 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
     lots = int(FIXED_RISK_PER_TRADE / loss_per_lot)  # floor — never exceed risk budget
     lots = max(MIN_LOTS, min(lots, MAX_LOTS))
     return lots * LOT_SIZE, hedge_offset_ratio
+
+
+def get_leg_deltas(main_symbol, hedge_symbol, fyers_client, strikecount=20):
+    """
+    Fetch live delta for the main and hedge leg in ONE greeks-enabled option-chain call.
+    Used to feed the DELTA offset ratio in calc_lots_by_risk.
+
+    Returns:
+        tuple: (main_delta, hedge_delta) — either can be None if unavailable, in which case
+        calc_lots_by_risk falls back to the range/premium ratio. Never raises: any failure
+        returns (None, None) so sizing degrades gracefully instead of blocking a live entry.
+    Also prints DELTA_CHECK lines (delta/gamma/theta/vega/iv for both legs + delta ratio)
+    so the greeks are captured in the log for offline comparison.
+    """
+    try:
+        resp = helper.getOptionChainWithGreeks(strikecount, "BSE:SENSEX-INDEX", fyers_client)
+        greeks = helper.getDeltaForSymbols(resp, [main_symbol, hedge_symbol])
+        main_g = greeks.get(main_symbol)
+        hedge_g = greeks.get(hedge_symbol)
+        print(f"DELTA_CHECK: main={main_symbol} -> {main_g}")
+        print(f"DELTA_CHECK: hedge={hedge_symbol} -> {hedge_g}")
+        main_delta = main_g.get("delta") if main_g else None
+        hedge_delta = hedge_g.get("delta") if hedge_g else None
+        if main_delta and hedge_delta and abs(main_delta) > 0:
+            print(f"DELTA_CHECK: delta_ratio (|hedge|/|main|) = "
+                  f"{round(abs(hedge_delta) / abs(main_delta), 3)}")
+        return main_delta, hedge_delta
+    except Exception as e:
+        print("GET_LEG_DELTAS_FAILED (non-fatal, sizing falls back to range/premium):", e)
+        return None, None
 
 
 def _order_ok(resp):
@@ -1157,9 +1216,13 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
+        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
+        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
+        main_delta_val, hedge_delta_val = get_leg_deltas(atmPE, otmPE, fyers)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
-                                main_range=opt_range, hedge_range=hedge_opt_range)
+                                main_range=opt_range, hedge_range=hedge_opt_range,
+                                main_delta=main_delta_val, hedge_delta=hedge_delta_val)
         hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
@@ -1168,15 +1231,6 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, -1, otmPE, 1, fyers)
-
-        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
-        # compare a delta-based offset ratio against the candle-range ratio and the realized
-        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
-        # data is collected. Wrapped so it can never delay/break entry.
-        try:
-            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmPE, otmPE, fyers)
-        except Exception as _dlt_err:
-            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
 
         hedgeOrderId = helper.placeTargetOrder(otmPE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmPE
@@ -1237,9 +1291,13 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
+        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
+        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
+        main_delta_val, hedge_delta_val = get_leg_deltas(atmCE, otmCE, fyers)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
-                                main_range=opt_range, hedge_range=hedge_opt_range)
+                                main_range=opt_range, hedge_range=hedge_opt_range,
+                                main_delta=main_delta_val, hedge_delta=hedge_delta_val)
         hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
@@ -1248,15 +1306,6 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, -1, otmCE, 1, fyers)
-
-        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
-        # compare a delta-based offset ratio against the candle-range ratio and the realized
-        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
-        # data is collected. Wrapped so it can never delay/break entry.
-        try:
-            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmCE, otmCE, fyers)
-        except Exception as _dlt_err:
-            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
 
         hedgeOrderId = helper.placeTargetOrder(otmCE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmCE
@@ -1352,9 +1401,13 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
+        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
+        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
+        main_delta_val, hedge_delta_val = get_leg_deltas(atmCE, otmCE, fyers)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
-                                main_range=opt_range, hedge_range=hedge_opt_range)
+                                main_range=opt_range, hedge_range=hedge_opt_range,
+                                main_delta=main_delta_val, hedge_delta=hedge_delta_val)
         hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
@@ -1363,15 +1416,6 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, 1, otmCE, -1, fyers)
-
-        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
-        # compare a delta-based offset ratio against the candle-range ratio and the realized
-        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
-        # data is collected. Wrapped so it can never delay/break entry.
-        try:
-            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmCE, otmCE, fyers)
-        except Exception as _dlt_err:
-            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
 
         # BUY ATM CE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmCE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
@@ -1432,9 +1476,13 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
+        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
+        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
+        main_delta_val, hedge_delta_val = get_leg_deltas(atmPE, otmPE, fyers)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
-                                main_range=opt_range, hedge_range=hedge_opt_range)
+                                main_range=opt_range, hedge_range=hedge_opt_range,
+                                main_delta=main_delta_val, hedge_delta=hedge_delta_val)
         hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
@@ -1443,15 +1491,6 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, 1, otmPE, -1, fyers)
-
-        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
-        # compare a delta-based offset ratio against the candle-range ratio and the realized
-        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
-        # data is collected. Wrapped so it can never delay/break entry.
-        try:
-            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmPE, otmPE, fyers)
-        except Exception as _dlt_err:
-            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
 
         # BUY ATM PE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmPE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
