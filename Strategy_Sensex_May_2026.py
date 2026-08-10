@@ -245,9 +245,14 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
       1) RANGE  — hedge_range / main_range (empirical delta proxy; most accurate)
       2) PREMIUM — hedge_premium / main_premium (fallback when hedge candles unavailable)
       3) NONE   — short-leg-only sizing (no hedge credit) if both are unusable
+
+    Returns:
+        tuple: (qty, used_offset_ratio) — used_offset_ratio is None if sizing fell back to
+        short-leg-only (no hedge credit applied). Caller stores this for the realized-vs-
+        assumed offset comparison logged at exit (see exitSpreadPosition).
     """
     if effective_sl_points is None or effective_sl_points <= 0:
-        return MIN_LOTS * LOT_SIZE
+        return MIN_LOTS * LOT_SIZE, None
 
     # --- Determine hedge offset ratio (how far the hedge moves per point of main move) ---
     hedge_offset_ratio = None
@@ -280,12 +285,12 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
           f" effective_sl={effective_sl_points} -> net_sl_points={round(net_sl_points, 2)}")
 
     if net_sl_points <= 0:
-        return MIN_LOTS * LOT_SIZE
+        return MIN_LOTS * LOT_SIZE, hedge_offset_ratio
 
     loss_per_lot = net_sl_points * LOT_SIZE
     lots = int(FIXED_RISK_PER_TRADE / loss_per_lot)  # floor — never exceed risk budget
     lots = max(MIN_LOTS, min(lots, MAX_LOTS))
-    return lots * LOT_SIZE
+    return lots * LOT_SIZE, hedge_offset_ratio
 
 
 def _order_ok(resp):
@@ -1095,6 +1100,8 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     global entry_ok
     global qty  # exitPosition/exitSpreadPosition read module-level qty on exit — must
                 # update it here so exits close the ACTUAL traded quantity, not stale default.
+    global hedgeEntryPremium   # hedge leg entry price — for realized-vs-assumed offset logging
+    global assumedOffsetRatio  # the ratio calc_lots_by_risk actually sized with
 
     dynamic_sl = iv_params.get("sl_point", sl_point)
     dynamic_target = iv_params.get("target_point", target_point)
@@ -1151,8 +1158,9 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+        qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range)
+        hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1221,8 +1229,9 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+        qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range)
+        hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1272,6 +1281,8 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
     global entry_ok
     global qty  # exitPosition/exitSpreadPosition read module-level qty on exit — must
                 # update it here so exits close the ACTUAL traded quantity, not stale default.
+    global hedgeEntryPremium   # hedge leg entry price — for realized-vs-assumed offset logging
+    global assumedOffsetRatio  # the ratio calc_lots_by_risk actually sized with
 
     dynamic_sl = iv_params.get("sl_point", sl_point)
     dynamic_target = iv_params.get("target_point", target_point)
@@ -1324,8 +1335,9 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+        qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range)
+        hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1394,8 +1406,9 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
-        qty = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
+        qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range)
+        hedgeEntryPremium = hedge_entry_price
         print(f"RISK_SIZING: effective_sl_pre={effective_sl_pre} main={entryPrice} hedge={hedge_entry_price} "
               f"main_range={opt_range} hedge_range={hedge_opt_range} "
               f"FIXED_RISK={FIXED_RISK_PER_TRADE} -> qty={qty} ({qty//LOT_SIZE} lots)")
@@ -1474,6 +1487,26 @@ def exitSpreadPosition(mainATMOption, hedgeOption):
     """Exit spread — logic differs for credit vs debit."""
     global spread_decision
     spread_type = spread_decision.get("type", "CREDIT")
+
+    # === REALIZED-VS-ASSUMED OFFSET LOGGING (auto-log, does not affect exit or sizing) ===
+    # Snapshot LTP on both legs right before firing exit orders (order responses don't carry
+    # fill price on a MARKET order, so this is the closest available approximation — same
+    # approach already used for the entry anchor). Wrapped so a quote hiccup can never delay
+    # or block the actual exit. Compares against entryPremium/hedgeEntryPremium and the ratio
+    # assumedOffsetRatio was sized with, so we build a real sample of how often/how far the
+    # pre-trade estimate misses (2026-07-30 and 2026-08-10 both showed the assumed ratio
+    # overstating the realized one on the SL side).
+    try:
+        main_exit_ltp = helper.manualLTP(mainATMOption, fyers)
+        hedge_exit_ltp = helper.manualLTP(hedgeOption, fyers)
+        main_move = abs(main_exit_ltp - entryPremium)
+        hedge_move = abs(hedge_exit_ltp - hedgeEntryPremium)
+        realized_ratio = round(hedge_move / main_move, 3) if main_move > 0 else None
+        print(f"REALIZED_OFFSET: main {entryPremium}->{main_exit_ltp} (moved {round(main_move,2)}) "
+              f"hedge {hedgeEntryPremium}->{hedge_exit_ltp} (moved {round(hedge_move,2)}) "
+              f"assumed_ratio={assumedOffsetRatio} realized_ratio={realized_ratio}")
+    except Exception as _roi_err:
+        print("REALIZED_OFFSET_LOG_FAILED (non-fatal):", _roi_err)
 
     if spread_type == "DEBIT":
         # Debit: close SHORT leg first (buy back OTM), then close LONG leg (sell ATM)
@@ -1920,6 +1953,16 @@ trailTriggerPts = 0  # effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION — set at 
 slTrailed = False
 slConfirmCount = 0
 spread_type_decided = False  # flag to decide spread type only once per day
+
+# --- Realized-vs-assumed hedge offset tracking (auto-logging, sizing/logic untouched) ---
+# We size lots using an offset ratio ESTIMATED at entry (from candle range or premium ratio).
+# 2026-07-30 and 2026-08-10 both showed the realized ratio come in well BELOW the assumed one
+# on the SL side (real losses of 7,096 and 6,480 vs a 5,000 budget), in the same direction both
+# times — suggesting a structural bias (main leg gains delta faster than the hedge as spot
+# approaches the main strike), not just noise. These two just log the ACTUAL outcome next to
+# what was assumed at entry, so we build a real sample before touching the sizing formula.
+hedgeEntryPremium = 0     # hedge leg entry premium — mirrors entryPremium for the main leg
+assumedOffsetRatio = None  # the used_ratio calc_lots_by_risk actually sized with
 
 
 # ============================================================

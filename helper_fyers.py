@@ -805,6 +805,29 @@ def getOptionChain(strikecount, ticker, fyers):
     # print("==check getOptionChain==")
     # print(response)
     return response
+
+
+def getOptionChainWithGreeks(strikecount, ticker, fyers):
+    """
+    Same as getOptionChain but requests Greeks (delta/gamma/theta/vega/iv) via greeks="1".
+    Kept as a SEPARATE function (not merged into getOptionChain) because the main-loop calls
+    to getOptionChain run every 3-min cycle and are used purely for PCR/CHOI — adding greeks
+    there would be unused payload on every cycle. This is for one-off/entry-time delta lookups
+    only, called explicitly where the delta ratio is actually needed.
+
+    NOTE (2026-08-10): the documented sample response returns an IDENTICAL greeks block
+    (delta/gamma/theta/vega/iv) across every strike shown — almost certainly placeholder/mock
+    data in the docs, not a realistic live response. Real strike-to-strike delta variation is
+    UNVERIFIED until tested against a live Sensex option chain.
+    """
+    data = {
+        "symbol": ticker,
+        "strikecount": strikecount,
+        "timestamp": "",
+        "greeks": "1"
+    }
+    response = fyers.optionchain(data=data)
+    return response
 # Function to extract general data
 def getTotalOI(response_data):
     if response_data.get("code") == 200:
@@ -864,6 +887,84 @@ def getClosestOptions1(response_data):
             # "prev_oi": option.get("prev_oi")
         } for option in options_chain]
     return []
+
+
+def getDeltaForSymbols(response_data, symbols):
+    """
+    Extract delta (and the rest of the greeks block, for reference) for specific option
+    symbols from a getOptionChainWithGreeks(...) response.
+
+    Args:
+        response_data: raw response from getOptionChainWithGreeks (must have been called
+                        with greeks="1" — the plain getOptionChain response has no "greeks" key).
+        symbols: list of exact option symbols to look up, e.g.
+                 ["BSE:SENSEX2681378700CE", "BSE:SENSEX2681379500CE"]
+
+    Returns:
+        dict: {symbol: {"delta": ..., "gamma": ..., "theta": ..., "vega": ..., "iv": ...} or None}
+        None per-symbol if that symbol wasn't found in the response, or had no "greeks" block
+        (e.g. the underlying/spot row, which always has option_type="").
+    """
+    result = {s: None for s in symbols}
+    if response_data.get("code") != 200:
+        print("getDeltaForSymbols: response code != 200 — no data")
+        return result
+
+    options_chain = response_data.get("data", {}).get("optionsChain", [])
+    wanted = set(symbols)
+    for option in options_chain:
+        sym = option.get("symbol")
+        if sym in wanted:
+            greeks = option.get("greeks")
+            if greeks:
+                result[sym] = {
+                    "delta": greeks.get("delta"),
+                    "gamma": greeks.get("gamma"),
+                    "theta": greeks.get("theta"),
+                    "vega": greeks.get("vega"),
+                    "iv": greeks.get("iv")
+                }
+            else:
+                print(f"getDeltaForSymbols: {sym} found but has no 'greeks' block")
+    for sym in symbols:
+        if sym not in {o.get("symbol") for o in options_chain}:
+            print(f"getDeltaForSymbols: {sym} not found in optionsChain — check strikecount is "
+                  f"wide enough to cover both the main and hedge strike")
+    return result
+
+
+def printDeltaComparison(strikecount, ticker, main_symbol, hedge_symbol, fyers):
+    """
+    Convenience one-shot: fetch the chain WITH greeks and print delta/gamma/theta/vega/iv for
+    the main leg and hedge leg side by side, plus the delta-ratio they imply.
+
+    This is a standalone diagnostic — it does NOT feed into calc_lots_by_risk or any live
+    sizing. Intended for manual/local runs to sanity-check whether delta ratio (hedge_delta /
+    main_delta) would have predicted the realized offset ratio better than the current
+    candle-range ratio, using REALIZED_OFFSET log lines from exitSpreadPosition for comparison.
+    """
+    response = getOptionChainWithGreeks(strikecount, ticker, fyers)
+    deltas = getDeltaForSymbols(response, [main_symbol, hedge_symbol])
+
+    main_g = deltas.get(main_symbol)
+    hedge_g = deltas.get(hedge_symbol)
+
+    print(f"DELTA_CHECK: main={main_symbol} -> {main_g}")
+    print(f"DELTA_CHECK: hedge={hedge_symbol} -> {hedge_g}")
+
+    if main_g and hedge_g and main_g.get("delta") and hedge_g.get("delta"):
+        main_delta = abs(main_g["delta"])
+        hedge_delta = abs(hedge_g["delta"])
+        if main_delta > 0:
+            delta_ratio = round(hedge_delta / main_delta, 3)
+            print(f"DELTA_CHECK: delta_ratio (hedge/main) = {delta_ratio}"
+                  f"  (main_delta={main_delta}, hedge_delta={hedge_delta})")
+        else:
+            print("DELTA_CHECK: main_delta is 0 — cannot compute ratio")
+    else:
+        print("DELTA_CHECK: missing delta on one or both legs — cannot compute ratio")
+
+    return deltas
 
 def getSyntheticFUTStrike(stock,fyers):
     name = getIndexSpot(stock)
