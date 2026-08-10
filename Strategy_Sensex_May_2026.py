@@ -322,6 +322,31 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
     return lots * LOT_SIZE, hedge_offset_ratio
 
 
+def log_atm_greeks(atm_ce_symbol, atm_pe_symbol, fyers_client, strikecount=5):
+    """
+    DIAGNOSTIC ONLY (does not feed any decision yet): log the synthetic-ATM CE and PE greeks
+    at spread-decision time. The two numbers of interest for the credit/debit question (#3):
+      - avg_atm_iv = (CE_iv + PE_iv)/2  -> a strike-specific 'is premium rich' gauge, more
+        local than India VIX (which is a 30-day index-wide number).
+      - iv_skew = PE_iv - CE_iv         -> directional fear (put IV richer = downside demand).
+    Logged now to build a sample; NOT wired into choose_spread_type. Never raises.
+    """
+    try:
+        resp = helper.getOptionChainWithGreeks(strikecount, "BSE:SENSEX-INDEX", fyers_client)
+        g = helper.getDeltaForSymbols(resp, [atm_ce_symbol, atm_pe_symbol])
+        ce = g.get(atm_ce_symbol)
+        pe = g.get(atm_pe_symbol)
+        ce_iv = ce.get("iv") if ce else None
+        pe_iv = pe.get("iv") if pe else None
+        avg_iv = round((ce_iv + pe_iv) / 2.0, 2) if (ce_iv is not None and pe_iv is not None) else None
+        skew = round(pe_iv - ce_iv, 2) if (ce_iv is not None and pe_iv is not None) else None
+        print(f"ATM_GREEKS: CE={atm_ce_symbol} -> {ce}")
+        print(f"ATM_GREEKS: PE={atm_pe_symbol} -> {pe}")
+        print(f"ATM_IV: ce_iv={ce_iv} pe_iv={pe_iv} avg_atm_iv={avg_iv} iv_skew(PE-CE)={skew}")
+    except Exception as e:
+        print("ATM_GREEKS_LOG_FAILED (non-fatal):", e)
+
+
 def get_leg_deltas(main_symbol, hedge_symbol, fyers_client, strikecount=20):
     """
     Fetch live delta for the main and hedge leg in ONE greeks-enabled option-chain call.
@@ -2438,6 +2463,9 @@ while x == 1:
                 print("SPREAD_CALC_AT_ENTRY: SyntheticATMStrike=", synthetic_atm_strike_tmp,
                       " ATM_PE=", atm_pe_prem, " ATM_CE=", atm_ce_prem,
                       " AvgATM=", round(avg_atm_premium, 2))
+                # #3 diagnostic: log ATM CE/PE IV (avg + skew) for the credit/debit study —
+                # NOT wired into choose_spread_type yet.
+                log_atm_greeks(atmCE_tmp, atmPE_tmp, fyers)
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
@@ -2576,6 +2604,9 @@ while x == 1:
                 print("SPREAD_CALC_AT_ENTRY: SyntheticATMStrike=", synthetic_atm_strike_tmp,
                       " ATM_PE=", atm_pe_prem, " ATM_CE=", atm_ce_prem,
                       " AvgATM=", round(avg_atm_premium, 2))
+                # #3 diagnostic: log ATM CE/PE IV (avg + skew) for the credit/debit study —
+                # NOT wired into choose_spread_type yet.
+                log_atm_greeks(atmCE_tmp, atmPE_tmp, fyers)
                 spread_type, spread_decision = choose_spread_type(iv_params, avg_atm_premium, fyers)
                 print("SPREAD_DECISION_AT_ENTRY:", spread_decision)
 
