@@ -1169,6 +1169,15 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, -1, otmPE, 1, fyers)
 
+        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
+        # compare a delta-based offset ratio against the candle-range ratio and the realized
+        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
+        # data is collected. Wrapped so it can never delay/break entry.
+        try:
+            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmPE, otmPE, fyers)
+        except Exception as _dlt_err:
+            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
+
         hedgeOrderId = helper.placeTargetOrder(otmPE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmPE
         if not _order_ok(hedgeOrderId):
@@ -1239,6 +1248,15 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, -1, otmCE, 1, fyers)
+
+        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
+        # compare a delta-based offset ratio against the candle-range ratio and the realized
+        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
+        # data is collected. Wrapped so it can never delay/break entry.
+        try:
+            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmCE, otmCE, fyers)
+        except Exception as _dlt_err:
+            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
 
         hedgeOrderId = helper.placeTargetOrder(otmCE, "BUY", qty, "MARKET", hedge_entry_price, 0, 0, fyers, papertrading)
         tradeHedgeOption = otmCE
@@ -1346,6 +1364,15 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmCE, 1, otmCE, -1, fyers)
 
+        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
+        # compare a delta-based offset ratio against the candle-range ratio and the realized
+        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
+        # data is collected. Wrapped so it can never delay/break entry.
+        try:
+            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmCE, otmCE, fyers)
+        except Exception as _dlt_err:
+            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
+
         # BUY ATM CE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmCE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
         tradeATMOption = atmCE
@@ -1416,6 +1443,15 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
 
         # === MARGIN CAP CHECK (real broker margin, may reduce qty) ===
         qty = apply_margin_cap(qty, atmPE, 1, otmPE, -1, fyers)
+
+        # DIAGNOSTIC ONLY (does NOT feed sizing): log live delta/IV of main+hedge so we can
+        # compare a delta-based offset ratio against the candle-range ratio and the realized
+        # ratio (REALIZED_OFFSET at exit). One extra optionchain API call — remove once enough
+        # data is collected. Wrapped so it can never delay/break entry.
+        try:
+            helper.printDeltaComparison(20, "BSE:SENSEX-INDEX", atmPE, otmPE, fyers)
+        except Exception as _dlt_err:
+            print("DELTA_CHECK_FAILED (non-fatal):", _dlt_err)
 
         # BUY ATM PE first (main leg)
         mainOrderId = helper.placeTargetOrder(atmPE, "BUY", qty, "MARKET", entryPrice, 0, 0, fyers, papertrading)
