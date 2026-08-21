@@ -1,0 +1,965 @@
+checkInstrument =  BSE:SENSEX-INDEX
+sensexExpDate =  26AUG
+BNFut (Sensex futures auto) = BSE:SENSEX26AUGFUT
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+Waiting for first candle to form. Current Second ==  0    2
+Waiting for first candle to form. Current Second ==  1    2
+Waiting for first candle to form. Current Second ==  2    2
+Waiting for first candle to form. Current Second ==  3    2
+Waiting for first candle to form. Current Second ==  4    2
+Waiting for first candle to form. Current Second ==  5    2
+Waiting for first candle to form. Current Second ==  6    2
+Waiting for first candle to form. Current Second ==  7    2
+Waiting for first candle to form. Current Second ==  8    2
+Waiting for first candle to form. Current Second ==  9    2
+Waiting for first candle to form. Current Second ==  10    2
+Waiting for first candle to form. Current Second ==  11    2
+Waiting for first candle to form. Current Second ==  12    2
+Waiting for first candle to form. Current Second ==  13    2
+Waiting for first candle to form. Current Second ==  14    2
+Waiting for first candle to form. Current Second ==  15    2
+Waiting for first candle to form. Current Second ==  16    2
+Waiting for first candle to form. Current Second ==  17    2
+Waiting for first candle to form. Current Second ==  18    2
+Waiting for first candle to form. Current Second ==  19    2
+Waiting for first candle to form. Current Second ==  20    2
+Waiting for first candle to form. Current Second ==  21    2
+Waiting for first candle to form. Current Second ==  22    2
+Waiting for first candle to form. Current Second ==  23    2
+Waiting for first candle to form. Current Second ==  24    2
+Waiting for first candle to form. Current Second ==  25    2
+Waiting for first candle to form. Current Second ==  26    2
+Waiting for first candle to form. Current Second ==  27    2
+Waiting for first candle to form. Current Second ==  28    2
+Waiting for first candle to form. Current Second ==  29    2
+Waiting for first candle to form. Current Second ==  30    2
+Waiting for first candle to form. Current Second ==  31    2
+Waiting for first candle to form. Current Second ==  32    2
+Waiting for first candle to form. Current Second ==  33    2
+Waiting for first candle to form. Current Second ==  34    2
+Waiting for first candle to form. Current Second ==  35    2
+Waiting for first candle to form. Current Second ==  36    2
+Waiting for first candle to form. Current Second ==  37    2
+Waiting for first candle to form. Current Second ==  38    2
+Waiting for first candle to form. Current Second ==  39    2
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 10.96  Spot Price = 77585.41
+VIX_PERCENTILES_FETCHED: P25= 11.36  P50= 11.92  P75= 12.21  Min= 10.83  Max= 13.9
+IV Regime = LOW (ADAPTIVE: P25= 11.36  P50= 11.92  P75= 12.21 ) | DailyRange = 1214.8 | 3minCandleRange = 63.9 (theoretical= 106.5 ) | ATMoptionMove = 28.8 | SL = 101 | Target = 101 | TrailTrigger = 29 | Spread = 300 | Buffer = 26
+IV Params refreshed: {'vix': 10.96, 'bn_price': 77585.41, 'regime': 'LOW', 'regime_thresholds': 'P25=11.36 P50=11.92 P75=12.21', 'daily_range': 1214.8, 'candle_range': 63.9, 'atm_option_move': 28.8, 'sl_point': 101, 'target_point': 101, 'sl_pct_of_premium': 0.1, 'trail_trigger': 29, 'spread_width': 300, 'support_resistance_buffer': 26}
+IV_RANK_DATA: VIX_30d_High= 13.9  VIX_30d_Low= 10.83  Current= 10.96  IV_Rank= 0.04
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+===
+====after 3 min ochain==== 2026-08-21 09:18:00.585919
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX26AUG78400CE   0.11   0.09 CALL added 12060   PUT added 1100  OI= 51140
+pcr2 =  BSE:SENSEX26AUG78300CE   0.28   0.13 CALL added 15300   PUT added 1960  OI= 65880
+pcr3 =  BSE:SENSEX26AUG78200PE   0.21   0.2 CALL added 21540   PUT added 4320  OI= 14600
+pcr4 =  BSE:SENSEX26AUG78100PE   0.4   0.24 CALL added 14760   PUT added 3520  OI= 17760
+pcr5 =  BSE:SENSEX26AUG78000CE   0.58   0.26 CALL added 72660   PUT added 19040  OI= 427660
+pcr6 =  BSE:SENSEX26AUG77900CE   0.62    0.93 CALL added 28320   PUT added 26360  OI= 70040
+pcr7 =  BSE:SENSEX26AUG77800PE   0.64   0.71 CALL added 68260   PUT added 48360  OI= 94760
+pcr8 =  BSE:SENSEX26AUG77700PE   0.98   1.37 CALL added 88720   PUT added 121600  OI= 169840
+pcr9 =  BSE:SENSEX26AUG77600CE   1.1   1.55 CALL added 44240   PUT added 68400  OI= 167960
+pcr10 =  BSE:SENSEX26AUG77500CE   1.23   1.69 CALL added 57180   PUT added 96640  OI= 493900
+pcr11 =  BSE:SENSEX26AUG77400CE   2.69   3.46 CALL added 7340   PUT added 25380  OI= 67180
+pcr12 =  BSE:SENSEX26AUG77300CE   4.11   6.96 CALL added 2640   PUT added 18380  OI= 22280
+pcr13 =  BSE:SENSEX26AUG77200CE   3.0   10.41 CALL added 1380   PUT added 14360  OI= 25340
+pcr14 =  BSE:SENSEX26AUG77100PE   4.51   15.86 CALL added 560   PUT added 8880  OI= 51020
+pcr15 =  BSE:SENSEX26AUG77000CE   2.4   16.16 CALL added 1340   PUT added 21660  OI= 188160
+pcr16 =  BSE:SENSEX26AUG76900CE   2.35   -11.9 CALL unwind -780   PUT added 9280  OI= 23560
+pcr17 =  BSE:SENSEX26AUG76800PE   11.28   92.71 CALL added 140   PUT added 12980  OI= 82540
+pcrSummation= 8.45  result =  ['BSE:SENSEX26AUG78200PE', 'BSE:SENSEX26AUG78100PE', 'BSE:SENSEX26AUG78000CE', 'BSE:SENSEX26AUG77900CE', 'BSE:SENSEX26AUG77800PE', 'BSE:SENSEX26AUG77700PE', 'BSE:SENSEX26AUG77600CE', 'BSE:SENSEX26AUG77500CE', 'BSE:SENSEX26AUG77400CE']
+PCRSUM== 36.49
+pcrSummation== 8.45
+VOLPCRSUM== 6.23
+spotLTP =  77589.14  ATM_STRIKE =  77600
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77600: 77600}
+avgOiPcrList2 = [np.float64(2.15)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 78000  Buffer= 26
+CEoich val =  72660.0  PEoich val =  19040.0 , CE > PE by 73.8%
+SUPP_RES TOTAL OI: CE= 427660  PE= 247780 , CE > PE by 42.1%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-08-21 09:18:01.862338
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 38.1
+RSI_VAL2== 38.1
+FUT_3m_OHLC O= 77786.8  H= 77872.9  L= 77771.3  C= 77771.3  Range= 101.6
+CHART_PATTERN_DETECTED: SHOOTING_STAR | OUTSIDE_BAR | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= -15.5  Range= 101.6  ExpectedRange= 63.9  RangeRatio= 1.59  O= 77786.8  H= 77872.9  L= 77771.3  C= 77771.3
+newSynthFut =  77800
+ATMStrike =  77600
+AVG_OIPCR= 0.94
+avgoiPCROld=  2.15
+SUPP_RES = 78000
+FUT LTP = 77771.3
+CEchoi  PechOi = 72660.0    19040.0
+====================================
+totalOIPCR = 1.11
+AVG_VOLPCR= 0.69
+atmPCR= 0.58  belowATM  0.62
+atmVolPCR= 0.42  belowATM  0.69
+True   77771.3   78000   False   False   38.1
+curr Doji False
+BSE:SENSEX26AUG77700PE  curr candle vol pcr = 1.87  PE= 583080  CE= 311980      cpr =  0.54
+BSE:SENSEX26AUG77800PE  prev candle vol pcr = 1.07  PE= 9420  CE= 8780      cpr =  0.93
+ATM_CE_premium= 429.6  ATM_PE_premium= 358.0
+CE_PremChg= -16.1  PE_PremChg= -11.35
+CandleBody= -15.5  PrevBody= -30.0  CandleRange= 101.6  Bearish
+TotalVol= 895060  PrevTotalVol= 18200  VolSpike= 49.18 x  SPIKE!
+SCALP_SCORE: BEAR | BullScore= 1  BearScore= 3 | Confidence= MEDIUM
+  SCALP_BEAR_REASONS: 2ConsecBearCandles + VolSpike(49.18x)_bear + BreakoutCandle(1.6x)
+DATAPOINT|09:18|FUT=77771.3|Body=-15.5|PrevBody=-30.0|Range=101.6|RangeRatio=1.59|CurrVolPCR=1.87|PrevVolPCR=1.07|CurrCPR=0.54|PrevCPR=0.93|VolSpike=49.18|CE_PremChg=-16.1|PE_PremChg=-11.35|BullScore=1|BearScore=3|Dir=BEAR|Conf=MEDIUM
+CHART_PATTERN_DETECTED: SHOOTING_STAR | OUTSIDE_BAR | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= -15.5  Range= 101.6  ExpectedRange= 63.9  RangeRatio= 1.59  O= 77786.8  H= 77872.9  L= 77771.3  C= 77771.3
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+======================================
+oipcr1 =  BSE:SENSEX26AUG77900CE   0.62
+oipcr2 =  BSE:SENSEX26AUG77800PE   0.64
+oipcr3 =  BSE:SENSEX26AUG77700PE   0.98
+oipcrBull = NoEntry  bulcount= 0  bearcount= 3 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.1    1.23
+No Entry Yet
+India VIX = 10.94  Spot Price = 77496.92
+IV Regime = LOW (ADAPTIVE: P25= 11.36  P50= 11.92  P75= 12.21 ) | DailyRange = 1211.2 | 3minCandleRange = 63.7 (theoretical= 106.2 ) | ATMoptionMove = 28.7 | SL = 100 | Target = 100 | TrailTrigger = 29 | Spread = 300 | Buffer = 25
+IV Params refreshed: {'vix': 10.94, 'bn_price': 77496.92, 'regime': 'LOW', 'regime_thresholds': 'P25=11.36 P50=11.92 P75=12.21', 'daily_range': 1211.2, 'candle_range': 63.7, 'atm_option_move': 28.7, 'sl_point': 100, 'target_point': 100, 'sl_pct_of_premium': 0.1, 'trail_trigger': 29, 'spread_width': 300, 'support_resistance_buffer': 25}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+===
+====after 3 min ochain==== 2026-08-21 09:21:00.000012
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX26AUG78300CE   0.22   0.07 CALL added 34040   PUT added 2380  OI= 84620
+pcr2 =  BSE:SENSEX26AUG78200PE   0.2   0.18 CALL added 33220   PUT added 5840  OI= 16120
+pcr3 =  BSE:SENSEX26AUG78100PE   0.26   0.13 CALL added 46740   PUT added 5860  OI= 20100
+pcr4 =  BSE:SENSEX26AUG78000CE   0.54   0.26 CALL added 139420   PUT added 36300  OI= 494420
+pcr5 =  BSE:SENSEX26AUG77900CE   0.72   1.18 CALL added 28320   PUT added 33520  OI= 70040
+pcr6 =  BSE:SENSEX26AUG77800PE   0.76    0.89 CALL added 102980   PUT added 91480  OI= 137880
+pcr7 =  BSE:SENSEX26AUG77700PE   1.04   1.31 CALL added 143260   PUT added 187300  OI= 235540
+pcr8 =  BSE:SENSEX26AUG77600CE   1.27   1.61 CALL added 119760   PUT added 193360  OI= 243480
+pcr9 =  BSE:SENSEX26AUG77500CE   1.26   1.54 CALL added 140300   PUT added 216520  OI= 577020
+pcr10 =  BSE:SENSEX26AUG77400CE   2.85   4.02 CALL added 12760   PUT added 51340  OI= 72600
+pcr11 =  BSE:SENSEX26AUG77300CE   3.17   1.97 CALL added 9320   PUT added 18380  OI= 28960
+pcr12 =  BSE:SENSEX26AUG77200CE   3.0   4.77 CALL added 5880   PUT added 28040  OI= 29840
+pcr13 =  BSE:SENSEX26AUG77100PE   3.42   2.14 CALL added 4140   PUT added 8880  OI= 51020
+pcr14 =  BSE:SENSEX26AUG77000CE   2.58   41.13 CALL added 1340   PUT added 55120  OI= 188160
+pcr15 =  BSE:SENSEX26AUG76900CE   2.72   -122.0 CALL unwind -160   PUT added 19520  OI= 24180
+pcr16 =  BSE:SENSEX26AUG76800PE   12.7   72.83 CALL added 360   PUT added 26220  OI= 95780
+pcr17 =  BSE:SENSEX26AUG76700PE   14.68   246.0 CALL added 160   PUT added 39360  OI= 94540
+pcrSummation= 8.9  result =  ['BSE:SENSEX26AUG78200PE', 'BSE:SENSEX26AUG78100PE', 'BSE:SENSEX26AUG78000CE', 'BSE:SENSEX26AUG77900CE', 'BSE:SENSEX26AUG77800PE', 'BSE:SENSEX26AUG77700PE', 'BSE:SENSEX26AUG77600CE', 'BSE:SENSEX26AUG77500CE', 'BSE:SENSEX26AUG77400CE']
+PCRSUM== 51.39
+pcrSummation== 8.9
+VOLPCRSUM== 8.69
+spotLTP =  77496.92  ATM_STRIKE =  77500
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {77500: 77500}
+avgOiPcrList2 = [np.float64(3.02)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 78000  Buffer= 25
+CEoich val =  139420.0  PEoich val =  36300.0 , CE > PE by 74.0%
+SUPP_RES TOTAL OI: CE= 494420  PE= 265040 , CE > PE by 46.4%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-08-21 09:21:00.680277
+IS_CHOI_DIFF_GT_25PERC== True
+RSI_VAL1== 34.14
+RSI_VAL2== 34.14
+FUT_3m_OHLC O= 77759.2  H= 77759.2  L= 77725.0  C= 77750.0  Range= 34.2
+CHART_PATTERN_DETECTED: THREE_BLACK_CROWS | HAMMER
+  PATTERN_CONTEXT: Body= -9.2  Range= 34.2  ExpectedRange= 63.7  RangeRatio= 0.54  O= 77759.2  H= 77759.2  L= 77725.0  C= 77750.0
+newSynthFut =  77800
+ATMStrike =  77500
+AVG_OIPCR= 0.99
+avgoiPCROld=  3.02
+SUPP_RES = 78000
+FUT LTP = 77750.0
+CEchoi  PechOi = 139420.0    36300.0
+====================================
+totalOIPCR = 1.1
+AVG_VOLPCR= 0.97
+atmPCR= 0.72  belowATM  0.76
+atmVolPCR= 0.71  belowATM  1.03
+True   77750.0   78000   False   False   34.14
+curr Doji False
+BSE:SENSEX26AUG77700PE  curr candle vol pcr = 1.74  PE= 363860  CE= 209460      cpr =  0.58
+BSE:SENSEX26AUG77700PE  prev candle vol pcr = 1.87  PE= 583080  CE= 311980      cpr =  0.54
+ATM_CE_premium= 387.55  ATM_PE_premium= 404.8
+CE_PremChg= -42.05  PE_PremChg= 46.8
+CandleBody= -9.2  PrevBody= -15.5  CandleRange= 34.2  Bearish
+TotalVol= 573320  PrevTotalVol= 895060  VolSpike= 0.64 x 
+SCALP_SCORE: BULL | BullScore= 2  BearScore= 1 | Confidence= LOW
+DATAPOINT|09:21|FUT=77750.0|Body=-9.2|PrevBody=-15.5|Range=34.2|RangeRatio=0.54|CurrVolPCR=1.74|PrevVolPCR=1.87|CurrCPR=0.58|PrevCPR=0.54|VolSpike=0.64|CE_PremChg=-42.05|PE_PremChg=46.8|BullScore=2|BearScore=1|Dir=BULL|Conf=LOW
+CHART_PATTERN_DETECTED: THREE_BLACK_CROWS | HAMMER
+  PATTERN_CONTEXT: Body= -9.2  Range= 34.2  ExpectedRange= 63.7  RangeRatio= 0.54  O= 77759.2  H= 77759.2  L= 77725.0  C= 77750.0
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+======================================
+oipcr1 =  BSE:SENSEX26AUG77800PE   0.76
+oipcr2 =  BSE:SENSEX26AUG77700PE   1.04
+oipcr3 =  BSE:SENSEX26AUG77600CE   1.27
+oipcrBull = BullTrade  bulcount= 2  bearcount= 1 oipcrBear= NoEntry
+atmpcr5 pcr6= 1.26    2.85
+No Entry Yet
+India VIX = 11.22  Spot Price = 77494.4
+IV Regime = LOW (ADAPTIVE: P25= 11.36  P50= 11.92  P75= 12.21 ) | DailyRange = 1242.1 | 3minCandleRange = 65.4 (theoretical= 108.9 ) | ATMoptionMove = 29.4 | SL = 103 | Target = 103 | TrailTrigger = 29 | Spread = 300 | Buffer = 26
+IV Params refreshed: {'vix': 11.22, 'bn_price': 77494.4, 'regime': 'LOW', 'regime_thresholds': 'P25=11.36 P50=11.92 P75=12.21', 'daily_range': 1242.1, 'candle_range': 65.4, 'atm_option_move': 29.4, 'sl_point': 103, 'target_point': 103, 'sl_pct_of_premium': 0.1, 'trail_trigger': 29, 'spread_width': 300, 'support_resistance_buffer': 26}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+===
+====after 3 min ochain==== 2026-08-21 09:24:00.000078
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX26AUG78300CE   0.22   0.08 CALL added 39160   PUT added 3120  OI= 89740
+pcr2 =  BSE:SENSEX26AUG78200PE   0.17   0.12 CALL added 48340   PUT added 5780  OI= 16060
+pcr3 =  BSE:SENSEX26AUG78100PE   0.25   0.11 CALL added 51900   PUT added 5940  OI= 20180
+pcr4 =  BSE:SENSEX26AUG78000CE   0.51   0.26 CALL added 181060   PUT added 46720  OI= 536060
+pcr5 =  BSE:SENSEX26AUG77900CE   0.41   0.41 CALL added 78620   PUT added 32520  OI= 120340
+pcr6 =  BSE:SENSEX26AUG77800PE   0.66    0.7 CALL added 146840   PUT added 103180  OI= 149580
+pcr7 =  BSE:SENSEX26AUG77700PE   1.01   1.26 CALL added 153640   PUT added 193240  OI= 241480
+pcr8 =  BSE:SENSEX26AUG77600CE   1.19   1.37 CALL added 173520   PUT added 237100  OI= 297240
+pcr9 =  BSE:SENSEX26AUG77500CE   1.2   1.24 CALL added 270380   PUT added 335420  OI= 707100
+pcr10 =  BSE:SENSEX26AUG77400CE   2.76   3.11 CALL added 26860   PUT added 83480  OI= 86700
+pcr11 =  BSE:SENSEX26AUG77300CE   3.37   3.05 CALL added 23000   PUT added 70240  OI= 42640
+pcr12 =  BSE:SENSEX26AUG77200CE   3.12   4.2 CALL added 12300   PUT added 51620  OI= 36260
+pcr13 =  BSE:SENSEX26AUG77100PE   3.37   3.01 CALL added 16400   PUT added 49360  OI= 91500
+pcr14 =  BSE:SENSEX26AUG77000CE   2.57   6.91 CALL added 11800   PUT added 81480  OI= 198620
+pcr15 =  BSE:SENSEX26AUG76900CE   2.91   32.98 CALL added 820   PUT added 27040  OI= 25160
+pcr16 =  BSE:SENSEX26AUG76800PE   11.08   15.41 CALL added 2320   PUT added 35740  OI= 105300
+pcr17 =  BSE:SENSEX26AUG76700PE   13.98   195.22 CALL added 180   PUT added 35140  OI= 90320
+pcrSummation= 11.36  result =  ['BSE:SENSEX26AUG78100PE', 'BSE:SENSEX26AUG78000CE', 'BSE:SENSEX26AUG77900CE', 'BSE:SENSEX26AUG77800PE', 'BSE:SENSEX26AUG77700PE', 'BSE:SENSEX26AUG77600CE', 'BSE:SENSEX26AUG77500CE', 'BSE:SENSEX26AUG77400CE', 'BSE:SENSEX26AUG77300CE']
+PCRSUM== 48.78
+pcrSummation== 11.36
+VOLPCRSUM== 9.080000000000002
+spotLTP =  77494.4  ATM_STRIKE =  77500
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77500: 77500}
+avgOiPcrList2 = [np.float64(3.02), np.float64(2.87)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 77500  Buffer= 26
+CEoich val =  270380.0  PEoich val =  335420.0 , CE < PE by 19.4%
+SUPP_RES TOTAL OI: CE= 707100  PE= 848600 , CE < PE by 16.7%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-08-21 09:24:00.706759
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 24.34
+RSI_VAL2== 24.34
+FUT_3m_OHLC O= 77700.0  H= 77700.0  L= 77670.0  C= 77673.3  Range= 30.0
+CHART_PATTERN_DETECTED: THREE_BLACK_CROWS
+  PATTERN_CONTEXT: Body= -26.7  Range= 30.0  ExpectedRange= 65.4  RangeRatio= 0.46  O= 77700.0  H= 77700.0  L= 77670.0  C= 77673.3
+newSynthFut =  77700
+ATMStrike =  77500
+AVG_OIPCR= 1.26
+avgoiPCROld=  2.87
+SUPP_RES = 77500
+FUT LTP = 77673.3
+CEchoi  PechOi = 270380.0    335420.0
+====================================
+totalOIPCR = 1.08
+AVG_VOLPCR= 1.01
+atmPCR= 0.41  belowATM  0.66
+atmVolPCR= 0.67  belowATM  1.08
+False   77673.3   77500   False   False   24.34
+curr Doji False
+BSE:SENSEX26AUG77700PE  curr candle vol pcr = 2.07  PE= 263300  CE= 127140      cpr =  0.48
+BSE:SENSEX26AUG77700PE  prev candle vol pcr = 1.74  PE= 363860  CE= 209460      cpr =  0.58
+VOL_PRESSURE_WATCH: SINGLE_CANDLE_PUT_PRESSURE | currPCR= 2.07  prevPCR= 1.74
+ATM_CE_premium= 389.85  ATM_PE_premium= 398.7
+CE_PremChg= 2.3  PE_PremChg= -6.1
+CandleBody= -26.7  PrevBody= -9.2  CandleRange= 30.0  Bearish
+TotalVol= 390440  PrevTotalVol= 573320  VolSpike= 0.68 x 
+SCALP_SCORE: BEAR | BullScore= 1  BearScore= 2 | Confidence= LOW
+DATAPOINT|09:24|FUT=77673.3|Body=-26.7|PrevBody=-9.2|Range=30.0|RangeRatio=0.46|CurrVolPCR=2.07|PrevVolPCR=1.74|CurrCPR=0.48|PrevCPR=0.58|VolSpike=0.68|CE_PremChg=2.3|PE_PremChg=-6.1|BullScore=1|BearScore=2|Dir=BEAR|Conf=LOW
+CHART_PATTERN_DETECTED: THREE_BLACK_CROWS
+  PATTERN_CONTEXT: Body= -26.7  Range= 30.0  ExpectedRange= 65.4  RangeRatio= 0.46  O= 77700.0  H= 77700.0  L= 77670.0  C= 77673.3
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+======================================
+oipcr1 =  BSE:SENSEX26AUG77800PE   0.66
+oipcr2 =  BSE:SENSEX26AUG77700PE   1.01
+oipcr3 =  BSE:SENSEX26AUG77600CE   1.19
+oipcrBull = BullTrade  bulcount= 2  bearcount= 1 oipcrBear= NoEntry
+atmpcr5 pcr6= 1.2    2.76
+No Entry Yet
+India VIX = 11.22  Spot Price = 77490.43
+IV Regime = LOW (ADAPTIVE: P25= 11.36  P50= 11.92  P75= 12.21 ) | DailyRange = 1242.1 | 3minCandleRange = 65.4 (theoretical= 108.9 ) | ATMoptionMove = 29.4 | SL = 103 | Target = 103 | TrailTrigger = 29 | Spread = 300 | Buffer = 26
+IV Params refreshed: {'vix': 11.22, 'bn_price': 77490.43, 'regime': 'LOW', 'regime_thresholds': 'P25=11.36 P50=11.92 P75=12.21', 'daily_range': 1242.1, 'candle_range': 65.4, 'atm_option_move': 29.4, 'sl_point': 103, 'target_point': 103, 'sl_pct_of_premium': 0.1, 'trail_trigger': 29, 'spread_width': 300, 'support_resistance_buffer': 26}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+===
+====after 3 min ochain==== 2026-08-21 09:27:00.000003
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX26AUG78300CE   0.21   0.07 CALL added 43880   PUT added 3160  OI= 94460
+pcr2 =  BSE:SENSEX26AUG78200PE   0.18   0.14 CALL added 57780   PUT added 8320  OI= 18600
+pcr3 =  BSE:SENSEX26AUG78100PE   0.19   0.08 CALL added 81260   PUT added 6840  OI= 21080
+pcr4 =  BSE:SENSEX26AUG78000CE   0.49   0.24 CALL added 218460   PUT added 52680  OI= 573460
+pcr5 =  BSE:SENSEX26AUG77900CE   0.35   0.33 CALL added 101080   PUT added 33500  OI= 142800
+pcr6 =  BSE:SENSEX26AUG77800PE   0.64    0.66 CALL added 165500   PUT added 109960  OI= 156360
+pcr7 =  BSE:SENSEX26AUG77700PE   1.0   1.2 CALL added 174340   PUT added 209980  OI= 258220
+pcr8 =  BSE:SENSEX26AUG77600CE   1.18   1.32 CALL added 200220   PUT added 264920  OI= 323940
+pcr9 =  BSE:SENSEX26AUG77500CE   1.22   1.28 CALL added 328440   PUT added 418860  OI= 765160
+pcr10 =  BSE:SENSEX26AUG77400CE   2.85   3.21 CALL added 41820   PUT added 134400  OI= 101660
+pcr11 =  BSE:SENSEX26AUG77300CE   3.67   3.63 CALL added 31420   PUT added 114120  OI= 51060
+pcr12 =  BSE:SENSEX26AUG77200CE   3.44   4.52 CALL added 19180   PUT added 86740  OI= 43140
+pcr13 =  BSE:SENSEX26AUG77100PE   3.31   2.97 CALL added 19100   PUT added 56660  OI= 98800
+pcr14 =  BSE:SENSEX26AUG77000CE   2.65   6.48 CALL added 16860   PUT added 109320  OI= 203680
+pcr15 =  BSE:SENSEX26AUG76900CE   2.79   15.04 CALL added 1780   PUT added 26780  OI= 26120
+pcr16 =  BSE:SENSEX26AUG76800PE   10.67   13.08 CALL added 2920   PUT added 38200  OI= 107760
+pcr17 =  BSE:SENSEX26AUG76700PE   14.09   180.7 CALL added 200   PUT added 36140  OI= 91320
+pcrSummation= 11.59  result =  ['BSE:SENSEX26AUG78100PE', 'BSE:SENSEX26AUG78000CE', 'BSE:SENSEX26AUG77900CE', 'BSE:SENSEX26AUG77800PE', 'BSE:SENSEX26AUG77700PE', 'BSE:SENSEX26AUG77600CE', 'BSE:SENSEX26AUG77500CE', 'BSE:SENSEX26AUG77400CE', 'BSE:SENSEX26AUG77300CE']
+PCRSUM== 48.93
+pcrSummation== 11.59
+VOLPCRSUM== 8.74
+spotLTP =  77489.79  ATM_STRIKE =  77500
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77500: 77500}
+avgOiPcrList2 = [np.float64(3.02), np.float64(2.87), np.float64(2.88)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 77500  Buffer= 26
+CEoich val =  328440.0  PEoich val =  418860.0 , CE < PE by 21.6%
+SUPP_RES TOTAL OI: CE= 765160  PE= 932040 , CE < PE by 17.9%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-08-21 09:27:00.694409
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 26.86
+RSI_VAL2== 26.86
+FUT_3m_OHLC O= 77673.3  H= 77681.8  L= 77673.3  C= 77681.8  Range= 8.6
+CHART_PATTERN_DETECTED: INSIDE_BAR | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 8.6  Range= 8.6  ExpectedRange= 65.4  RangeRatio= 0.13  O= 77673.3  H= 77681.8  L= 77673.3  C= 77681.8
+recent two = [np.float64(2.87), np.float64(2.88)]
+newSynthFut =  77700
+ATMStrike =  77500
+AVG_OIPCR= 1.29
+avgoiPCROld=  2.88
+SUPP_RES = 77500
+FUT LTP = 77681.85
+CEchoi  PechOi = 328440.0    418860.0
+====================================
+totalOIPCR = 1.09
+AVG_VOLPCR= 0.97
+atmPCR= 0.35  belowATM  0.64
+atmVolPCR= 0.6  belowATM  1.06
+False   77681.85   77500   False   False   26.86
+curr Doji False
+BSE:SENSEX26AUG77600PE  curr candle vol pcr = 1.63  PE= 143400  CE= 87800      cpr =  0.61
+BSE:SENSEX26AUG77700PE  prev candle vol pcr = 2.07  PE= 263300  CE= 127140      cpr =  0.48
+VOL_PRESSURE_WATCH: SINGLE_CANDLE_PUT_PRESSURE | currPCR= 1.63  prevPCR= 2.07
+ATM_CE_premium= 424.45  ATM_PE_premium= 366.15
+CE_PremChg= -19.55  PE_PremChg= 12.25
+CandleBody= 8.6  PrevBody= -26.7  CandleRange= 8.6  Bullish
+TotalVol= 231200  PrevTotalVol= 390440  VolSpike= 0.59 x 
+SCALP_SCORE: BULL | BullScore= 3  BearScore= 0 | Confidence= MEDIUM
+  SCALP_BULL_REASONS: VolPCR_curr_bull + StrongBullCandle(100%) + PremMomentum_bull(CE-19.55,PE+12.25)
+DATAPOINT|09:27|FUT=77681.8|Body=8.6|PrevBody=-26.7|Range=8.6|RangeRatio=0.13|CurrVolPCR=1.63|PrevVolPCR=2.07|CurrCPR=0.61|PrevCPR=0.48|VolSpike=0.59|CE_PremChg=-19.55|PE_PremChg=12.25|BullScore=3|BearScore=0|Dir=BULL|Conf=MEDIUM
+CHART_PATTERN_DETECTED: INSIDE_BAR | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 8.6  Range= 8.6  ExpectedRange= 65.4  RangeRatio= 0.13  O= 77673.3  H= 77681.8  L= 77673.3  C= 77681.8
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+======================================
+oipcr1 =  BSE:SENSEX26AUG77800PE   0.64
+oipcr2 =  BSE:SENSEX26AUG77700PE   1.0
+oipcr3 =  BSE:SENSEX26AUG77600CE   1.18
+oipcrBull = BullTrade  bulcount= 2  bearcount= 1 oipcrBear= NoEntry
+atmpcr5 pcr6= 1.22    2.85
+No Entry Yet
+India VIX = 11.22  Spot Price = 77511.92
+IV Regime = LOW (ADAPTIVE: P25= 11.36  P50= 11.92  P75= 12.21 ) | DailyRange = 1242.4 | 3minCandleRange = 65.4 (theoretical= 109.0 ) | ATMoptionMove = 29.4 | SL = 103 | Target = 103 | TrailTrigger = 29 | Spread = 300 | Buffer = 26
+IV Params refreshed: {'vix': 11.22, 'bn_price': 77511.92, 'regime': 'LOW', 'regime_thresholds': 'P25=11.36 P50=11.92 P75=12.21', 'daily_range': 1242.4, 'candle_range': 65.4, 'atm_option_move': 29.4, 'sl_point': 103, 'target_point': 103, 'sl_pct_of_premium': 0.1, 'trail_trigger': 29, 'spread_width': 300, 'support_resistance_buffer': 26}
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+===
+====after 3 min ochain==== 2026-08-21 09:30:00.000015
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX26AUG78300CE   0.18   0.05 CALL added 56300   PUT added 2880  OI= 106880
+pcr2 =  BSE:SENSEX26AUG78200PE   0.19   0.17 CALL added 66160   PUT added 11400  OI= 21680
+pcr3 =  BSE:SENSEX26AUG78100PE   0.16   0.06 CALL added 90120   PUT added 5220  OI= 19460
+pcr4 =  BSE:SENSEX26AUG78000CE   0.43   0.18 CALL added 313420   PUT added 57160  OI= 668420
+pcr5 =  BSE:SENSEX26AUG77900CE   0.34   0.33 CALL added 137300   PUT added 44920  OI= 179020
+pcr6 =  BSE:SENSEX26AUG77800PE   0.61    0.62 CALL added 188180   PUT added 116640  OI= 163040
+pcr7 =  BSE:SENSEX26AUG77700PE   0.88   1.0 CALL added 222240   PUT added 221860  OI= 270100
+pcr8 =  BSE:SENSEX26AUG77600CE   1.14   1.24 CALL added 234240   PUT added 291520  OI= 357960
+pcr9 =  BSE:SENSEX26AUG77500CE   1.23   1.29 CALL added 396300   PUT added 512380  OI= 833020
+pcr10 =  BSE:SENSEX26AUG77400CE   2.89   3.16 CALL added 67840   PUT added 214040  OI= 127680
+pcr11 =  BSE:SENSEX26AUG77300CE   4.47   4.88 CALL added 36220   PUT added 176580  OI= 55860
+pcr12 =  BSE:SENSEX26AUG77200CE   3.64   4.68 CALL added 24820   PUT added 116120  OI= 48780
+pcr13 =  BSE:SENSEX26AUG77100PE   3.42   3.18 CALL added 21240   PUT added 67440  OI= 109580
+pcr14 =  BSE:SENSEX26AUG77000CE   2.66   5.5 CALL added 23960   PUT added 131740  OI= 210780
+pcr15 =  BSE:SENSEX26AUG76900CE   2.99   18.94 CALL added 1660   PUT added 31440  OI= 26000
+pcr16 =  BSE:SENSEX26AUG76800PE   12.27   18.45 CALL added 3000   PUT added 55360  OI= 124920
+pcr17 =  BSE:SENSEX26AUG76700PE   16.16   346.86 CALL added 140   PUT added 48560  OI= 103740
+pcrSummation= 12.149999999999999  result =  ['BSE:SENSEX26AUG78100PE', 'BSE:SENSEX26AUG78000CE', 'BSE:SENSEX26AUG77900CE', 'BSE:SENSEX26AUG77800PE', 'BSE:SENSEX26AUG77700PE', 'BSE:SENSEX26AUG77600CE', 'BSE:SENSEX26AUG77500CE', 'BSE:SENSEX26AUG77400CE', 'BSE:SENSEX26AUG77300CE']
+PCRSUM== 53.66
+pcrSummation== 12.15
+VOLPCRSUM== 8.47
+spotLTP =  77507.86  ATM_STRIKE =  77500
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77500: 77500}
+avgOiPcrList2 = [np.float64(2.87), np.float64(2.88), np.float64(3.16)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 77500  Buffer= 26
+CEoich val =  396300.0  PEoich val =  512380.0 , CE < PE by 22.7%
+SUPP_RES TOTAL OI: CE= 833020  PE= 1025560 , CE < PE by 18.8%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-08-21 09:30:00.854735
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 43.01
+RSI_VAL2== 43.01
+FUT_3m_OHLC O= 77685.0  H= 77749.4  L= 77682.0  C= 77749.4  Range= 67.4
+CHART_PATTERN_DETECTED: DOUBLE_TOP_FORMING | DOUBLE_BOTTOM_FORMING | STRONG_MOMENTUM_BULL
+  PATTERN_CONTEXT: Body= 64.4  Range= 67.4  ExpectedRange= 65.4  RangeRatio= 1.03  O= 77685.0  H= 77749.4  L= 77682.0  C= 77749.4
+isPcrInc = True
+newSynthFut =  77700
+ATMStrike =  77500
+AVG_OIPCR= 1.35
+avgoiPCROld=  3.16
+SUPP_RES = 77500
+FUT LTP = 77749.4
+CEchoi  PechOi = 396300.0    512380.0
+====================================
+totalOIPCR = 1.09
+AVG_VOLPCR= 0.94
+atmPCR= 0.34  belowATM  0.61
+atmVolPCR= 0.6  belowATM  1.03
+False   77749.4   77500   True   False   43.01
+In Bull trade, slCount =  0  (mode= LOGIC2_TREND_CONVERGENCE )
+SPREAD_CALC_AT_ENTRY: SyntheticATMStrike= 77700  ATM_PE= 401.4  ATM_CE= 385.45  AvgATM= 393.42
+ATM_GREEKS: CE=BSE:SENSEX26AUG77700CE -> {'delta': 0.51, 'gamma': 0.0004, 'theta': -33.15, 'vega': 40.58, 'iv': 10.22}
+ATM_GREEKS: PE=BSE:SENSEX26AUG77700PE -> {'delta': -0.49, 'gamma': 0.0004, 'theta': -33.15, 'vega': 40.58, 'iv': 10.22}
+ATM_IV: ce_iv=10.22 pe_iv=10.22 avg_atm_iv=10.22 iv_skew(PE-CE)=0.0
+==================================================
+SPREAD_SELECTION (Sensex weekly): Type= CREDIT | DTE= 6 | PremRatio= 0.7 | IVRank= 0.04
+SPREAD_REASONS: DTE=6(weekly) | PremRatio=0.7 | IVRank=0.04 | DECISION:CREDIT (default — theta favors seller for weekly)
+==================================================
+SPREAD_DECISION_AT_ENTRY: {'type': 'CREDIT', 'score': 1, 'dte': 6, 'premium_ratio': 0.7, 'iv_rank': 0.04, 'vix_30d_high': 13.9, 'vix_30d_low': 10.83, 'reasons': ['DTE=6(weekly)', 'PremRatio=0.7', 'IVRank=0.04', 'DECISION:CREDIT (default — theta favors seller for weekly)']}
+ENTRY_ROUTING: spread_type= CREDIT  isBullish= True  isBearish= False
+IV-Dynamic: SL= 103  Target= 103  Spread= 300
+  Checking hedge BSE:SENSEX26AUG77000PE: premium=158.9 (max=200.5)
+=atmPE= BSE:SENSEX26AUG77700PE
+=otmPE== BSE:SENSEX26AUG77000PE  entryPrice= 401.0  maxHedgePremium= 200.5
+hedge_entry_price = 158.9
+CREDIT_NET_CREDIT= 242.1
+OPT_RANGE_DEBUG: symbol=BSE:SENSEX26AUG77700PE | total_candles_after_skip1st=4 | ranges=[51.5, 26.55, 15.65, 28.25] | median_all=27.4
+OPT_OHLC_ENTRY: symbol=BSE:SENSEX26AUG77700PE | candles=4 | open=[358.6, 409.5, 398.25, 412.4] | high=[406.45, 425.25, 413.9, 416.95] | low=[354.95, 398.7, 398.25, 388.7] | close=[404.8, 398.7, 413.9, 398.5] | median_range=27.4
+OPT_RANGE_DEBUG: symbol=BSE:SENSEX26AUG77000PE | total_candles_after_skip1st=4 | ranges=[27.5, 13.1, 7.45, 13.8] | median_all=13.45
+OPT_OHLC_ENTRY: symbol=BSE:SENSEX26AUG77000PE | candles=4 | open=[136.45, 162.85, 157.55, 164.2] | high=[162.5, 171.0, 165.0, 165.8] | low=[135.0, 157.9, 157.55, 152.0] | close=[162.35, 158.15, 163.3, 157.8] | median_range=13.45
+DELTA_CHECK: main=BSE:SENSEX26AUG77700PE -> {'delta': -0.49, 'gamma': 0.0004, 'theta': -33.29, 'vega': 40.58, 'iv': 10.27}
+DELTA_CHECK: hedge=BSE:SENSEX26AUG77000PE -> {'delta': -0.25, 'gamma': 0.0003, 'theta': -27.17, 'vega': 32.09, 'iv': 10.59}
+DELTA_CHECK: delta_ratio (|hedge|/|main|) = 0.51
+HEDGE_OFFSET: source=DELTA used_ratio=0.51 raw=0.51 | delta_ratio=0.51 range_ratio=0.491 premium_ratio=0.396 | (main_delta=-0.49 hedge_delta=-0.25 main_range=27.4 hedge_range=13.45) effective_sl=55 -> net_sl_points=26.94
+RISK_SIZING: effective_sl_pre=55 main=401.0 hedge=158.9 main_range=27.4 hedge_range=13.45 FIXED_RISK=5000 -> qty=180 (9 lots)
+CREDIT_ENTRY: qty= 180
+MARGIN_CHECK: qty=180 (9 lots) margin_required=417003.79 avail=883942.55 usable(90%)=795548.3
+9 : 30 : 3  =>  BUY   SENSEX26AUG77000PE   180   MARKET
+9 : 30 : 3  =>  SENSEX26AUG77000PE {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '1a8eb8f3-e424-4e73-b9be-868a24471654', 'id': '26082100031646'}
+entryPrice== 401.0 Target = 298  BSE:SENSEX26AUG77700PE  SL = 504
+9 : 30 : 4  =>  SELL   SENSEX26AUG77700PE   180   MARKET
+9 : 30 : 4  =>  SENSEX26AUG77700PE {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': 'fd341ed7-cd23-4f38-9e95-36e14d7c061a', 'id': '26082100031666'}
+Exit OID:  {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': 'fd341ed7-cd23-4f38-9e95-36e14d7c061a', 'id': '26082100031666'}   {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '1a8eb8f3-e424-4e73-b9be-868a24471654', 'id': '26082100031646'}
+after entry tradeATMOption = BSE:SENSEX26AUG77700PE
+ENTRY_SL_TGT: spread= CREDIT  SL= 456.9  Target= 305.9  EntryPrem= 401.9  AnchorSrc= CANDLE_CLOSE  TrailTrigger= 58  SL_Source= OPTION_RANGE(median=27.4,SLx2,Tgtx3.5)  (iv_pts= 103  effective_sl= 55 )
+curr Doji False
+BSE:SENSEX26AUG77600PE  curr candle vol pcr = 1.69  PE= 188480  CE= 111600      cpr =  0.59
+BSE:SENSEX26AUG77600PE  prev candle vol pcr = 1.63  PE= 143400  CE= 87800      cpr =  0.61
+ATM_CE_premium= 442.15  ATM_PE_premium= 353.4
+CE_PremChg= 17.7  PE_PremChg= -12.75
+CandleBody= 64.4  PrevBody= 8.6  CandleRange= 67.4  Bullish
+TotalVol= 300080  PrevTotalVol= 231200  VolSpike= 1.3 x 
+SCALP_SCORE: BULL | BullScore= 3  BearScore= 1 | Confidence= MEDIUM
+  SCALP_BULL_REASONS: VolPCR_curr_bull + StrongBullCandle(96%) + 2ConsecBullCandles
+DATAPOINT|09:30|FUT=77749.4|Body=64.4|PrevBody=8.6|Range=67.4|RangeRatio=1.03|CurrVolPCR=1.69|PrevVolPCR=1.63|CurrCPR=0.59|PrevCPR=0.61|VolSpike=1.3|CE_PremChg=17.7|PE_PremChg=-12.75|BullScore=3|BearScore=1|Dir=BULL|Conf=MEDIUM
+CHART_PATTERN_DETECTED: DOUBLE_TOP_FORMING | DOUBLE_BOTTOM_FORMING | STRONG_MOMENTUM_BULL
+  PATTERN_CONTEXT: Body= 64.4  Range= 67.4  ExpectedRange= 65.4  RangeRatio= 1.03  O= 77685.0  H= 77749.4  L= 77682.0  C= 77749.4
+BSE:SENSEX-INDEX  strikecount= 3   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x7325d169f1a0>
+======================================
+oipcr1 =  BSE:SENSEX26AUG77800PE   0.61
+oipcr2 =  BSE:SENSEX26AUG77700PE   0.88
+oipcr3 =  BSE:SENSEX26AUG77600CE   1.14
+oipcrBull = NoEntry  bulcount= 1  bearcount= 2 oipcrBear= BearTrade
+atmpcr5 pcr6= 1.23    2.89
+No Entry Yet
+In Trade ( CREDIT ). No Exit. ltp= 412.25  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 414.55  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 420.8  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 421.0  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 425.65  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 415.35  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 416.75  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 417.5  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 417.25  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 408.55  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 403.45  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 386.4  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 378.25  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 381.8  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 377.65  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.6  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 374.7  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 370.05  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.3  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.9  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.35  SL= 456.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 344.8  SL= 456.9  target= 305.9
+TRAILING SL activated! SL moved to breakeven = 401.9
+In Trade ( CREDIT ). No Exit. ltp= 349.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 355.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 371.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 373.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 378.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 370.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 371.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 346.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 350.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 334.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 337.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 340.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 345.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 344.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 339.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 344.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 337.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 329.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 340.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 338.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 329.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 328.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 329.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 330.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 329.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 334.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 330.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 330.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 329.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 327.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 328.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 331.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 334.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 330.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 331.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 328.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 331.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 337.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 339.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 339.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 338.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 331.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 331.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 332.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 332.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 330.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 327.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 331.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 332.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 333.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 334.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 338.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 340.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 345.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 345.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 344.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 344.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 339.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 330.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 335.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 340.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 339.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 358.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 355.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 344.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 346.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 362.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 355.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 362.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 361.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 361.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 362.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 340.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 339.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 334.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 336.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 340.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 343.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 345.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 342.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 358.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 369.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 358.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 363.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 358.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 359.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 360.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 362.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 364.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 366.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 365.95  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 372.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 369.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 370.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 367.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 362.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 362.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 357.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 350.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 346.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 350.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.2  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.55  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 341.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 345.25  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 347.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.35  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.85  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.7  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.9  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.05  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 352.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.0  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.8  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 355.45  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 356.65  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.5  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 350.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 349.75  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 350.4  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 346.1  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 346.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 348.6  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 351.15  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 354.3  SL= 401.9  target= 305.9
+In Trade ( CREDIT ). No Exit. ltp= 353.65  SL= 401.9  target= 305.9
