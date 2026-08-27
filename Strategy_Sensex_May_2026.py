@@ -1244,7 +1244,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
         # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
         main_delta_val, hedge_delta_val = get_leg_deltas(atmPE, otmPE, fyers)
-        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1319,7 +1319,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
         # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
         main_delta_val, hedge_delta_val = get_leg_deltas(atmCE, otmCE, fyers)
-        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1429,7 +1429,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
         # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
         main_delta_val, hedge_delta_val = get_leg_deltas(atmCE, otmCE, fyers)
-        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1504,7 +1504,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
         # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
         main_delta_val, hedge_delta_val = get_leg_deltas(atmPE, otmPE, fyers)
-        effective_sl_pre = round(opt_range * 2) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -2518,15 +2518,15 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 2, Target: median x 3.5 (R:R 1:1.75). Median is HIGH-LOW range.
+                # SL: median x 1.7, Target: median x 3.5 (R:R ~1:2). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here,
                 # so SL/Target and qty sizing always agree on the same volatility snapshot.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 2)
+                    effective_sl = round(opt_range * 1.7)
                     effective_tgt = round(opt_range * 3.5)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx3.5)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.7,Tgtx3.5)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -2657,14 +2657,14 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 2, Target: median x 3.5 (R:R 1:1.75). Median is HIGH-LOW range.
+                # SL: median x 1.7, Target: median x 3.5 (R:R ~1:2). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 2)
+                    effective_sl = round(opt_range * 1.7)
                     effective_tgt = round(opt_range * 3.5)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx2,Tgtx3.5)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.7,Tgtx3.5)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
