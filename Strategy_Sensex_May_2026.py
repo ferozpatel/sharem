@@ -222,9 +222,10 @@ MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capit
 MIN_LOTS = 1                     # minimum position
 # Fraction of available funds usable for a trade. Applied to REAL available funds
 # (margin_avail from the broker, fetched live) when available; else to FALLBACK_CAPITAL.
-# 0.90 leaves a 10% buffer so we never hit a broker margin-shortfall rejection
-# (which previously left a naked leg — see 2026-07-16).
-DEPLOYABLE_CAPITAL_FRACTION = 0.90
+# 0.97 leaves only a 3% buffer against a broker margin-shortfall rejection (which previously
+# left a naked leg — see 2026-07-16). Thin buffer: margin can tick up between the check and
+# the actual fill, so a very tight day could still see a leg rejected.
+DEPLOYABLE_CAPITAL_FRACTION = 0.97
 # Used ONLY when the broker's live available-funds figure (margin_avail) can't be fetched.
 # Keep at/below your real account balance so a fallback never over-sizes.
 FALLBACK_CAPITAL = 800000        # ₹ — hardcoded deployable capital fallback
