@@ -397,9 +397,10 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
       4. Scan same-option-type strikes on the OTM side only (PE: strikes BELOW main;
          CE: strikes ABOVE main) and pick the one whose |delta| is NEAREST the target.
       5. Snap that strike to the nearest 500 multiple for liquidity.
-      6. Guard: hedge must stay strictly OTM and at least HEDGE_MIN_DISTANCE away from the
-         main strike. If snapping violates that, push it out to the first valid 500-grid
-         strike beyond the floor.
+      6. Guard (strictly-OTM only, NO minimum-distance floor): the delta/2 target already
+         puts the hedge well OTM with lower premium, so no artificial distance is imposed.
+         The only fix is if snapping to the 500 grid rounds the strike onto/through the main
+         strike — then move to the nearest 500 strictly on the OTM side.
       7. Look up the snapped strike's delta (for the offset ratio / logging).
 
     This ALSO serves the delta-based lot sizing: it returns both leg deltas, so the caller
@@ -455,15 +456,19 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
         best_sp, best_d = min(otm, key=lambda x: abs(abs(x[1]) - target))
         snapped = int(round(float(best_sp) / 500.0) * 500)
 
-        # Enforce strictly-OTM + minimum-distance floor on the snapped strike.
+        # Strictly-OTM guard only (NO minimum-distance floor): the delta/2 target already
+        # places the hedge well OTM with lower premium by construction, so no artificial
+        # distance is imposed. The only correction needed is when snapping to the 500 grid
+        # rounds a near strike back onto/through the main strike (which would flip it to the
+        # wrong, ITM side) — in that case move to the nearest 500 strictly on the OTM side.
         if option_type == "PE":
-            floor_strike = int(math.floor((main_strike - HEDGE_MIN_DISTANCE) / 500.0) * 500)
-            if snapped > floor_strike:
-                snapped = floor_strike
+            # PE hedge must stay strictly BELOW main.
+            if snapped >= main_strike:
+                snapped = int((math.ceil(main_strike / 500.0) - 1) * 500)
         else:  # CE
-            floor_strike = int(math.ceil((main_strike + HEDGE_MIN_DISTANCE) / 500.0) * 500)
-            if snapped < floor_strike:
-                snapped = floor_strike
+            # CE hedge must stay strictly ABOVE main.
+            if snapped <= main_strike:
+                snapped = int((math.floor(main_strike / 500.0) + 1) * 500)
 
         # Delta of the FINAL snapped strike (nearest match in the chain, if present).
         hedge_delta = None
