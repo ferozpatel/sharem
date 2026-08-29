@@ -378,6 +378,117 @@ def get_leg_deltas(main_symbol, hedge_symbol, fyers_client, strikecount=20):
         return None, None
 
 
+def _strike_eq(a, b, tol=1.0):
+    """Tolerance-based compare for option-chain strike_price (float) vs our int strike."""
+    try:
+        return abs(float(a) - float(b)) <= tol
+    except (TypeError, ValueError):
+        return False
+
+
+def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, strikecount=20):
+    """
+    DELTA-BASED hedge selection (replaces the premium-fraction + 500-grid walk).
+
+    Logic:
+      1. Fetch the greeks-enabled option chain ONCE.
+      2. Read the MAIN leg's |delta| (match strike_price + option_type).
+      3. target_hedge_delta = |main_delta| / 2   (sign ignored — puts have negative delta).
+      4. Scan same-option-type strikes on the OTM side only (PE: strikes BELOW main;
+         CE: strikes ABOVE main) and pick the one whose |delta| is NEAREST the target.
+      5. Snap that strike to the nearest 500 multiple for liquidity.
+      6. Guard: hedge must stay strictly OTM and at least HEDGE_MIN_DISTANCE away from the
+         main strike. If snapping violates that, push it out to the first valid 500-grid
+         strike beyond the floor.
+      7. Look up the snapped strike's delta (for the offset ratio / logging).
+
+    This ALSO serves the delta-based lot sizing: it returns both leg deltas, so the caller
+    no longer needs a separate get_leg_deltas() call (net API calls stay ~2 greeks fetches).
+
+    Returns:
+        (hedge_symbol, main_delta, hedge_delta) on success.
+        (None, None, None) on ANY failure — caller then falls back to the premium+distance
+        walk. Never raises: a greeks hiccup must never block a live entry.
+    """
+    try:
+        resp = helper.getOptionChainWithGreeks(strikecount, "BSE:SENSEX-INDEX", fyers_client)
+        if not resp or resp.get("code") != 200:
+            print(f"HEDGE_BY_DELTA: chain fetch failed (code={resp.get('code') if resp else None}) "
+                  f"- falling back to premium walk")
+            return None, None, None
+        chain = resp.get("data", {}).get("optionsChain", [])
+
+        # Build strike -> delta map for THIS option type (only rows with a real greeks block).
+        same_type = []
+        main_delta = None
+        for opt in chain:
+            if opt.get("option_type") != option_type:
+                continue
+            greeks = opt.get("greeks")
+            if not greeks or greeks.get("delta") is None:
+                continue
+            sp = opt.get("strike_price")
+            d = greeks.get("delta")
+            same_type.append((sp, d))
+            if _strike_eq(sp, main_strike):
+                main_delta = d
+
+        if main_delta is None or abs(main_delta) <= 0:
+            print(f"HEDGE_BY_DELTA: main delta not found for strike={main_strike} {option_type} "
+                  f"- falling back to premium walk")
+            return None, None, None
+
+        target = abs(main_delta) / 2.0
+
+        # OTM side only: PE hedge is BELOW main strike, CE hedge is ABOVE main strike.
+        if option_type == "PE":
+            otm = [(sp, d) for (sp, d) in same_type if float(sp) < float(main_strike)]
+        else:  # CE
+            otm = [(sp, d) for (sp, d) in same_type if float(sp) > float(main_strike)]
+
+        if not otm:
+            print(f"HEDGE_BY_DELTA: no OTM {option_type} strikes with greeks vs main={main_strike} "
+                  f"- falling back to premium walk")
+            return None, None, None
+
+        # Strike whose |delta| is nearest the target hedge delta.
+        best_sp, best_d = min(otm, key=lambda x: abs(abs(x[1]) - target))
+        snapped = int(round(float(best_sp) / 500.0) * 500)
+
+        # Enforce strictly-OTM + minimum-distance floor on the snapped strike.
+        if option_type == "PE":
+            floor_strike = int(math.floor((main_strike - HEDGE_MIN_DISTANCE) / 500.0) * 500)
+            if snapped > floor_strike:
+                snapped = floor_strike
+        else:  # CE
+            floor_strike = int(math.ceil((main_strike + HEDGE_MIN_DISTANCE) / 500.0) * 500)
+            if snapped < floor_strike:
+                snapped = floor_strike
+
+        # Delta of the FINAL snapped strike (nearest match in the chain, if present).
+        hedge_delta = None
+        for (sp, d) in same_type:
+            if _strike_eq(sp, snapped):
+                hedge_delta = d
+                break
+
+        hedge_symbol = getOptionFormatSensex(intExpiry, snapped, option_type)
+        print(f"HEDGE_BY_DELTA: main={main_strike}{option_type} main_delta={main_delta} "
+              f"target_hedge_delta={round(target, 4)} nearest_strike={best_sp} "
+              f"nearest_delta={best_d} -> snapped500={snapped} hedge={hedge_symbol} "
+              f"hedge_delta={hedge_delta}")
+        if main_delta and hedge_delta and abs(main_delta) > 0:
+            print(f"DELTA_CHECK: main={getOptionFormatSensex(intExpiry, main_strike, option_type)} "
+                  f"delta={main_delta}")
+            print(f"DELTA_CHECK: hedge={hedge_symbol} delta={hedge_delta}")
+            print(f"DELTA_CHECK: delta_ratio (|hedge|/|main|) = "
+                  f"{round(abs(hedge_delta) / abs(main_delta), 3)}")
+        return hedge_symbol, main_delta, hedge_delta
+    except Exception as e:
+        print("SELECT_HEDGE_BY_DELTA_FAILED (non-fatal, falling back to premium walk):", e)
+        return None, None, None
+
+
 def _order_ok(resp):
     """
     True if an order response indicates success.
@@ -1206,28 +1317,38 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     if isBullish:
         entryPrice = helper.manualLTP(atmPE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
-        hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
-        otmPE_found = None
-        for _ in range(6):
-            candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
-            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
-            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
-            try:
-                candidate_premium = helper.manualLTP(candidate, fyers)
-            except Exception as _hedge_err:
-                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+        # DELTA-BASED hedge selection (primary): hedge |delta| ~= main |delta|/2, snapped to a
+        # 500 multiple for liquidity. Also returns both leg deltas (feeds the offset ratio in
+        # calc_lots_by_risk), so no separate get_leg_deltas() call is needed.
+        hedge_sym, main_delta_val, hedge_delta_val = select_hedge_by_delta(
+            syntheticATMStrike, "PE", intExpiry, fyers)
+        if hedge_sym:
+            otmPE = hedge_sym
+        else:
+            # FALLBACK: greeks unavailable -> original premium-fraction + 500-grid walk.
+            main_delta_val, hedge_delta_val = None, None
+            # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
+            hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
+            otmPE_found = None
+            for _ in range(6):
+                candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
+                # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+                # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+                try:
+                    candidate_premium = helper.manualLTP(candidate, fyers)
+                except Exception as _hedge_err:
+                    print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                    hedge_strike -= 500
+                    continue
+                print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
+                # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+                # untraded, illiquid strike as the hedge.
+                if 0 < candidate_premium <= max_premium:
+                    otmPE_found = candidate
+                    break
                 hedge_strike -= 500
-                continue
-            print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
-            # untraded, illiquid strike as the hedge.
-            if 0 < candidate_premium <= max_premium:
-                otmPE_found = candidate
-                break
-            hedge_strike -= 500
-        if otmPE_found:
-            otmPE = otmPE_found
+            if otmPE_found:
+                otmPE = otmPE_found
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
@@ -1242,9 +1363,8 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
-        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
-        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
-        main_delta_val, hedge_delta_val = get_leg_deltas(atmPE, otmPE, fyers)
+        # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
+        # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
@@ -1281,28 +1401,38 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     if isBearish:
         entryPrice = helper.manualLTP(atmCE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
-        hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
-        otmCE_found = None
-        for _ in range(6):
-            candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
-            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
-            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
-            try:
-                candidate_premium = helper.manualLTP(candidate, fyers)
-            except Exception as _hedge_err:
-                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+        # DELTA-BASED hedge selection (primary): hedge |delta| ~= main |delta|/2, snapped to a
+        # 500 multiple for liquidity. Also returns both leg deltas (feeds the offset ratio in
+        # calc_lots_by_risk), so no separate get_leg_deltas() call is needed.
+        hedge_sym, main_delta_val, hedge_delta_val = select_hedge_by_delta(
+            syntheticATMStrike, "CE", intExpiry, fyers)
+        if hedge_sym:
+            otmCE = hedge_sym
+        else:
+            # FALLBACK: greeks unavailable -> original premium-fraction + 500-grid walk.
+            main_delta_val, hedge_delta_val = None, None
+            # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
+            hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
+            otmCE_found = None
+            for _ in range(6):
+                candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
+                # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+                # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+                try:
+                    candidate_premium = helper.manualLTP(candidate, fyers)
+                except Exception as _hedge_err:
+                    print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                    hedge_strike += 500
+                    continue
+                print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
+                # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+                # untraded, illiquid strike as the hedge.
+                if 0 < candidate_premium <= max_premium:
+                    otmCE_found = candidate
+                    break
                 hedge_strike += 500
-                continue
-            print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
-            # untraded, illiquid strike as the hedge.
-            if 0 < candidate_premium <= max_premium:
-                otmCE_found = candidate
-                break
-            hedge_strike += 500
-        if otmCE_found:
-            otmCE = otmCE_found
+            if otmCE_found:
+                otmCE = otmCE_found
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
@@ -1317,9 +1447,8 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
-        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
-        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
-        main_delta_val, hedge_delta_val = get_leg_deltas(atmCE, otmCE, fyers)
+        # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
+        # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
@@ -1392,27 +1521,37 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # (500-pt interval, hedge <= HEDGE_MAX_PREMIUM_FRACTION of buy premium)
         entryPrice = helper.manualLTP(atmCE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
-        hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
-        otmCE_found = None
-        for _ in range(6):
-            candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
-            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
-            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
-            try:
-                candidate_premium = helper.manualLTP(candidate, fyers)
-            except Exception as _hedge_err:
-                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+        # DELTA-BASED hedge selection (primary): hedge |delta| ~= main |delta|/2, snapped to a
+        # 500 multiple for liquidity. Also returns both leg deltas (feeds the offset ratio in
+        # calc_lots_by_risk), so no separate get_leg_deltas() call is needed.
+        hedge_sym, main_delta_val, hedge_delta_val = select_hedge_by_delta(
+            syntheticATMStrike, "CE", intExpiry, fyers)
+        if hedge_sym:
+            otmCE = hedge_sym
+        else:
+            # FALLBACK: greeks unavailable -> original premium-fraction + 500-grid walk.
+            main_delta_val, hedge_delta_val = None, None
+            # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
+            hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
+            otmCE_found = None
+            for _ in range(6):
+                candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
+                # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+                # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+                try:
+                    candidate_premium = helper.manualLTP(candidate, fyers)
+                except Exception as _hedge_err:
+                    print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                    hedge_strike += 500
+                    continue
+                print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
+                # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+                # untraded, illiquid strike as the hedge.
+                if 0 < candidate_premium <= max_premium:
+                    otmCE_found = candidate
+                    break
                 hedge_strike += 500
-                continue
-            print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
-            # untraded, illiquid strike as the hedge.
-            if 0 < candidate_premium <= max_premium:
-                otmCE_found = candidate
-                break
-            hedge_strike += 500
-        otmCE = otmCE_found if otmCE_found else getOptionFormatSensex(intExpiry, syntheticATMStrike + dynamic_spread, "CE")
+            otmCE = otmCE_found if otmCE_found else getOptionFormatSensex(intExpiry, syntheticATMStrike + dynamic_spread, "CE")
         print("=atmCE=", atmCE)
         print("=otmCE==", otmCE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
@@ -1427,9 +1566,8 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
-        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
-        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
-        main_delta_val, hedge_delta_val = get_leg_deltas(atmCE, otmCE, fyers)
+        # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
+        # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
@@ -1467,27 +1605,37 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # (500-pt interval, hedge <= HEDGE_MAX_PREMIUM_FRACTION of buy premium)
         entryPrice = helper.manualLTP(atmPE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
-        # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
-        hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
-        otmPE_found = None
-        for _ in range(6):
-            candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
-            # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
-            # not traded return lp=0, and manualLTP now raises rather than reporting 0.
-            try:
-                candidate_premium = helper.manualLTP(candidate, fyers)
-            except Exception as _hedge_err:
-                print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+        # DELTA-BASED hedge selection (primary): hedge |delta| ~= main |delta|/2, snapped to a
+        # 500 multiple for liquidity. Also returns both leg deltas (feeds the offset ratio in
+        # calc_lots_by_risk), so no separate get_leg_deltas() call is needed.
+        hedge_sym, main_delta_val, hedge_delta_val = select_hedge_by_delta(
+            syntheticATMStrike, "PE", intExpiry, fyers)
+        if hedge_sym:
+            otmPE = hedge_sym
+        else:
+            # FALLBACK: greeks unavailable -> original premium-fraction + 500-grid walk.
+            main_delta_val, hedge_delta_val = None, None
+            # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
+            hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
+            otmPE_found = None
+            for _ in range(6):
+                candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
+                # Skip (don't crash on) a strike with no usable price — deep-OTM strikes that have
+                # not traded return lp=0, and manualLTP now raises rather than reporting 0.
+                try:
+                    candidate_premium = helper.manualLTP(candidate, fyers)
+                except Exception as _hedge_err:
+                    print(f"  HEDGE_SKIP {candidate}: no usable price ({_hedge_err})")
+                    hedge_strike -= 500
+                    continue
+                print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
+                # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
+                # untraded, illiquid strike as the hedge.
+                if 0 < candidate_premium <= max_premium:
+                    otmPE_found = candidate
+                    break
                 hedge_strike -= 500
-                continue
-            print(f"  Checking hedge {candidate}: premium={candidate_premium} (max={max_premium})")
-            # Require a POSITIVE premium — 0 would satisfy '<= max_premium' and select an
-            # untraded, illiquid strike as the hedge.
-            if 0 < candidate_premium <= max_premium:
-                otmPE_found = candidate
-                break
-            hedge_strike -= 500
-        otmPE = otmPE_found if otmPE_found else getOptionFormatSensex(intExpiry, syntheticATMStrike - dynamic_spread, "PE")
+            otmPE = otmPE_found if otmPE_found else getOptionFormatSensex(intExpiry, syntheticATMStrike - dynamic_spread, "PE")
         print("=atmPE=", atmPE)
         print("=otmPE==", otmPE, " entryPrice=", entryPrice, " maxHedgePremium=", max_premium)
 
@@ -1502,9 +1650,8 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
-        # Live deltas for the DELTA offset ratio (primary in calc_lots_by_risk); (None,None) on
-        # failure -> sizing falls back to range/premium. Also prints DELTA_CHECK for the log.
-        main_delta_val, hedge_delta_val = get_leg_deltas(atmPE, otmPE, fyers)
+        # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
+        # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
