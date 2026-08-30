@@ -390,6 +390,16 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
     """
     DELTA-BASED hedge selection (replaces the premium-fraction + 500-grid walk).
 
+    COVERAGE: this single helper serves ALL FOUR entry paths — the caller just passes the
+    main leg's option_type:
+      - CREDIT bull  -> main sell ATM PE, hedge PE (OTM below main)
+      - CREDIT bear  -> main sell ATM CE, hedge CE (OTM above main)
+      - DEBIT  bull  -> main buy  ATM CE, hedge CE (OTM above main)
+      - DEBIT  bear  -> main buy  ATM PE, hedge PE (OTM below main)
+    All delta maths is SIGN-AGNOSTIC (abs() everywhere) — CE deltas are positive, PE deltas
+    negative, but only magnitude matters. The band bounds are DERIVED DYNAMICALLY from the
+    nearest delta (NOT hardcoded) — see step 5.
+
     Logic:
       1. Fetch the greeks-enabled option chain ONCE.
       2. Read the MAIN leg's |delta| (match strike_price + option_type).
@@ -400,9 +410,11 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
          hedge delta never overshoots the target toward ATM:
            - if the nearest-delta strike is already a 500 multiple -> use it;
            - else if a 500-multiple strike has |delta| within the same first-decimal band
-             (e.g. nearest 0.24 -> band [0.24, 0.29]) -> use that (slightly toward ATM but
-             same ballpark);
-           - else snap FAR OTM to the nearest 500 (floor for PE, ceil for CE).
+             [nearest, nearest's .x9] -> use that (slightly toward ATM but same ballpark).
+             The band is COMPUTED from the nearest delta, not fixed: nearest 0.24 -> [0.24,
+             0.29]; nearest 0.31 -> [0.31, 0.39]; nearest 0.16 -> [0.16, 0.19]; etc.
+           - else snap FAR OTM to the nearest 500 (floor for PE, ceil for CE) — the hedge
+             delta may then be < target, which is the safe (cheaper/wider) direction.
       6. Guard (strictly-OTM, no-op with the above): never let the snapped strike land
          on/through the main strike.
       7. Look up the snapped strike's delta (for the offset ratio / logging).
@@ -476,7 +488,9 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
             snap_reason = "nearest_is_500mult"
         else:
             band_low = nearest_abs
-            band_high = (math.floor(band_low * 10) + 1) / 10.0 - 0.01  # 0.24 -> 0.29
+            # band_high = top of the SAME first-decimal digit as band_low (dynamic, not
+            # hardcoded): 0.24 -> 0.29, 0.31 -> 0.39, 0.16 -> 0.19, 0.47 -> 0.49, etc.
+            band_high = (math.floor(band_low * 10) + 1) / 10.0 - 0.01
             band_500 = [(int(round(sp)), d) for (sp, d) in otm
                         if int(round(sp)) % 500 == 0 and band_low <= abs(d) <= band_high + 1e-9]
             if band_500:
