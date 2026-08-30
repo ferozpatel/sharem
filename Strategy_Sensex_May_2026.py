@@ -396,11 +396,15 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
       3. target_hedge_delta = |main_delta| / 2   (sign ignored — puts have negative delta).
       4. Scan same-option-type strikes on the OTM side only (PE: strikes BELOW main;
          CE: strikes ABOVE main) and pick the one whose |delta| is NEAREST the target.
-      5. Snap that strike to the nearest 500 multiple for liquidity.
-      6. Guard (strictly-OTM only, NO minimum-distance floor): the delta/2 target already
-         puts the hedge well OTM with lower premium, so no artificial distance is imposed.
-         The only fix is if snapping to the 500 grid rounds the strike onto/through the main
-         strike — then move to the nearest 500 strictly on the OTM side.
+      5. Snap that strike to a 500 multiple for liquidity, biased AWAY from ATM so the
+         hedge delta never overshoots the target toward ATM:
+           - if the nearest-delta strike is already a 500 multiple -> use it;
+           - else if a 500-multiple strike has |delta| within the same first-decimal band
+             (e.g. nearest 0.24 -> band [0.24, 0.29]) -> use that (slightly toward ATM but
+             same ballpark);
+           - else snap FAR OTM to the nearest 500 (floor for PE, ceil for CE).
+      6. Guard (strictly-OTM, no-op with the above): never let the snapped strike land
+         on/through the main strike.
       7. Look up the snapped strike's delta (for the offset ratio / logging).
 
     This ALSO serves the delta-based lot sizing: it returns both leg deltas, so the caller
@@ -454,21 +458,45 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
 
         # Strike whose |delta| is nearest the target hedge delta.
         best_sp, best_d = min(otm, key=lambda x: abs(abs(x[1]) - target))
-        snapped = int(round(float(best_sp) / 500.0) * 500)
+        best_sp = int(round(float(best_sp)))
+        nearest_abs = abs(best_d)
 
-        # Strictly-OTM guard only (NO minimum-distance floor): the delta/2 target already
-        # places the hedge well OTM with lower premium by construction, so no artificial
-        # distance is imposed. The only correction needed is when snapping to the 500 grid
-        # rounds a near strike back onto/through the main strike (which would flip it to the
-        # wrong, ITM side) — in that case move to the nearest 500 strictly on the OTM side.
-        if option_type == "PE":
-            # PE hedge must stay strictly BELOW main.
-            if snapped >= main_strike:
-                snapped = int((math.ceil(main_strike / 500.0) - 1) * 500)
-        else:  # CE
-            # CE hedge must stay strictly ABOVE main.
-            if snapped <= main_strike:
-                snapped = int((math.floor(main_strike / 500.0) + 1) * 500)
+        # === SNAP TO A 500 MULTIPLE (liquidity), biased AWAY from ATM ===
+        # Rule (avoids the old round()-toward-ATM delta overshoot):
+        #   1. If the nearest-delta strike is already a 500 multiple -> use it.
+        #   2. Else look for a 500-multiple strike whose |delta| stays within the SAME
+        #      first-decimal band as the nearest delta, i.e. [nearest, X.x9]. e.g. nearest
+        #      0.24 -> band [0.24, 0.29]. These sit just toward ATM; taking one keeps the
+        #      hedge delta in the same ballpark (accepts a 0.28 500-strike, rejects a 0.31).
+        #   3. If no 500-multiple falls in that band -> snap FAR OTM (away from ATM) to the
+        #      nearest 500: floor (lower strike) for PE, ceil (higher strike) for CE. This is
+        #      the safe direction — hedge delta undershoots the target rather than overshoots.
+        if best_sp % 500 == 0:
+            snapped = best_sp
+            snap_reason = "nearest_is_500mult"
+        else:
+            band_low = nearest_abs
+            band_high = (math.floor(band_low * 10) + 1) / 10.0 - 0.01  # 0.24 -> 0.29
+            band_500 = [(int(round(sp)), d) for (sp, d) in otm
+                        if int(round(sp)) % 500 == 0 and band_low <= abs(d) <= band_high + 1e-9]
+            if band_500:
+                # Most-OTM in-band 500 strike = the one whose |delta| is nearest the target.
+                bsp, _bd = min(band_500, key=lambda x: abs(abs(x[1]) - target))
+                snapped = int(bsp)
+                snap_reason = f"500mult_in_band[{round(band_low, 2)}-{round(band_high, 2)}]"
+            else:
+                if option_type == "PE":
+                    snapped = int(math.floor(float(best_sp) / 500.0) * 500)
+                else:  # CE
+                    snapped = int(math.ceil(float(best_sp) / 500.0) * 500)
+                snap_reason = "far_otm_snap"
+
+        # Strictly-OTM safety guard (no-op with the above, kept for defense): never let the
+        # snapped strike land on/through the main strike (would flip it to the ITM side).
+        if option_type == "PE" and snapped >= main_strike:
+            snapped = int((math.ceil(main_strike / 500.0) - 1) * 500)
+        elif option_type == "CE" and snapped <= main_strike:
+            snapped = int((math.floor(main_strike / 500.0) + 1) * 500)
 
         # Delta of the FINAL snapped strike (nearest match in the chain, if present).
         hedge_delta = None
@@ -480,8 +508,8 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
         hedge_symbol = getOptionFormatSensex(intExpiry, snapped, option_type)
         print(f"HEDGE_BY_DELTA: main={main_strike}{option_type} main_delta={main_delta} "
               f"target_hedge_delta={round(target, 4)} nearest_strike={best_sp} "
-              f"nearest_delta={best_d} -> snapped500={snapped} hedge={hedge_symbol} "
-              f"hedge_delta={hedge_delta}")
+              f"nearest_delta={best_d} -> snapped500={snapped} ({snap_reason}) "
+              f"hedge={hedge_symbol} hedge_delta={hedge_delta}")
         if main_delta and hedge_delta and abs(main_delta) > 0:
             print(f"DELTA_CHECK: main={getOptionFormatSensex(intExpiry, main_strike, option_type)} "
                   f"delta={main_delta}")
