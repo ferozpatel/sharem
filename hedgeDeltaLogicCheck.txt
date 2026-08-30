@@ -1,0 +1,180 @@
+C:\Users\feroz\AppData\Local\Programs\Python\Python310\python.exe C:\Users\feroz\Documents\Python\Strategy_Sensex_May_2026.py 
+checkInstrument =  BSE:SENSEX-INDEX
+sensexExpDate =  26903
+BNFut (Sensex futures auto) = BSE:SENSEX26SEPFUT
+Waiting for first candle to form. Current Second ==  39    1
+Waiting for first candle to form. Current Second ==  40    1
+Waiting for first candle to form. Current Second ==  41    1
+Waiting for first candle to form. Current Second ==  42    1
+Waiting for first candle to form. Current Second ==  43    1
+Waiting for first candle to form. Current Second ==  44    1
+Waiting for first candle to form. Current Second ==  45    1
+Waiting for first candle to form. Current Second ==  46    1
+Waiting for first candle to form. Current Second ==  47    1
+Waiting for first candle to form. Current Second ==  48    1
+Waiting for first candle to form. Current Second ==  49    1
+Waiting for first candle to form. Current Second ==  50    1
+Waiting for first candle to form. Current Second ==  51    1
+Waiting for first candle to form. Current Second ==  52    1
+Waiting for first candle to form. Current Second ==  53    1
+Waiting for first candle to form. Current Second ==  54    1
+Waiting for first candle to form. Current Second ==  55    1
+Waiting for first candle to form. Current Second ==  56    1
+Waiting for first candle to form. Current Second ==  57    1
+Waiting for first candle to form. Current Second ==  58    1
+Waiting for first candle to form. Current Second ==  59    1
+Waiting for first candle to form. Current Second ==  0    2
+Waiting for first candle to form. Current Second ==  1    2
+Waiting for first candle to form. Current Second ==  2    2
+Waiting for first candle to form. Current Second ==  3    2
+Waiting for first candle to form. Current Second ==  4    2
+Waiting for first candle to form. Current Second ==  5    2
+Waiting for first candle to form. Current Second ==  6    2
+Waiting for first candle to form. Current Second ==  7    2
+Waiting for first candle to form. Current Second ==  8    2
+Waiting for first candle to form. Current Second ==  9    2
+Waiting for first candle to form. Current Second ==  10    2
+Waiting for first candle to form. Current Second ==  11    2
+Waiting for first candle to form. Current Second ==  12    2
+Waiting for first candle to form. Current Second ==  14    2
+Waiting for first candle to form. Current Second ==  15    2
+Waiting for first candle to form. Current Second ==  16    2
+Waiting for first candle to form. Current Second ==  17    2
+Waiting for first candle to form. Current Second ==  18    2
+Waiting for first candle to form. Current Second ==  19    2
+Waiting for first candle to form. Current Second ==  20    2
+Waiting for first candle to form. Current Second ==  21    2
+Waiting for first candle to form. Current Second ==  22    2
+Waiting for first candle to form. Current Second ==  23    2
+Waiting for first candle to form. Current Second ==  24    2
+Waiting for first candle to form. Current Second ==  25    2
+Waiting for first candle to form. Current Second ==  26    2
+Waiting for first candle to form. Current Second ==  27    2
+Waiting for first candle to form. Current Second ==  28    2
+Waiting for first candle to form. Current Second ==  29    2
+Waiting for first candle to form. Current Second ==  30    2
+Waiting for first candle to form. Current Second ==  31    2
+Waiting for first candle to form. Current Second ==  32    2
+Waiting for first candle to form. Current Second ==  33    2
+Waiting for first candle to form. Current Second ==  34    2
+Waiting for first candle to form. Current Second ==  35    2
+Waiting for first candle to form. Current Second ==  36    2
+Waiting for first candle to form. Current Second ==  37    2
+Waiting for first candle to form. Current Second ==  38    2
+Waiting for first candle to form. Current Second ==  39    2
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 10.68  Spot Price = 77264.51
+VIX_PERCENTILES_FETCHED: P25= 11.22  P50= 11.38  P75= 11.86  Min= 10.48  Max= 12.21
+IV Regime = LOW (ADAPTIVE: P25= 11.22  P50= 11.38  P75= 11.86 ) | DailyRange = 1178.8 | 3minCandleRange = 62.0 (theoretical= 103.4 ) | ATMoptionMove = 27.9 | SL = 98 | Target = 98 | TrailTrigger = 28 | Spread = 300 | Buffer = 25
+IV Params refreshed: {'vix': 10.68, 'bn_price': 77264.51, 'regime': 'LOW', 'regime_thresholds': 'P25=11.22 P50=11.38 P75=11.86', 'daily_range': 1178.8, 'candle_range': 62.0, 'atm_option_move': 27.9, 'sl_point': 98, 'target_point': 98, 'sl_pct_of_premium': 0.1, 'trail_trigger': 28, 'spread_width': 300, 'support_resistance_buffer': 25}
+IV_RANK_DATA: VIX_30d_High= 12.21  VIX_30d_Low= 10.48  Current= 10.59  IV_Rank= 0.06
+BSE:SENSEX-INDEX  strikecount= 8   fyers <fyers_apiv3.fyersModel.FyersModel object at 0x0000017C5D8A5E10>
+===
+====after 3 min ochain==== 2026-08-30 14:15:00.518830
+                                    oipcr   choipcr   totalOI
+pcr1 =  BSE:SENSEX2690378100PE   0.16   0.06 CALL added 45800   PUT added 2600  OI= 18280
+pcr2 =  BSE:SENSEX2690378000CE   0.38   -0.77 CALL added 33040   PUT unwind -25380  OI= 636600
+pcr3 =  BSE:SENSEX2690377900PE   0.18   -0.04 CALL added 99860   PUT unwind -3760  OI= 29780
+pcr4 =  BSE:SENSEX2690377800CE   0.28   0.08 CALL added 107100   PUT added 8340  OI= 215360
+pcr5 =  BSE:SENSEX2690377700CE   0.37   0.35 CALL added 72380   PUT added 25280  OI= 193280
+pcr6 =  BSE:SENSEX2690377600CE   0.51    0.35 CALL added 88720   PUT added 30620  OI= 202780
+pcr7 =  BSE:SENSEX2690377500CE   0.9   1.92 CALL added 75120   PUT added 143960  OI= 575060
+pcr8 =  BSE:SENSEX2690377400PE   0.72   0.83 CALL added 104760   PUT added 87120  OI= 188740
+pcr9 =  BSE:SENSEX2690377300CE   0.93   1.38 CALL added 85380   PUT added 117600  OI= 217900
+pcr10 =  BSE:SENSEX2690377200CE   1.27   2.14 CALL added 93000   PUT added 199420  OI= 287800
+pcr11 =  BSE:SENSEX2690377100PE   1.75   1.76 CALL added 203800   PUT added 358640  OI= 408500
+pcr12 =  BSE:SENSEX2690377000PE   3.03   5.98 CALL added 68780   PUT added 411460  OI= 664580
+pcr13 =  BSE:SENSEX2690376900PE   6.68   20.31 CALL added 7360   PUT added 149460  OI= 201520
+pcr14 =  BSE:SENSEX2690376800CE   4.75   4.52 CALL added 22240   PUT added 100620  OI= 32240
+pcr15 =  BSE:SENSEX2690376700PE   11.98   15.84 CALL added 5640   PUT added 89360  OI= 134220
+pcr16 =  BSE:SENSEX2690376600CE   12.02   24.8 CALL added 3120   PUT added 77380  OI= 8680
+pcr17 =  BSE:SENSEX2690376500PE   9.39   5.84 CALL added 13520   PUT added 78920  OI= 245340
+pcrSummation= 1.8800000000000001  result =  ['BSE:SENSEX2690378100PE', 'BSE:SENSEX2690378000CE', 'BSE:SENSEX2690377900PE', 'BSE:SENSEX2690377800CE', 'BSE:SENSEX2690377700CE', 'BSE:SENSEX2690377600CE']
+PCRSUM== 55.3
+pcrSummation== 1.88
+VOLPCRSUM== 3.54
+spotLTP =  77264.51  ATM_STRIKE =  77300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {77300: 77300}
+avgOiPcrList2 = [3.25] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 78000  Buffer= 25
+CEoich val =  33040.0  PEoich val =  -25380.0 , CE > PE by 176.8%
+SUPP_RES TOTAL OI: CE= 636600  PE= 244280 , CE > PE by 61.6%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+CHOI_UNWIND: PE side unwinding at SUPP_RES (PEchoi=-25380.0) - CHOI-based logic skipped this cycle
+================================================
+==== signal check time ==== 2026-08-30 14:15:03.070104
+IS_CHOI_DIFF_GT_25PERC== False
+RSI_VAL1== 61.3
+RSI_VAL2== 67.39
+FUT_3m_OHLC O= 77949.3  H= 77999.0  L= 77949.3  C= 77990.0  Range= 49.7
+CHART_PATTERN_DETECTED: BULLISH_ENGULFING | INSIDE_BAR | DOUBLE_TOP_FORMING
+  PATTERN_CONTEXT: Body= 40.6  Range= 49.7  ExpectedRange= 62.0  RangeRatio= 0.8  O= 77949.3  H= 77999.0  L= 77949.3  C= 77990.0
+newSynthFut =  78000
+ATMStrike =  77300
+AVG_OIPCR= 0.21
+avgoiPCROld=  3.25
+SUPP_RES = 78000
+FUT LTP = 77960.95
+CEchoi  PechOi = 33040.0    -25380.0
+====================================
+totalOIPCR = 1.02
+AVG_VOLPCR= 0.39
+atmPCR= 0.37  belowATM  0.51
+atmVolPCR= 0.22  belowATM  0.32
+False   77960.95   78000   False   False   67.39
+In Bull trade, slCount =  0  (mode= LOGIC2_TREND_CONVERGENCE )
+SPREAD_CALC_AT_ENTRY: SyntheticATMStrike= 77400  ATM_PE= 339.65  ATM_CE= 414.9  AvgATM= 377.27
+ATM_GREEKS: CE=BSE:SENSEX2690377400CE -> {'delta': 0.54, 'gamma': 0.0004, 'theta': -31.3, 'vega': 39.5, 'iv': 9.52}
+ATM_GREEKS: PE=BSE:SENSEX2690377400PE -> {'delta': -0.46, 'gamma': 0.0004, 'theta': -31.3, 'vega': 39.5, 'iv': 9.52}
+ATM_IV: ce_iv=9.52 pe_iv=9.52 avg_atm_iv=9.52 iv_skew(PE-CE)=0.0
+==================================================
+SPREAD_SELECTION (Sensex weekly): Type= CREDIT | DTE= 4 | PremRatio= 0.71 | IVRank= 0.06
+SPREAD_REASONS: DTE=4(weekly) | PremRatio=0.71 | IVRank=0.06 | DECISION:CREDIT (default — theta favors seller for weekly)
+==================================================
+SPREAD_DECISION_AT_ENTRY: {'type': 'CREDIT', 'score': 1, 'dte': 4, 'premium_ratio': 0.71, 'iv_rank': 0.06, 'vix_30d_high': 12.21, 'vix_30d_low': 10.48, 'reasons': ['DTE=4(weekly)', 'PremRatio=0.71', 'IVRank=0.06', 'DECISION:CREDIT (default — theta favors seller for weekly)']}
+ENTRY_ROUTING: spread_type= CREDIT  isBullish= True  isBearish= False
+IV-Dynamic: SL= 98  Target= 98  Spread= 300
+HEDGE_BY_DELTA: main=77400PE main_delta=-0.46 target_hedge_delta=0.23 nearest_strike=76800 nearest_delta=-0.24 -> snapped500=77000 hedge=BSE:SENSEX2690377000PE hedge_delta=-0.31
+DELTA_CHECK: main=BSE:SENSEX2690377400PE delta=-0.46
+DELTA_CHECK: hedge=BSE:SENSEX2690377000PE delta=-0.31
+DELTA_CHECK: delta_ratio (|hedge|/|main|) = 0.674
+=atmPE= BSE:SENSEX2690377400PE
+=otmPE== BSE:SENSEX2690377000PE  entryPrice= 339.65  maxHedgePremium= 169.825
+hedge_entry_price = 189.9
+CREDIT_NET_CREDIT= 149.75
+OPTION_RANGE_ERROR: "fyers.history returned no 'candles' after 3 retries. last_response={'candles': [], 'code': 200, 'message': '', 'nextTime': 1787911740, 's': 'no_data'}"
+OPTION_RANGE_ERROR: "fyers.history returned no 'candles' after 3 retries. last_response={'candles': [], 'code': 200, 'message': '', 'nextTime': 1787911740, 's': 'no_data'}"
+HEDGE_OFFSET: source=DELTA used_ratio=0.674 raw=0.674 | delta_ratio=0.674 range_ratio=None premium_ratio=0.559 | (main_delta=-0.46 hedge_delta=-0.31 main_range=None hedge_range=None) effective_sl=98 -> net_sl_points=31.96
+RISK_SIZING: effective_sl_pre=98 main=339.65 hedge=189.9 main_range=None hedge_range=None FIXED_RISK=7000 -> qty=200 (10 lots)
+CREDIT_ENTRY: qty= 200
+MARGIN_CHECK: qty=200 (10 lots) margin_required=416900.04 avail=1012562.06 usable(97%)=982185.2
+14 : 15 : 7  =>  BUY   SENSEX2690377000PE   200   MARKET
+14 : 15 : 7  =>  SENSEX2690377000PE {'code': -50, 'message': 'Request rejected: Orders are only allowed from whitelisted IP addresses. This request was received from IP: 103.84.105.154.', 's': 'error'}
+ENTRY_ABORT: CREDIT bull hedge BUY leg failed — no position taken. resp= {'code': -50, 'message': 'Request rejected: Orders are only allowed from whitelisted IP addresses. This request was received from IP: 103.84.105.154.', 's': 'error'}
+ENTRY_ABORT: bull entry failed — no position held, resetting state
+Traceback (most recent call last):
+  File "C:\Users\feroz\Documents\Python\Strategy_Sensex_May_2026.py", line 2228, in <module>
+    now = datetime.now()
+KeyboardInterrupt
+
+Process finished with exit code -1073741510 (0xC000013A: interrupted by Ctrl+C)
