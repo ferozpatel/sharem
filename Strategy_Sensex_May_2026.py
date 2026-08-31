@@ -2587,11 +2587,11 @@ while x == 1:
             logic1_bull = IS_MORNING_WINDOW and _bull_mandatory and (suppResCeOi_total > suppResPeOi_total) and (suppResPeChOi > suppResCeChOi and _choi_pct >= 15)
             logic1_bear = IS_MORNING_WINDOW and _bear_mandatory and (suppResPeOi_total > suppResCeOi_total) and (suppResCeChOi > suppResPeChOi and _choi_pct >= 15)
 
-            # Logic 2: Trend convergence — CHOI and Total OI both same direction by 10%
-            # Bull: fut>S/R, PCR up, CEchoi>PEchoi by 10%, CE_total>PE_total by 10%
-            # Bear: fut<S/R, PCR down, CEchoi>PEchoi by 10%, CE_total>PE_total by 10%  (wait—mirror)
-            logic2_bull = _bull_mandatory and (suppResPeChOi > suppResCeChOi and _choi_pct >= 10) and (suppResPeOi_total > suppResCeOi_total and _oi_pct >= 10)
-            logic2_bear = _bear_mandatory and (suppResCeChOi > suppResPeChOi and _choi_pct >= 10) and (suppResCeOi_total > suppResPeOi_total and _oi_pct >= 10)
+            # Logic 2: Trend convergence — CHOI same direction by 10%, Total OI by 2%
+            # Bull: fut>S/R, PCR up, PEchoi>CEchoi by 10%, PE_total>CE_total by 2%
+            # Bear: fut<S/R, PCR down, CEchoi>PEchoi by 10%, CE_total>PE_total by 2%
+            logic2_bull = _bull_mandatory and (suppResPeChOi > suppResCeChOi and _choi_pct >= 10) and (suppResPeOi_total > suppResCeOi_total and _oi_pct >= 2)
+            logic2_bear = _bear_mandatory and (suppResCeChOi > suppResPeChOi and _choi_pct >= 10) and (suppResCeOi_total > suppResPeOi_total and _oi_pct >= 2)
 
             # Logic 3: CHOI trap — CEchoi > PEchoi for bull, reverse for bear, + 15% diff
             logic3_bull = _bull_mandatory and (suppResCeChOi > suppResPeChOi) and _choi_pct >= 15
