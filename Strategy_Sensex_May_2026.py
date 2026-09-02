@@ -1880,6 +1880,23 @@ def findStrikePricePremium(optionName, premium, premiumType):
         return atmPE
 
 
+def _oi_pair(oi_arr, otype_arr, idx_a, idx_b):
+    """
+    DIAGNOSTIC/log helper: given the two adjacent option-chain legs of ONE strike
+    (one CE + one PE at indices idx_a, idx_b), return ' CE_OI=<> PE_OI=<>' so both
+    sides of that strike are printed side by side. Uses option_type to decide which
+    index is the call and which is the put (order can vary in the raw chain).
+    """
+    try:
+        if otype_arr[idx_a] == 'PE':
+            pe_oi, ce_oi = int(oi_arr[idx_a]), int(oi_arr[idx_b])
+        else:
+            ce_oi, pe_oi = int(oi_arr[idx_a]), int(oi_arr[idx_b])
+        return f" CE_OI={ce_oi} PE_OI={pe_oi}"
+    except Exception:
+        return " CE_OI=NA PE_OI=NA"
+
+
 def get_support_resistance(futltp, step=500, buffer=None):
     """Calculate support/resistance based on FUT_LTP.
     Buffer/NOTRADEZONE commented out — returning support or resistance directly.
@@ -2374,25 +2391,25 @@ while x == 1:
             pcrList = [pcr1, pcr2, pcr3, pcr4, pcr5, pcr6, pcr7, pcr8, pcr9, pcr10, pcr11, pcr12, pcr13, pcr14, pcr15, pcr16, pcr17]
             volPcrList = [volpcr1, volpcr2, volpcr3, volpcr4, volpcr5, volpcr6, volpcr7, volpcr8, volpcr9]
 
-            print("".ljust(35), "oipcr", " ", "choipcr", " ", "totalOI")
-            print("pcr1 = ", symbol[-2], " ", pcr1, " ", changOI, " OI=", int(oi[-2]))
-            print("pcr2 = ", symbol[-4], " ", pcr2, " ", changOIpcr2, " OI=", int(oi[-4]))
-            print("pcr3 = ", symbol[-6], " ", pcr3, " ", changOIpcr3, " OI=", int(oi[-6]))
+            print("".ljust(35), "oipcr", " ", "choipcr", " ", "CE_OI / PE_OI (same strike)")
+            print("pcr1 = ", symbol[-2], " ", pcr1, " ", changOI, _oi_pair(oi, option_type, -1, -2))
+            print("pcr2 = ", symbol[-4], " ", pcr2, " ", changOIpcr2, _oi_pair(oi, option_type, -3, -4))
+            print("pcr3 = ", symbol[-6], " ", pcr3, " ", changOIpcr3, _oi_pair(oi, option_type, -5, -6))
             if strikecount >= 2:
-                print("pcr4 = ", symbol[-8], " ", pcr4, " ", changOIpcr4, " OI=", int(oi[-8]))
-                print("pcr5 = ", symbol[-10], " ", pcr5, " ", changOIpcr5, " OI=", int(oi[-10]))
-                print("pcr6 = ", symbol[-12], " ", pcr6, "  ", changOIpcr6, " OI=", int(oi[-12]))
-                print("pcr7 = ", symbol[-14], " ", pcr7, " ", changOIpcr7, " OI=", int(oi[-14]))
-                print("pcr8 = ", symbol[-16], " ", pcr8, " ", changOIpcr8, " OI=", int(oi[-16]))
-                print("pcr9 = ", symbol[-18], " ", pcr9, " ", changOIpcr9, " OI=", int(oi[-18]))
-                print("pcr10 = ", symbol[-20], " ", pcr10, " ", changOIpcr10, " OI=", int(oi[-20]))
-                print("pcr11 = ", symbol[-22], " ", pcr11, " ", changOIpcr11, " OI=", int(oi[-22]))
-                print("pcr12 = ", symbol[-24], " ", pcr12, " ", changOIpcr12, " OI=", int(oi[-24]))
-                print("pcr13 = ", symbol[-26], " ", pcr13, " ", changOIpcr13, " OI=", int(oi[-26]))
-                print("pcr14 = ", symbol[-28], " ", pcr14, " ", changOIpcr14, " OI=", int(oi[-28]))
-                print("pcr15 = ", symbol[-30], " ", pcr15, " ", changOIpcr15, " OI=", int(oi[-30]))
-                print("pcr16 = ", symbol[-32], " ", pcr16, " ", changOIpcr16, " OI=", int(oi[-32]))
-                print("pcr17 = ", symbol[-34], " ", pcr17, " ", changOIpcr17, " OI=", int(oi[-34]))
+                print("pcr4 = ", symbol[-8], " ", pcr4, " ", changOIpcr4, _oi_pair(oi, option_type, -7, -8))
+                print("pcr5 = ", symbol[-10], " ", pcr5, " ", changOIpcr5, _oi_pair(oi, option_type, -9, -10))
+                print("pcr6 = ", symbol[-12], " ", pcr6, "  ", changOIpcr6, _oi_pair(oi, option_type, -11, -12))
+                print("pcr7 = ", symbol[-14], " ", pcr7, " ", changOIpcr7, _oi_pair(oi, option_type, -13, -14))
+                print("pcr8 = ", symbol[-16], " ", pcr8, " ", changOIpcr8, _oi_pair(oi, option_type, -15, -16))
+                print("pcr9 = ", symbol[-18], " ", pcr9, " ", changOIpcr9, _oi_pair(oi, option_type, -17, -18))
+                print("pcr10 = ", symbol[-20], " ", pcr10, " ", changOIpcr10, _oi_pair(oi, option_type, -19, -20))
+                print("pcr11 = ", symbol[-22], " ", pcr11, " ", changOIpcr11, _oi_pair(oi, option_type, -21, -22))
+                print("pcr12 = ", symbol[-24], " ", pcr12, " ", changOIpcr12, _oi_pair(oi, option_type, -23, -24))
+                print("pcr13 = ", symbol[-26], " ", pcr13, " ", changOIpcr13, _oi_pair(oi, option_type, -25, -26))
+                print("pcr14 = ", symbol[-28], " ", pcr14, " ", changOIpcr14, _oi_pair(oi, option_type, -27, -28))
+                print("pcr15 = ", symbol[-30], " ", pcr15, " ", changOIpcr15, _oi_pair(oi, option_type, -29, -30))
+                print("pcr16 = ", symbol[-32], " ", pcr16, " ", changOIpcr16, _oi_pair(oi, option_type, -31, -32))
+                print("pcr17 = ", symbol[-34], " ", pcr17, " ", changOIpcr17, _oi_pair(oi, option_type, -33, -34))
 
                 symbolPcrMap = {
                     symbol[-2]: pcr1, symbol[-4]: pcr2, symbol[-6]: pcr3, symbol[-8]: pcr4,
