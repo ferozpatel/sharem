@@ -2453,6 +2453,27 @@ while x == 1:
                 SUPP_RES = round(SUPP_RES)
 
             print("SUPP_RES===", SUPP_RES, " Buffer=", iv_params.get("support_resistance_buffer", 30))
+
+            # === DIAGNOSTIC (no behaviour change): future-anchor vs spot-anchor comparison ===
+            # We currently anchor S/R and the PCR window to the MONTHLY future (FUT_LTP). Options
+            # settle on SPOT at their (weekly) expiry, so OI/max-pain cluster near the weekly
+            # forward ~= spot, not the monthly future (which carries a full month of basis). This
+            # logs what the anchors WOULD be on spot so we can measure the misalignment across a
+            # few live sessions before deciding to switch. Costs ZERO extra API calls (spotLTP and
+            # FUT_LTP are already fetched; get_support_resistance is a pure price function).
+            try:
+                _sr_spot = get_support_resistance(spotLTP)
+                if _sr_spot != "NOTRADEZONE":
+                    _sr_spot = round(_sr_spot)
+                _basis = round(FUT_LTP - spotLTP, 2)
+                _win_fut = SYNTH_FUT_STRIKE                    # PCR-window center now (future)
+                _win_spot = round(spotLTP / 100) * 100         # PCR-window center if on spot
+                _sr_diff = (SUPP_RES - _sr_spot) if (SUPP_RES != "NOTRADEZONE" and _sr_spot != "NOTRADEZONE") else "NA"
+                print(f"ANCHOR_COMPARE: spot={spotLTP} fut={FUT_LTP} basis(fut-spot)={_basis} | "
+                      f"SR_future={SUPP_RES} SR_spot={_sr_spot} SR_diff={_sr_diff} | "
+                      f"PCRwin_future={_win_fut} PCRwin_spot={_win_spot}")
+            except Exception as _anchor_err:
+                print("ANCHOR_COMPARE_FAILED (non-fatal, diagnostic only):", _anchor_err)
             suppResCE = getOptionFormatSensex(intExpiry, SUPP_RES, "CE")
             suppResPE = getOptionFormatSensex(intExpiry, SUPP_RES, "PE")
 
