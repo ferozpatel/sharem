@@ -412,8 +412,10 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
            - else if a 500-multiple strike has |delta| within the band [nearest, .x6] ->
              use that (slightly toward ATM but same ballpark). The band is COMPUTED from the
              nearest delta, not fixed: nearest 0.24 -> [0.24, 0.26]; nearest 0.31 -> [0.31,
-             0.36]. Tighter than before (was .x9) so only a toward-ATM 500 strike within ~2
-             pips qualifies; otherwise go far OTM.
+             0.36]. Only a toward-ATM 500 strike within ~2 pips qualifies.
+           - EDGE CASE: if the nearest delta is already above the band cap (band empty, e.g.
+             nearest 0.27 -> [0.27, 0.26]), only accept a 500-multiple whose |delta| matches
+             the nearest/target near-exactly (within 0.01); otherwise go far OTM.
            - else snap FAR OTM to the nearest 500 (floor for PE, ceil for CE) — the hedge
              delta may then be < target, which is the safe (cheaper/wider) direction.
       6. Guard (strictly-OTM, no-op with the above): never let the snapped strike land
@@ -477,31 +479,39 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
         # === SNAP TO A 500 MULTIPLE (liquidity), biased AWAY from ATM ===
         # Rule (avoids the old round()-toward-ATM delta overshoot):
         #   1. If the nearest-delta strike is already a 500 multiple -> use it.
-        #   2. Else look for a 500-multiple strike whose |delta| stays within the SAME
-        #      first-decimal band as the nearest delta, i.e. [nearest, X.x9]. e.g. nearest
-        #      0.24 -> band [0.24, 0.29]. These sit just toward ATM; taking one keeps the
-        #      hedge delta in the same ballpark (accepts a 0.28 500-strike, rejects a 0.31).
-        #   3. If no 500-multiple falls in that band -> snap FAR OTM (away from ATM) to the
-        #      nearest 500: floor (lower strike) for PE, ceil (higher strike) for CE. This is
-        #      the safe direction — hedge delta undershoots the target rather than overshoots.
+        #   2. Else look for a 500-multiple strike whose |delta| stays within the band
+        #      [nearest, .x6] (dynamic). e.g. nearest 0.24 -> band [0.24, 0.26]. These sit
+        #      just toward ATM; taking one keeps the hedge delta in the same ballpark.
+        #   2b. EDGE CASE: if the nearest delta is already ABOVE the band cap (band empty,
+        #      e.g. nearest 0.27 -> band [0.27, 0.26]), do NOT stretch toward ATM by a whole
+        #      band. Only accept a 500-multiple whose |delta| (near-)EXACTLY matches the
+        #      nearest/target delta (within 0.01); otherwise fall through to far OTM.
+        #   3. If no qualifying 500-multiple -> snap FAR OTM (away from ATM) to the nearest
+        #      500: floor (lower strike) for PE, ceil (higher strike) for CE. Safe direction —
+        #      hedge delta undershoots the target rather than overshoots.
         if best_sp % 500 == 0:
             snapped = best_sp
             snap_reason = "nearest_is_500mult"
         else:
             band_low = nearest_abs
             # band_high = first-decimal digit of band_low + 0.06 (dynamic, not hardcoded):
-            # 0.24 -> 0.26, 0.31 -> 0.36, 0.16 -> 0.16+.. i.e. 0.1x -> 0.16, 0.47 -> 0.46.
-            # Tighter than before (was .x9) so we only accept a toward-ATM 500 strike within
-            # ~2 pips of the nearest delta; anything further toward ATM -> go far OTM instead.
-            # (If band_low already exceeds band_high, the band is empty -> far-OTM snap.)
+            # 0.24 -> 0.26, 0.31 -> 0.36. If band_low already exceeds band_high the band is
+            # empty -> handled by the exact-match edge-case branch below.
             band_high = math.floor(band_low * 10) / 10.0 + 0.06
-            band_500 = [(int(round(sp)), d) for (sp, d) in otm
-                        if int(round(sp)) % 500 == 0 and band_low <= abs(d) <= band_high + 1e-9]
+            if band_low <= band_high:
+                band_500 = [(int(round(sp)), d) for (sp, d) in otm
+                            if int(round(sp)) % 500 == 0 and band_low <= abs(d) <= band_high + 1e-9]
+                _band_tag = f"500mult_in_band[{round(band_low, 2)}-{round(band_high, 2)}]"
+            else:
+                # EDGE CASE: band empty -> only a near-EXACT delta match on a 500 strike.
+                band_500 = [(int(round(sp)), d) for (sp, d) in otm
+                            if int(round(sp)) % 500 == 0 and abs(abs(d) - band_low) <= 0.01]
+                _band_tag = f"500mult_exact~{round(band_low, 2)}"
             if band_500:
-                # Most-OTM in-band 500 strike = the one whose |delta| is nearest the target.
+                # Most-OTM qualifying 500 strike = the one whose |delta| is nearest the target.
                 bsp, _bd = min(band_500, key=lambda x: abs(abs(x[1]) - target))
                 snapped = int(bsp)
-                snap_reason = f"500mult_in_band[{round(band_low, 2)}-{round(band_high, 2)}]"
+                snap_reason = _band_tag
             else:
                 if option_type == "PE":
                     snapped = int(math.floor(float(best_sp) / 500.0) * 500)
