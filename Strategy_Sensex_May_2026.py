@@ -3082,7 +3082,7 @@ while x == 1:
                         # Routine heartbeat throttled to ~once/min (near top of minute) so the
                         # 2s poll doesn't flood the log — breach lines above still log every poll.
                         if not sl_breach and not tgt_reached and dt2.second < LTP_POLL_INTERVAL:
-                            print("In Trade (", spread_decision.get("type"), "). No Exit. ltp=", ltp_now,
+                            print(dt2.strftime("%H:%M:%S"), "In Trade (", spread_decision.get("type"), "). No Exit. ltp=", ltp_now,
                                   " SL=", sl, " target=", target)
 
                     elif ltp_now is None and (st == 1 or st == 2):
