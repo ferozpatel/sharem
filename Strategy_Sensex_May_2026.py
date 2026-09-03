@@ -2993,11 +2993,17 @@ while x == 1:
             # On 2026-08-03 an unhandled exception here (Fyers added a 7th candle field)
             # propagated up and killed the whole process for the rest of the day with no
             # position open at the time, but it could just as easily happen mid-trade.
-            try:
-                order_id = checkCriteriaAndTakeTrade()
-            except Exception as _cctt_err:
-                print("CHECK_CRITERIA_DIAGNOSTIC_FAILED (non-fatal, diagnostic-only):", _cctt_err)
-                order_id = None
+            # DISABLED: checkCriteriaAndTakeTrade() is diagnostic-only (never places an order)
+            # and makes a redundant 2nd option-chain call (strikecount=3) + heavy log output.
+            # Commented out to cut the extra API call and log noise. order_id kept as None so
+            # the downstream flow is unchanged. Re-enable by uncommenting if the scalp/oipcr
+            # diagnostics are needed again.
+            order_id = None
+            # try:
+            #     order_id = checkCriteriaAndTakeTrade()
+            # except Exception as _cctt_err:
+            #     print("CHECK_CRITERIA_DIAGNOSTIC_FAILED (non-fatal, diagnostic-only):", _cctt_err)
+            #     order_id = None
 
             if tradeCEoption != "":
                 optionInstum = tradeCEoption
