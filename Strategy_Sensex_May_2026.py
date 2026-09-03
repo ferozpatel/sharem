@@ -2527,6 +2527,39 @@ while x == 1:
             else:
                 print("not found")
 
+            # === DIAGNOSTIC (no behaviour change): the SAME 3 lines but at the SPOT-based S/R
+            # strike, so CHOI/total-OI at the future strike vs the spot strike can be compared
+            # side by side across a few sessions. Uses the already-fetched dfochain -> ZERO extra
+            # API calls. Separate _sp_* locals -> trading logic's future-based values untouched. ===
+            try:
+                _sr_spot = get_support_resistance(spotLTP)
+                if _sr_spot != "NOTRADEZONE":
+                    _sr_spot = round(_sr_spot)
+                    _sp_ce_sym = getOptionFormatSensex(intExpiry, _sr_spot, "CE")
+                    _sp_pe_sym = getOptionFormatSensex(intExpiry, _sr_spot, "PE")
+                    _sp_r1 = dfochain[dfochain['symbol'] == _sp_ce_sym]
+                    _sp_r2 = dfochain[dfochain['symbol'] == _sp_pe_sym]
+                    print("SPOT_SUPP_RES===", _sr_spot, " Buffer=", iv_params.get("support_resistance_buffer", 30))
+                    if not _sp_r1.empty and not _sp_r2.empty:
+                        _sp_ce_choi = _sp_r1.iloc[0]['oich']
+                        _sp_pe_choi = _sp_r2.iloc[0]['oich']
+                        _sp_ce_oi = int(_sp_r1.iloc[0]['oi'])
+                        _sp_pe_oi = int(_sp_r2.iloc[0]['oi'])
+                        _den_choi = max(abs(_sp_ce_choi), abs(_sp_pe_choi)) or 1
+                        _den_oi = max(_sp_ce_oi, _sp_pe_oi) or 1
+                        print("SPOT CEoich val = ", _sp_ce_choi, " PEoich val = ", _sp_pe_choi, ",",
+                              f"CE > PE by {round(abs(_sp_ce_choi - _sp_pe_choi) / _den_choi * 100, 1)}%" if _sp_ce_choi > _sp_pe_choi
+                              else f"CE < PE by {round(abs(_sp_ce_choi - _sp_pe_choi) / _den_choi * 100, 1)}%")
+                        print("SPOT_SUPP_RES TOTAL OI: CE=", _sp_ce_oi, " PE=", _sp_pe_oi, ",",
+                              f"CE > PE by {round(abs(_sp_ce_oi - _sp_pe_oi) / _den_oi * 100, 1)}%" if _sp_ce_oi > _sp_pe_oi
+                              else f"CE < PE by {round(abs(_sp_ce_oi - _sp_pe_oi) / _den_oi * 100, 1)}%")
+                    else:
+                        print("SPOT_SUPP_RES: strike", _sr_spot, "not found in chain (may be outside strikecount window)")
+                else:
+                    print("SPOT_SUPP_RES=== NOTRADEZONE")
+            except Exception as _spot_sr_err:
+                print("SPOT_SUPP_RES_DIAG_FAILED (non-fatal, diagnostic only):", _spot_sr_err)
+
             # Morning rule: 9:15-9:48 IST. CHOI is noisy/zero in first ~11 candles after open.
             # Use TOTAL OI direction (carried from yesterday's positioning) as the trapped-writers signal.
             IS_MORNING_WINDOW = (dt1.hour == 9 and dt1.minute < 48)
