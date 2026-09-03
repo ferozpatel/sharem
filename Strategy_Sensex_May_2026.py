@@ -409,10 +409,11 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
       5. Snap that strike to a 500 multiple for liquidity, biased AWAY from ATM so the
          hedge delta never overshoots the target toward ATM:
            - if the nearest-delta strike is already a 500 multiple -> use it;
-           - else if a 500-multiple strike has |delta| within the same first-decimal band
-             [nearest, nearest's .x9] -> use that (slightly toward ATM but same ballpark).
-             The band is COMPUTED from the nearest delta, not fixed: nearest 0.24 -> [0.24,
-             0.29]; nearest 0.31 -> [0.31, 0.39]; nearest 0.16 -> [0.16, 0.19]; etc.
+           - else if a 500-multiple strike has |delta| within the band [nearest, .x6] ->
+             use that (slightly toward ATM but same ballpark). The band is COMPUTED from the
+             nearest delta, not fixed: nearest 0.24 -> [0.24, 0.26]; nearest 0.31 -> [0.31,
+             0.36]. Tighter than before (was .x9) so only a toward-ATM 500 strike within ~2
+             pips qualifies; otherwise go far OTM.
            - else snap FAR OTM to the nearest 500 (floor for PE, ceil for CE) — the hedge
              delta may then be < target, which is the safe (cheaper/wider) direction.
       6. Guard (strictly-OTM, no-op with the above): never let the snapped strike land
@@ -488,9 +489,12 @@ def select_hedge_by_delta(main_strike, option_type, intExpiry, fyers_client, str
             snap_reason = "nearest_is_500mult"
         else:
             band_low = nearest_abs
-            # band_high = top of the SAME first-decimal digit as band_low (dynamic, not
-            # hardcoded): 0.24 -> 0.29, 0.31 -> 0.39, 0.16 -> 0.19, 0.47 -> 0.49, etc.
-            band_high = (math.floor(band_low * 10) + 1) / 10.0 - 0.01
+            # band_high = first-decimal digit of band_low + 0.06 (dynamic, not hardcoded):
+            # 0.24 -> 0.26, 0.31 -> 0.36, 0.16 -> 0.16+.. i.e. 0.1x -> 0.16, 0.47 -> 0.46.
+            # Tighter than before (was .x9) so we only accept a toward-ATM 500 strike within
+            # ~2 pips of the nearest delta; anything further toward ATM -> go far OTM instead.
+            # (If band_low already exceeds band_high, the band is empty -> far-OTM snap.)
+            band_high = math.floor(band_low * 10) / 10.0 + 0.06
             band_500 = [(int(round(sp)), d) for (sp, d) in otm
                         if int(round(sp)) % 500 == 0 and band_low <= abs(d) <= band_high + 1e-9]
             if band_500:
