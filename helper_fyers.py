@@ -794,7 +794,7 @@ def getHistoricalSeconds(ticker,interval,duration,fyers):
     # return resampled_df
 
 def getOptionChain(strikecount, ticker, fyers):
-    print(ticker," strikecount=",strikecount, "  fyers",fyers)
+    # print(ticker," strikecount=",strikecount, "  fyers",fyers)  # log noise — commented
     data = {
         # "symbol":"NSE:TCS-EQ",
         "symbol":ticker,

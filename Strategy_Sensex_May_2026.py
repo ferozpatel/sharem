@@ -2437,7 +2437,7 @@ while x == 1:
                 SYNTH_FUT_STRIKE = round(FUT_LTP / 100) * 100
 
                 pcrSummation, result = sum_with_neighbors(symbolPcrMap, str(SYNTH_FUT_STRIKE))
-                print("pcrSummation=", pcrSummation, " result = ", result)
+                # print("pcrSummation=", pcrSummation, " result = ", result)  # log noise — commented
 
                 pcrSum = round(sum(pcrList), 2)
                 print("PCRSUM==", pcrSum)
@@ -2637,7 +2637,7 @@ while x == 1:
             print("FUT LTP =", FUT_LTP)
             print("CEchoi  PechOi =", suppResCeChOi, "  ", suppResPeChOi)
             print("====================================")
-            print("totalOIPCR =", totalOIPCR)
+            # print("totalOIPCR =", totalOIPCR)  # log noise — commented
             print("AVG_VOLPCR=", avgvolPCR)
             print("atmPCR=", pcr5, " belowATM ", pcr6)
             print("atmVolPCR=", volpcr5, " belowATM ", volpcr6)
