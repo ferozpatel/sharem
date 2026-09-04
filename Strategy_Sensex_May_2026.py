@@ -1894,6 +1894,20 @@ def findStrikePricePremium(optionName, premium, premiumType):
         return atmPE
 
 
+def _parse_strike_from_symbol(sym):
+    """
+    Parse the integer strike out of a Sensex option symbol, e.g.
+    'BSE:SENSEX2690377100PE' -> 77100. The numeric core = expiry(5 digits) + strike(5 digits),
+    so the trailing 5 digits before the CE/PE suffix are the strike. Returns None on any
+    malformed symbol (diagnostic-only, must never raise).
+    """
+    try:
+        core = sym.replace("BSE:SENSEX", "")[:-2]  # drop prefix + CE/PE suffix
+        return int(core[-5:])                       # last 5 digits = strike
+    except Exception:
+        return None
+
+
 def _oi_pair(oi_arr, otype_arr, idx_a, idx_b):
     """
     DIAGNOSTIC/log helper: given the two adjacent option-chain legs of ONE strike
@@ -2566,6 +2580,76 @@ while x == 1:
                     print("SPOT_SUPP_RES=== NOTRADEZONE")
             except Exception as _spot_sr_err:
                 print("SPOT_SUPP_RES_DIAG_FAILED (non-fatal, diagnostic only):", _spot_sr_err)
+
+            # === DIAGNOSTIC (no behaviour change): OI-based Support/Resistance ===
+            # Classic OI reading: highest-PE-OI strike = support (put writers defend it),
+            # highest-CE-OI strike = resistance (call writers defend it). ATM = round(spot/100).
+            # Scanned from the already-fetched dfochain -> ZERO extra API calls. Logged for a
+            # few sessions to validate before wiring into entry logic. Never raises.
+            try:
+                _oi_arr = dfochain['oi'].to_numpy()
+                _sym_arr = dfochain['symbol'].to_numpy()
+                _otype_arr = dfochain['option_type'].to_numpy()
+                _oich_arr = dfochain['oich'].to_numpy() if 'oich' in dfochain.columns else None
+                _atm_oi = round(spotLTP / 100) * 100
+                _pe_best_strike = _pe_best_oi = None
+                _ce_best_strike = _ce_best_oi = None
+                _atm_ce_oi = _atm_pe_oi = None
+                # per-strike lookups (for the detail 3-line blocks below)
+                _ce_oi_by = {}; _pe_oi_by = {}; _ce_ch_by = {}; _pe_ch_by = {}
+                for _i in range(len(_sym_arr)):
+                    _stk = _parse_strike_from_symbol(str(_sym_arr[_i]))
+                    if _stk is None:
+                        continue
+                    _oiv = int(_oi_arr[_i])
+                    _chv = _oich_arr[_i] if _oich_arr is not None else None
+                    _ot = _otype_arr[_i]
+                    if _ot == 'PE':
+                        _pe_oi_by[_stk] = _oiv; _pe_ch_by[_stk] = _chv
+                        if _pe_best_oi is None or _oiv > _pe_best_oi:
+                            _pe_best_oi, _pe_best_strike = _oiv, _stk
+                        if _stk == _atm_oi:
+                            _atm_pe_oi = _oiv
+                    elif _ot == 'CE':
+                        _ce_oi_by[_stk] = _oiv; _ce_ch_by[_stk] = _chv
+                        if _ce_best_oi is None or _oiv > _ce_best_oi:
+                            _ce_best_oi, _ce_best_strike = _oiv, _stk
+                        if _stk == _atm_oi:
+                            _atm_ce_oi = _oiv
+                _dist_supp = (_pe_best_strike - _atm_oi) if _pe_best_strike is not None else "NA"
+                _dist_res = (_ce_best_strike - _atm_oi) if _ce_best_strike is not None else "NA"
+                # When the highest PE OI and highest CE OI land on the SAME strike, that strike
+                # is both support and resistance (a pin/battle line). Flag it — the side whose
+                # wall breaks first is the likely trade direction (watch for the breakout).
+                _pin_tag = " | SAME_STRIKE_PIN (support==resistance, trade the side whose wall breaks)" \
+                    if (_pe_best_strike is not None and _pe_best_strike == _ce_best_strike) else ""
+                print(f"OI_SUPP_RES: spot={spotLTP} ATM={_atm_oi} (ATM_CE_OI={_atm_ce_oi} ATM_PE_OI={_atm_pe_oi}) | "
+                      f"SUPPORT={_pe_best_strike}PE OI={_pe_best_oi} (dist={_dist_supp}) | "
+                      f"RESISTANCE={_ce_best_strike}CE OI={_ce_best_oi} (dist={_dist_res}){_pin_tag}")
+
+                # Spot-style 3-line detail (CE/PE change-OI + total-OI) at the OI SUPPORT and
+                # RESISTANCE strikes, so both walls can be inspected the same way as SPOT_SUPP_RES.
+                def _print_oi_level(_label, _strike):
+                    if _strike is None:
+                        return
+                    _ce_oi = _ce_oi_by.get(_strike); _pe_oi = _pe_oi_by.get(_strike)
+                    _ce_ch = _ce_ch_by.get(_strike); _pe_ch = _pe_ch_by.get(_strike)
+                    print(f"{_label}=== {_strike}")
+                    if _ce_ch is not None and _pe_ch is not None:
+                        _d = max(abs(_ce_ch), abs(_pe_ch)) or 1
+                        _rel = (f"CE > PE by {round(abs(_ce_ch - _pe_ch) / _d * 100, 1)}%" if _ce_ch > _pe_ch
+                                else f"CE < PE by {round(abs(_ce_ch - _pe_ch) / _d * 100, 1)}%")
+                        print(f"{_label} CEoich val = {_ce_ch}  PEoich val = {_pe_ch} , {_rel}")
+                    if _ce_oi is not None and _pe_oi is not None:
+                        _do = max(_ce_oi, _pe_oi) or 1
+                        _relo = (f"CE > PE by {round(abs(_ce_oi - _pe_oi) / _do * 100, 1)}%" if _ce_oi > _pe_oi
+                                 else f"CE < PE by {round(abs(_ce_oi - _pe_oi) / _do * 100, 1)}%")
+                        print(f"{_label} TOTAL OI: CE= {_ce_oi}  PE= {_pe_oi} , {_relo}")
+
+                _print_oi_level("OI_SUPPORT", _pe_best_strike)
+                _print_oi_level("OI_RESISTANCE", _ce_best_strike)
+            except Exception as _oisr_err:
+                print("OI_SUPP_RES_DIAG_FAILED (non-fatal, diagnostic only):", _oisr_err)
 
             # Morning rule: 9:15-9:48 IST. CHOI is noisy/zero in first ~11 candles after open.
             # Use TOTAL OI direction (carried from yesterday's positioning) as the trapped-writers signal.
