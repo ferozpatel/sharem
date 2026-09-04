@@ -2295,6 +2295,12 @@ assumedOffsetRatio = None  # the used_ratio calc_lots_by_risk actually sized wit
 # MAIN WHILE LOOP
 # ============================================================
 
+# Guards the candle block to run ONCE per candle-minute. The entry gate is `second <= 1`
+# (a 2s window) and the block ends with sleep(1), so a fast pass can loop back while still
+# inside that window and process the same candle twice (was masked before by the slower
+# checkCriteriaAndTakeTrade call). Tracking the last processed minute makes it deterministic.
+last_candle_minute = -1
+
 while x == 1:
 
     dt1 = datetime.now()
@@ -2304,7 +2310,8 @@ while x == 1:
 
     if now >= custom_time1:
 
-        if dt1.second <= 1 and dt1.minute % timeFrame == 0:
+        if dt1.second <= 1 and dt1.minute % timeFrame == 0 and dt1.minute != last_candle_minute:
+            last_candle_minute = dt1.minute   # process this candle only once
             count += 1
             candle_formed = 1
             optionInstum = BNFut
