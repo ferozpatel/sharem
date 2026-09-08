@@ -215,6 +215,11 @@ HEDGE_MAX_PREMIUM_FRACTION = 0.50
 # HEDGE_MAX_PREMIUM_FRACTION stays as a secondary guard for high-IV days where even a distant
 # hedge is expensive.
 HEDGE_MIN_DISTANCE = 400
+# Anchor for S/R level, PCR-window center, and the FUT/spot-vs-SUPP_RES breakout comparisons.
+# Weekly-option OI/max-pain cluster near SPOT (not the monthly future, which carries a full
+# month of basis), so spot is the correct reference for S/R. True = use spot, False = monthly
+# future (the old behaviour). One-line reversible if live behaviour looks off.
+USE_SPOT_ANCHOR = True
 FIXED_RISK_PER_TRADE = 10000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
@@ -2454,8 +2459,14 @@ while x == 1:
                     symbol[-34]: pcr17
                 }
 
+                # Fetch spot first (needed for the anchor). strikecount is always >=2 here, so
+                # this always runs; the duplicate spot fetch below was removed to avoid a 2nd call.
+                sensexIndex = helper.getIndexSpot(stock)
+                spotLTP = helper.manualLTP(sensexIndex, fyers)
                 FUT_LTP = helper.manualLTP(BNFut, fyers)
-                SYNTH_FUT_STRIKE = round(FUT_LTP / 100) * 100
+                # anchorLTP drives S/R, the PCR-window center, and the breakout comparisons.
+                anchorLTP = spotLTP if USE_SPOT_ANCHOR else FUT_LTP
+                SYNTH_FUT_STRIKE = round(anchorLTP / 100) * 100
 
                 pcrSummation, result = sum_with_neighbors(symbolPcrMap, str(SYNTH_FUT_STRIKE))
                 # print("pcrSummation=", pcrSummation, " result = ", result)  # log noise — commented
@@ -2475,9 +2486,7 @@ while x == 1:
                 avgOiPcrList.append(avgoiPCR)
                 avgOiPcrList2.append(avgoiPCROld)
 
-            # ATM Strike shift detection
-            sensexIndex = helper.getIndexSpot(stock)
-            spotLTP = helper.manualLTP(sensexIndex, fyers)
+            # ATM Strike shift detection (spotLTP already fetched above with the anchor)
             ATM_STRIKE = round(spotLTP / 100) * 100
             print("spotLTP = ", spotLTP, " ATM_STRIKE = ", ATM_STRIKE)
 
@@ -2500,7 +2509,7 @@ while x == 1:
             print("avgOiPcrList2 =", avgOiPcrList2, "atmStrikeNotShiftedCount=", atmStrikeNotShiftedCount)
             print(IS_ATM_STRIKE_SHIFT, " ", atmStrikeNotShiftedCount, " ", len(avgOiPcrList2))
 
-            SUPP_RES = get_support_resistance(FUT_LTP)
+            SUPP_RES = get_support_resistance(anchorLTP)
             if SUPP_RES != "NOTRADEZONE":
                 SUPP_RES = round(SUPP_RES)
 
@@ -2755,9 +2764,10 @@ while x == 1:
             _larger_oi = max(suppResCeOi_total, suppResPeOi_total) if max(suppResCeOi_total, suppResPeOi_total) > 0 else 1
             _oi_pct = round(abs(suppResCeOi_total - suppResPeOi_total) / _larger_oi * 100, 1)
 
-            # Mandatory direction gates (FUT position + PCR trend)
-            _bull_mandatory = (FUT_LTP > SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2
-            _bear_mandatory = (FUT_LTP < SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2
+            # Mandatory direction gates (price-vs-S/R + PCR trend). anchorLTP (spot by default)
+            # must be compared against SUPP_RES which is derived from the SAME anchor.
+            _bull_mandatory = (anchorLTP > SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2
+            _bear_mandatory = (anchorLTP < SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2
 
             # Logic 1: Morning window trap (Total OI direction + CHOI trapped writers by 15%)
             logic1_bull = IS_MORNING_WINDOW and _bull_mandatory and (suppResCeOi_total > suppResPeOi_total) and (suppResPeChOi > suppResCeChOi and _choi_pct >= 15)
@@ -2794,7 +2804,7 @@ while x == 1:
                 _entry_mode = "LOGIC3_CHOI_15PCT"
 
             # === BULL ENTRY ===
-            if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and FUT_LTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
+            if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
                 print("In Bull trade, slCount = ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
@@ -2935,7 +2945,7 @@ while x == 1:
                 avgOiPcrList2 = []
 
             # === BEAR ENTRY ===
-            elif bear_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and FUT_LTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
+            elif bear_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
                 print("In Bear trade, slCount= ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
