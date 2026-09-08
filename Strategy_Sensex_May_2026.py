@@ -2515,24 +2515,22 @@ while x == 1:
 
             print("SUPP_RES===", SUPP_RES, " Buffer=", iv_params.get("support_resistance_buffer", 30))
 
-            # === DIAGNOSTIC (no behaviour change): future-anchor vs spot-anchor comparison ===
-            # We currently anchor S/R and the PCR window to the MONTHLY future (FUT_LTP). Options
-            # settle on SPOT at their (weekly) expiry, so OI/max-pain cluster near the weekly
-            # forward ~= spot, not the monthly future (which carries a full month of basis). This
-            # logs what the anchors WOULD be on spot so we can measure the misalignment across a
-            # few live sessions before deciding to switch. Costs ZERO extra API calls (spotLTP and
-            # FUT_LTP are already fetched; get_support_resistance is a pure price function).
+            # === DIAGNOSTIC (no behaviour change): spot-anchor (now PRIMARY) vs future-anchor ===
+            # SUPP_RES + PCR window now use SPOT (anchorLTP). This one-liner shows the basis and
+            # what the S/R WOULD be on the monthly future, so the two anchors stay comparable at a
+            # glance. ZERO extra API calls (spotLTP/FUT_LTP already fetched; get_support_resistance
+            # is pure).
             try:
-                _sr_spot = get_support_resistance(spotLTP)
-                if _sr_spot != "NOTRADEZONE":
-                    _sr_spot = round(_sr_spot)
+                _sr_fut = get_support_resistance(FUT_LTP)
+                if _sr_fut != "NOTRADEZONE":
+                    _sr_fut = round(_sr_fut)
                 _basis = round(FUT_LTP - spotLTP, 2)
-                _win_fut = SYNTH_FUT_STRIKE                    # PCR-window center now (future)
-                _win_spot = round(spotLTP / 100) * 100         # PCR-window center if on spot
-                _sr_diff = (SUPP_RES - _sr_spot) if (SUPP_RES != "NOTRADEZONE" and _sr_spot != "NOTRADEZONE") else "NA"
+                _win_spot = SYNTH_FUT_STRIKE                   # PCR-window center now (spot)
+                _win_fut = round(FUT_LTP / 100) * 100          # PCR-window center if on future
+                _sr_diff = (_sr_fut - SUPP_RES) if (SUPP_RES != "NOTRADEZONE" and _sr_fut != "NOTRADEZONE") else "NA"
                 print(f"ANCHOR_COMPARE: spot={spotLTP} fut={FUT_LTP} basis(fut-spot)={_basis} | "
-                      f"SR_future={SUPP_RES} SR_spot={_sr_spot} SR_diff={_sr_diff} | "
-                      f"PCRwin_future={_win_fut} PCRwin_spot={_win_spot}")
+                      f"SR_spot(PRIMARY)={SUPP_RES} SR_future={_sr_fut} SR_diff(fut-spot)={_sr_diff} | "
+                      f"PCRwin_spot(PRIMARY)={_win_spot} PCRwin_future={_win_fut}")
             except Exception as _anchor_err:
                 print("ANCHOR_COMPARE_FAILED (non-fatal, diagnostic only):", _anchor_err)
             suppResCE = getOptionFormatSensex(intExpiry, SUPP_RES, "CE")
@@ -2557,38 +2555,39 @@ while x == 1:
             else:
                 print("not found")
 
-            # === DIAGNOSTIC (no behaviour change): the SAME 3 lines but at the SPOT-based S/R
-            # strike, so CHOI/total-OI at the future strike vs the spot strike can be compared
-            # side by side across a few sessions. Uses the already-fetched dfochain -> ZERO extra
-            # API calls. Separate _sp_* locals -> trading logic's future-based values untouched. ===
+            # === DIAGNOSTIC (no behaviour change): FUT-based S/R for OBSERVATION. The primary
+            # SUPP_RES above is now SPOT-based (anchorLTP); this logs what the S/R WOULD be on the
+            # monthly future + its CHOI/total-OI, so we can keep comparing spot-vs-future anchor
+            # over a few sessions. Uses the already-fetched dfochain -> ZERO extra API calls.
+            # Separate _fs_* locals -> trading logic untouched. ===
             try:
-                _sr_spot = get_support_resistance(spotLTP)
-                if _sr_spot != "NOTRADEZONE":
-                    _sr_spot = round(_sr_spot)
-                    _sp_ce_sym = getOptionFormatSensex(intExpiry, _sr_spot, "CE")
-                    _sp_pe_sym = getOptionFormatSensex(intExpiry, _sr_spot, "PE")
-                    _sp_r1 = dfochain[dfochain['symbol'] == _sp_ce_sym]
-                    _sp_r2 = dfochain[dfochain['symbol'] == _sp_pe_sym]
-                    print("SPOT_SUPP_RES===", _sr_spot, " Buffer=", iv_params.get("support_resistance_buffer", 30))
-                    if not _sp_r1.empty and not _sp_r2.empty:
-                        _sp_ce_choi = _sp_r1.iloc[0]['oich']
-                        _sp_pe_choi = _sp_r2.iloc[0]['oich']
-                        _sp_ce_oi = int(_sp_r1.iloc[0]['oi'])
-                        _sp_pe_oi = int(_sp_r2.iloc[0]['oi'])
-                        _den_choi = max(abs(_sp_ce_choi), abs(_sp_pe_choi)) or 1
-                        _den_oi = max(_sp_ce_oi, _sp_pe_oi) or 1
-                        print("SPOT CEoich val = ", _sp_ce_choi, " PEoich val = ", _sp_pe_choi, ",",
-                              f"CE > PE by {round(abs(_sp_ce_choi - _sp_pe_choi) / _den_choi * 100, 1)}%" if _sp_ce_choi > _sp_pe_choi
-                              else f"CE < PE by {round(abs(_sp_ce_choi - _sp_pe_choi) / _den_choi * 100, 1)}%")
-                        print("SPOT_SUPP_RES TOTAL OI: CE=", _sp_ce_oi, " PE=", _sp_pe_oi, ",",
-                              f"CE > PE by {round(abs(_sp_ce_oi - _sp_pe_oi) / _den_oi * 100, 1)}%" if _sp_ce_oi > _sp_pe_oi
-                              else f"CE < PE by {round(abs(_sp_ce_oi - _sp_pe_oi) / _den_oi * 100, 1)}%")
+                _sr_fut = get_support_resistance(FUT_LTP)
+                if _sr_fut != "NOTRADEZONE":
+                    _sr_fut = round(_sr_fut)
+                    _fs_ce_sym = getOptionFormatSensex(intExpiry, _sr_fut, "CE")
+                    _fs_pe_sym = getOptionFormatSensex(intExpiry, _sr_fut, "PE")
+                    _fs_r1 = dfochain[dfochain['symbol'] == _fs_ce_sym]
+                    _fs_r2 = dfochain[dfochain['symbol'] == _fs_pe_sym]
+                    print("FUT_SUPP_RES===", _sr_fut, " (FUT_LTP=", FUT_LTP, ") Buffer=", iv_params.get("support_resistance_buffer", 30))
+                    if not _fs_r1.empty and not _fs_r2.empty:
+                        _fs_ce_choi = _fs_r1.iloc[0]['oich']
+                        _fs_pe_choi = _fs_r2.iloc[0]['oich']
+                        _fs_ce_oi = int(_fs_r1.iloc[0]['oi'])
+                        _fs_pe_oi = int(_fs_r2.iloc[0]['oi'])
+                        _den_choi = max(abs(_fs_ce_choi), abs(_fs_pe_choi)) or 1
+                        _den_oi = max(_fs_ce_oi, _fs_pe_oi) or 1
+                        print("FUT CEoich val = ", _fs_ce_choi, " PEoich val = ", _fs_pe_choi, ",",
+                              f"CE > PE by {round(abs(_fs_ce_choi - _fs_pe_choi) / _den_choi * 100, 1)}%" if _fs_ce_choi > _fs_pe_choi
+                              else f"CE < PE by {round(abs(_fs_ce_choi - _fs_pe_choi) / _den_choi * 100, 1)}%")
+                        print("FUT_SUPP_RES TOTAL OI: CE=", _fs_ce_oi, " PE=", _fs_pe_oi, ",",
+                              f"CE > PE by {round(abs(_fs_ce_oi - _fs_pe_oi) / _den_oi * 100, 1)}%" if _fs_ce_oi > _fs_pe_oi
+                              else f"CE < PE by {round(abs(_fs_ce_oi - _fs_pe_oi) / _den_oi * 100, 1)}%")
                     else:
-                        print("SPOT_SUPP_RES: strike", _sr_spot, "not found in chain (may be outside strikecount window)")
+                        print("FUT_SUPP_RES: strike", _sr_fut, "not found in chain (may be outside strikecount window)")
                 else:
-                    print("SPOT_SUPP_RES=== NOTRADEZONE")
-            except Exception as _spot_sr_err:
-                print("SPOT_SUPP_RES_DIAG_FAILED (non-fatal, diagnostic only):", _spot_sr_err)
+                    print("FUT_SUPP_RES=== NOTRADEZONE")
+            except Exception as _fut_sr_err:
+                print("FUT_SUPP_RES_DIAG_FAILED (non-fatal, diagnostic only):", _fut_sr_err)
 
             # === DIAGNOSTIC (no behaviour change): OI-based Support/Resistance ===
             # Classic OI reading: highest-PE-OI strike = support (put writers defend it),
