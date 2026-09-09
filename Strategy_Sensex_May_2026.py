@@ -2270,6 +2270,9 @@ def checkCriteriaAndTakeTrade():
 # ============================================================
 
 avgOiPcrMap = {}
+# Observation-only: last cycle's cumulative CE/PE oich per strike, used to derive the 3-min
+# INCREMENTAL (fresh) change-in-OI at the SUPP_RES strike = now_oich - prev_cycle_oich.
+_prev_suppres_choi = {}   # {strike: (ce_oich, pe_oich)}
 avgOiPcr = {}
 SUPP_RES_STRIKE = ''
 AVGOI_PCR = 0
@@ -2565,6 +2568,30 @@ while x == 1:
                 print("SUPP_RES TOTAL OI: CE=", suppResCeOi_total, " PE=", suppResPeOi_total, ",",
                       f"CE > PE by {round(abs(suppResCeOi_total - suppResPeOi_total) / max(suppResCeOi_total, suppResPeOi_total) * 100, 1)}%" if suppResCeOi_total > suppResPeOi_total
                       else f"CE < PE by {round(abs(suppResCeOi_total - suppResPeOi_total) / max(suppResCeOi_total, suppResPeOi_total) * 100, 1)}%")
+
+                # === DIAGNOSTIC (observation only, no behaviour change): 3-min INCREMENTAL
+                # (fresh) change-in-OI at the SUPP_RES strike. oich is cumulative-vs-prev-day,
+                # so the fresh flow in THIS 3-min window = now_oich - last_cycle_oich for the
+                # SAME strike. This is the "flow" (who is writing RIGHT NOW at the level) vs the
+                # cumulative CHOI above (the "stock"); flow leads. Fresh PE-dominant = bullish
+                # (put writers defending), fresh CE-dominant = bearish (call writers capping).
+                # Keyed by strike so a SUPP_RES shift compares like-for-like. ZERO extra API.
+                try:
+                    _prev_sr = _prev_suppres_choi.get(SUPP_RES)
+                    if _prev_sr is not None:
+                        _fresh_ce = round(suppResCeChOi - _prev_sr[0])
+                        _fresh_pe = round(suppResPeChOi - _prev_sr[1])
+                        _fdom = "CE" if _fresh_ce > _fresh_pe else ("PE" if _fresh_pe > _fresh_ce else "FLAT")
+                        _fden = max(abs(_fresh_ce), abs(_fresh_pe)) or 1
+                        _fgap = round(abs(_fresh_ce - _fresh_pe) / _fden * 100, 1)
+                        print(f"INCR_CHOI: SUPP_RES={SUPP_RES} fresh_CE={_fresh_ce} fresh_PE={_fresh_pe} "
+                              f"-> {_fdom}_dominant by {_fgap}% | cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
+                    else:
+                        print(f"INCR_CHOI: SUPP_RES={SUPP_RES} first sighting (no prev cycle to diff) "
+                              f"| cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
+                    _prev_suppres_choi[SUPP_RES] = (suppResCeChOi, suppResPeChOi)
+                except Exception as _incr_err:
+                    print("INCR_CHOI_DIAG_FAILED (non-fatal, diagnostic only):", _incr_err)
             else:
                 print("not found")
 
