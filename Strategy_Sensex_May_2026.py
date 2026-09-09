@@ -220,12 +220,11 @@ HEDGE_MIN_DISTANCE = 400
 # month of basis), so spot is the correct reference for S/R. True = use spot, False = monthly
 # future (the old behaviour). One-line reversible if live behaviour looks off.
 USE_SPOT_ANCHOR = True
-# CREDIT-spread main (sell) leg offset from the synthetic ATM: sell 1-OTM instead of ATM.
-# Bull-credit sells the PE one strike BELOW ATM (ATM-ONE_OTM); bear-credit sells the CE one
-# strike ABOVE ATM (ATM+ONE_OTM). Lowers the sold delta (~0.5 -> ~0.4) for a slightly-OTM,
-# higher-probability short leg. Sensex strikes are 100 apart, so 1-OTM = 100. DEBIT is
-# unchanged (still sells/buys at the synthetic ATM).
-ONE_OTM = 100
+# CREDIT-spread main (sell) leg offset from the synthetic ATM. 0 = sell AT the synthetic ATM
+# (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
+# sold delta (~0.5 -> ~0.4) for a slightly-OTM, higher-probability short leg. All the plumbing
+# is in place; flip this to 100 when ready. DEBIT is unaffected either way.
+ONE_OTM = 0
 FIXED_RISK_PER_TRADE = 10000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
@@ -2866,7 +2865,11 @@ while x == 1:
                 isBullTrade = True
                 if not OBSERVATION_MODE:
                     st = 1
-                takeEntry(isBullTrade, False, synthetic_atm_strike_tmp, intExpiry_tmp, fyers, papertrading)
+                # CREDIT places the main leg at the SPOT ATM; DEBIT at the synthetic-futures ATM.
+                entry_main_strike = spot_strike_tmp if spread_type == "CREDIT" else synthetic_atm_strike_tmp
+                print("ENTRY_MAIN_STRIKE:", entry_main_strike, "(", spread_type,
+                      "->", "spotATM" if spread_type == "CREDIT" else "synthATM", ")")
+                takeEntry(isBullTrade, False, entry_main_strike, intExpiry_tmp, fyers, papertrading)
 
                 # Entry safety: if a leg was rejected, entry_ok is False and any orphaned leg
                 # was already squared off inside takeEntry. Reset state and skip monitoring so
@@ -3007,7 +3010,11 @@ while x == 1:
                 isBearTrade = True
                 if not OBSERVATION_MODE:
                     st = 2
-                takeEntry(False, isBearTrade, synthetic_atm_strike_tmp, intExpiry_tmp, fyers, papertrading)
+                # CREDIT places the main leg at the SPOT ATM; DEBIT at the synthetic-futures ATM.
+                entry_main_strike = spot_strike_tmp if spread_type == "CREDIT" else synthetic_atm_strike_tmp
+                print("ENTRY_MAIN_STRIKE:", entry_main_strike, "(", spread_type,
+                      "->", "spotATM" if spread_type == "CREDIT" else "synthATM", ")")
+                takeEntry(False, isBearTrade, entry_main_strike, intExpiry_tmp, fyers, papertrading)
 
                 # Entry safety: if a leg was rejected, entry_ok is False and any orphaned leg
                 # was already squared off inside takeEntry. Reset state and skip monitoring so
