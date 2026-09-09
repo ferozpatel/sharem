@@ -220,6 +220,12 @@ HEDGE_MIN_DISTANCE = 400
 # month of basis), so spot is the correct reference for S/R. True = use spot, False = monthly
 # future (the old behaviour). One-line reversible if live behaviour looks off.
 USE_SPOT_ANCHOR = True
+# CREDIT-spread main (sell) leg offset from the synthetic ATM: sell 1-OTM instead of ATM.
+# Bull-credit sells the PE one strike BELOW ATM (ATM-ONE_OTM); bear-credit sells the CE one
+# strike ABOVE ATM (ATM+ONE_OTM). Lowers the sold delta (~0.5 -> ~0.4) for a slightly-OTM,
+# higher-probability short leg. Sensex strikes are 100 apart, so 1-OTM = 100. DEBIT is
+# unchanged (still sells/buys at the synthetic ATM).
+ONE_OTM = 100
 FIXED_RISK_PER_TRADE = 10000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
@@ -1372,29 +1378,36 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
     print("IV-Dynamic: SL=", dynamic_sl, " Target=", dynamic_target,
           " Spread=", dynamic_spread)
 
-    Hedge_Strike_CE_OTMBuy = syntheticATMStrike + dynamic_spread
-    Hedge_Strike_PE_OTMBuy = syntheticATMStrike - dynamic_spread
-    atmCE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "CE")
-    atmPE = getOptionFormatSensex(intExpiry, syntheticATMStrike, "PE")
+    # CREDIT main (sell) leg is 1-OTM from the synthetic ATM (see ONE_OTM): bull sells the PE
+    # ONE_OTM BELOW ATM, bear sells the CE ONE_OTM ABOVE ATM. All downstream calc (delta hedge,
+    # sizing, SL/target, exit symbol) keys off these shifted strikes. atmCE/atmPE keep their
+    # names but now hold the 1-OTM main leg.
+    creditBullStrike = syntheticATMStrike - ONE_OTM   # bull-credit sells PE here (1-OTM)
+    creditBearStrike = syntheticATMStrike + ONE_OTM   # bear-credit sells CE here (1-OTM)
+    Hedge_Strike_CE_OTMBuy = creditBearStrike + dynamic_spread
+    Hedge_Strike_PE_OTMBuy = creditBullStrike - dynamic_spread
+    atmCE = getOptionFormatSensex(intExpiry, creditBearStrike, "CE")
+    atmPE = getOptionFormatSensex(intExpiry, creditBullStrike, "PE")
 
     otmCE = getOptionFormatSensex(intExpiry, Hedge_Strike_CE_OTMBuy, "CE")
     otmPE = getOptionFormatSensex(intExpiry, Hedge_Strike_PE_OTMBuy, "PE")
 
     if isBullish:
+        print("CREDIT_MAIN_1OTM: bull sell PE strike=", creditBullStrike, "(synthATM", syntheticATMStrike, "- ONE_OTM", ONE_OTM, ")")
         entryPrice = helper.manualLTP(atmPE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
         # DELTA-BASED hedge selection (primary): hedge |delta| ~= main |delta|/2, snapped to a
         # 500 multiple for liquidity. Also returns both leg deltas (feeds the offset ratio in
         # calc_lots_by_risk), so no separate get_leg_deltas() call is needed.
         hedge_sym, main_delta_val, hedge_delta_val = select_hedge_by_delta(
-            syntheticATMStrike, "PE", intExpiry, fyers)
+            creditBullStrike, "PE", intExpiry, fyers)
         if hedge_sym:
             otmPE = hedge_sym
         else:
             # FALLBACK: greeks unavailable -> original premium-fraction + 500-grid walk.
             main_delta_val, hedge_delta_val = None, None
             # First 500-grid strike at least HEDGE_MIN_DISTANCE BELOW the main leg (PE hedge).
-            hedge_strike = math.floor((syntheticATMStrike - HEDGE_MIN_DISTANCE) / 500) * 500
+            hedge_strike = math.floor((creditBullStrike - HEDGE_MIN_DISTANCE) / 500) * 500
             otmPE_found = None
             for _ in range(6):
                 candidate = getOptionFormatSensex(intExpiry, hedge_strike, "PE")
@@ -1465,20 +1478,21 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
             return None
 
     if isBearish:
+        print("CREDIT_MAIN_1OTM: bear sell CE strike=", creditBearStrike, "(synthATM", syntheticATMStrike, "+ ONE_OTM", ONE_OTM, ")")
         entryPrice = helper.manualLTP(atmCE, fyers)
         max_premium = entryPrice * HEDGE_MAX_PREMIUM_FRACTION
         # DELTA-BASED hedge selection (primary): hedge |delta| ~= main |delta|/2, snapped to a
         # 500 multiple for liquidity. Also returns both leg deltas (feeds the offset ratio in
         # calc_lots_by_risk), so no separate get_leg_deltas() call is needed.
         hedge_sym, main_delta_val, hedge_delta_val = select_hedge_by_delta(
-            syntheticATMStrike, "CE", intExpiry, fyers)
+            creditBearStrike, "CE", intExpiry, fyers)
         if hedge_sym:
             otmCE = hedge_sym
         else:
             # FALLBACK: greeks unavailable -> original premium-fraction + 500-grid walk.
             main_delta_val, hedge_delta_val = None, None
             # First 500-grid strike at least HEDGE_MIN_DISTANCE ABOVE the main leg (CE hedge).
-            hedge_strike = math.ceil((syntheticATMStrike + HEDGE_MIN_DISTANCE) / 500) * 500
+            hedge_strike = math.ceil((creditBearStrike + HEDGE_MIN_DISTANCE) / 500) * 500
             otmCE_found = None
             for _ in range(6):
                 candidate = getOptionFormatSensex(intExpiry, hedge_strike, "CE")
