@@ -2577,6 +2577,11 @@ while x == 1:
                 # (put writers defending), fresh CE-dominant = bearish (call writers capping).
                 # Keyed by strike so a SUPP_RES shift compares like-for-like. ZERO extra API.
                 try:
+                    # Level role: price ABOVE SUPP_RES -> it's acting as SUPPORT; price BELOW ->
+                    # RESISTANCE. The confirm/warning hint depends on this role (see table): fresh
+                    # PE at a support = holding (bullish); fresh CE at a support = undermined
+                    # (bearish). At a resistance it's mirrored.
+                    _sr_role = "SUPPORT" if spotLTP >= SUPP_RES else "RESISTANCE"
                     _prev_sr = _prev_suppres_choi.get(SUPP_RES)
                     if _prev_sr is not None:
                         _fresh_ce = round(suppResCeChOi - _prev_sr[0])
@@ -2584,10 +2589,17 @@ while x == 1:
                         _fdom = "CE" if _fresh_ce > _fresh_pe else ("PE" if _fresh_pe > _fresh_ce else "FLAT")
                         _fden = max(abs(_fresh_ce), abs(_fresh_pe)) or 1
                         _fgap = round(abs(_fresh_ce - _fresh_pe) / _fden * 100, 1)
-                        print(f"INCR_CHOI: SUPP_RES={SUPP_RES} fresh_CE={_fresh_ce} fresh_PE={_fresh_pe} "
-                              f"-> {_fdom}_dominant by {_fgap}% | cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
+                        # Map dominance -> confirm/warning given the level role.
+                        if _fdom == "FLAT":
+                            _hint = "neutral"
+                        elif _sr_role == "SUPPORT":
+                            _hint = "support HOLDING (bullish)" if _fdom == "PE" else "support UNDERMINED (bearish warning)"
+                        else:  # RESISTANCE
+                            _hint = "resistance HOLDING (bearish)" if _fdom == "CE" else "resistance CHALLENGED (bullish warning)"
+                        print(f"INCR_CHOI: SUPP_RES={SUPP_RES} role={_sr_role} fresh_CE={_fresh_ce} fresh_PE={_fresh_pe} "
+                              f"-> {_fdom}_dominant by {_fgap}% ({_hint}) | cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
                     else:
-                        print(f"INCR_CHOI: SUPP_RES={SUPP_RES} first sighting (no prev cycle to diff) "
+                        print(f"INCR_CHOI: SUPP_RES={SUPP_RES} role={_sr_role} first sighting (no prev cycle to diff) "
                               f"| cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
                     _prev_suppres_choi[SUPP_RES] = (suppResCeChOi, suppResPeChOi)
                 except Exception as _incr_err:
