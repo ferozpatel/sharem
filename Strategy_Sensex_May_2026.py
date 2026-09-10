@@ -806,7 +806,13 @@ def choose_spread_type(iv_params, atm_premium, fyers_client):
     reasons.append(f"IVRank={iv_rank}")
 
     # === THETA-DOMINANT DECISION ===
-    if iv_rank > 0.70 and premium_ratio < 1.0:
+    # EXPIRY-DAY GUARD (DTE=0): NEVER buy (debit) on expiry day. Theta decay is maximal, and
+    # the "cheap premium" (low PremRatio) is mostly an artifact of near-zero extrinsic value,
+    # not a real edge. Buying options 0DTE is theta-toxic — force CREDIT (theta seller).
+    if dte == 0:
+        spread_type = "CREDIT"
+        reasons.append("DECISION:CREDIT (DTE=0 expiry-day guard — never buy/debit on expiry, theta-toxic)")
+    elif iv_rank > 0.70 and premium_ratio < 1.0:
         spread_type = "DEBIT"
         reasons.append("DECISION:DEBIT (IV_Rank>0.70 AND PremRatio<1.0 — high IV, cheap premium)")
     else:
