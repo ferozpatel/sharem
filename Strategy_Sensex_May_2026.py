@@ -2810,14 +2810,17 @@ while x == 1:
                 avgOiPcrList2 = avgOiPcrList2[remove:]
                 print("none =", avgOiPcrList2)
 
-            # Observation-only confirmation flags derived from INCR_CHOI consecutive dominance:
-            # pair isPcrInc(bull) with isPE_DominantAtSupp_*, isPcrDecr(bear) with isCE_DominantAtRes_*.
-            print("isPE_DominantAtSupp_twice =", isPE_DominantAtSupp_twice,
-                  " isPE_DominantAtSupp_trice =", isPE_DominantAtSupp_trice,
-                  "(PE_supp_streak=", _pe_supp_streak, ")")
-            print("isCE_DominantAtRes_twice =", isCE_DominantAtRes_twice,
-                  " isCE_DominantAtRes_trice =", isCE_DominantAtRes_trice,
-                  "(CE_res_streak=", _ce_res_streak, ")")
+            # Observation-only confirmation flags derived from INCR_CHOI consecutive dominance.
+            # Printed like isPcrInc/isPcrDecr — only the ACTIVE side shows: PE-at-support (bull
+            # confirm) when that streak is live, CE-at-resistance (bear confirm) when that one is.
+            if _pe_supp_streak > 0:
+                print("isPE_DominantAtSupp_twice =", isPE_DominantAtSupp_twice,
+                      " isPE_DominantAtSupp_trice =", isPE_DominantAtSupp_trice,
+                      "(PE_supp_streak=", _pe_supp_streak, ")")
+            elif _ce_res_streak > 0:
+                print("isCE_DominantAtRes_twice =", isCE_DominantAtRes_twice,
+                      " isCE_DominantAtRes_trice =", isCE_DominantAtRes_trice,
+                      "(CE_res_streak=", _ce_res_streak, ")")
 
             # print("newSynthFut = ", SYNTH_FUT_STRIKE)
             print("ATMStrike = ", ATM_STRIKE)
