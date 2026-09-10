@@ -2279,6 +2279,15 @@ avgOiPcrMap = {}
 # Observation-only: last cycle's cumulative CE/PE oich per strike, used to derive the 3-min
 # INCREMENTAL (fresh) change-in-OI at the SUPP_RES strike = now_oich - prev_cycle_oich.
 _prev_suppres_choi = {}   # {strike: (ce_oich, pe_oich)}
+# Consecutive-streak of INCR_CHOI fresh-flow dominance at the S/R level. Flags flip True once
+# the same-side dominance persists >= CHOI_DOM_STREAK consecutive cycles (mirrors the PCR
+# consecutive-trend idea): PE-dominant at a SUPPORT -> isPE_DominantAtSupp (bull confirm),
+# CE-dominant at a RESISTANCE -> isCE_DominantAtRes (bear confirm). Observation only for now.
+CHOI_DOM_STREAK = 2
+_pe_supp_streak = 0
+_ce_res_streak = 0
+isPE_DominantAtSupp = False
+isCE_DominantAtRes = False
 avgOiPcr = {}
 SUPP_RES_STRIKE = ''
 AVGOI_PCR = 0
@@ -2604,6 +2613,17 @@ while x == 1:
                             _hint = "resistance HOLDING (bearish)" if _fdom == "CE" else "resistance CHALLENGED (bullish warning)"
                         print(f"INCR_CHOI: SUPP_RES={SUPP_RES} role={_sr_role} fresh_CE={_fresh_ce} fresh_PE={_fresh_pe} "
                               f"-> {_fdom}_dominant by {_fgap}% ({_hint}) | cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
+                        # Consecutive fresh-flow dominance streaks -> confirmation flags.
+                        if _sr_role == "SUPPORT" and _fdom == "PE":
+                            _pe_supp_streak += 1
+                        else:
+                            _pe_supp_streak = 0
+                        if _sr_role == "RESISTANCE" and _fdom == "CE":
+                            _ce_res_streak += 1
+                        else:
+                            _ce_res_streak = 0
+                        isPE_DominantAtSupp = (_pe_supp_streak >= CHOI_DOM_STREAK)
+                        isCE_DominantAtRes = (_ce_res_streak >= CHOI_DOM_STREAK)
                     else:
                         print(f"INCR_CHOI: SUPP_RES={SUPP_RES} role={_sr_role} first sighting (no prev cycle to diff) "
                               f"| cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
@@ -2786,6 +2806,11 @@ while x == 1:
                 remove = 3 - atmStrikeNotShiftedCount
                 avgOiPcrList2 = avgOiPcrList2[remove:]
                 print("none =", avgOiPcrList2)
+
+            # Observation-only confirmation flags derived from INCR_CHOI consecutive dominance:
+            # pair isPcrInc(bull) with isPE_DominantAtSupp, isPcrDecr(bear) with isCE_DominantAtRes.
+            print("isPE_DominantAtSupp =", isPE_DominantAtSupp, "(streak=", _pe_supp_streak, ")",
+                  " | isCE_DominantAtRes =", isCE_DominantAtRes, "(streak=", _ce_res_streak, ")")
 
             # print("newSynthFut = ", SYNTH_FUT_STRIKE)
             print("ATMStrike = ", ATM_STRIKE)
