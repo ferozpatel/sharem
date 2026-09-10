@@ -2502,7 +2502,7 @@ while x == 1:
                 avgoiPCR = round(pcrSummation / 9, 2)
 
                 volpcrsum = sum(volPcrList)
-                print("VOLPCRSUM==", volpcrsum)
+                # print("VOLPCRSUM==", volpcrsum)
                 avgvolPCR = round(volpcrsum / 9, 2)
 
                 avgOiPcrList.append(avgoiPCR)
@@ -2626,6 +2626,7 @@ while x == 1:
                     _fs_pe_sym = getOptionFormatSensex(intExpiry, _sr_fut, "PE")
                     _fs_r1 = dfochain[dfochain['symbol'] == _fs_ce_sym]
                     _fs_r2 = dfochain[dfochain['symbol'] == _fs_pe_sym]
+                    print("==========================")
                     print("FUT_SUPP_RES===", _sr_fut, " (FUT_LTP=", FUT_LTP, ") Buffer=", iv_params.get("support_resistance_buffer", 30))
                     if not _fs_r1.empty and not _fs_r2.empty:
                         _fs_ce_choi = _fs_r1.iloc[0]['oich']
@@ -2739,7 +2740,7 @@ while x == 1:
                     print(f"CHOI_UNWIND: PE side unwinding at SUPP_RES (PEchoi={suppResPeChOi}) - CHOI-based logic skipped this cycle")
             print("================================================")
             print("==== signal check time ====", datetime.now())
-            print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
+            # print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
 
             try:
                 dataFUT = helper.getHistorical(BNFut, timeFrame, 3, fyers)
@@ -2755,11 +2756,11 @@ while x == 1:
             RSI_VAL1 = round(ta.momentum.RSIIndicator(pd.Series(close), 14, False).rsi().iloc[-1], 2)
             RSI_VAL2 = round(ta.momentum.RSIIndicator(pd.Series(close), 14, False).rsi().iloc[-2], 2)
             RSI_VAL = RSI_VAL2
-            print("RSI_VAL1==", RSI_VAL1)
-            print("RSI_VAL2==", RSI_VAL2)
-            print("FUT_3m_OHLC O=", round(opens[-2], 1), " H=", round(high[-2], 1),
-                  " L=", round(low[-2], 1), " C=", round(close[-2], 1),
-                  " Range=", round(high[-2] - low[-2], 1))
+            # print("RSI_VAL1==", RSI_VAL1)
+            # print("RSI_VAL2==", RSI_VAL2)
+            # print("FUT_3m_OHLC O=", round(opens[-2], 1), " H=", round(high[-2], 1),
+            #       " L=", round(low[-2], 1), " C=", round(close[-2], 1),
+            #       " Range=", round(high[-2] - low[-2], 1))
 
             # --- Chart Pattern Detection on FUT candles ---
             log_chart_patterns(opens, high, low, close, iv_params)
@@ -2786,21 +2787,20 @@ while x == 1:
                 avgOiPcrList2 = avgOiPcrList2[remove:]
                 print("none =", avgOiPcrList2)
 
-            print("newSynthFut = ", SYNTH_FUT_STRIKE)
+            # print("newSynthFut = ", SYNTH_FUT_STRIKE)
             print("ATMStrike = ", ATM_STRIKE)
             print("AVG_OIPCR=", avgoiPCR)
             print("avgoiPCROld= ", avgoiPCROld)
             print("SUPP_RES =", SUPP_RES)
+            print("spotLTP =", spotLTP)
             print("FUT LTP =", FUT_LTP)
             print("CEchoi  PechOi =", suppResCeChOi, "  ", suppResPeChOi)
             print("====================================")
             # print("totalOIPCR =", totalOIPCR)  # log noise — commented
-            print("AVG_VOLPCR=", avgvolPCR)
+            # print("AVG_VOLPCR=", avgvolPCR)
             print("atmPCR=", pcr5, " belowATM ", pcr6)
-            print("atmVolPCR=", volpcr5, " belowATM ", volpcr6)
-            print(IS_CHOI_DIFF_GT_25PERC, " ", FUT_LTP, " ", SUPP_RES, " ",
-                  IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2, " ",
-                  IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2, " ", RSI_VAL)
+            # print("atmVolPCR=", volpcr5, " belowATM ", volpcr6)
+            
 
             # === Direction signal — 3-tier priority system ===
             # Each logic checks FULL criteria: OI/CHOI direction + FUT vs S/R + PCR trend.
