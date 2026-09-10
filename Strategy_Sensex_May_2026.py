@@ -2283,11 +2283,12 @@ _prev_suppres_choi = {}   # {strike: (ce_oich, pe_oich)}
 # the same-side dominance persists >= CHOI_DOM_STREAK consecutive cycles (mirrors the PCR
 # consecutive-trend idea): PE-dominant at a SUPPORT -> isPE_DominantAtSupp (bull confirm),
 # CE-dominant at a RESISTANCE -> isCE_DominantAtRes (bear confirm). Observation only for now.
-CHOI_DOM_STREAK = 2
 _pe_supp_streak = 0
 _ce_res_streak = 0
-isPE_DominantAtSupp = False
-isCE_DominantAtRes = False
+isPE_DominantAtSupp_twice = False   # PE dominant at support >=2 consecutive cycles
+isPE_DominantAtSupp_trice = False   # PE dominant at support >=3 consecutive cycles
+isCE_DominantAtRes_twice = False    # CE dominant at resistance >=2 consecutive cycles
+isCE_DominantAtRes_trice = False    # CE dominant at resistance >=3 consecutive cycles
 avgOiPcr = {}
 SUPP_RES_STRIKE = ''
 AVGOI_PCR = 0
@@ -2622,8 +2623,10 @@ while x == 1:
                             _ce_res_streak += 1
                         else:
                             _ce_res_streak = 0
-                        isPE_DominantAtSupp = (_pe_supp_streak >= CHOI_DOM_STREAK)
-                        isCE_DominantAtRes = (_ce_res_streak >= CHOI_DOM_STREAK)
+                        isPE_DominantAtSupp_twice = (_pe_supp_streak >= 2)
+                        isPE_DominantAtSupp_trice = (_pe_supp_streak >= 3)
+                        isCE_DominantAtRes_twice = (_ce_res_streak >= 2)
+                        isCE_DominantAtRes_trice = (_ce_res_streak >= 3)
                     else:
                         print(f"INCR_CHOI: SUPP_RES={SUPP_RES} role={_sr_role} first sighting (no prev cycle to diff) "
                               f"| cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
@@ -2808,9 +2811,13 @@ while x == 1:
                 print("none =", avgOiPcrList2)
 
             # Observation-only confirmation flags derived from INCR_CHOI consecutive dominance:
-            # pair isPcrInc(bull) with isPE_DominantAtSupp, isPcrDecr(bear) with isCE_DominantAtRes.
-            print("isPE_DominantAtSupp =", isPE_DominantAtSupp, "(streak=", _pe_supp_streak, ")",
-                  " | isCE_DominantAtRes =", isCE_DominantAtRes, "(streak=", _ce_res_streak, ")")
+            # pair isPcrInc(bull) with isPE_DominantAtSupp_*, isPcrDecr(bear) with isCE_DominantAtRes_*.
+            print("isPE_DominantAtSupp_twice =", isPE_DominantAtSupp_twice,
+                  " isPE_DominantAtSupp_trice =", isPE_DominantAtSupp_trice,
+                  "(PE_supp_streak=", _pe_supp_streak, ")")
+            print("isCE_DominantAtRes_twice =", isCE_DominantAtRes_twice,
+                  " isCE_DominantAtRes_trice =", isCE_DominantAtRes_trice,
+                  "(CE_res_streak=", _ce_res_streak, ")")
 
             # print("newSynthFut = ", SYNTH_FUT_STRIKE)
             print("ATMStrike = ", ATM_STRIKE)
