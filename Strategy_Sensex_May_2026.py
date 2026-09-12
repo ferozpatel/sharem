@@ -220,6 +220,10 @@ HEDGE_MIN_DISTANCE = 400
 # month of basis), so spot is the correct reference for S/R. True = use spot, False = monthly
 # future (the old behaviour). One-line reversible if live behaviour looks off.
 USE_SPOT_ANCHOR = True
+# Master switch: always trade CREDIT spreads, never DEBIT. Weekly theta favours the seller,
+# and DEBIT has repeatedly lost in chop/expiry (needs a directional move that often doesn't
+# come). True disables debit entirely; set False to re-enable the IV-Rank/premium debit rule.
+ALWAYS_CREDIT = True
 # CREDIT-spread main (sell) leg offset from the synthetic ATM. 0 = sell AT the synthetic ATM
 # (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
 # sold delta (~0.5 -> ~0.4) for a slightly-OTM, higher-probability short leg. All the plumbing
@@ -809,7 +813,10 @@ def choose_spread_type(iv_params, atm_premium, fyers_client):
     # EXPIRY-DAY GUARD (DTE=0): NEVER buy (debit) on expiry day. Theta decay is maximal, and
     # the "cheap premium" (low PremRatio) is mostly an artifact of near-zero extrinsic value,
     # not a real edge. Buying options 0DTE is theta-toxic — force CREDIT (theta seller).
-    if dte == 0:
+    if ALWAYS_CREDIT:
+        spread_type = "CREDIT"
+        reasons.append("DECISION:CREDIT (ALWAYS_CREDIT=True — debit disabled)")
+    elif dte == 0:
         spread_type = "CREDIT"
         reasons.append("DECISION:CREDIT (DTE=0 expiry-day guard — never buy/debit on expiry, theta-toxic)")
     elif iv_rank > 0.70 and premium_ratio < 1.0:
