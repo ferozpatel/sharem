@@ -224,6 +224,12 @@ USE_SPOT_ANCHOR = True
 # and DEBIT has repeatedly lost in chop/expiry (needs a directional move that often doesn't
 # come). True disables debit entirely; set False to re-enable the IV-Rank/premium debit rule.
 ALWAYS_CREDIT = True
+# CHOI fresh-flow dominance confirmation gate wired into the ENTRY criteria. When True, a BULL
+# entry additionally requires PE writers freshly DEFENDING the support this cycle
+# (isPE_DominantAtSupp_once AND fresh_PE > 0 = added, not unwound); a BEAR entry requires CE
+# writers freshly CAPPING the resistance (isCE_DominantAtRes_once AND fresh_CE > 0). This is on
+# top of the existing price-vs-S/R + PCR-trend gates. Set False to revert to prior behaviour.
+USE_CHOI_DOMINANCE_GATE = True
 # CREDIT-spread main (sell) leg offset from the synthetic ATM. 0 = sell AT the synthetic ATM
 # (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
 # sold delta (~0.5 -> ~0.4) for a slightly-OTM, higher-probability short leg. All the plumbing
@@ -2292,10 +2298,16 @@ _prev_suppres_choi = {}   # {strike: (ce_oich, pe_oich)}
 # CE-dominant at a RESISTANCE -> isCE_DominantAtRes (bear confirm). Observation only for now.
 _pe_supp_streak = 0
 _ce_res_streak = 0
+isPE_DominantAtSupp_once = False    # PE dominant at support this cycle (streak >=1)
+isCE_DominantAtRes_once = False     # CE dominant at resistance this cycle (streak >=1)
 isPE_DominantAtSupp_twice = False   # PE dominant at support >=2 consecutive cycles
 isPE_DominantAtSupp_trice = False   # PE dominant at support >=3 consecutive cycles
 isCE_DominantAtRes_twice = False    # CE dominant at resistance >=2 consecutive cycles
 isCE_DominantAtRes_trice = False    # CE dominant at resistance >=3 consecutive cycles
+# Latest 3-min fresh (incremental) change-in-OI at the SUPP_RES strike. Persisted so the entry
+# gate can require the dominant side to be freshly ADDED (positive) rather than unwound.
+_last_fresh_ce = 0
+_last_fresh_pe = 0
 avgOiPcr = {}
 SUPP_RES_STRIKE = ''
 AVGOI_PCR = 0
@@ -2630,13 +2642,23 @@ while x == 1:
                             _ce_res_streak += 1
                         else:
                             _ce_res_streak = 0
+                        isPE_DominantAtSupp_once = (_pe_supp_streak >= 1)
                         isPE_DominantAtSupp_twice = (_pe_supp_streak >= 2)
                         isPE_DominantAtSupp_trice = (_pe_supp_streak >= 3)
+                        isCE_DominantAtRes_once = (_ce_res_streak >= 1)
                         isCE_DominantAtRes_twice = (_ce_res_streak >= 2)
                         isCE_DominantAtRes_trice = (_ce_res_streak >= 3)
+                        # Persist this cycle's fresh flow so the entry gate can require the
+                        # dominant side to be freshly ADDED (positive), not unwound.
+                        _last_fresh_ce = _fresh_ce
+                        _last_fresh_pe = _fresh_pe
                     else:
                         print(f"INCR_CHOI: SUPP_RES={SUPP_RES} role={_sr_role} first sighting (no prev cycle to diff) "
                               f"| cumulative CE={suppResCeChOi} PE={suppResPeChOi}")
+                        # No comparable prev cycle at this strike -> cannot confirm fresh flow.
+                        # Reset so the dominance entry gate stays conservative (blocks).
+                        _last_fresh_ce = 0
+                        _last_fresh_pe = 0
                     _prev_suppres_choi[SUPP_RES] = (suppResCeChOi, suppResPeChOi)
                 except Exception as _incr_err:
                     print("INCR_CHOI_DIAG_FAILED (non-fatal, diagnostic only):", _incr_err)
@@ -2821,11 +2843,13 @@ while x == 1:
             # Printed like isPcrInc/isPcrDecr — only the ACTIVE side shows: PE-at-support (bull
             # confirm) when that streak is live, CE-at-resistance (bear confirm) when that one is.
             if _pe_supp_streak > 0:
-                print("isPE_DominantAtSupp_twice =", isPE_DominantAtSupp_twice,
+                print("isPE_DominantAtSupp_once =", isPE_DominantAtSupp_once,
+                      " isPE_DominantAtSupp_twice =", isPE_DominantAtSupp_twice,
                       " isPE_DominantAtSupp_trice =", isPE_DominantAtSupp_trice,
                       "(PE_supp_streak=", _pe_supp_streak, ")")
             elif _ce_res_streak > 0:
-                print("isCE_DominantAtRes_twice =", isCE_DominantAtRes_twice,
+                print("isCE_DominantAtRes_once =", isCE_DominantAtRes_once,
+                      " isCE_DominantAtRes_twice =", isCE_DominantAtRes_twice,
                       " isCE_DominantAtRes_trice =", isCE_DominantAtRes_trice,
                       "(CE_res_streak=", _ce_res_streak, ")")
 
@@ -2902,8 +2926,23 @@ while x == 1:
                 choi_filter_bear = True
                 _entry_mode = "LOGIC3_CHOI_15PCT"
 
+            # CHOI fresh-flow dominance confirmation (wired into entry via USE_CHOI_DOMINANCE_GATE).
+            # BULL: at the moment PCR trends up, PE writers must be freshly DEFENDING the support
+            # THIS cycle -> isPE_DominantAtSupp_once (fresh_PE > fresh_CE at a support) AND
+            # fresh_PE actually positive (added, not unwound). BEAR mirrors at the resistance.
+            if USE_CHOI_DOMINANCE_GATE:
+                _dominance_ok_bull = isPE_DominantAtSupp_once and (_last_fresh_pe > 0)
+                _dominance_ok_bear = isCE_DominantAtRes_once and (_last_fresh_ce > 0)
+            else:
+                _dominance_ok_bull = True
+                _dominance_ok_bear = True
+            print("CHOI_DOM_GATE: gate_on=", USE_CHOI_DOMINANCE_GATE,
+                  " bull_ok=", _dominance_ok_bull, " bear_ok=", _dominance_ok_bear,
+                  "| isPE_DomSupp_once=", isPE_DominantAtSupp_once, " fresh_PE=", _last_fresh_pe,
+                  "| isCE_DomRes_once=", isCE_DominantAtRes_once, " fresh_CE=", _last_fresh_ce)
+
             # === BULL ENTRY ===
-            if bull_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
+            if bull_direction_ok and _dominance_ok_bull and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
                 print("In Bull trade, slCount = ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
@@ -3048,7 +3087,7 @@ while x == 1:
                 avgOiPcrList2 = []
 
             # === BEAR ENTRY ===
-            elif bear_direction_ok and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
+            elif bear_direction_ok and _dominance_ok_bear and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
                 print("In Bear trade, slCount= ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
