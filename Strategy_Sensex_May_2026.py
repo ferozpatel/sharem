@@ -2929,10 +2929,12 @@ while x == 1:
             # CHOI fresh-flow dominance confirmation (wired into entry via USE_CHOI_DOMINANCE_GATE).
             # BULL: at the moment PCR trends up, PE writers must be freshly DEFENDING the support
             # THIS cycle -> isPE_DominantAtSupp_once (fresh_PE > fresh_CE at a support) AND
-            # fresh_PE actually positive (added, not unwound). BEAR mirrors at the resistance.
+            # fresh_PE NOT being unwound (>= 0: flat or added). The >= 0 check also excludes the
+            # "both sides negative" case automatically: if PE is dominant yet fresh_PE < 0 then
+            # PE is unwinding too, so it's rejected. BEAR mirrors at the resistance (fresh_CE >= 0).
             if USE_CHOI_DOMINANCE_GATE:
-                _dominance_ok_bull = isPE_DominantAtSupp_once and (_last_fresh_pe > 0)
-                _dominance_ok_bear = isCE_DominantAtRes_once and (_last_fresh_ce > 0)
+                _dominance_ok_bull = isPE_DominantAtSupp_once and (_last_fresh_pe >= 0)
+                _dominance_ok_bear = isCE_DominantAtRes_once and (_last_fresh_ce >= 0)
             else:
                 _dominance_ok_bull = True
                 _dominance_ok_bear = True
