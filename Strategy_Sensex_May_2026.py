@@ -226,9 +226,10 @@ USE_SPOT_ANCHOR = True
 ALWAYS_CREDIT = True
 # CHOI fresh-flow dominance confirmation gate wired into the ENTRY criteria. When True, a BULL
 # entry additionally requires PE writers freshly DEFENDING the support this cycle
-# (isPE_DominantAtSupp_once AND fresh_PE > 0 = added, not unwound); a BEAR entry requires CE
-# writers freshly CAPPING the resistance (isCE_DominantAtRes_once AND fresh_CE > 0). This is on
-# top of the existing price-vs-S/R + PCR-trend gates. Set False to revert to prior behaviour.
+# (isPE_DominantAtSupp_once AND fresh_PE >= 0 = flat or added, not unwound); a BEAR entry
+# requires CE writers freshly CAPPING the resistance (isCE_DominantAtRes_once AND fresh_CE >= 0).
+# The >= 0 check also excludes the "both sides unwinding (both negative)" case. This is on top
+# of the existing price-vs-S/R + PCR-trend gates. Set False to revert to prior behaviour.
 USE_CHOI_DOMINANCE_GATE = True
 # CREDIT-spread main (sell) leg offset from the synthetic ATM. 0 = sell AT the synthetic ATM
 # (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
