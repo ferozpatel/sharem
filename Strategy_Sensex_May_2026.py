@@ -231,6 +231,15 @@ ALWAYS_CREDIT = True
 # The >= 0 check also excludes the "both sides unwinding (both negative)" case. This is on top
 # of the existing price-vs-S/R + PCR-trend gates. Set False to revert to prior behaviour.
 USE_CHOI_DOMINANCE_GATE = True
+# NO-TRADE ZONE: skip the middle of the 500-pt S/R band. Price must be at least
+# NO_TRADE_ZONE_BUFFER points away from the band midpoint before a directional trade is allowed
+# — bull only in the lower part (near support), bear only in the upper part (near resistance).
+# The dead zone is midpoint ± buffer (i.e. 2*buffer wide). Example, band 75500-76000 (mid 75750),
+# buffer 20: bull zone = up to 75730 (support 75500 side), bear zone = from 75770 (resistance
+# 76000 side), 75730-75770 = NOTRADEZONE. Set USE_NO_TRADE_ZONE=False to revert to a simple
+# midpoint split (no dead zone). Can only REMOVE trades, never add — it's risk-reducing.
+USE_NO_TRADE_ZONE = True
+NO_TRADE_ZONE_BUFFER = 20
 # CREDIT-spread main (sell) leg offset from the synthetic ATM. 0 = sell AT the synthetic ATM
 # (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
 # sold delta (~0.5 -> ~0.4) for a slightly-OTM, higher-probability short leg. All the plumbing
@@ -1964,28 +1973,29 @@ def _oi_pair(oi_arr, otype_arr, idx_a, idx_b):
 
 
 def get_support_resistance(futltp, step=500, buffer=None):
-    """Calculate support/resistance based on FUT_LTP.
-    Buffer/NOTRADEZONE commented out — returning support or resistance directly.
-    Uncomment below to re-enable NOTRADEZONE.
-    """
-    # if buffer is None:
-    #     buffer = iv_params.get("support_resistance_buffer", 30) if iv_params else 30
+    """Support/resistance from the 500-pt grid around price.
 
+    When USE_NO_TRADE_ZONE is True, a dead band of (midpoint ± buffer) is skipped: price in the
+    LOWER part of the band -> return support (bull side), UPPER part -> resistance (bear side),
+    and the middle band -> "NOTRADEZONE" (no directional trade). buffer defaults to
+    NO_TRADE_ZONE_BUFFER. When False, falls back to a simple midpoint split (no dead zone).
+    """
     support = (futltp // step) * step
     resistance = support + step
     middle = (support + resistance) / 2
 
-    # NOTRADEZONE logic — commented out for now
-    # no_trade_low = middle - buffer
-    # no_trade_high = middle + buffer
-    # if futltp <= no_trade_low:
-    #     return support
-    # elif futltp >= no_trade_high:
-    #     return resistance
-    # else:
-    #     return "NOTRADEZONE"
+    if USE_NO_TRADE_ZONE:
+        b = NO_TRADE_ZONE_BUFFER if buffer is None else buffer
+        no_trade_low = middle - b
+        no_trade_high = middle + b
+        if futltp <= no_trade_low:
+            return support
+        elif futltp >= no_trade_high:
+            return resistance
+        else:
+            return "NOTRADEZONE"
 
-    # Without buffer: simple middle split
+    # Simple midpoint split (dead zone disabled)
     if futltp < middle:
         return support
     else:
@@ -2911,9 +2921,13 @@ while x == 1:
             _oi_pct = round(abs(suppResCeOi_total - suppResPeOi_total) / _larger_oi * 100, 1)
 
             # Mandatory direction gates (price-vs-S/R + PCR trend). anchorLTP (spot by default)
-            # must be compared against SUPP_RES which is derived from the SAME anchor.
-            _bull_mandatory = (anchorLTP > SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2
-            _bear_mandatory = (anchorLTP < SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2
+            # must be compared against SUPP_RES which is derived from the SAME anchor. The
+            # _in_trade_zone guard MUST come first: when SUPP_RES == "NOTRADEZONE" (dead band),
+            # it short-circuits before the numeric comparison (str vs int would raise) and blocks
+            # both directions — price is in the skipped middle of the band.
+            _in_trade_zone = (SUPP_RES != "NOTRADEZONE")
+            _bull_mandatory = _in_trade_zone and (anchorLTP > SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2
+            _bear_mandatory = _in_trade_zone and (anchorLTP < SUPP_RES) and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2
 
             # Logic 1: Morning window trap (Total OI direction + CHOI trapped writers by 15%)
             logic1_bull = IS_MORNING_WINDOW and _bull_mandatory and (suppResCeOi_total > suppResPeOi_total) and (suppResPeChOi > suppResCeChOi and _choi_pct >= 15)
