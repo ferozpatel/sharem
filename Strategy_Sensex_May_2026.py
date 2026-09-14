@@ -2852,12 +2852,19 @@ while x == 1:
 
             # PCR trend detection (3 consecutive values)
             if not IS_ATM_STRIKE_SHIFT and atmStrikeNotShiftedCount >= 3 and len(avgOiPcrList2) == 3:
+                _p0, _p1, _p2 = avgOiPcrList2[0], avgOiPcrList2[1], avgOiPcrList2[2]
+                _step1_pct = round((_p1 - _p0) / _p0 * 100, 1) if _p0 else 0.0
+                _step2_pct = round((_p2 - _p1) / _p1 * 100, 1) if _p1 else 0.0
                 if avgOiPcrList2[0] < avgOiPcrList2[1] < avgOiPcrList2[2]:
                     IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = True
                     print("isPcrInc =", IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2)
+                    # Observation: the rising 3-value sequence and each step's % rise.
+                    print(f"PCR_SEQ_INC: {_p0} -> {_p1} -> {_p2} | pcr2 > pcr1 by +{_step1_pct}% | pcr3 > pcr2 by +{_step2_pct}%")
                 elif avgOiPcrList2[0] > avgOiPcrList2[1] > avgOiPcrList2[2]:
                     IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = True
                     print("isPcrDecr =", IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2)
+                    # Observation: the falling 3-value sequence and each step's % drop.
+                    print(f"PCR_SEQ_DEC: {_p0} -> {_p1} -> {_p2} | pcr2 < pcr1 by {_step1_pct}% | pcr3 < pcr2 by {_step2_pct}%")
                 else:
                     IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                     IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
