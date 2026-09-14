@@ -2712,10 +2712,17 @@ while x == 1:
                 _otype_arr = dfochain['option_type'].to_numpy()
                 _oich_arr = dfochain['oich'].to_numpy() if 'oich' in dfochain.columns else None
                 _atm_oi = round(spotLTP / 100) * 100
+                # NEAREST-wall window: support (PE) is scanned only AT/BELOW ATM and resistance
+                # (CE) only AT/ABOVE ATM, each within _OI_SR_WINDOW points of ATM. This finds the
+                # IMMEDIATE S/R box (support <= spot <= resistance, span <= 2*window) instead of
+                # the old global-max scan, which kept landing on far round-number OI magnets and
+                # produced 1000+ pt ranges. ATM strike is eligible for both sides (pin case).
+                _OI_SR_WINDOW = 500
                 _pe_best_strike = _pe_best_oi = None
                 _ce_best_strike = _ce_best_oi = None
                 _atm_ce_oi = _atm_pe_oi = None
-                # per-strike lookups (for the detail 3-line blocks below)
+                # per-strike lookups (for the detail 3-line blocks below) — populated for ALL
+                # strikes regardless of window, so the detail print can look up any chosen level.
                 _ce_oi_by = {}; _pe_oi_by = {}; _ce_ch_by = {}; _pe_ch_by = {}
                 for _i in range(len(_sym_arr)):
                     _stk = _parse_strike_from_symbol(str(_sym_arr[_i]))
@@ -2726,14 +2733,18 @@ while x == 1:
                     _ot = _otype_arr[_i]
                     if _ot == 'PE':
                         _pe_oi_by[_stk] = _oiv; _pe_ch_by[_stk] = _chv
-                        if _pe_best_oi is None or _oiv > _pe_best_oi:
-                            _pe_best_oi, _pe_best_strike = _oiv, _stk
+                        # support: PE OI at/below ATM, within window below
+                        if (_atm_oi - _OI_SR_WINDOW) <= _stk <= _atm_oi:
+                            if _pe_best_oi is None or _oiv > _pe_best_oi:
+                                _pe_best_oi, _pe_best_strike = _oiv, _stk
                         if _stk == _atm_oi:
                             _atm_pe_oi = _oiv
                     elif _ot == 'CE':
                         _ce_oi_by[_stk] = _oiv; _ce_ch_by[_stk] = _chv
-                        if _ce_best_oi is None or _oiv > _ce_best_oi:
-                            _ce_best_oi, _ce_best_strike = _oiv, _stk
+                        # resistance: CE OI at/above ATM, within window above
+                        if _atm_oi <= _stk <= (_atm_oi + _OI_SR_WINDOW):
+                            if _ce_best_oi is None or _oiv > _ce_best_oi:
+                                _ce_best_oi, _ce_best_strike = _oiv, _stk
                         if _stk == _atm_oi:
                             _atm_ce_oi = _oiv
                 _dist_supp = (_pe_best_strike - _atm_oi) if _pe_best_strike is not None else "NA"
@@ -2743,7 +2754,7 @@ while x == 1:
                 # wall breaks first is the likely trade direction (watch for the breakout).
                 _pin_tag = " | SAME_STRIKE_PIN (support==resistance, trade the side whose wall breaks)" \
                     if (_pe_best_strike is not None and _pe_best_strike == _ce_best_strike) else ""
-                print(f"OI_SUPP_RES: spot={spotLTP} ATM={_atm_oi} (ATM_CE_OI={_atm_ce_oi} ATM_PE_OI={_atm_pe_oi}) | "
+                print(f"OI_SUPP_RES: spot={spotLTP} ATM={_atm_oi} (win=±{_OI_SR_WINDOW}) (ATM_CE_OI={_atm_ce_oi} ATM_PE_OI={_atm_pe_oi}) | "
                       f"SUPPORT={_pe_best_strike}PE OI={_pe_best_oi} (dist={_dist_supp}) | "
                       f"RESISTANCE={_ce_best_strike}CE OI={_ce_best_oi} (dist={_dist_res}){_pin_tag}")
 
