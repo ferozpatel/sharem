@@ -2718,8 +2718,17 @@ while x == 1:
                 # the old global-max scan, which kept landing on far round-number OI magnets and
                 # produced 1000+ pt ranges. ATM strike is eligible for both sides (pin case).
                 _OI_SR_WINDOW = 500
-                _pe_best_strike = _pe_best_oi = None
-                _ce_best_strike = _ce_best_oi = None
+                # METRIC SOURCE switches by time (stock-vs-flow): in the opening window
+                # (9:15-9:48 IST) fresh change-in-OI is ~0/noisy, so the standing OVERNIGHT walls
+                # (absolute OI) are the real S/R -> use absolute OI. After 9:48, today's fresh
+                # writing (change-in-OI) is where intraday S/R forms -> use oich. Same 9:48 cut as
+                # IS_MORNING_WINDOW. When using oich, the "best" per side is the largest fresh
+                # ADD (most positive oich); if a whole side is unwinding it falls back to the
+                # least-negative. Observation only — not wired into entry.
+                _sr_use_oich = not (dt1.hour == 9 and dt1.minute < 48)
+                _sr_metric_label = "CHOI" if _sr_use_oich else "OI"
+                _pe_best_strike = _pe_best_val = None
+                _ce_best_strike = _ce_best_val = None
                 _atm_ce_oi = _atm_pe_oi = None
                 # per-strike lookups (for the detail 3-line blocks below) — populated for ALL
                 # strikes regardless of window, so the detail print can look up any chosen level.
@@ -2730,33 +2739,35 @@ while x == 1:
                         continue
                     _oiv = int(_oi_arr[_i])
                     _chv = _oich_arr[_i] if _oich_arr is not None else None
+                    # selection metric: oich after 9:48 (fall back to abs OI if oich missing), else abs OI
+                    _metric = int(_chv) if (_sr_use_oich and _chv is not None) else _oiv
                     _ot = _otype_arr[_i]
                     if _ot == 'PE':
                         _pe_oi_by[_stk] = _oiv; _pe_ch_by[_stk] = _chv
-                        # support: PE OI at/below ATM, within window below
+                        # support: PE at/below ATM, within window below — highest metric wins
                         if (_atm_oi - _OI_SR_WINDOW) <= _stk <= _atm_oi:
-                            if _pe_best_oi is None or _oiv > _pe_best_oi:
-                                _pe_best_oi, _pe_best_strike = _oiv, _stk
+                            if _pe_best_val is None or _metric > _pe_best_val:
+                                _pe_best_val, _pe_best_strike = _metric, _stk
                         if _stk == _atm_oi:
                             _atm_pe_oi = _oiv
                     elif _ot == 'CE':
                         _ce_oi_by[_stk] = _oiv; _ce_ch_by[_stk] = _chv
-                        # resistance: CE OI at/above ATM, within window above
+                        # resistance: CE at/above ATM, within window above — highest metric wins
                         if _atm_oi <= _stk <= (_atm_oi + _OI_SR_WINDOW):
-                            if _ce_best_oi is None or _oiv > _ce_best_oi:
-                                _ce_best_oi, _ce_best_strike = _oiv, _stk
+                            if _ce_best_val is None or _metric > _ce_best_val:
+                                _ce_best_val, _ce_best_strike = _metric, _stk
                         if _stk == _atm_oi:
                             _atm_ce_oi = _oiv
                 _dist_supp = (_pe_best_strike - _atm_oi) if _pe_best_strike is not None else "NA"
                 _dist_res = (_ce_best_strike - _atm_oi) if _ce_best_strike is not None else "NA"
-                # When the highest PE OI and highest CE OI land on the SAME strike, that strike
-                # is both support and resistance (a pin/battle line). Flag it — the side whose
-                # wall breaks first is the likely trade direction (watch for the breakout).
+                # When the chosen PE and CE walls land on the SAME strike, that strike is both
+                # support and resistance (a pin/battle line). Flag it — the side whose wall breaks
+                # first is the likely trade direction (watch for the breakout).
                 _pin_tag = " | SAME_STRIKE_PIN (support==resistance, trade the side whose wall breaks)" \
                     if (_pe_best_strike is not None and _pe_best_strike == _ce_best_strike) else ""
-                print(f"OI_SUPP_RES: spot={spotLTP} ATM={_atm_oi} (win=±{_OI_SR_WINDOW}) (ATM_CE_OI={_atm_ce_oi} ATM_PE_OI={_atm_pe_oi}) | "
-                      f"SUPPORT={_pe_best_strike}PE OI={_pe_best_oi} (dist={_dist_supp}) | "
-                      f"RESISTANCE={_ce_best_strike}CE OI={_ce_best_oi} (dist={_dist_res}){_pin_tag}")
+                print(f"OI_SUPP_RES: spot={spotLTP} ATM={_atm_oi} (win=±{_OI_SR_WINDOW} mode={_sr_metric_label}) (ATM_CE_OI={_atm_ce_oi} ATM_PE_OI={_atm_pe_oi}) | "
+                      f"SUPPORT={_pe_best_strike}PE {_sr_metric_label}={_pe_best_val} (dist={_dist_supp}) | "
+                      f"RESISTANCE={_ce_best_strike}CE {_sr_metric_label}={_ce_best_val} (dist={_dist_res}){_pin_tag}")
 
                 # Spot-style 3-line detail (CE/PE change-OI + total-OI) at the OI SUPPORT and
                 # RESISTANCE strikes, so both walls can be inspected the same way as SPOT_SUPP_RES.
