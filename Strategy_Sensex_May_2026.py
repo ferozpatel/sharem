@@ -2358,7 +2358,7 @@ ATM_STRIKE = 0
 IS_ATM_STRIKE_SHIFT = False
 atmStrikeNotShiftedCount = 1
 spotLTP = 0
-avgOiPcrList2 = []
+avgOiPcrList2 = []; avgOiPcr9List2 = []
 isBullTrade = False
 isBearTrade = False
 hedgeOrderId = ''
@@ -2567,7 +2567,7 @@ while x == 1:
                 avgvolPCR = round(volpcrsum / 9, 2)
 
                 avgOiPcrList.append(avgoiPCR)
-                avgOiPcrList2.append(avgoiPCROld)
+                avgOiPcrList2.append(avgoiPCROld); avgOiPcr9List2.append(avgoiPCR9)
 
             # ATM Strike shift detection (spotLTP already fetched above with the anchor)
             ATM_STRIKE = round(spotLTP / 100) * 100
@@ -2585,11 +2585,12 @@ while x == 1:
                     mapStrike[ATM_STRIKE] = ATM_STRIKE
                     IS_ATM_STRIKE_SHIFT = True
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = avgOiPcrList2[-1:]
+                    avgOiPcrList2 = avgOiPcrList2[-1:]; avgOiPcr9List2 = avgOiPcr9List2[-1:]
             else:
                 mapStrike[ATM_STRIKE] = ATM_STRIKE
             print("IS_ATM_STRIKE_SHIFT =", IS_ATM_STRIKE_SHIFT, " mapStrike =", mapStrike)
             print("avgOiPcrList2 =", avgOiPcrList2, "atmStrikeNotShiftedCount=", atmStrikeNotShiftedCount)
+            print("avgOiPcr9List2 =", avgOiPcr9List2, "atmStrikeNotShiftedCount=", atmStrikeNotShiftedCount)
             print(IS_ATM_STRIKE_SHIFT, " ", atmStrikeNotShiftedCount, " ", len(avgOiPcrList2))
 
             SUPP_RES = get_support_resistance(anchorLTP)
@@ -2871,6 +2872,24 @@ while x == 1:
             # --- Chart Pattern Detection on FUT candles ---
             log_chart_patterns(opens, high, low, close, iv_params)
 
+            # NEW (observation only): same consecutive-trend logic on the narrow 9-strike PCR.
+            # avgOiPcr9List2 shadows avgOiPcrList2's window exactly (same append/reset/trim), so
+            # it always holds the matching triplet. Read-only here (no trimming — the 17-strike
+            # block below manages the shared window); just reports its own inc/dec verdict + the
+            # per-step % so we can compare the narrow PCR trend against the wide one.
+            if not IS_ATM_STRIKE_SHIFT and atmStrikeNotShiftedCount >= 3 and len(avgOiPcr9List2) == 3:
+                _q0, _q1, _q2 = avgOiPcr9List2[0], avgOiPcr9List2[1], avgOiPcr9List2[2]
+                _qstep1 = round((_q1 - _q0) / _q0 * 100, 1) if _q0 else 0.0
+                _qstep2 = round((_q2 - _q1) / _q1 * 100, 1) if _q1 else 0.0
+                if _q0 < _q1 < _q2:
+                    print("isPcrInc9 = True")
+                    print(f"PCR9_SEQ_INC: {_q0} -> {_q1} -> {_q2} | pcr2 > pcr1 by +{_qstep1}% | pcr3 > pcr2 by +{_qstep2}%")
+                elif _q0 > _q1 > _q2:
+                    print("isPcrDecr9 = True")
+                    print(f"PCR9_SEQ_DEC: {_q0} -> {_q1} -> {_q2} | pcr2 < pcr1 by {_qstep1}% | pcr3 < pcr2 by {_qstep2}%")
+                else:
+                    print(f"PCR9_SEQ_FLAT: {_q0} -> {_q1} -> {_q2} (not monotonic)")
+
             # PCR trend detection (3 consecutive values)
             if not IS_ATM_STRIKE_SHIFT and atmStrikeNotShiftedCount >= 3 and len(avgOiPcrList2) == 3:
                 _p0, _p1, _p2 = avgOiPcrList2[0], avgOiPcrList2[1], avgOiPcrList2[2]
@@ -2890,14 +2909,14 @@ while x == 1:
                     IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                     IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                     if avgOiPcrList2[1] < avgOiPcrList2[2] or avgOiPcrList2[1] > avgOiPcrList2[2]:
-                        avgOiPcrList2 = avgOiPcrList2[1:]
+                        avgOiPcrList2 = avgOiPcrList2[1:]; avgOiPcr9List2 = avgOiPcr9List2[1:]
                         print("recent two =", avgOiPcrList2)
                     else:
-                        avgOiPcrList2 = avgOiPcrList2[2:]
+                        avgOiPcrList2 = avgOiPcrList2[2:]; avgOiPcr9List2 = avgOiPcr9List2[2:]
                         print("neither =", avgOiPcrList2)
             elif len(avgOiPcrList2) == 3:
                 remove = 3 - atmStrikeNotShiftedCount
-                avgOiPcrList2 = avgOiPcrList2[remove:]
+                avgOiPcrList2 = avgOiPcrList2[remove:]; avgOiPcr9List2 = avgOiPcr9List2[remove:]
                 print("none =", avgOiPcrList2)
 
             # Observation-only confirmation flags derived from INCR_CHOI consecutive dominance.
@@ -3026,7 +3045,7 @@ while x == 1:
                     IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                     IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                     if len(avgOiPcrList2) == 3:
-                        avgOiPcrList2 = avgOiPcrList2[1:]
+                        avgOiPcrList2 = avgOiPcrList2[1:]; avgOiPcr9List2 = avgOiPcr9List2[1:]
                     continue
 
                 # Decide spread type at entry time (real-time premium)
@@ -3075,7 +3094,7 @@ while x == 1:
                     mapStrike.clear()
                     IS_ATM_STRIKE_SHIFT = False
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = []
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
                     continue
 
                 if OBSERVATION_MODE:
@@ -3084,7 +3103,7 @@ while x == 1:
                     mapStrike.clear()
                     IS_ATM_STRIKE_SHIFT = False
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = []
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
                     print("OBSERVATION_MODE: skipping post-entry SL/target setup")
                     continue  # skip rest of bull entry, wait for next 3-min candle
 
@@ -3103,7 +3122,7 @@ while x == 1:
                     mapStrike.clear()
                     IS_ATM_STRIKE_SHIFT = False
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = []
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
                     continue
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
@@ -3152,7 +3171,7 @@ while x == 1:
                 mapStrike.clear()
                 IS_ATM_STRIKE_SHIFT = False
                 atmStrikeNotShiftedCount = 1
-                avgOiPcrList2 = []
+                avgOiPcrList2 = []; avgOiPcr9List2 = []
 
             # === BEAR ENTRY ===
             elif bear_direction_ok and _dominance_ok_bear and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
@@ -3171,7 +3190,7 @@ while x == 1:
                     IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                     IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                     if len(avgOiPcrList2) == 3:
-                        avgOiPcrList2 = avgOiPcrList2[1:]
+                        avgOiPcrList2 = avgOiPcrList2[1:]; avgOiPcr9List2 = avgOiPcr9List2[1:]
                     continue
 
                 # Decide spread type at entry time (real-time premium)
@@ -3220,7 +3239,7 @@ while x == 1:
                     mapStrike.clear()
                     IS_ATM_STRIKE_SHIFT = False
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = []
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
                     continue
 
                 if OBSERVATION_MODE:
@@ -3229,7 +3248,7 @@ while x == 1:
                     mapStrike.clear()
                     IS_ATM_STRIKE_SHIFT = False
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = []
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
                     print("OBSERVATION_MODE: skipping post-entry SL/target setup")
                     continue  # skip rest of bear entry, wait for next 3-min candle
 
@@ -3246,7 +3265,7 @@ while x == 1:
                     mapStrike.clear()
                     IS_ATM_STRIKE_SHIFT = False
                     atmStrikeNotShiftedCount = 1
-                    avgOiPcrList2 = []
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
                     continue
 
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
@@ -3292,13 +3311,13 @@ while x == 1:
                 mapStrike.clear()
                 IS_ATM_STRIKE_SHIFT = False
                 atmStrikeNotShiftedCount = 1
-                avgOiPcrList2 = []
+                avgOiPcrList2 = []; avgOiPcr9List2 = []
 
             elif len(avgOiPcrList2) == 3:
                 print("no trade yet =", avgOiPcrList2)
                 IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
-                avgOiPcrList2 = avgOiPcrList2[1:]
+                avgOiPcrList2 = avgOiPcrList2[1:]; avgOiPcr9List2 = avgOiPcr9List2[1:]
 
             # Commented out — function makes a redundant 2nd ochain call (strikecount=3) which
             # causes parallel API contention with BN strategy and crashes with KeyError.
