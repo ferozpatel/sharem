@@ -1472,7 +1472,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.5) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1557,7 +1557,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.5) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1676,7 +1676,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.5) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1760,7 +1760,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.7) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * 1.5) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -3114,15 +3114,15 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 1.7, Target: median x 3.0 (R:R ~1:2). Median is HIGH-LOW range.
+                # SL: median x 1.5, Target: median x 3.0 (R:R ~1:2). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here,
                 # so SL/Target and qty sizing always agree on the same volatility snapshot.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 1.7)
+                    effective_sl = round(opt_range * 1.5)
                     effective_tgt = round(opt_range * 3.0)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.7,Tgtx3.0)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.5,Tgtx3.0)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -3257,14 +3257,14 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 1.7, Target: median x 3.0 (R:R ~1:2). Median is HIGH-LOW range.
+                # SL: median x 1.5, Target: median x 3.0 (R:R ~1:2). Median is HIGH-LOW range.
                 # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
                 # traded strike, right before qty/margin sizing. No second live API call here.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 1.7)
+                    effective_sl = round(opt_range * 1.5)
                     effective_tgt = round(opt_range * 3.0)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.7,Tgtx3.0)"
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.5,Tgtx3.0)"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
