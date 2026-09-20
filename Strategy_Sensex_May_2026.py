@@ -186,15 +186,6 @@ LOT_SIZE = 20                    # Sensex lot size
 # bad data point can never collapse net_sl_points toward zero and over-size the position.
 HEDGE_OFFSET_RATIO_MIN = 0.10
 HEDGE_OFFSET_RATIO_MAX = 0.75
-# HAIRCUT on the hedge offset ratio used for sizing. The delta/range ratio consistently
-# OVERSTATES how much the hedge offsets a real SL move: the near-ATM short leg has higher gamma
-# than the far-OTM hedge, so on an adverse move the hedge gains LESS than its starting ratio
-# implies (09-11: assumed 0.48 delta ratio vs realized 0.39). Sizing off the un-shaved ratio
-# under-hedges -> net_sl_points too small -> too many lots -> loss overshoots FIXED_RISK. This
-# factor shaves the raw ratio before it sizes the position (0.8 pulls a ~0.5 delta ratio down
-# to ~0.4, matching realized). Result: fewer lots, loss lands inside the risk budget. Set to
-# 1.0 to disable (no haircut). Applies to whichever ratio source (DELTA/RANGE/PREMIUM) is used.
-HEDGE_OFFSET_HAIRCUT = 0.8
 
 # Max hedge premium as a fraction of the main-leg premium. The hedge search walks the 500-pt
 # grid outward until a candidate is at/below this; a cheaper hedge means a wider spread.
@@ -333,13 +324,9 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
         raw_ratio = None
         ratio_source = "NONE"
 
-    # Apply the conservative HAIRCUT to the raw ratio, THEN clamp. Shaving before clamping means
-    # the [MIN, MAX] guard still bounds the final value used for sizing.
-    haircut_ratio = None
     if raw_ratio is not None:
-        haircut_ratio = raw_ratio * HEDGE_OFFSET_HAIRCUT
         hedge_offset_ratio = max(HEDGE_OFFSET_RATIO_MIN,
-                                 min(haircut_ratio, HEDGE_OFFSET_RATIO_MAX))
+                                 min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
 
     # Net-of-hedge SL points: discount the short-leg SL by the hedge's offset share.
     net_sl_points = effective_sl_points
@@ -351,7 +338,6 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
 
     print(f"HEDGE_OFFSET: source={ratio_source}"
           f" used_ratio={_r(hedge_offset_ratio)} raw={_r(raw_ratio)}"
-          f" haircut={HEDGE_OFFSET_HAIRCUT} post_haircut={_r(haircut_ratio)}"
           f" | delta_ratio={_r(delta_ratio)} range_ratio={_r(range_ratio)}"
           f" premium_ratio={_r(premium_ratio)}"
           f" | (main_delta={main_delta} hedge_delta={hedge_delta}"
