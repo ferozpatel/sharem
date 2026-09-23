@@ -244,7 +244,7 @@ NO_TRADE_ZONE_BUFFER = 20
 # (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
 # sold delta (~0.5 -> ~0.4) for a slightly-OTM, higher-probability short leg. All the plumbing
 # is in place; flip this to 100 when ready. DEBIT is unaffected either way.
-ONE_OTM = 0
+ONE_OTM = 100
 FIXED_RISK_PER_TRADE = 5000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
