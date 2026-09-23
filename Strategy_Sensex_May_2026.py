@@ -250,6 +250,14 @@ FIXED_RISK_PER_TRADE = 5000     # ₹ NET risk per trade if SL hits (after hedge
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
 MIN_LOTS = 1                     # minimum position
+# PYRAMIDING: once a trade trails to breakeven (original lot is risk-free), scale in by adding
+# up to PYRAMID_ADD_MULTIPLIER x the original qty to BOTH legs on the SAME strikes, sized to
+# whatever live margin still allows (as many lots as fit). The combined position then rides the
+# SAME target with SL at breakeven for all lots -> winners run at ~3x size (R:R boost). Trade-off:
+# if price REVERSES from the trail point back to breakeven, the added lots give back ~trail
+# points each (a fatter loss than the base risk budget on those rare days). Set False to disable.
+PYRAMIDING_ENABLED = True
+PYRAMID_ADD_MULTIPLIER = 2       # add 2x original qty (total becomes ~3x) when trail activates
 # Fraction of available funds usable for a trade. Applied to REAL available funds
 # (margin_avail from the broker, fetched live) when available; else to FALLBACK_CAPITAL.
 # 0.97 leaves only a 3% buffer against a broker margin-shortfall rejection (which previously
@@ -1884,6 +1892,57 @@ def exitSpreadPosition(mainATMOption, hedgeOption):
     return mainOidentry
 
 
+def pyramid_add_position(main_symbol, hedge_symbol, is_debit, base_qty):
+    """PYRAMIDING: after the trade trails to breakeven (original lot risk-free), scale in by
+    adding up to PYRAMID_ADD_MULTIPLIER x the original qty to BOTH legs on the SAME strikes,
+    sized to whatever live margin still allows (adds as many lots as fit; never blocks).
+    Sides MIRROR the original entry so we ADD to the position, not offset it:
+      credit -> main SELL, hedge BUY   |   debit -> main BUY, hedge SELL
+    The BUY (long/protective) leg is placed FIRST (avoids a naked-short moment + gets the
+    hedge-margin benefit). If a leg fails, the add is aborted/unwound and the original position
+    is untouched (still safe at breakeven). Returns the qty actually added (0 if none)."""
+    want_qty = PYRAMID_ADD_MULTIPLIER * base_qty
+    if is_debit:
+        main_side, hedge_side = 1, -1
+        main_action, hedge_action = "BUY", "SELL"
+    else:
+        main_side, hedge_side = -1, 1
+        main_action, hedge_action = "SELL", "BUY"
+
+    # 1b: add as many lots as the REMAINING live margin allows (position already open, so
+    # margin_avail already reflects the base position's blocked margin).
+    add_qty = apply_margin_cap(want_qty, main_symbol, main_side, hedge_symbol, hedge_side, fyers)
+    if add_qty is None or add_qty < LOT_SIZE:
+        print(f"PYRAMID_SKIP: no margin room to add (wanted {want_qty}) — keeping original at breakeven")
+        return 0
+
+    # BUY (long) leg first, then SELL leg.
+    if not is_debit:
+        buy_sym, buy_act, sell_sym, sell_act = hedge_symbol, hedge_action, main_symbol, main_action
+    else:
+        buy_sym, buy_act, sell_sym, sell_act = main_symbol, main_action, hedge_symbol, hedge_action
+
+    buy_oid = helper.placeOrder(buy_sym, buy_act, add_qty, "MARKET", 0, "regular", fyers, papertrading)
+    print(f"PYRAMID {buy_act} {buy_sym} qty={add_qty} OID:", buy_oid)
+    if not _order_ok(buy_oid):
+        print("PYRAMID_ABORT: long add leg failed — no add taken, original stays at breakeven. resp=", buy_oid)
+        return 0
+    time.sleep(0.5)
+    sell_oid = helper.placeOrder(sell_sym, sell_act, add_qty, "MARKET", 0, "regular", fyers, papertrading)
+    print(f"PYRAMID {sell_act} {sell_sym} qty={add_qty} OID:", sell_oid)
+    if not _order_ok(sell_oid):
+        # SELL leg failed after the long filled -> unwind the orphan long to stay balanced.
+        _unwind = "SELL" if buy_act == "BUY" else "BUY"
+        print("PYRAMID_ABORT: short add leg failed — unwinding orphan long add. resp=", sell_oid)
+        helper.placeOrder(buy_sym, _unwind, add_qty, "MARKET", 0, "regular", fyers, papertrading)
+        return 0
+
+    print(f"PYRAMID_ADD: base_qty={base_qty} wanted={want_qty} added={add_qty} "
+          f"({add_qty // LOT_SIZE} lots) | {main_action} {main_symbol} + {hedge_action} {hedge_symbol} "
+          f"| combined qty now {base_qty + add_qty} (SL=breakeven, same target for all)")
+    return add_qty
+
+
 def findStrikePricePremium(optionName, premium, premiumType):
     name = helper.getIndexSpot(stock)
     closest_Strike_PE = ''
@@ -2359,6 +2418,7 @@ entry_ok = True  # set False by takeEntryCredit/Debit if a leg is rejected (orph
 entryPremium = 0  # track entry premium for trailing SL
 trailTriggerPts = 0  # effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION — set at entry time
 slTrailed = False
+pyramided = False  # one-time guard: True once we've scaled in on this trade's trail activation
 slConfirmCount = 0
 spread_type_decided = False  # flag to decide spread type only once per day
 
@@ -3141,6 +3201,7 @@ while x == 1:
 
                 entryPremium = anchorPremium
                 slTrailed = False
+                pyramided = False
                 slConfirmCount = 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
@@ -3282,6 +3343,7 @@ while x == 1:
 
                 entryPremium = anchorPremium
                 slTrailed = False
+                pyramided = False
                 slConfirmCount = 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
@@ -3363,6 +3425,14 @@ while x == 1:
                                 sl = entryPremium
                                 slTrailed = True
                                 print("TRAILING SL activated! SL moved to breakeven =", sl)
+                                # PYRAMIDING: scale in (add up to 2x) now that the base lot is
+                                # risk-free at breakeven. Combined position rides the SAME target
+                                # with SL=breakeven for all. is_debit=False (credit).
+                                if PYRAMIDING_ENABLED and not pyramided:
+                                    _added = pyramid_add_position(tradeATMOption, tradeHedgeOption, False, qty)
+                                    if _added > 0:
+                                        qty = qty + _added
+                                    pyramided = True
                             sl_breach = ltp_now >= sl
                             tgt_reached = ltp_now <= target
                         else:
@@ -3371,6 +3441,13 @@ while x == 1:
                                 sl = entryPremium
                                 slTrailed = True
                                 print("DEBIT TRAILING SL activated! SL moved to breakeven =", sl)
+                                # PYRAMIDING: scale in (add up to 2x) now that the base lot is
+                                # risk-free at breakeven. is_debit=True (debit spread).
+                                if PYRAMIDING_ENABLED and not pyramided:
+                                    _added = pyramid_add_position(tradeATMOption, tradeHedgeOption, True, qty)
+                                    if _added > 0:
+                                        qty = qty + _added
+                                    pyramided = True
                             sl_breach = ltp_now <= sl
                             tgt_reached = ltp_now >= target
 
