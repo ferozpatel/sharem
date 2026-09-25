@@ -3457,8 +3457,14 @@ while x == 1:
                             if ltpSlConfirm >= SL_CONFIRM_TICKS:
                                 print('SL Hit (LTP)')
                                 st = 0
-                                slCount += 1
-                                print('slCount =', slCount)
+                                # Only a NON-trailed SL is a real loss and counts toward the
+                                # daily 2-SL halt. A trailed exit (SL already at breakeven) is a
+                                # scratch (or a pyramided give-back) — do NOT count it.
+                                if not slTrailed:
+                                    slCount += 1
+                                    print('slCount =', slCount)
+                                else:
+                                    print('SL at breakeven (trailed) — NOT counted toward daily SL limit. slCount =', slCount)
                                 oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
                                 break
                         else:
@@ -3504,8 +3510,13 @@ while x == 1:
                             if fb_sl:
                                 print("SL Hit (CANDLE FALLBACK) close=", _fb_close, " SL=", sl)
                                 st = 0
-                                slCount += 1
-                                print('slCount =', slCount)
+                                # Trailed (breakeven) SL is a scratch/pyramided give-back — not
+                                # counted toward the daily 2-SL halt; only a real untrailed SL counts.
+                                if not slTrailed:
+                                    slCount += 1
+                                    print('slCount =', slCount)
+                                else:
+                                    print('SL at breakeven (trailed) — NOT counted toward daily SL limit. slCount =', slCount)
                                 oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
                                 break
                             elif fb_tgt:
