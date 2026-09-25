@@ -151,7 +151,7 @@ TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
 # (i.e. 60% of the way to target), move the SL to breakeven (one-shot, no incremental
 # trailing). Refuses to let a solid winner that has covered most of the distance to target
 # turn back into a loss, while still giving the trade room in the first half of the move.
-TRAIL_TRIGGER_TARGET_FRACTION = 0.60
+TRAIL_TRIGGER_TARGET_FRACTION = 0.50
 
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
