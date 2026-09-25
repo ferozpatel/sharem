@@ -1,0 +1,15 @@
+# ---- Delta Exchange bot: secrets & session (NEVER commit) ----
+delta_api_key.txt
+delta_api_secret.txt
+delta_session.json
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.hypothesis/
+
+# ---- Logs ----
+*.log
