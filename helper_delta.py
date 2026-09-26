@@ -47,6 +47,14 @@ SETTLING_ASSET = "USD"
 INDEX_ANCHOR_SYMBOL = ".DEXBTUSD"
 PERP_SYMBOL = "BTCUSD"
 
+# Delta does NOT serve index symbols (dot-prefixed, e.g. ".DEXBTUSD") via
+# GET /v2/tickers/{symbol} — that endpoint returns {"success": true,
+# "result": null} for an index. Instead each index value is exposed as the
+# `spot_price` field on its UNDERLYING PERPETUAL ticker. This mapping resolves
+# an index symbol to the perpetual whose ticker carries its `spot_price`;
+# unknown index symbols fall back to PERP_SYMBOL ("BTCUSD").
+INDEX_TO_PERP = {".DEXBTUSD": "BTCUSD"}
+
 
 # ============================================================
 # 4. PRICE RETRIEVAL (Requirement 4) — Task 6.1
@@ -185,7 +193,19 @@ def manualLTP(symbol, client):
     re-read on the remaining attempts (4.5). When no usable price remains after
     all attempts, it raises ``PriceUnavailableError`` identifying the `symbol`
     and the last upstream response, and returns no price (4.6).
+
+    Delta INDEX symbols are dot-prefixed (e.g. ".DEXBTUSD") and are NOT served
+    by GET /v2/tickers/{symbol} (that returns result:null). Such symbols are
+    delegated to ``getIndexPrice``, which resolves the index to its underlying
+    perpetual ticker and reads the `spot_price` field. This makes both the
+    strategy's index reads and the local data feed work for index symbols with
+    no change at the call sites. Non-dot symbols keep the perpetual/option
+    ladder below unchanged.
     """
+    # Route Delta index symbols (dot-prefixed) to the index resolver.
+    if str(symbol).startswith("."):
+        return getIndexPrice(client, str(symbol))
+
     path = "/v2/tickers/{}".format(quote(str(symbol), safe=""))
     last_upstream = None
     total_attempts = MANUAL_LTP_MAX_RETRIES + 1
@@ -337,6 +357,9 @@ def getDailyExpiry(now_utc=None):
 # ============================================================
 # OPTION-CHAIN MODULE (Requirements 9.6-9.9, 9.11, 9.12) — Task 13
 # ============================================================
+# NOTE: getIndexPrice (Req 9.11) is implemented below. The remaining Task 13
+# option-chain functions — fetchOptionChain, buildChainSnapshot, computePCR,
+# and computeSameStrikeOIDelta — are still separate/pending.
 def fetchOptionChain(underlying, expiry_ddmmyyyy, client):
     """Fetch the option chain via GET /v2/tickers. (Task 13.1, Requirement 9.6)"""
     raise NotImplementedError("Implemented in Task 13.1")
@@ -359,6 +382,106 @@ def computeSameStrikeOIDelta(prev_snapshot, curr_snapshot):
     raise NotImplementedError("Implemented in Task 13.3")
 
 
-def getIndexPrice(client):
-    """Read the .DEXBTUSD index anchor price. (Task 13.1, Requirement 9.11)"""
-    raise NotImplementedError("Implemented in Task 13.1")
+def _extract_index_price(ticker):
+    """
+    Read an index value from an underlying PERPETUAL ticker payload.
+
+    Delta exposes the index (e.g. ".DEXBTUSD") as the `spot_price` field on the
+    perpetual ticker (BTCUSD). Preference order, each must be strictly > 0 and
+    rounded to two decimal places:
+      1. `spot_price` — this IS the index value (sent as a string, coerced).
+      2. `mark_price` — mark price fallback (also a string).
+      3. `close` / `last` — last traded price as a last resort.
+    Returns ``None`` when none is positive so the caller can retry or raise.
+    """
+    result = _ticker_result(ticker)
+
+    # 1. spot_price is the index value itself (Delta sends it as a string).
+    spot = _coerce_price(result.get("spot_price"))
+    if spot is not None and spot > 0:
+        return round(spot, 2)
+
+    # 2. mark_price fallback (also a string in Delta responses).
+    mark = _coerce_price(result.get("mark_price"))
+    if mark is not None and mark > 0:
+        return round(mark, 2)
+
+    # 3. Last traded price as a last resort.
+    last = None
+    for key in ("close", "last", "last_price"):
+        last = _coerce_price(result.get(key))
+        if last is not None:
+            break
+    if last is not None and last > 0:
+        return round(last, 2)
+
+    return None
+
+
+def getIndexPrice(client, index_symbol=INDEX_ANCHOR_SYMBOL):
+    """
+    Read a Delta INDEX value (e.g. ".DEXBTUSD" -> ~84010) by resolving it to its
+    underlying perpetual ticker. (Task 13.1, Requirement 9.11)
+
+    Delta does NOT serve index symbols via GET /v2/tickers/{index_symbol} — that
+    returns ``{"success": true, "result": null}``. Instead the index value is
+    published as the `spot_price` field on the UNDERLYING PERPETUAL ticker. This
+    function maps `index_symbol` to its perpetual via ``INDEX_TO_PERP`` (default
+    ``PERP_SYMBOL`` == "BTCUSD" for unknown index symbols), fetches
+    ``GET /v2/tickers/{perp_symbol}``, and reads the value with the preference
+    order in ``_extract_index_price`` (`spot_price`, then `mark_price`, then
+    `close`/`last`), each > 0 and rounded to two decimal places.
+
+    It mirrors ``manualLTP``'s transient-retry behavior: a ``requests`` transport
+    error or a retryable ``DeltaAPIError`` (429/5xx/network), or a well-formed
+    ticker with no usable value, is re-read up to ``MANUAL_LTP_MAX_RETRIES``
+    additional attempts with exponential backoff (0.3 * 2**n seconds). When no
+    usable value remains after all attempts it raises ``PriceUnavailableError``
+    naming `index_symbol` and carrying the last upstream response (Req 4.6).
+
+    Returns the index price as a float.
+    """
+    perp_symbol = INDEX_TO_PERP.get(str(index_symbol), PERP_SYMBOL)
+    path = "/v2/tickers/{}".format(quote(str(perp_symbol), safe=""))
+    last_upstream = None
+    total_attempts = MANUAL_LTP_MAX_RETRIES + 1
+
+    for attempt in range(total_attempts):
+        retry_remaining = attempt < MANUAL_LTP_MAX_RETRIES
+
+        try:
+            ticker = client.request("GET", path)
+        except requests.exceptions.RequestException as exc:
+            # Network timeout / connection error: always transient (Req 4.5).
+            last_upstream = repr(exc)
+            if retry_remaining:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            break
+        except DeltaAPIError as exc:
+            last_upstream = exc.payload if exc.payload is not None else str(exc)
+            if _is_transient_delta_error(exc) and retry_remaining:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            # Non-transient upstream error: stop retrying and raise below.
+            break
+
+        # A well-formed ticker was returned; remember it as the last response.
+        last_upstream = ticker
+        price = _extract_index_price(ticker)
+        if price is not None:
+            return price
+
+        # Well-formed ticker but no positive spot/mark/last: re-read on the
+        # remaining attempts, then raise the identifying error (Req 4.6).
+        if retry_remaining:
+            time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+            continue
+
+    raise PriceUnavailableError(
+        "getIndexPrice could not obtain a usable index value for {!r} (via "
+        "perpetual {!r}) after {} attempt(s); last upstream response: "
+        "{!r}".format(index_symbol, perp_symbol, total_attempts, last_upstream),
+        symbol=index_symbol,
+        payload=last_upstream,
+    )
