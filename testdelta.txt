@@ -1,0 +1,35 @@
+PS C:\Users\feroz\Documents\Python> cd DeltaBot
+PS C:\Users\feroz\Documents\Python\DeltaBot> python Strategy_BTC_Options.py
+============================================================
+STARTUP [2026-09-26 10:36:47] Strategy_BTC_Options starting...
+STARTUP [2026-09-26 10:36:47] Delta client connection established.
+STARTUP config:
+  instrument           = BTC daily options
+  underlying_asset     = BTC
+  index_anchor         = .DEXBTUSD
+  perpetual (log-only) = BTCUSD
+  timeframe_minutes    = 3
+  strike_step          = 200
+  sr_band_width        = 1000
+  no_trade_buffer      = 50
+  sl_confirm_ticks     = 2
+  tgt_confirm_ticks    = 2
+  ltp_poll_interval    = 2s
+  trail_trigger_frac   = 0.6
+  always_credit        = True
+  pre_expiry_lead_min  = 15
+  reference_timezone   = UTC
+  OBSERVATION_MODE     = True
+STARTUP risk params (concrete live values are [NEEDS INPUT], Req 9.27):
+  PCR_BULL_THRESHOLD   = None [NEEDS INPUT]
+  PCR_BEAR_THRESHOLD   = None [NEEDS INPUT]
+  STOP_LOSS_POINTS     = None [NEEDS INPUT]
+  TARGET_POINTS        = None [NEEDS INPUT]
+  POSITION_SIZE        = None [NEEDS INPUT]
+  MAX_TRADES_PER_DAY   = None [NEEDS INPUT]
+============================================================
+OBSERVATION_MODE is ON: the strategy will LOG signals, the PCR table, the option-chain snapshot, support/resistance levels, and WOULD_HAVE_ENTERED decisions, and will place NO live orders (Req 9.3, 9.4).
+============================================================
+SIGNAL_LOOP [2026-09-26 10:36:47] starting observation cycles every 180s (no orders will be placed).
+SIGNAL_ERROR [2026-09-26 10:36:48] signal cycle failed, continuing: NotImplementedError: Implemented in Task 8.1
+
