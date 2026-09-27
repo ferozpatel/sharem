@@ -12,7 +12,7 @@ config-constant initialization, and the observation-mode logging surface.
 """
 
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from delta_config import REFERENCE_TIMEZONE, REFERENCE_TIMEZONE_NAME
 
@@ -95,6 +95,27 @@ def _now_ts():
     return datetime.now(REFERENCE_TIMEZONE).strftime("%Y-%m-%d %H:%M:%S")
 
 
+# IST offset from UTC (India Standard Time = UTC+5:30). DISPLAY-ONLY.
+_IST_OFFSET = timedelta(hours=5, minutes=30)
+
+
+def _now_ist():
+    """
+    Return the current timestamp in IST (India Standard Time, UTC+5:30) as
+    "YYYY-MM-DD HH:MM:SS IST", used to prefix human-facing log lines.
+
+    DISPLAY ONLY. This does NOT change any scheduling/expiry math: Delta's
+    daily expiry is 12:00 UTC and every internal time computation (getDailyExpiry,
+    future expiry handling, all API timestamps) stays anchored to the
+    Reference_Timezone (UTC). This helper merely shifts the current UTC wall
+    clock by +5:30 for readability and appends an explicit "IST" label. Computed
+    from ``datetime.now(REFERENCE_TIMEZONE)`` (UTC) so no extra tz dependency is
+    required.
+    """
+    ist = datetime.now(REFERENCE_TIMEZONE) + _IST_OFFSET
+    return ist.strftime("%Y-%m-%d %H:%M:%S") + " IST"
+
+
 # ============================================================
 # SUPPORT / RESISTANCE + NO-TRADE ZONE (Req 9.13, 9.14)
 # ============================================================
@@ -170,7 +191,7 @@ def log_signal(index_price, perp_price=None, pcr=None, bias=None,
     """
     line = ("SIGNAL [{ts}] index({idx})={ip} perp({perp})={pp} "
             "atm_strike={atm} pcr={pcr} bias={bias}").format(
-                ts=_now_ts(),
+                ts=_now_ist(),
                 idx=INDEX_ANCHOR_SYMBOL, ip=_fmt(index_price),
                 perp=PERP_SYMBOL, pp=_fmt(perp_price),
                 atm=atm_strike if atm_strike is not None else "N/A",
@@ -181,69 +202,96 @@ def log_signal(index_price, perp_price=None, pcr=None, bias=None,
     print(line)
 
 
-def log_pcr_table(snapshot, pcr):
+def _fmt_delta(value):
     """
-    Log the PCR table: the per-strike put/call OI over the central strikes plus
-    the aggregate Put-Call Ratio (Req 9.4, 9.7).
+    Format an own same-strike OI delta for the consolidated chain table.
 
-    `snapshot` is the 17-strike snapshot from ``helper.buildChainSnapshot``;
-    `pcr` is the aggregate value from ``helper.computePCR``. Reads absolute
-    open interest only — the log-only 6-hour OI field is never consulted here.
+    Returns a 1-decimal string for a real value; returns "" (blank) when the
+    delta is missing — e.g. the first cycle, where there is no previous snapshot
+    to diff against (Req 9.8). Kept blank rather than "N/A" so the ``call_oiChg``
+    / ``put_oiChg`` columns read cleanly on the first cycle.
     """
-    print("PCR_TABLE [{ts}] aggregate_PCR={pcr} (central 9 strikes)".format(
-        ts=_now_ts(), pcr=_fmt(pcr, 4)))
+    if value is None:
+        return ""
+    return _fmt(value, 1)
+
+
+def log_option_chain_table(snapshot, oi_deltas, pcr):
+    """
+    Log ONE consolidated Sensex-style option-chain table per cycle (Req 9.4,
+    9.6, 9.7, 9.8, 9.9).
+
+    This single table replaces the three former per-strike tables
+    (CHAIN_SNAPSHOT + PCR_TABLE + the inline OI_DELTA block) with one aligned,
+    ASCII-safe grid. Columns:
+
+        #, strike, call_oi, call_px, put_px, put_oi,
+        call_oiChg, put_oiChg, oi_chg_6h*
+
+      * ``#`` numbers the 17 strikes 1..17 ascending; the middle row (#9 of 17)
+        is the ATM strike (``snapshot["atm_strike"]``) and is marked with a
+        trailing " <== ATM".
+      * ``call_oiChg`` / ``put_oiChg`` are the bot's OWN same-strike
+        consecutive-snapshot OI deltas (Req 9.8), looked up per strike from the
+        ``oi_deltas`` dict (``helper.computeSameStrikeOIDelta``); blank on the
+        first cycle when there is no previous snapshot.
+      * ``oi_chg_6h`` is the exchange-provided 6-hour OI-change field, logged for
+        observation ONLY and never used for signals (Req 9.9); marked with a
+        trailing footnote.
+
+    The aggregate PCR over the central 9 strikes (Req 9.7) is printed in the
+    header line (``aggregatePCR=...``) so the separate PCR table is no longer
+    needed. Timestamps are displayed in IST (display-only; logic stays UTC).
+    """
     if not isinstance(snapshot, dict):
-        print("  (no snapshot available)")
+        print("OPTION_CHAIN [{ts}] (no snapshot available)".format(
+            ts=_now_ist()))
         return
+
+    atm_strike = snapshot.get("atm_strike")
+    print("OPTION_CHAIN [{ts}] ATM={atm} aggregatePCR={pcr} "
+          "(central 9 strikes)".format(
+              ts=_now_ist(), atm=atm_strike, pcr=_fmt(pcr, 4)))
+
     rows = snapshot.get("rows") or {}
-    print("  {:>10} {:>14} {:>14}".format("strike", "put_oi", "call_oi"))
-    for strike in snapshot.get("strikes", []):
-        pair = rows.get(strike) or {}
-        put_row = pair.get("put") or {}
-        call_row = pair.get("call") or {}
-        put_oi = put_row.get("oi") if isinstance(put_row, dict) else None
-        call_oi = call_row.get("oi") if isinstance(call_row, dict) else None
-        print("  {:>10} {:>14} {:>14}".format(
-            strike, _fmt(put_oi, 1), _fmt(call_oi, 1)))
+    oi_deltas = oi_deltas or {}
+    row_fmt = ("  {:>2} {:>10} {:>12} {:>12} {:>12} {:>12} "
+               "{:>12} {:>12} {:>14}")
+    print(row_fmt.format(
+        "#", "strike", "call_oi", "call_px", "put_px", "put_oi",
+        "call_oiChg", "put_oiChg", "oi_chg_6h*"))
 
-
-def log_chain_snapshot(snapshot):
-    """
-    Log the Option_Chain_Snapshot table: for each of the 17 strikes the call/put
-    price and absolute OI, plus the exchange 6-hour OI change for observation
-    only (Req 9.4, 9.6, 9.9).
-
-    The 6-hour OI-change field is logged strictly for observation and never
-    feeds signal logic (Req 9.9).
-    """
-    if not isinstance(snapshot, dict):
-        print("CHAIN_SNAPSHOT [{ts}] (no snapshot available)".format(
-            ts=_now_ts()))
-        return
-    print("CHAIN_SNAPSHOT [{ts}] atm_strike={atm} step={step} "
-          "strikes={cnt}".format(
-              ts=_now_ts(), atm=snapshot.get("atm_strike"),
-              step=snapshot.get("step"),
-              cnt=len(snapshot.get("strikes", []))))
-    rows = snapshot.get("rows") or {}
-    print("  {:>10} {:>12} {:>12} {:>12} {:>12} {:>14}".format(
-        "strike", "call_px", "call_oi", "put_px", "put_oi", "oi_chg_6h*"))
-    for strike in snapshot.get("strikes", []):
+    for i, strike in enumerate(snapshot.get("strikes", []), start=1):
         pair = rows.get(strike) or {}
         call_row = pair.get("call") if isinstance(pair, dict) else None
         put_row = pair.get("put") if isinstance(pair, dict) else None
         call_row = call_row if isinstance(call_row, dict) else {}
         put_row = put_row if isinstance(put_row, dict) else {}
+
         # 6-hour OI change is log-only (Req 9.9); prefer the call row, fall
         # back to the put row so the observation field is captured either way.
         oi_chg_6h = call_row.get("oi_change_6h")
         if oi_chg_6h is None:
             oi_chg_6h = put_row.get("oi_change_6h")
-        print("  {:>10} {:>12} {:>12} {:>12} {:>12} {:>14}".format(
-            strike,
-            _fmt(call_row.get("price")), _fmt(call_row.get("oi"), 1),
+
+        # Own same-strike consecutive-snapshot OI deltas (Req 9.8), keyed by
+        # strike; tolerate int/str key variants and first-cycle-empty deltas.
+        delta_row = (oi_deltas.get(strike)
+                     or oi_deltas.get(int(strike)) or {}) \
+            if isinstance(oi_deltas, dict) else {}
+        call_delta = delta_row.get("call_oi_delta")
+        put_delta = delta_row.get("put_oi_delta")
+
+        line = row_fmt.format(
+            i, strike,
+            _fmt(call_row.get("oi"), 1), _fmt(call_row.get("price")),
             _fmt(put_row.get("price")), _fmt(put_row.get("oi"), 1),
-            _fmt(oi_chg_6h, 1)))
+            _fmt_delta(call_delta), _fmt_delta(put_delta),
+            _fmt(oi_chg_6h, 1))
+        if atm_strike is not None and strike == atm_strike:
+            line += " <== ATM"
+        print(line)
+
     print("  * oi_chg_6h is exchange-provided, logged for observation only "
           "(never used for signals).")
 
@@ -257,7 +305,7 @@ def log_support_resistance(index_price, support, resistance,
     print("SUPPORT_RESISTANCE [{ts}] index={ip} midpoint={mid} "
           "support={sup} resistance={res} "
           "no_trade_zone=[{ntl}, {nth}] (band_width={bw}, buffer={buf})".format(
-              ts=_now_ts(), ip=_fmt(index_price),
+              ts=_now_ist(), ip=_fmt(index_price),
               mid=_fmt(midpoint if midpoint is not None else index_price),
               sup=_fmt(support), res=_fmt(resistance),
               ntl=_fmt(no_trade_low), nth=_fmt(no_trade_high),
@@ -281,7 +329,7 @@ def log_would_have_entered(decision, reason=None, **details):
     else:
         verdict = "WOULD_ENTER" if decision else "NO_ENTRY"
     line = "WOULD_HAVE_ENTERED [{ts}] decision={verdict}".format(
-        ts=_now_ts(), verdict=verdict)
+        ts=_now_ist(), verdict=verdict)
     if reason:
         line += " reason={}".format(reason)
     if details:
@@ -476,7 +524,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
       5. Fetch the chain + build the 17-strike snapshot (Req 9.6).
       6. Compute the PCR over the 9 central strikes (Req 9.7).
       7. Diff same-strike OI vs the previous snapshot (Req 9.8); the exchange
-         6-hour field is logged via ``log_chain_snapshot`` only (Req 9.9).
+         6-hour field is logged via ``log_option_chain_table`` only (Req 9.9).
       8. Derive the S/R band + no-trade zone from the anchor (Req 9.13/9.14).
       9. Track the consecutive same-strike PCR change across cycles (Req 9.10).
      10. Derive the directional bias from PCR + index position (Req 9.13).
@@ -497,7 +545,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         perp_price = None
         print("SIGNAL_WARN [{ts}] perpetual {sym} price unavailable "
               "(log-only): {typ}: {msg}".format(
-                  ts=_now_ts(), sym=PERP_SYMBOL,
+                  ts=_now_ist(), sym=PERP_SYMBOL,
                   typ=type(exc).__name__, msg=exc))
 
     # 3. Daily expiry -> chain-query date format.
@@ -515,8 +563,9 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     pcr = helper.computePCR(snapshot, central=9)
 
     # 7. Same-strike OI deltas vs the previous cycle's snapshot (Req 9.8). The
-    #    exchange 6-hour field is log-only and surfaced via log_chain_snapshot
-    #    (Req 9.9); it is intentionally NOT consulted for any signal here.
+    #    exchange 6-hour field is log-only and surfaced via
+    #    log_option_chain_table (Req 9.9); it is intentionally NOT consulted for
+    #    any signal here.
     oi_deltas = helper.computeSameStrikeOIDelta(prev_snapshot, snapshot)
 
     # 8. S/R band + no-trade zone from the anchor (Req 9.13/9.14).
@@ -539,31 +588,20 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         pcr_trend="{}x{}".format(pcr_trend.get("direction"),
                                  pcr_trend.get("streak")),
         expiry=expiry_ddmmyyyy)
-    log_chain_snapshot(snapshot)
-    log_pcr_table(snapshot, pcr)
+    # ONE consolidated Sensex-style option-chain table per cycle (Req 9.6,
+    # 9.7, 9.8, 9.9): per-strike call/put price+OI, the bot's OWN same-strike
+    # OI deltas, and the log-only exchange 6-hour field, with the aggregate PCR
+    # in its header. Replaces the former CHAIN_SNAPSHOT + PCR_TABLE + inline
+    # OI_DELTA blocks (now a single table per cycle).
+    log_option_chain_table(snapshot, oi_deltas, pcr)
+
     log_support_resistance(index_price, support, resistance, ntl, nth,
                            midpoint=midpoint)
-
-    # Same-strike OI-delta line (bot's OWN signal-logic OI change, Req 9.8),
-    # kept distinct from the log-only exchange 6-hour field (Req 9.9).
-    print("OI_DELTA [{ts}] same-strike consecutive-snapshot OI change "
-          "(own, signal-logic; exchange 6h field is log-only):".format(
-              ts=_now_ts()))
-    if oi_deltas:
-        print("  {:>10} {:>16} {:>16}".format(
-            "strike", "call_oi_delta", "put_oi_delta"))
-        for strike in snapshot.get("strikes", []):
-            row = oi_deltas.get(strike) or oi_deltas.get(int(strike)) or {}
-            print("  {:>10} {:>16} {:>16}".format(
-                strike, _fmt(row.get("call_oi_delta"), 1),
-                _fmt(row.get("put_oi_delta"), 1)))
-    else:
-        print("  (first cycle — no previous snapshot to diff against)")
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
           "prev_pcr={prev} curr_pcr={curr}".format(
-              ts=_now_ts(), dir=pcr_trend.get("direction"),
+              ts=_now_ist(), dir=pcr_trend.get("direction"),
               streak=pcr_trend.get("streak"),
               prev=_fmt(prev_pcr, 4), curr=_fmt(pcr, 4)))
 
@@ -643,7 +681,7 @@ def startup():
     """
     print("=" * 60)
     print("STARTUP [{ts}] Strategy_BTC_Options starting...".format(
-        ts=_now_ts()))
+        ts=_now_ist()))
 
     # --- Establish the client connection FIRST (Req 9.1, 9.2) -------------
     try:
@@ -653,7 +691,7 @@ def startup():
         # credential file the operator must supply.
         print("STARTUP_ERROR [{ts}] Delta client connection could NOT be "
               "established (credential load failure): {msg}".format(
-                  ts=_now_ts(), msg=exc))
+                  ts=_now_ist(), msg=exc))
         if getattr(exc, "expected_file", None):
             print("STARTUP_ERROR expected credential file: {}".format(
                 exc.expected_file))
@@ -663,7 +701,7 @@ def startup():
     except Exception as exc:  # noqa: BLE001 - any connection failure aborts
         print("STARTUP_ERROR [{ts}] Delta client connection could NOT be "
               "established: {typ}: {msg}".format(
-                  ts=_now_ts(), typ=type(exc).__name__, msg=exc))
+                  ts=_now_ist(), typ=type(exc).__name__, msg=exc))
         print("STARTUP_ABORT: stopping without evaluating entry conditions; "
               "no orders placed (Req 9.2).")
         return None
@@ -671,14 +709,14 @@ def startup():
     if client is None:
         # Defensive: require_delta returned no client without raising.
         print("STARTUP_ERROR [{ts}] Delta client is unavailable (no client "
-              "constructed).".format(ts=_now_ts()))
+              "constructed).".format(ts=_now_ist()))
         print("STARTUP_ABORT: stopping without evaluating entry conditions; "
               "no orders placed (Req 9.2).")
         return None
 
     # --- Initialize + log the configuration (Req 9.1, 9.27) ---------------
     print("STARTUP [{ts}] Delta client connection established.".format(
-        ts=_now_ts()))
+        ts=_now_ist()))
     print("STARTUP config:")
     print("  instrument           = {}".format(INSTRUMENT_LABEL))
     print("  underlying_asset     = {}".format(UNDERLYING_ASSET))
@@ -755,7 +793,7 @@ def run():
     # KeyboardInterrupt stops the loop cleanly. Observation-only: no orders.
     print("SIGNAL_LOOP [{ts}] starting observation cycles every {n}s "
           "(no orders will be placed).".format(
-              ts=_now_ts(), n=SIGNAL_INTERVAL_SEC))
+              ts=_now_ist(), n=SIGNAL_INTERVAL_SEC))
     state = {}
     try:
         while True:
@@ -766,11 +804,11 @@ def run():
             except Exception as exc:  # noqa: BLE001 - keep the loop alive
                 print("SIGNAL_ERROR [{ts}] signal cycle failed, continuing: "
                       "{typ}: {msg}".format(
-                          ts=_now_ts(), typ=type(exc).__name__, msg=exc))
+                          ts=_now_ist(), typ=type(exc).__name__, msg=exc))
             time.sleep(SIGNAL_INTERVAL_SEC)
     except KeyboardInterrupt:
         print("SIGNAL_LOOP [{ts}] stopped by operator (KeyboardInterrupt); "
-              "no orders were placed.".format(ts=_now_ts()))
+              "no orders were placed.".format(ts=_now_ist()))
 
     return client
 
