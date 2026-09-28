@@ -1896,6 +1896,48 @@ def exitSpreadPosition(mainATMOption, hedgeOption):
     return mainOidentry
 
 
+def pyramid_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fyers_client):
+    """Margin sizing for the SEQUENTIAL pyramid add.
+
+    The two add legs are placed one-by-one (BUY hedge first, then SELL main). At the instant the
+    SHORT (main) leg is placed, the broker has NOT yet applied the hedge-netting benefit for the
+    new lot, so it charges ~STANDALONE margin on the short. On 2026-09-28 the netted spread
+    estimate was ₹594k but the short standalone was ~₹990k -> the SELL rejected (margin shortfall)
+    even though the netted check passed.
+
+    So we size the add against the SHORT leg's STANDALONE margin, after RESERVING the hedge (long)
+    leg's margin (it fills first and consumes funds):
+        fits if  main_standalone_margin(qty) <= usable_available - hedge_margin(qty)
+    Steps qty down by one lot until it fits. Returns the fitting qty, or 0 if even MIN_LOTS
+    doesn't fit (skip the add — original position stays safe at breakeven). Never raises.
+    """
+    candidate = qty
+    while candidate >= LOT_SIZE:
+        try:
+            # Standalone margin for the SHORT/main leg — the leg that actually gets rejected.
+            main_req, avail = helper.getSpreadMargin(
+                [{"symbol": main_symbol, "qty": candidate, "side": main_side, "productType": "INTRADAY"}], fyers_client)
+            # Margin for the hedge/long leg placed first (reserve it out of available).
+            hedge_req, _ = helper.getSpreadMargin(
+                [{"symbol": hedge_symbol, "qty": candidate, "side": hedge_side, "productType": "INTRADAY"}], fyers_client)
+        except Exception as _e:
+            print("PYRAMID_MARGIN: margin API error — skipping add (safe). err=", _e)
+            return 0
+        if main_req is None or hedge_req is None or avail is None:
+            print("PYRAMID_MARGIN: margin API returned None — skipping add (safe).")
+            return 0
+        usable = avail * DEPLOYABLE_CAPITAL_FRACTION
+        actual_available = usable - hedge_req      # funds left after the BUY hedge fills first
+        print(f"PYRAMID_MARGIN: qty={candidate} ({candidate // LOT_SIZE} lots) "
+              f"short_standalone={round(main_req)} hedge_req={round(hedge_req)} avail={round(avail)} "
+              f"usable={round(usable)} actual_avail_after_hedge={round(actual_available)}")
+        if main_req <= actual_available:
+            return candidate
+        candidate -= LOT_SIZE
+    print("PYRAMID_MARGIN: even MIN_LOTS short-leg margin does not fit — no add.")
+    return 0
+
+
 def pyramid_add_position(main_symbol, hedge_symbol, is_debit, base_qty):
     """PYRAMIDING: after the trade trails to breakeven (original lot risk-free), scale in by
     adding up to PYRAMID_ADD_MULTIPLIER x the original qty to BOTH legs on the SAME strikes,
@@ -1913,9 +1955,10 @@ def pyramid_add_position(main_symbol, hedge_symbol, is_debit, base_qty):
         main_side, hedge_side = -1, 1
         main_action, hedge_action = "SELL", "BUY"
 
-    # 1b: add as many lots as the REMAINING live margin allows (position already open, so
-    # margin_avail already reflects the base position's blocked margin).
-    add_qty = apply_margin_cap(want_qty, main_symbol, main_side, hedge_symbol, hedge_side, fyers)
+    # 1b: add as many lots as the REMAINING live margin allows. Sized against the SHORT leg's
+    # STANDALONE margin (reserving the hedge leg first) because legs are placed sequentially and
+    # the broker charges standalone on the short at that instant — see pyramid_margin_cap.
+    add_qty = pyramid_margin_cap(want_qty, main_symbol, main_side, hedge_symbol, hedge_side, fyers)
     if add_qty is None or add_qty < LOT_SIZE:
         print(f"PYRAMID_SKIP: no margin room to add (wanted {want_qty}) — keeping original at breakeven")
         return 0

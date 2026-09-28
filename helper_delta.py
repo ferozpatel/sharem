@@ -11,6 +11,7 @@ Tasks 6, 8, 9, 10, 11, and 13.
 
 import re
 import time
+import uuid
 from datetime import datetime, timedelta
 from urllib.parse import quote
 
@@ -306,14 +307,223 @@ def resolveProductId(symbol, client):
     )
 
 
+# Order timeout budget in seconds (Req 5.10). Note: the EFFECTIVE per-request
+# timeout is governed by the injected client's own ``timeout`` (DeltaSigner
+# defaults to (connect=3, read=27)); this constant documents the requirement
+# and is used for the failure message. To strictly bound an order at 5s, pass a
+# client configured with ``timeout=5`` (or a (connect, read) pair summing ~5s).
+ORDER_TIMEOUT_SEC = 5
+
+# Accepted order types and sides for POST /v2/orders (Reqs 5.2, 5.3, 5.4).
+_ORDER_TYPES = ("market_order", "limit_order")
+_ORDER_SIDES = ("buy", "sell")
+
+# Accepted stop-trigger reference prices for a bracket / trailing stop (Req 5.7).
+_STOP_TRIGGER_METHODS = ("last_traded_price", "mark_price", "spot_price")
+
+
+def _simulated_order_id(symbol, side, size):
+    """
+    Build a deterministic-looking but unique simulated order id for
+    paper-trading (Req 5.5), e.g. ``PAPER-C-BTC-83600-240926-buy-1-a1b2c3d4``.
+
+    The trailing token is a short uuid4 hex slice so repeated paper orders for
+    the same instrument/side/size never collide, while the leading ``PAPER-``
+    prefix makes the simulated origin obvious in logs and to callers.
+    """
+    token = uuid.uuid4().hex[:8]
+    return "PAPER-{}-{}-{}-{}".format(symbol, side, size, token)
+
+
 def placeOrder(symbol, side, size, order_type="market_order",
                limit_price=None, client=None, papertrading=0):
     """
     Place a market or limit order via POST /v2/orders after product resolution,
     with input validation and paper-trading gating.
     (Task 9.1, Requirements 5.1-5.5, 5.10, 5.11)
+
+    Return contract (a structured dict so callers — including the position/exit
+    reconciliation in Task 14.3 — can branch on success without string parsing):
+
+      * success:  ``{"ok": True,  "id": <order_id>, "simulated": <bool>}``
+      * failure:  ``{"ok": False, "error": "<human reason>",
+                     "invalid": "<field>"}`` for a validation reject (5.4), or
+                  ``{"ok": False, "error": "<reason>", "payload": <delta body>}``
+                  for a submission timeout (5.10) or Delta rejection (5.11).
+
+    Order of operations:
+
+      1. **Local validation FIRST (Req 5.4)** — before any network call, so a
+         bad request is never transmitted. `side` must be ``buy``/``sell``
+         (case-insensitive, normalized to lower case); `size` must coerce to an
+         integer strictly greater than zero; `order_type` must be
+         ``market_order`` or ``limit_order``; and for a limit order
+         `limit_price` must be a number strictly greater than zero. Each reject
+         returns ``{"ok": False, ...}`` naming the offending field in
+         ``invalid``.
+      2. **Paper-trading (Req 5.5)** — when `papertrading` is truthy, after
+         local validation the intended fields (symbol, side, size, and
+         limit_price for a limit order) are logged and a simulated order id is
+         returned with ``simulated=True``; NOTHING is transmitted to Delta and
+         no `client` is required.
+      3. **Product resolution (Req 5.1)** — for a live order the symbol is
+         resolved to its integer `product_id` via ``resolveProductId`` (cached
+         GET /v2/products). An unknown symbol surfaces as a ``DeltaAPIError``
+         and is reported as an invalid-symbol validation failure (5.4) with
+         nothing else transmitted.
+      4. **Submit (Reqs 5.2, 5.3)** — a market order posts ``{"product_id",
+         "size", "side", "order_type": "market_order"}``; a limit order adds
+         ``"order_type": "limit_order"`` and ``"limit_price"`` encoded as a
+         STRING. On acceptance the ``result.id`` is returned with
+         ``simulated=False``.
+      5. **Timeout (Req 5.10)** — a ``requests`` timeout/transport error while
+         awaiting accept/reject returns a submission-failure signal rather than
+         raising; the effective bound is the client's configured timeout (see
+         ``ORDER_TIMEOUT_SEC``).
+      6. **Rejection (Req 5.11)** — a ``DeltaAPIError`` (or a body Delta marks
+         unsuccessful) is logged with its reason, no prior state is mutated, and
+         a failure signal carrying the Delta payload is returned.
     """
-    raise NotImplementedError("Implemented in Task 9.1")
+    # ---- 1. Local validation (Req 5.4) — no network yet -----------------
+    # side ∈ {buy, sell}, case-insensitive, normalized to lower case.
+    side_norm = str(side).strip().lower() if side is not None else ""
+    if side_norm not in _ORDER_SIDES:
+        return {
+            "ok": False,
+            "error": "invalid side {!r}; expected 'buy' or 'sell'".format(side),
+            "invalid": "side",
+        }
+
+    # size must coerce to an integer strictly greater than zero. Reject a
+    # fractional value (e.g. 1.5) rather than silently truncating it.
+    if isinstance(size, bool):
+        # bool is an int subclass; a boolean size is never a valid quantity.
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; expected an integer > 0".format(size),
+            "invalid": "size",
+        }
+    try:
+        size_int = int(size)
+    except (TypeError, ValueError):
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; expected an integer > 0".format(size),
+            "invalid": "size",
+        }
+    if isinstance(size, float) and not float(size).is_integer():
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; expected a whole number".format(size),
+            "invalid": "size",
+        }
+    if size_int <= 0:
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; must be greater than zero".format(size),
+            "invalid": "size",
+        }
+
+    # order_type ∈ {market_order, limit_order}.
+    order_type_norm = str(order_type).strip().lower() \
+        if order_type is not None else ""
+    if order_type_norm not in _ORDER_TYPES:
+        return {
+            "ok": False,
+            "error": "invalid order_type {!r}; expected 'market_order' or "
+                     "'limit_order'".format(order_type),
+            "invalid": "order_type",
+        }
+
+    # For a limit order, limit_price must be a number strictly greater than 0.
+    limit_price_val = None
+    if order_type_norm == "limit_order":
+        limit_price_val = _coerce_price(limit_price)
+        if limit_price_val is None or limit_price_val <= 0:
+            return {
+                "ok": False,
+                "error": "invalid limit_price {!r}; must be a number greater "
+                         "than zero for a limit order".format(limit_price),
+                "invalid": "limit_price",
+            }
+
+    # ---- 2. Paper-trading (Req 5.5) — log intent, transmit nothing ------
+    if papertrading:
+        if order_type_norm == "limit_order":
+            print("PAPER_ORDER: symbol={} side={} size={} order_type={} "
+                  "limit_price={}".format(symbol, side_norm, size_int,
+                                          order_type_norm, limit_price_val))
+        else:
+            print("PAPER_ORDER: symbol={} side={} size={} order_type={}".format(
+                symbol, side_norm, size_int, order_type_norm))
+        sim_id = _simulated_order_id(symbol, side_norm, size_int)
+        print("PAPER_ORDER: simulated order id -> {}".format(sim_id))
+        return {"ok": True, "id": sim_id, "simulated": True}
+
+    # ---- 3. Product resolution (Req 5.1) — unknown symbol -> reject -----
+    try:
+        product_id = resolveProductId(symbol, client)
+    except DeltaAPIError as exc:
+        # An unresolvable symbol is a validation failure; nothing was
+        # transmitted as an order (Req 5.4).
+        return {
+            "ok": False,
+            "error": "unrecognized symbol {!r}: {}".format(symbol, exc),
+            "invalid": "symbol",
+        }
+
+    # ---- 4. Build the order body (Reqs 5.2, 5.3) ------------------------
+    body = {
+        "product_id": product_id,
+        "size": size_int,
+        "side": side_norm,
+        "order_type": order_type_norm,
+    }
+    if order_type_norm == "limit_order":
+        # Delta accepts/returns big decimals as strings (Req 5.3).
+        body["limit_price"] = str(limit_price_val)
+
+    # ---- 5 & 6. Submit, handling timeout (5.10) and rejection (5.11) ----
+    try:
+        response = client.request("POST", "/v2/orders", body_obj=body)
+    except requests.exceptions.RequestException as exc:
+        # Network timeout / transport failure while awaiting accept/reject:
+        # signal submission failure without mutating any prior state (5.10).
+        print("ORDER_TIMEOUT: symbol={} side={} size={} order_type={} did not "
+              "receive an accept/reject within the order timeout budget "
+              "(~{}s): {!r}".format(symbol, side_norm, size_int,
+                                    order_type_norm, ORDER_TIMEOUT_SEC, exc))
+        return {
+            "ok": False,
+            "error": "order submission timed out (~{}s): {}".format(
+                ORDER_TIMEOUT_SEC, exc),
+            "payload": repr(exc),
+        }
+    except DeltaAPIError as exc:
+        # Delta rejected the order: log the reason, preserve prior state, and
+        # return a failure signal carrying Delta's payload (5.11).
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("ORDER_REJECTED: symbol={} side={} size={} order_type={} "
+              "reason={!r}".format(symbol, side_norm, size_int,
+                                   order_type_norm, reason))
+        return {"ok": False, "error": str(exc), "payload": reason}
+
+    # A well-formed 2xx response: pull result.id (Reqs 5.2, 5.3).
+    result = response.get("result") if isinstance(response, dict) else None
+    order_id = result.get("id") if isinstance(result, dict) else None
+    if order_id is None:
+        # Delta returned a body but no order id: treat as a rejection so the
+        # caller never mistakes an unacknowledged order for a success (5.11).
+        print("ORDER_REJECTED: symbol={} side={} size={} order_type={} "
+              "response carried no result.id: {!r}".format(
+                  symbol, side_norm, size_int, order_type_norm, response))
+        return {
+            "ok": False,
+            "error": "order response carried no result.id",
+            "payload": response,
+        }
+
+    return {"ok": True, "id": order_id, "simulated": False}
 
 
 def placeBracketOrder(symbol, side, size, stop_loss_price=None,
@@ -321,15 +531,297 @@ def placeBracketOrder(symbol, side, size, stop_loss_price=None,
                       stop_trigger_method="last_traded_price",
                       client=None, papertrading=0):
     """
-    Place a native/attached bracket order with optional trailing stop.
-    (Task 9.3, Requirements 5.6, 5.7)
+    Place a market entry with an attached bracket (stop-loss / target) and an
+    optional trailing stop. (Task 9.3, Requirements 5.6, 5.7)
+
+    Return contract — identical in shape to ``placeOrder`` so callers branch on
+    success without string parsing:
+
+      * success:  ``{"ok": True,  "id": <order_id>, "simulated": <bool>}``
+      * failure:  ``{"ok": False, "error": "<human reason>",
+                     "invalid": "<field>"}`` for a validation reject (5.4-style),
+                  or ``{"ok": False, "error": "<reason>", "payload": <body>}``
+                  for a submission timeout (5.10-style) or Delta rejection
+                  (5.11-style).
+
+    Endpoint choice: this implementation uses the ATTACHED-parameter approach on
+    ``POST /v2/orders`` (design's second option) rather than the native
+    ``POST /v2/orders/bracket`` — it places a single ``market_order`` entry and
+    attaches the bracket via ``bracket_stop_loss_price`` /
+    ``bracket_take_profit_price`` (plus ``trail_amount`` and
+    ``stop_trigger_method`` for a trailing stop). This keeps a single order id in
+    the response and reuses the same submit/timeout/rejection handling as
+    ``placeOrder``. All price-like fields (SL, TP, trail_amount) are encoded as
+    STRINGS per Reqs 5.6/5.7.
+
+    Order of operations:
+
+      1. **Local validation FIRST** — no network call is made until the request
+         is known-good. `side` ∈ {buy, sell} (case-insensitive); `size` coerces
+         to an integer > 0; `stop_trigger_method` ∈ {last_traded_price,
+         mark_price, spot_price}; any provided `stop_loss_price` /
+         `take_profit_price` / `trail_amount` must be a number > 0. At least one
+         of SL / TP / trail must be present for a meaningful bracket, otherwise
+         the request is rejected naming the missing bracket params. Each reject
+         returns ``{"ok": False, ...}`` naming the offender in ``invalid``.
+      2. **Paper-trading (mirror 5.5)** — when `papertrading` is truthy, the
+         intended bracket fields are logged, a simulated id is returned with
+         ``simulated=True``, and NOTHING is transmitted (no `client` required).
+      3. **Product resolution** — the symbol is resolved to its integer
+         `product_id` via ``resolveProductId``; an unknown symbol surfaces as an
+         invalid-symbol validation failure with nothing transmitted.
+      4. **Submit** — ``POST /v2/orders`` with a market entry plus the attached
+         bracket / trailing params (string-encoded). On acceptance the
+         ``result.id`` is returned with ``simulated=False``.
+      5. **Timeout (5.10-style)** — a ``requests`` transport error returns a
+         submission-failure signal rather than raising.
+      6. **Rejection (5.11-style)** — a ``DeltaAPIError`` (or a body carrying no
+         ``result.id``) returns a failure signal carrying the Delta payload;
+         no prior state is mutated.
     """
-    raise NotImplementedError("Implemented in Task 9.3")
+    # ---- 1. Local validation — no network yet ---------------------------
+    # side ∈ {buy, sell}, case-insensitive, normalized to lower case.
+    side_norm = str(side).strip().lower() if side is not None else ""
+    if side_norm not in _ORDER_SIDES:
+        return {
+            "ok": False,
+            "error": "invalid side {!r}; expected 'buy' or 'sell'".format(side),
+            "invalid": "side",
+        }
+
+    # size must coerce to an integer strictly greater than zero.
+    if isinstance(size, bool):
+        # bool is an int subclass; a boolean size is never a valid quantity.
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; expected an integer > 0".format(size),
+            "invalid": "size",
+        }
+    try:
+        size_int = int(size)
+    except (TypeError, ValueError):
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; expected an integer > 0".format(size),
+            "invalid": "size",
+        }
+    if isinstance(size, float) and not float(size).is_integer():
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; expected a whole number".format(size),
+            "invalid": "size",
+        }
+    if size_int <= 0:
+        return {
+            "ok": False,
+            "error": "invalid size {!r}; must be greater than zero".format(size),
+            "invalid": "size",
+        }
+
+    # stop_trigger_method ∈ {last_traded_price, mark_price, spot_price}.
+    method_norm = str(stop_trigger_method).strip().lower() \
+        if stop_trigger_method is not None else ""
+    if method_norm not in _STOP_TRIGGER_METHODS:
+        return {
+            "ok": False,
+            "error": "invalid stop_trigger_method {!r}; expected one of "
+                     "{}".format(stop_trigger_method,
+                                 ", ".join(_STOP_TRIGGER_METHODS)),
+            "invalid": "stop_trigger_method",
+        }
+
+    # Only validate the bracket price fields that were actually provided; each
+    # provided value must be a number strictly greater than zero.
+    sl_val = None
+    if stop_loss_price is not None:
+        sl_val = _coerce_price(stop_loss_price)
+        if sl_val is None or sl_val <= 0:
+            return {
+                "ok": False,
+                "error": "invalid stop_loss_price {!r}; must be a number "
+                         "greater than zero".format(stop_loss_price),
+                "invalid": "stop_loss_price",
+            }
+
+    tp_val = None
+    if take_profit_price is not None:
+        tp_val = _coerce_price(take_profit_price)
+        if tp_val is None or tp_val <= 0:
+            return {
+                "ok": False,
+                "error": "invalid take_profit_price {!r}; must be a number "
+                         "greater than zero".format(take_profit_price),
+                "invalid": "take_profit_price",
+            }
+
+    trail_val = None
+    if trail_amount is not None:
+        trail_val = _coerce_price(trail_amount)
+        if trail_val is None or trail_val <= 0:
+            return {
+                "ok": False,
+                "error": "invalid trail_amount {!r}; must be a number greater "
+                         "than zero".format(trail_amount),
+                "invalid": "trail_amount",
+            }
+
+    # A bracket with no stop-loss, target, or trailing stop is meaningless;
+    # reject naming the missing bracket parameters (nothing transmitted).
+    if sl_val is None and tp_val is None and trail_val is None:
+        return {
+            "ok": False,
+            "error": "a bracket order requires at least one of "
+                     "stop_loss_price, take_profit_price, or trail_amount",
+            "invalid": "stop_loss_price/take_profit_price/trail_amount",
+        }
+
+    # ---- 2. Paper-trading (mirror Req 5.5) — log intent, transmit nothing
+    if papertrading:
+        print("PAPER_BRACKET: symbol={} side={} size={} stop_loss_price={} "
+              "take_profit_price={} trail_amount={} stop_trigger_method="
+              "{}".format(symbol, side_norm, size_int, sl_val, tp_val,
+                          trail_val, method_norm))
+        sim_id = _simulated_order_id(symbol, side_norm, size_int)
+        print("PAPER_BRACKET: simulated order id -> {}".format(sim_id))
+        return {"ok": True, "id": sim_id, "simulated": True}
+
+    # ---- 3. Product resolution — unknown symbol -> reject ---------------
+    try:
+        product_id = resolveProductId(symbol, client)
+    except DeltaAPIError as exc:
+        return {
+            "ok": False,
+            "error": "unrecognized symbol {!r}: {}".format(symbol, exc),
+            "invalid": "symbol",
+        }
+
+    # ---- 4. Build the market entry + attached bracket body (5.6, 5.7) ---
+    body = {
+        "product_id": product_id,
+        "size": size_int,
+        "side": side_norm,
+        "order_type": "market_order",
+    }
+    # Prices sent as STRINGS (Reqs 5.6, 5.7).
+    if sl_val is not None:
+        body["bracket_stop_loss_price"] = str(sl_val)
+    if tp_val is not None:
+        body["bracket_take_profit_price"] = str(tp_val)
+    if trail_val is not None:
+        body["trail_amount"] = str(trail_val)
+    # A stop_trigger_method is only meaningful when a stop / trailing stop is
+    # attached; include it whenever a trailing stop or stop-loss is present.
+    if trail_val is not None or sl_val is not None:
+        body["stop_trigger_method"] = method_norm
+
+    # ---- 5 & 6. Submit, handling timeout (5.10) and rejection (5.11) ----
+    try:
+        response = client.request("POST", "/v2/orders", body_obj=body)
+    except requests.exceptions.RequestException as exc:
+        print("BRACKET_TIMEOUT: symbol={} side={} size={} did not receive an "
+              "accept/reject within the order timeout budget (~{}s): "
+              "{!r}".format(symbol, side_norm, size_int, ORDER_TIMEOUT_SEC, exc))
+        return {
+            "ok": False,
+            "error": "bracket order submission timed out (~{}s): {}".format(
+                ORDER_TIMEOUT_SEC, exc),
+            "payload": repr(exc),
+        }
+    except DeltaAPIError as exc:
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("BRACKET_REJECTED: symbol={} side={} size={} reason={!r}".format(
+            symbol, side_norm, size_int, reason))
+        return {"ok": False, "error": str(exc), "payload": reason}
+
+    # A well-formed 2xx response: pull result.id.
+    result = response.get("result") if isinstance(response, dict) else None
+    order_id = result.get("id") if isinstance(result, dict) else None
+    if order_id is None:
+        print("BRACKET_REJECTED: symbol={} side={} size={} response carried no "
+              "result.id: {!r}".format(symbol, side_norm, size_int, response))
+        return {
+            "ok": False,
+            "error": "bracket order response carried no result.id",
+            "payload": response,
+        }
+
+    return {"ok": True, "id": order_id, "simulated": False}
 
 
 def cancelOrder(order_id, product_id, client):
-    """Cancel an open order via DELETE /v2/orders. (Task 9.3, Requirement 5.8)"""
-    raise NotImplementedError("Implemented in Task 9.3")
+    """
+    Cancel an open order via ``DELETE /v2/orders``. (Task 9.3, Requirement 5.8)
+
+    Submits ``DELETE /v2/orders`` with body ``{"id": <order_id>,
+    "product_id": <int product_id>}`` and returns a value indicating whether the
+    cancellation was accepted:
+
+      * success:  ``{"ok": True,  "accepted": True}``
+      * failure:  ``{"ok": False, "accepted": False, "error": "<reason>",
+                     ...}`` — for a missing-argument validation reject
+                  (``"invalid": "<field>"``), a transport timeout (5.10-style),
+                  or a Delta rejection (5.11-style, ``"payload": <delta body>``).
+
+    Local validation runs FIRST: both `order_id` and `product_id` must be
+    present, and `product_id` must coerce to an integer. Nothing is transmitted
+    when validation fails.
+    """
+    # ---- 1. Local validation — name missing / bad arguments ------------
+    if order_id is None or (isinstance(order_id, str) and order_id.strip() == ""):
+        return {
+            "ok": False,
+            "accepted": False,
+            "error": "cancelOrder requires a non-empty order_id",
+            "invalid": "order_id",
+        }
+    if product_id is None:
+        return {
+            "ok": False,
+            "accepted": False,
+            "error": "cancelOrder requires a product_id",
+            "invalid": "product_id",
+        }
+    try:
+        product_id_int = int(product_id)
+    except (TypeError, ValueError):
+        return {
+            "ok": False,
+            "accepted": False,
+            "error": "invalid product_id {!r}; expected an integer".format(
+                product_id),
+            "invalid": "product_id",
+        }
+
+    body = {"id": order_id, "product_id": product_id_int}
+
+    # ---- 2. Submit, handling timeout (5.10) and rejection (5.11) -------
+    try:
+        response = client.request("DELETE", "/v2/orders", body_obj=body)
+    except requests.exceptions.RequestException as exc:
+        print("CANCEL_TIMEOUT: order_id={} product_id={} did not receive an "
+              "accept/reject within the timeout budget (~{}s): {!r}".format(
+                  order_id, product_id_int, ORDER_TIMEOUT_SEC, exc))
+        return {
+            "ok": False,
+            "accepted": False,
+            "error": "cancel request timed out (~{}s): {}".format(
+                ORDER_TIMEOUT_SEC, exc),
+            "payload": repr(exc),
+        }
+    except DeltaAPIError as exc:
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("CANCEL_REJECTED: order_id={} product_id={} reason={!r}".format(
+            order_id, product_id_int, reason))
+        return {
+            "ok": False,
+            "accepted": False,
+            "error": str(exc),
+            "payload": reason,
+        }
+
+    # A well-formed 2xx response from DELETE /v2/orders indicates the
+    # cancellation was accepted (Req 5.8).
+    return {"ok": True, "accepted": True}
 
 
 # ============================================================
@@ -347,28 +839,405 @@ def getHistorical(symbol, interval, duration, client):
 # ============================================================
 # 7. POSITIONS, MARGIN, EXITS (Requirement 7) — Task 11.1
 # ============================================================
+# Default leverage applied by getSpreadMargin when a leg omits its own
+# `leverage`. This is CONFIGURABLE: callers may pass a per-leg `leverage` to
+# override it, or this module constant may be tuned to the account's default.
+# A leverage of 1 means "full notional as margin" (most conservative estimate).
+DEFAULT_LEVERAGE = 1.0
+
+# NOT-AVAILABLE sentinels (documented, distinguishable from valid values):
+#   * getBalance          -> None                 when balance cannot be read
+#   * getPositions        -> (0, None)            when there is NO open position
+#                            (None, None)          on error/unreadable
+#   * getSpreadMargin     -> (None, None)         when the computation fails
+#   * exitAll             -> a dict whose "ok"/"closed_all" flags distinguish
+#                            full success from partial failure / error.
+
+
+def _balance_row_asset(row):
+    """
+    Extract the asset symbol from a wallet-balance row, tolerating Delta field
+    variants: a flat ``asset_symbol`` string, or a nested ``asset`` object
+    exposing ``symbol`` (some responses) / ``symbol`` under other keys.
+    Returns the symbol string, or ``None`` when it cannot be determined.
+    """
+    if not isinstance(row, dict):
+        return None
+    # Flat variant: {"asset_symbol": "USD", ...}
+    sym = row.get("asset_symbol")
+    if sym:
+        return str(sym)
+    # Nested variant: {"asset": {"symbol": "USD"}, ...}
+    asset = row.get("asset")
+    if isinstance(asset, dict):
+        nested = asset.get("symbol")
+        if nested:
+            return str(nested)
+    # Some payloads flatten to {"symbol": "USD"} on the row itself.
+    sym = row.get("symbol")
+    if sym:
+        return str(sym)
+    return None
+
+
 def getBalance(settling_asset=SETTLING_ASSET, client=None):
     """Return available_balance for the Settling_Asset from GET /v2/wallet/balances.
-    (Task 11.1, Requirements 7.1, 7.6)"""
-    raise NotImplementedError("Implemented in Task 11.1")
+    (Task 11.1, Requirements 7.1, 7.6)
+
+    Request: ``client.request("GET", "/v2/wallet/balances")`` (signed). The
+    response ``result`` is a list of balance rows; each row carries the asset
+    identity as a flat ``asset_symbol`` or a nested ``asset.symbol`` and the
+    spendable amount as ``available_balance`` (Delta sends numeric fields as
+    strings).
+
+    Return contract:
+      * success (7.1): the ``available_balance`` for ``settling_asset`` coerced
+        to a ``float``.
+      * not-available (7.6): ``None`` — a defined sentinel distinguishable from
+        any valid (float) balance — returned on ANY failure: transport error,
+        ``DeltaAPIError``, no matching asset row, or an unparseable amount. A
+        warning is logged so the absence is loud rather than silent.
+    """
+    if client is None:
+        print("BALANCE_UNAVAILABLE: no client supplied to getBalance; "
+              "returning not-available sentinel (None).")
+        return None
+
+    try:
+        response = client.request("GET", "/v2/wallet/balances")
+    except requests.exceptions.RequestException as exc:
+        print("BALANCE_UNAVAILABLE: transport error reading "
+              "/v2/wallet/balances: {!r}".format(exc))
+        return None
+    except DeltaAPIError as exc:
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("BALANCE_UNAVAILABLE: Delta error reading /v2/wallet/balances: "
+              "{!r}".format(reason))
+        return None
+
+    result = response.get("result") if isinstance(response, dict) else None
+    # Tolerate a single-object result as well as the documented list.
+    if isinstance(result, dict):
+        rows = [result]
+    elif isinstance(result, list):
+        rows = result
+    else:
+        rows = []
+
+    target = str(settling_asset)
+    for row in rows:
+        if _balance_row_asset(row) == target:
+            balance = _coerce_price(row.get("available_balance"))
+            if balance is None:
+                print("BALANCE_UNAVAILABLE: matched asset {!r} but its "
+                      "available_balance was missing/unparseable: {!r}".format(
+                          target, row.get("available_balance")))
+                return None
+            return balance
+
+    print("BALANCE_UNAVAILABLE: no wallet row for Settling_Asset {!r} in "
+          "/v2/wallet/balances; returning not-available sentinel "
+          "(None).".format(target))
+    return None
 
 
 def getPositions(symbol, client):
     """Return (size, entry_price) from GET /v2/positions.
-    (Task 11.1, Requirement 7.2)"""
-    raise NotImplementedError("Implemented in Task 11.1")
+    (Task 11.1, Requirement 7.2)
+
+    Resolves ``symbol`` to its integer ``product_id`` via ``resolveProductId``
+    and reads ``client.request("GET", "/v2/positions",
+    params={"product_id": product_id})``. Delta may return the position as a
+    single object OR as a list; both are handled and, for a list, the row whose
+    ``product_id`` matches is selected.
+
+    Return contract:
+      * open position (7.2): ``(size, entry_price)`` where ``size`` is an
+        ``int`` number of contracts (negative for a short) and ``entry_price``
+        is a ``float``.
+      * no open position: ``(0, None)`` — a flat, non-error signal that there
+        is simply nothing open (size 0, no entry price).
+      * not-available/error: ``(None, None)`` — distinguishable from both an
+        open position and the flat ``(0, None)`` — on transport error,
+        ``DeltaAPIError`` (including an unresolvable symbol), or an unparseable
+        size.
+    """
+    if client is None:
+        print("POSITIONS_UNAVAILABLE: no client supplied to getPositions for "
+              "symbol {!r}; returning (None, None).".format(symbol))
+        return (None, None)
+
+    try:
+        product_id = resolveProductId(symbol, client)
+    except DeltaAPIError as exc:
+        print("POSITIONS_UNAVAILABLE: could not resolve product_id for symbol "
+              "{!r}: {}".format(symbol, exc))
+        return (None, None)
+
+    try:
+        response = client.request(
+            "GET", "/v2/positions", params={"product_id": product_id})
+    except requests.exceptions.RequestException as exc:
+        print("POSITIONS_UNAVAILABLE: transport error reading /v2/positions "
+              "for product_id {}: {!r}".format(product_id, exc))
+        return (None, None)
+    except DeltaAPIError as exc:
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("POSITIONS_UNAVAILABLE: Delta error reading /v2/positions for "
+              "product_id {}: {!r}".format(product_id, reason))
+        return (None, None)
+
+    result = response.get("result") if isinstance(response, dict) else None
+
+    # Normalize to the single position row for this product.
+    position = None
+    if isinstance(result, dict):
+        position = result
+    elif isinstance(result, list):
+        for row in result:
+            if not isinstance(row, dict):
+                continue
+            row_pid = row.get("product_id")
+            if row_pid is None:
+                nested = row.get("product")
+                if isinstance(nested, dict):
+                    row_pid = nested.get("id")
+            try:
+                if row_pid is not None and int(row_pid) == int(product_id):
+                    position = row
+                    break
+            except (TypeError, ValueError):
+                continue
+        # A single-element list with no product_id is still this product's row.
+        if position is None and len(result) == 1 and isinstance(result[0], dict):
+            position = result[0]
+
+    # Empty/absent result => no open position (flat).
+    if not isinstance(position, dict) or not position:
+        return (0, None)
+
+    raw_size = position.get("size")
+    if raw_size is None:
+        # A position object with no size is effectively flat.
+        return (0, None)
+
+    try:
+        size = int(float(raw_size))
+    except (TypeError, ValueError):
+        print("POSITIONS_UNAVAILABLE: unparseable size {!r} for symbol {!r}; "
+              "returning (None, None).".format(raw_size, symbol))
+        return (None, None)
+
+    if size == 0:
+        return (0, None)
+
+    entry_price = _coerce_price(position.get("entry_price"))
+    return (size, entry_price)
+
+
+def _leg_leverage(leg):
+    """
+    Resolve a leg's leverage: the leg's own positive ``leverage`` if present and
+    valid, otherwise the module ``DEFAULT_LEVERAGE``. Returns a positive float,
+    or ``None`` when a supplied leverage is present but non-positive/unparseable
+    (so the caller can treat it as a computation failure per 7.7).
+    """
+    if isinstance(leg, dict) and leg.get("leverage") is not None:
+        lev = _coerce_price(leg.get("leverage"))
+        if lev is None or lev <= 0:
+            return None
+        return lev
+    return DEFAULT_LEVERAGE
 
 
 def getSpreadMargin(legs, client):
     """Compute (required_margin, available_balance) from contract size, price,
-    and leverage. (Task 11.1, Requirements 7.3, 7.7)"""
-    raise NotImplementedError("Implemented in Task 11.1")
+    and leverage. (Task 11.1, Requirements 7.3, 7.7)
+
+    Delta exposes NO pre-trade basket-margin endpoint, so the required margin is
+    computed locally as an approximation (per design 5d):
+
+        required_margin = sum over legs of ( |size| * price / leverage )
+
+    where each leg is a dict with the shape
+    ``{"size": int, "price": float, "leverage": float, "side": "buy"/"sell"}``.
+    ``size`` is the contract count (its sign — long/short — does not change the
+    margin requirement, so its absolute value is used); ``price`` is the
+    per-contract price; ``leverage`` is optional and defaults to
+    ``DEFAULT_LEVERAGE`` (configurable) when omitted. ``side`` is accepted but
+    not required for this notional/leverage estimate.
+
+    The current available balance is read via ``getBalance(client=client)``.
+
+    Return contract:
+      * success (7.3): ``(required_margin, available_balance)`` as floats.
+        ``available_balance`` may itself be ``None`` if the wallet read failed
+        (7.6) while the margin computation still succeeded — the required
+        margin is still returned so risk sizing has the computed value.
+      * not-available (7.7): ``(None, None)`` — distinguishable from valid
+        values — when the margin computation cannot be performed (empty/means
+        no legs, a non-dict leg, a missing/non-positive size or price, or an
+        invalid supplied leverage). A warning is logged.
+    """
+    # No legs => nothing to size; treat as a computation failure (7.7).
+    if not legs or not isinstance(legs, (list, tuple)):
+        print("MARGIN_UNAVAILABLE: no order legs supplied to getSpreadMargin; "
+              "returning (None, None).")
+        return (None, None)
+
+    required_margin = 0.0
+    for index, leg in enumerate(legs):
+        if not isinstance(leg, dict):
+            print("MARGIN_UNAVAILABLE: leg #{} is not a dict ({!r}); returning "
+                  "(None, None).".format(index, leg))
+            return (None, None)
+
+        size = _coerce_price(leg.get("size"))
+        if size is None or size == 0:
+            print("MARGIN_UNAVAILABLE: leg #{} has missing/zero size {!r}; "
+                  "returning (None, None).".format(index, leg.get("size")))
+            return (None, None)
+
+        price = _coerce_price(leg.get("price"))
+        if price is None or price <= 0:
+            print("MARGIN_UNAVAILABLE: leg #{} has missing/non-positive price "
+                  "{!r}; returning (None, None).".format(index, leg.get("price")))
+            return (None, None)
+
+        leverage = _leg_leverage(leg)
+        if leverage is None or leverage <= 0:
+            print("MARGIN_UNAVAILABLE: leg #{} has invalid leverage {!r}; "
+                  "returning (None, None).".format(index, leg.get("leverage")))
+            return (None, None)
+
+        # Notional / leverage; sign of size is irrelevant to margin.
+        required_margin += (abs(size) * price) / leverage
+
+    available_balance = getBalance(client=client)
+    return (float(required_margin), available_balance)
+
+
+def _position_identifier(row):
+    """
+    Build a human-usable identifier for a residual open position row, preferring
+    the symbol and falling back to the product_id, tolerating nested ``product``
+    objects. Returns a string like ``"C-BTC-...(#84)"`` or ``"#84"``.
+    """
+    if not isinstance(row, dict):
+        return repr(row)
+    symbol = row.get("product_symbol") or row.get("symbol")
+    pid = row.get("product_id")
+    if pid is None:
+        nested = row.get("product")
+        if isinstance(nested, dict):
+            symbol = symbol or nested.get("symbol")
+            pid = nested.get("id")
+    if symbol and pid is not None:
+        return "{}(#{})".format(symbol, pid)
+    if symbol:
+        return str(symbol)
+    if pid is not None:
+        return "#{}".format(pid)
+    return repr(row)
+
+
+def _open_positions_after_close(client):
+    """
+    Read ``GET /v2/positions`` and return the list of rows with a non-zero size
+    (i.e. still open). Returns a list of position dicts, or ``None`` when the
+    positions read itself failed (so the caller cannot confirm the flatten).
+    """
+    try:
+        response = client.request("GET", "/v2/positions")
+    except (requests.exceptions.RequestException, DeltaAPIError):
+        return None
+
+    result = response.get("result") if isinstance(response, dict) else None
+    if isinstance(result, dict):
+        rows = [result]
+    elif isinstance(result, list):
+        rows = result
+    else:
+        rows = []
+
+    residual = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        size = _coerce_price(row.get("size"))
+        if size is not None and size != 0:
+            residual.append(row)
+    return residual
 
 
 def exitAll(close_scope=None, client=None):
     """Flatten in-scope positions via POST /v2/positions/close_all, signaling
-    full vs partial success. (Task 11.1, Requirements 7.4, 7.5)"""
-    raise NotImplementedError("Implemented in Task 11.1")
+    full vs partial success. (Task 11.1, Requirements 7.4, 7.5)
+
+    Request: ``client.request("POST", "/v2/positions/close_all", body_obj=<scope>)``.
+    ``close_scope`` is the body describing WHAT to close; when ``None`` a
+    sensible default that closes everything is sent —
+    ``{"close_all_portfolio": True, "close_all_isolated": True}`` — which
+    flattens both cross/portfolio and isolated positions.
+
+    After submitting, the flatten is VERIFIED by re-reading ``GET /v2/positions``
+    and checking whether any position still has a non-zero size (7.5).
+
+    Return contract (a dict, so full vs partial vs error is unambiguous):
+      * full success (7.4): ``{"ok": True, "closed_all": True, "residual": []}``
+        — the close_all was accepted and no in-scope position remains open.
+      * partial failure (7.5): ``{"ok": False, "closed_all": False,
+        "residual": [<identifiers>]}`` — some positions remain open; each
+        residual position's identifier is ALSO logged individually.
+      * error: ``{"ok": False, "closed_all": False, "error": "<reason>",
+        "residual": []}`` — the close_all request failed, or the post-close
+        verification read failed (flatten unconfirmed). Distinguishable from
+        both success and partial failure by the presence of ``"error"``.
+    """
+    if client is None:
+        print("EXIT_ALL_ERROR: no client supplied to exitAll; nothing closed.")
+        return {"ok": False, "closed_all": False,
+                "error": "no client supplied", "residual": []}
+
+    scope = close_scope
+    if scope is None:
+        # Default: flatten every open position (portfolio + isolated).
+        scope = {"close_all_portfolio": True, "close_all_isolated": True}
+
+    try:
+        client.request("POST", "/v2/positions/close_all", body_obj=scope)
+    except requests.exceptions.RequestException as exc:
+        print("EXIT_ALL_ERROR: transport error submitting close_all with scope "
+              "{!r}: {!r}".format(scope, exc))
+        return {"ok": False, "closed_all": False,
+                "error": "transport error: {}".format(exc), "residual": []}
+    except DeltaAPIError as exc:
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("EXIT_ALL_ERROR: Delta rejected close_all with scope {!r}: "
+              "{!r}".format(scope, reason))
+        return {"ok": False, "closed_all": False,
+                "error": str(exc), "residual": []}
+
+    # ---- Verify the flatten by re-reading open positions (7.4 / 7.5) ----
+    residual_rows = _open_positions_after_close(client)
+    if residual_rows is None:
+        # We could not confirm the flatten — do NOT claim full success.
+        print("EXIT_ALL_ERROR: close_all was submitted but the post-close "
+              "verification read of /v2/positions failed; flatten unconfirmed.")
+        return {"ok": False, "closed_all": False,
+                "error": "post-close verification read failed", "residual": []}
+
+    if not residual_rows:
+        return {"ok": True, "closed_all": True, "residual": []}
+
+    # Some positions remain open: log each residual id and signal partial fail.
+    residual_ids = [_position_identifier(row) for row in residual_rows]
+    for ident in residual_ids:
+        print("EXIT_ALL_PARTIAL: position still open after close_all -> "
+              "{}".format(ident))
+    print("EXIT_ALL_PARTIAL: {} position(s) remain open after close_all; "
+          "signaling partial failure.".format(len(residual_ids)))
+    return {"ok": False, "closed_all": False, "residual": residual_ids}
 
 
 # ============================================================
