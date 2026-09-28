@@ -543,17 +543,27 @@ def derive_directional_bias(index_price, pcr, no_trade_low, no_trade_high):
 # ============================================================
 # ENTRY GATING (Req 9.14-9.17) — Task 14.3
 # ============================================================
-def market_hours_permit():
+def market_hours_permit(now_utc=None):
     """
-    Market-hours entry policy hook (Req 9.16).
+    Market-hours entry policy hook (Req 9.16, 9.24).
 
-    BTC daily options trade ~24/7 on Delta, so this permissively returns True
-    by default. The pre-expiry lead-window gate that suppresses NEW entries in
-    the final minutes before the 12:00 UTC daily expiry (Req 9.24) is a
-    separate concern implemented in Task 14.8; it is intentionally NOT applied
-    here. Kept as a hook so 14.8 can layer the expiry-window / session policy on
-    top without touching the entry-gating core.
+    BTC daily options trade ~24/7 on Delta, so this permissively permits new
+    entries at (almost) all times. The ONE exception is the pre-expiry lead
+    window (Task 14.8, Req 9.24): during the final ``PRE_EXPIRY_LEAD_MINUTES``
+    before the 12:00 UTC daily expiry (default 11:45:00–11:59:59 UTC) this
+    returns ``False`` so no NEW entry is opened as the current daily contract
+    winds down. ``evaluate_entry`` already calls ``market_hours_permit()`` as a
+    gate, so returning ``False`` here surfaces a ``market_hours_closed`` blocker
+    and suppresses the entry — the explicit human-facing pre-expiry log line is
+    emitted by ``handle_expiry_rollover`` (Req 9.24/9.25).
+
+    ``now_utc`` is optional and defaults to "now" (mirrors
+    ``in_pre_expiry_window`` / ``getDailyExpiry`` handling); the default arg
+    keeps the existing zero-argument callers backward-compatible. Returns
+    ``True`` (entries permitted) outside the pre-expiry window.
     """
+    if in_pre_expiry_window(now_utc):
+        return False
     return True
 
 
@@ -751,6 +761,18 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     """
     carried = state if isinstance(state, dict) else {}
 
+    # ---- Expiry handling + daily rollover (Task 14.8, Req 9.23-9.26) ----
+    # Run ONCE per cycle, before anything else: re-resolve the daily expiry and
+    # detect/log a rollover to a new contract (9.23/9.26), and — at the start of
+    # the 11:45-12:00 UTC pre-expiry window — square off any open position
+    # (9.25). In OBSERVATION_MODE this logs WOULD_HAVE_SQUARED_OFF only. It is
+    # fully defensive and never raises. When a LIVE square-off closes the
+    # position, ``carried["position_open"]`` is flipped False here so the monitor
+    # branch below is skipped and the cycle falls through to entry evaluation —
+    # which is then suppressed by ``market_hours_permit`` during the window
+    # (9.24).
+    expiry_result = handle_expiry_rollover(client, carried)
+
     # ---- Open position? Monitor for exit instead of evaluating entry ----
     # (Task 14.6, Req 9.18-9.22). Monitoring mutates the carried state's
     # confirmation counters / trail flag and, on a completed exit, flips
@@ -781,6 +803,11 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "sl_confirm_count": carried.get("sl_confirm_count", 0),
             "sl_at_breakeven": carried.get("sl_at_breakeven", False),
             "last_exit": carried.get("last_exit"),
+            # Expiry/rollover state (Task 14.8) — persist across cycles so the
+            # new-contract detection and per-expiry square-off marker survive.
+            "current_expiry": carried.get("current_expiry"),
+            "squared_off_for": carried.get("squared_off_for"),
+            "expiry": expiry_result,
         }
 
     # 1. Index anchor (Req 9.11).
@@ -944,6 +971,12 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "sl_at_breakeven": (False if entry_state.get("position_open")
                             else carried.get("sl_at_breakeven", False)),
         "last_exit": carried.get("last_exit"),
+        # Expiry/rollover state (Task 14.8) — persist across cycles so the
+        # new-contract detection and per-expiry square-off marker survive. These
+        # were updated in place on ``carried`` by ``handle_expiry_rollover``.
+        "current_expiry": carried.get("current_expiry"),
+        "squared_off_for": carried.get("squared_off_for"),
+        "expiry": expiry_result,
     }
 
 
@@ -1529,6 +1562,185 @@ def monitor_open_position(client, state):
             "exit": "failed_retained", "reason": exit_reason,
             "unrealized_points": unrealized_points,
             "unrealized_pnl": unrealized_pnl, "detail": result}
+
+
+# ============================================================
+# EXPIRY HANDLING + DAILY ROLLOVER (Req 9.23-9.26) — Task 14.8
+# ============================================================
+# Delta BTC daily options expire at 12:00 UTC (17:30 IST). Every expiry-window /
+# rollover computation is anchored to that boundary in the Reference_Timezone
+# (UTC), consistent with helper_delta.getDailyExpiry (which rolls at >= 12:00
+# UTC). Human-facing log lines are timestamped in IST (_now_ist) for readability
+# only; NONE of the scheduling math depends on IST.
+def in_pre_expiry_window(now_utc=None):
+    """
+    Return True when the current UTC time is inside the pre-expiry lead window
+    that precedes the 12:00 UTC daily expiry (Req 9.24).
+
+    The window is the ``PRE_EXPIRY_LEAD_MINUTES`` (default 15) immediately before
+    the ``DAILY_EXPIRY_UTC_HOUR`` (12:00) UTC boundary, i.e. with the defaults it
+    spans::
+
+        [11:45:00.000000 UTC, 12:00:00.000000 UTC)
+
+    — inclusive of 11:45:00 and running through 11:59:59.999999, and EXCLUSIVE of
+    12:00:00 (at which point the contract has already rolled and
+    ``getDailyExpiry`` returns the next day). In IST that is 17:15:00–17:29:59.
+
+    ``now_utc`` handling mirrors ``getDailyExpiry``: when omitted,
+    ``datetime.now(REFERENCE_TIMEZONE)`` (UTC) is used; a timezone-aware datetime
+    is normalized to the UTC reference timezone; a naive datetime is assumed to
+    already be expressed in UTC. Returns a plain ``bool``.
+    """
+    if now_utc is None:
+        now = datetime.now(REFERENCE_TIMEZONE)
+    elif now_utc.tzinfo is not None:
+        # Aware datetime: normalize to the UTC reference timezone.
+        now = now_utc.astimezone(REFERENCE_TIMEZONE)
+    else:
+        # Naive datetime: assume it is already expressed in UTC.
+        now = now_utc
+
+    # The 12:00 UTC daily-expiry boundary for `now`'s calendar day, and the
+    # lead-window start PRE_EXPIRY_LEAD_MINUTES before it (11:45 UTC default).
+    expiry_boundary = now.replace(
+        hour=DAILY_EXPIRY_UTC_HOUR, minute=0, second=0, microsecond=0)
+    window_start = expiry_boundary - timedelta(minutes=PRE_EXPIRY_LEAD_MINUTES)
+    return window_start <= now < expiry_boundary
+
+
+def handle_expiry_rollover(client, state):
+    """
+    Resolve the daily expiry, roll over to a new contract, and — at the start of
+    the pre-expiry window — square off any open position (Req 9.23-9.26).
+
+    Called ONCE per signal cycle near the top of ``run_signal_cycle`` (before the
+    open-position monitor branch). Fully defensive: any unexpected error is
+    logged and swallowed so it can never crash the observation/live loop.
+
+    Behavior:
+      * Resolve ``current_expiry = helper.getDailyExpiry()`` (DDMMYY, rolls to
+        the next day at/after 12:00 UTC) (Req 9.23).
+      * New-contract detection / resume (Req 9.26): compare to
+        ``state["current_expiry"]``. On the first cycle (no prior value) or when
+        it changes, store the new value and clear ``state["squared_off_for"]``;
+        when it changed from a real prior value, log ``RESUMED_ON_NEW_CONTRACT``.
+        Evaluation naturally resumes on the new contract because
+        ``run_signal_cycle`` re-queries ``getDailyExpiry`` for the chain each
+        cycle.
+      * Pre-expiry square-off (Req 9.25): while ``in_pre_expiry_window()`` AND a
+        position is open AND it has not already been squared off for this expiry
+        (``state["squared_off_for"] != current_expiry``):
+          - OBSERVATION_MODE: log ``WOULD_HAVE_SQUARED_OFF`` (naming the open
+            legs), set ``squared_off_for`` so it does not repeat every cycle, and
+            place NO orders.
+          - LIVE mode: force-exit via ``helper.exitAll(client=client)``. On full
+            success mark the position closed (``position_open=False``,
+            ``open_position=None``, reset monitor counters) and set
+            ``squared_off_for``; on partial/failure log the residual, RETAIN the
+            position open, and do NOT set ``squared_off_for`` so the next cycle
+            retries (Req 9.25, mirrors the 9.21 retain-on-failure policy).
+
+    Mutates ``state`` in place and returns a summary dict::
+
+        {"current_expiry": <DDMMYY|None>, "rolled": bool,
+         "squared_off": True|"would"|"partial"|"failed"|False,
+         "in_window": bool}
+    """
+    state = state if isinstance(state, dict) else {}
+    result = {"current_expiry": None, "rolled": False,
+              "squared_off": False, "in_window": False}
+
+    # ----- Resolve the current daily expiry (Req 9.23) -------------------
+    try:
+        current_expiry = helper.getDailyExpiry()
+    except Exception as exc:  # noqa: BLE001 - never crash the loop
+        print("EXPIRY_WARN [{}] getDailyExpiry failed ({}: {}); skipping "
+              "rollover handling this cycle.".format(
+                  _now_ist(), type(exc).__name__, exc))
+        return result
+    result["current_expiry"] = current_expiry
+
+    # ----- New-contract detection + resume (Req 9.26) --------------------
+    prev_expiry = state.get("current_expiry")
+    if prev_expiry != current_expiry:
+        state["current_expiry"] = current_expiry
+        # A fresh contract clears any prior square-off marker so the new day's
+        # pre-expiry square-off can arm again.
+        state["squared_off_for"] = None
+        result["rolled"] = True
+        if prev_expiry is not None:
+            print("RESUMED_ON_NEW_CONTRACT [{}] new_expiry={} (prev={}) — "
+                  "re-resolved the daily symbol; resuming evaluation on the new "
+                  "daily contract (9.26).".format(
+                      _now_ist(), current_expiry, prev_expiry))
+
+    # ----- Pre-expiry square-off (Req 9.24/9.25) -------------------------
+    in_window = in_pre_expiry_window()
+    result["in_window"] = in_window
+    if not (in_window and state.get("position_open")
+            and state.get("squared_off_for") != current_expiry):
+        return result
+
+    open_position = state.get("open_position")
+    if isinstance(open_position, dict):
+        legs = "main={} hedge={} kind={}".format(
+            open_position.get("main_symbol"),
+            open_position.get("hedge_symbol"),
+            open_position.get("spread_kind"))
+    else:
+        legs = str(open_position)
+
+    # OBSERVATION mode: log the would-have-squared-off; place NO orders and
+    # mark it done for this expiry so it does not repeat every cycle (Req 9.25).
+    if OBSERVATION_MODE:
+        print("WOULD_HAVE_SQUARED_OFF [{}] expiry={} open_position=({}) — "
+              "pre-expiry window (11:45-12:00 UTC); OBSERVATION_MODE (no exit "
+              "order placed) (9.25).".format(_now_ist(), current_expiry, legs))
+        state["squared_off_for"] = current_expiry
+        result["squared_off"] = "would"
+        return result
+
+    # LIVE mode: force-exit every open position via exitAll (Req 9.25).
+    try:
+        exit_result = helper.exitAll(client=client)
+    except Exception as exc:  # noqa: BLE001 - never crash the loop
+        exit_result = {"ok": False, "closed_all": False,
+                       "error": "{}: {}".format(type(exc).__name__, exc),
+                       "residual": []}
+        print("EXPIRY_SQUAREOFF_FAIL [{}] expiry={} unexpected error during "
+              "exitAll: {} — RETAINING position open for retry next cycle "
+              "(9.25).".format(_now_ist(), current_expiry, exit_result["error"]))
+
+    if exit_result.get("ok") and exit_result.get("closed_all"):
+        # Full flatten confirmed: mark the position closed and record the marker
+        # so this expiry is not squared off again.
+        state["position_open"] = False
+        state["open_position"] = None
+        _reset_monitor_state(state)
+        state["squared_off_for"] = current_expiry
+        result["squared_off"] = True
+        print("EXPIRY_SQUARED_OFF [{}] expiry={} open_position=({}) force-"
+              "exited via exitAll; position recorded closed (9.25).".format(
+                  _now_ist(), current_expiry, legs))
+    elif exit_result.get("error"):
+        # Request/verification error: retain the position open, do NOT set the
+        # squared_off marker so the next cycle retries (9.25).
+        result["squared_off"] = "failed"
+        print("EXPIRY_SQUAREOFF_FAIL [{}] expiry={} exitAll error: {} "
+              "residual={} — RETAINING position open for retry next cycle "
+              "(9.25).".format(
+                  _now_ist(), current_expiry, exit_result.get("error"),
+                  exit_result.get("residual")))
+    else:
+        # Partial flatten: some positions remain; retain open + retry next cycle.
+        result["squared_off"] = "partial"
+        print("EXPIRY_SQUAREOFF_PARTIAL [{}] expiry={} exitAll did not fully "
+              "flatten; residual={} — RETAINING position open for retry next "
+              "cycle (9.25).".format(
+                  _now_ist(), current_expiry, exit_result.get("residual")))
+
+    return result
 
 
 # ============================================================
