@@ -1913,10 +1913,16 @@ def pyramid_margin_cap(qty, main_symbol, main_side, hedge_symbol, hedge_side, fy
     while candidate >= LOT_SIZE:
         try:
             # Netted spread requirement + live available for the full pair at this qty.
-            spread_req, avail = helper.getSpreadMargin([
+            # CRITICAL: the BUY (long) leg MUST be listed FIRST — the Fyers multiorder/margin API
+            # only applies the hedge-netting benefit when the protective long leg is evaluated
+            # before the short. Passing SELL-first returns ~standalone short margin (~3.5x too
+            # high) — that bug on 2026-09-29 inflated spread_req and shrank the add to 2 lots.
+            _legs = [
                 {"symbol": main_symbol, "qty": candidate, "side": main_side, "productType": "INTRADAY"},
                 {"symbol": hedge_symbol, "qty": candidate, "side": hedge_side, "productType": "INTRADAY"},
-            ], fyers_client)
+            ]
+            _legs = sorted(_legs, key=lambda l: l["side"], reverse=True)  # BUY(+1) before SELL(-1)
+            spread_req, avail = helper.getSpreadMargin(_legs, fyers_client)
             # Hedge/BUY leg margin ALONE — reserve it (this leg is placed first).
             hedge_req, _ = helper.getSpreadMargin([
                 {"symbol": hedge_symbol, "qty": candidate, "side": hedge_side, "productType": "INTRADAY"},
