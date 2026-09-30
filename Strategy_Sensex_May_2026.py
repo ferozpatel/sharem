@@ -153,15 +153,19 @@ TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
 # turn back into a loss, while still giving the trade room in the first half of the move.
 TRAIL_TRIGGER_TARGET_FRACTION = 0.50
 # Target multiplier on the option's median HIGH-LOW range, per DIRECTION (SL stays 1.6x for both).
-# BULL uses a NEARER target (2.0) so bull credit trades bank the move instead of round-tripping
-# back to breakeven; BEAR keeps 3.0. R:R therefore ~1.25 bull / ~1.88 bear.
-TARGET_MULT_BULL = 2.0
-TARGET_MULT_BEAR = 3.0
+# SL/target multipliers on the option's median HIGH-LOW range, per DIRECTION. These feed BOTH the
+# pre-entry qty sizing (effective_sl_pre in takeEntryCredit/Debit) and the post-entry SL/target,
+# so the two always agree. BULL: wider stop + nearer target (survive the counter-wiggle, bank the
+# move). BEAR: unchanged.
+SL_MULT_BULL = 1.8       # bull: wider stop (more room against the counter-wiggle)
+TARGET_MULT_BULL = 2.1   # bull: nearer target -> R:R ~1.17
+SL_MULT_BEAR = 1.6       # bear: unchanged
+TARGET_MULT_BEAR = 3.0   # bear: unchanged -> R:R ~1.88
 # Trailing SL (move SL to breakeven once TRAIL_TRIGGER_TARGET_FRACTION of target is covered) is
-# DISABLED for BULL trades: with the nearer 2.0x bull target, trailing was exiting bull trades at
-# breakeven on a normal pullback instead of letting them reach target. Bull trades therefore keep
-# their ORIGINAL SL for the whole trade. BEAR trades still trail.
+# DISABLED for BOTH directions: trailing kept exiting trades at breakeven on a normal pullback
+# instead of letting them reach target. Every trade now keeps its ORIGINAL SL for the whole trade.
 TRAIL_SL_FOR_BULL = False
+TRAIL_SL_FOR_BEAR = False
 
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
@@ -1497,7 +1501,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.6) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * SL_MULT_BULL) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1582,7 +1586,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.6) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * SL_MULT_BEAR) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1701,7 +1705,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.6) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * SL_MULT_BULL) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -1785,7 +1789,7 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
-        effective_sl_pre = round(opt_range * 1.6) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
+        effective_sl_pre = round(opt_range * SL_MULT_BEAR) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
         qty, assumedOffsetRatio = calc_lots_by_risk(effective_sl_pre, main_premium=entryPrice, hedge_premium=hedge_entry_price,
                                 main_range=opt_range, hedge_range=hedge_opt_range,
                                 main_delta=main_delta_val, hedge_delta=hedge_delta_val)
@@ -3240,16 +3244,16 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # BULL: SL = median x 1.6, Target = median x TARGET_MULT_BULL (2.0 — nearer target
-                # so bull credit trades bank the move instead of round-tripping). Median is the
-                # HIGH-LOW range. Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit
-                # on the exact traded strike, right before qty/margin sizing. No second live API
-                # call here, so SL/Target and qty sizing use the same volatility snapshot.
+                # BULL: SL = median x SL_MULT_BULL (1.8 — wider stop for the counter-wiggle),
+                # Target = median x TARGET_MULT_BULL (2.1 — nearer target so bull trades bank the
+                # move instead of round-tripping). Median is the HIGH-LOW range. Reuse
+                # tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact traded
+                # strike, right before qty/margin sizing, so SL/Target and qty sizing agree.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 1.6)
+                    effective_sl = round(opt_range * SL_MULT_BULL)
                     effective_tgt = round(opt_range * TARGET_MULT_BULL)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.6,Tgtx{TARGET_MULT_BULL})"
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx{SL_MULT_BULL},Tgtx{TARGET_MULT_BULL})"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -3385,14 +3389,14 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # BEAR: SL = median x 1.6, Target = median x TARGET_MULT_BEAR (3.0 — unchanged).
-                # Median is HIGH-LOW range. Reuse tradeOptRange — computed ONCE inside
-                # takeEntryCredit/Debit on the exact traded strike, right before qty/margin sizing.
+                # BEAR: SL = median x SL_MULT_BEAR (1.6), Target = median x TARGET_MULT_BEAR (3.0)
+                # — both unchanged. Median is HIGH-LOW range. Reuse tradeOptRange — computed ONCE
+                # inside takeEntryCredit/Debit on the exact traded strike, right before sizing.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
-                    effective_sl = round(opt_range * 1.6)
+                    effective_sl = round(opt_range * SL_MULT_BEAR)
                     effective_tgt = round(opt_range * TARGET_MULT_BEAR)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.6,Tgtx{TARGET_MULT_BEAR})"
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx{SL_MULT_BEAR},Tgtx{TARGET_MULT_BEAR})"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -3488,9 +3492,9 @@ while x == 1:
                     if ltp_now is not None and (st == 1 or st == 2):
                         if not is_debit:
                             # Credit: premium rising = loss (SL), falling = profit (target)
-                            # TRAIL_SL_FOR_BULL=False -> bull trades (st==1) keep their ORIGINAL SL
-                            # and run to the (nearer, 2.0x) target instead of trailing to breakeven.
-                            if (TRAIL_SL_FOR_BULL or st != 1) and not slTrailed and ltp_now <= (entryPremium - trailTriggerPts):
+                            # Trailing is per-direction (st==1 bull, st==2 bear); both are OFF now,
+                            # so trades keep their ORIGINAL SL and run to target.
+                            if (TRAIL_SL_FOR_BULL if st == 1 else TRAIL_SL_FOR_BEAR) and not slTrailed and ltp_now <= (entryPremium - trailTriggerPts):
                                 sl = entryPremium
                                 slTrailed = True
                                 print("TRAILING SL activated! SL moved to breakeven =", sl)
@@ -3506,8 +3510,8 @@ while x == 1:
                             tgt_reached = ltp_now <= target
                         else:
                             # Debit: premium falling = loss (SL), rising = profit (target)
-                            # Same bull exclusion as the credit path (st==1 = bull trade).
-                            if (TRAIL_SL_FOR_BULL or st != 1) and not slTrailed and ltp_now >= (entryPremium + trailTriggerPts):
+                            # Same per-direction trail gate as the credit path.
+                            if (TRAIL_SL_FOR_BULL if st == 1 else TRAIL_SL_FOR_BEAR) and not slTrailed and ltp_now >= (entryPremium + trailTriggerPts):
                                 sl = entryPremium
                                 slTrailed = True
                                 print("DEBIT TRAILING SL activated! SL moved to breakeven =", sl)
