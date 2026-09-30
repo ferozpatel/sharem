@@ -714,10 +714,6 @@ sl = 0
 target = 0
 slCount = 0
 targetCount = 0
-# Separate daily halt: trades that trailed to breakeven, ACTUALLY pyramided (2x added), then
-# reversed and hit the breakeven SL (a real give-back loss). At 3 such, stop taking new trades.
-trailWithPyramidSLCount = 0
-TRAIL_PYRAMID_SL_HALT = 3
 
 
 # ============================================================
@@ -2489,7 +2485,6 @@ entryPremium = 0  # track entry premium for trailing SL
 trailTriggerPts = 0  # effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION — set at entry time
 slTrailed = False
 pyramided = False  # one-time guard: True once we've reached the trail point on this trade
-didPyramid = False  # True only if the pyramid add ACTUALLY filled (qty was increased)
 slConfirmCount = 0
 spread_type_decided = False  # flag to decide spread type only once per day
 
@@ -3146,7 +3141,7 @@ while x == 1:
                   "| isCE_DomRes_once=", isCE_DominantAtRes_once, " fresh_CE=", _last_fresh_ce)
 
             # === BULL ENTRY ===
-            if bull_direction_ok and _dominance_ok_bull and slCount != 2 and trailWithPyramidSLCount < TRAIL_PYRAMID_SL_HALT and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
+            if bull_direction_ok and _dominance_ok_bull and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
                 print("In Bull trade, slCount = ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
@@ -3274,7 +3269,6 @@ while x == 1:
                 entryPremium = anchorPremium
                 slTrailed = False
                 pyramided = False
-                didPyramid = False
                 slConfirmCount = 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
@@ -3294,7 +3288,7 @@ while x == 1:
                 avgOiPcrList2 = []; avgOiPcr9List2 = []
 
             # === BEAR ENTRY ===
-            elif bear_direction_ok and _dominance_ok_bear and slCount != 2 and trailWithPyramidSLCount < TRAIL_PYRAMID_SL_HALT and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
+            elif bear_direction_ok and _dominance_ok_bear and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
                 print("In Bear trade, slCount= ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
@@ -3417,7 +3411,6 @@ while x == 1:
                 entryPremium = anchorPremium
                 slTrailed = False
                 pyramided = False
-                didPyramid = False
                 slConfirmCount = 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
@@ -3508,7 +3501,6 @@ while x == 1:
                                     _added = pyramid_add_position(tradeATMOption, tradeHedgeOption, False, qty)
                                     if _added > 0:
                                         qty = qty + _added
-                                        didPyramid = True
                                     pyramided = True
                             sl_breach = ltp_now >= sl
                             tgt_reached = ltp_now <= target
@@ -3525,7 +3517,6 @@ while x == 1:
                                     _added = pyramid_add_position(tradeATMOption, tradeHedgeOption, True, qty)
                                     if _added > 0:
                                         qty = qty + _added
-                                        didPyramid = True
                                     pyramided = True
                             sl_breach = ltp_now <= sl
                             tgt_reached = ltp_now >= target
@@ -3536,18 +3527,13 @@ while x == 1:
                             if ltpSlConfirm >= SL_CONFIRM_TICKS:
                                 print('SL Hit (LTP)')
                                 st = 0
-                                # SL-count tiers: (1) untrailed SL = real loss -> slCount (2-SL halt).
-                                # (2) trailed + actually PYRAMIDED then reversed to breakeven = a real
-                                # give-back loss -> trailWithPyramidSLCount (own 3-count halt). (3)
-                                # trailed, no pyramid = scratch -> not counted anywhere.
+                                # Only an UNTRAILED SL is a real loss and counts toward the daily
+                                # 2-SL halt. A trailed exit (SL already at breakeven) is a scratch.
                                 if not slTrailed:
                                     slCount += 1
                                     print('slCount =', slCount)
-                                elif didPyramid:
-                                    trailWithPyramidSLCount += 1
-                                    print('trailWithPyramidSLCount =', trailWithPyramidSLCount, '(trailed+pyramided reversed to breakeven)')
                                 else:
-                                    print('SL at breakeven (trailed, no pyramid) — scratch, not counted. slCount =', slCount)
+                                    print('SL at breakeven (trailed) — scratch, not counted. slCount =', slCount)
                                 oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
                                 break
                         else:
@@ -3593,16 +3579,13 @@ while x == 1:
                             if fb_sl:
                                 print("SL Hit (CANDLE FALLBACK) close=", _fb_close, " SL=", sl)
                                 st = 0
-                                # Same tiers as the LTP path: untrailed=slCount, trailed+pyramided
-                                # reversed=trailWithPyramidSLCount, trailed-no-pyramid=scratch(not counted).
+                                # Same rule as the LTP path: untrailed SL counts, trailed
+                                # (breakeven) exit is a scratch and is not counted.
                                 if not slTrailed:
                                     slCount += 1
                                     print('slCount =', slCount)
-                                elif didPyramid:
-                                    trailWithPyramidSLCount += 1
-                                    print('trailWithPyramidSLCount =', trailWithPyramidSLCount, '(trailed+pyramided reversed to breakeven)')
                                 else:
-                                    print('SL at breakeven (trailed, no pyramid) — scratch, not counted. slCount =', slCount)
+                                    print('SL at breakeven (trailed) — scratch, not counted. slCount =', slCount)
                                 oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
                                 break
                             elif fb_tgt:
