@@ -157,6 +157,11 @@ TRAIL_TRIGGER_TARGET_FRACTION = 0.50
 # back to breakeven; BEAR keeps 3.0. R:R therefore ~1.25 bull / ~1.88 bear.
 TARGET_MULT_BULL = 2.0
 TARGET_MULT_BEAR = 3.0
+# Trailing SL (move SL to breakeven once TRAIL_TRIGGER_TARGET_FRACTION of target is covered) is
+# DISABLED for BULL trades: with the nearer 2.0x bull target, trailing was exiting bull trades at
+# breakeven on a normal pullback instead of letting them reach target. Bull trades therefore keep
+# their ORIGINAL SL for the whole trade. BEAR trades still trail.
+TRAIL_SL_FOR_BULL = False
 
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
@@ -3490,7 +3495,9 @@ while x == 1:
                     if ltp_now is not None and (st == 1 or st == 2):
                         if not is_debit:
                             # Credit: premium rising = loss (SL), falling = profit (target)
-                            if not slTrailed and ltp_now <= (entryPremium - trailTriggerPts):
+                            # TRAIL_SL_FOR_BULL=False -> bull trades (st==1) keep their ORIGINAL SL
+                            # and run to the (nearer, 2.0x) target instead of trailing to breakeven.
+                            if (TRAIL_SL_FOR_BULL or st != 1) and not slTrailed and ltp_now <= (entryPremium - trailTriggerPts):
                                 sl = entryPremium
                                 slTrailed = True
                                 print("TRAILING SL activated! SL moved to breakeven =", sl)
@@ -3507,7 +3514,8 @@ while x == 1:
                             tgt_reached = ltp_now <= target
                         else:
                             # Debit: premium falling = loss (SL), rising = profit (target)
-                            if not slTrailed and ltp_now >= (entryPremium + trailTriggerPts):
+                            # Same bull exclusion as the credit path (st==1 = bull trade).
+                            if (TRAIL_SL_FOR_BULL or st != 1) and not slTrailed and ltp_now >= (entryPremium + trailTriggerPts):
                                 sl = entryPremium
                                 slTrailed = True
                                 print("DEBIT TRAILING SL activated! SL moved to breakeven =", sl)
