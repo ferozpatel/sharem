@@ -152,6 +152,11 @@ TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
 # trailing). Refuses to let a solid winner that has covered most of the distance to target
 # turn back into a loss, while still giving the trade room in the first half of the move.
 TRAIL_TRIGGER_TARGET_FRACTION = 0.50
+# Target multiplier on the option's median HIGH-LOW range, per DIRECTION (SL stays 1.6x for both).
+# BULL uses a NEARER target (2.0) so bull credit trades bank the move instead of round-tripping
+# back to breakeven; BEAR keeps 3.0. R:R therefore ~1.25 bull / ~1.88 bear.
+TARGET_MULT_BULL = 2.0
+TARGET_MULT_BEAR = 3.0
 
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
@@ -256,7 +261,14 @@ MIN_LOTS = 1                     # minimum position
 # SAME target with SL at breakeven for all lots -> winners run at ~3x size (R:R boost). Trade-off:
 # if price REVERSES from the trail point back to breakeven, the added lots give back ~trail
 # points each (a fatter loss than the base risk budget on those rare days). Set False to disable.
-PYRAMIDING_ENABLED = True
+# DISABLED 2026-09-30: pyramiding lost on every live session it fired. The added lots enter at
+# the trail level but the SL sits at the ORIGINAL entry, so a reversal costs them the full trail
+# distance each (09-30: ~-19k across two trades against a 4k/trade budget), and those exits were
+# logged as trailWithPyramidSLCount so the 2-SL daily halt never tripped. Do NOT re-enable until
+# the SL is moved to the ADD price (so added lots scratch) AND the SL tracks the NET SPREAD
+# (main - hedge) instead of the main leg alone — at the main's entry price the spread is already
+# negative because the hedge decays independently.
+PYRAMIDING_ENABLED = False
 PYRAMID_ADD_MULTIPLIER = 2       # add 2x original qty (total becomes ~3x) when trail activates
 # Fraction of available funds usable for a trade. Applied to REAL available funds
 # (margin_avail from the broker, fetched live) when available; else to FALLBACK_CAPITAL.
@@ -3228,15 +3240,16 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 1.6, Target: median x 3.0 (R:R ~1:2). Median is HIGH-LOW range.
-                # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
-                # traded strike, right before qty/margin sizing. No second live API call here,
-                # so SL/Target and qty sizing always agree on the same volatility snapshot.
+                # BULL: SL = median x 1.6, Target = median x TARGET_MULT_BULL (2.0 — nearer target
+                # so bull credit trades bank the move instead of round-tripping). Median is the
+                # HIGH-LOW range. Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit
+                # on the exact traded strike, right before qty/margin sizing. No second live API
+                # call here, so SL/Target and qty sizing use the same volatility snapshot.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 1.6)
-                    effective_tgt = round(opt_range * 3.0)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.6,Tgtx3.0)"
+                    effective_tgt = round(opt_range * TARGET_MULT_BULL)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.6,Tgtx{TARGET_MULT_BULL})"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
@@ -3373,14 +3386,14 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # SL: median x 1.6, Target: median x 3.0 (R:R ~1:2). Median is HIGH-LOW range.
-                # Reuse tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact
-                # traded strike, right before qty/margin sizing. No second live API call here.
+                # BEAR: SL = median x 1.6, Target = median x TARGET_MULT_BEAR (3.0 — unchanged).
+                # Median is HIGH-LOW range. Reuse tradeOptRange — computed ONCE inside
+                # takeEntryCredit/Debit on the exact traded strike, right before qty/margin sizing.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
                     effective_sl = round(opt_range * 1.6)
-                    effective_tgt = round(opt_range * 3.0)
-                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.6,Tgtx3.0)"
+                    effective_tgt = round(opt_range * TARGET_MULT_BEAR)
+                    sl_source = f"OPTION_RANGE(median={opt_range},SLx1.6,Tgtx{TARGET_MULT_BEAR})"
                 else:
                     # Edge case: no candle data at all - use IV as absolute last resort
                     effective_sl = dynamic_sl_pt
