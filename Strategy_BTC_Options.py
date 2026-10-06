@@ -50,6 +50,10 @@ STRIKE_STEP = 200
 # 1000-point grid for BTC). e.g. spot 84800 -> line 85000.
 SR_LINE_STEP = 1000
 
+# Max length of the rolling OI-PCR windows (avgOiPcrList / avgOiPcr9List) kept
+# while the ATM strike holds steady; bounds memory on a long 24/7 session.
+ROLLING_PCR_WINDOW = 50
+
 # No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
 NO_TRADE_ZONE_BUFFER = 50
 
@@ -397,6 +401,108 @@ def log_support_resistance(index_price, sr_line, role, position,
               line=_fmt(sr_line), role=role, step=SR_LINE_STEP,
               spot=_fmt(index_price), ntl=_fmt(no_trade_low),
               nth=_fmt(no_trade_high), note=note))
+
+
+def _compare_ce_pe(ce, pe):
+    """
+    Sensex-style ``CE < PE by X%`` comparison string for a CE/PE pair.
+
+    ``X`` is the absolute difference as a percentage of the larger side
+    (``|ce - pe| / max(|ce|, |pe|) * 100``). Returns ``"n/a"`` when either side
+    is non-numeric and ``"CE = PE by 0.0%"`` when both are zero.
+    """
+    try:
+        c = float(ce)
+        p = float(pe)
+    except (TypeError, ValueError):
+        return "n/a"
+    larger = max(abs(c), abs(p))
+    if larger == 0.0:
+        return "CE = PE by 0.0%"
+    pct = abs(c - p) / larger * 100.0
+    if c > p:
+        rel = "CE > PE"
+    elif c < p:
+        rel = "CE < PE"
+    else:
+        rel = "CE = PE"
+    return "{} by {:.1f}%".format(rel, pct)
+
+
+def log_atm_shift_summary(snapshot, pcr_full, pcr_9, is_atm_shift, map_strike,
+                          avg_oipcr_list, avg_oipcr9_list,
+                          atm_not_shifted_count):
+    """
+    Log the Sensex-equivalent ATM-shift + rolling OI-PCR summary lines
+    (Req 9.4, 9.7, 9.10).
+
+    Mirrors the Sensex block::
+
+        IS_ATM_STRIKE_SHIFT = False  mapStrike = {85000: 85000}
+        avgOiPcrList2  = [1.59, 1.61] atmStrikeNotShiftedCount= 2   (full 17)
+        avgOiPcr9List2 = [1.10, 1.12] atmStrikeNotShiftedCount= 2   (central 9)
+
+    ``is_atm_shift`` is True when the ATM strike moved vs the previous cycle;
+    ``map_strike`` maps prev->curr ATM. The two lists accumulate the per-cycle
+    full-17 and central-9 OI PCRs while the ATM holds steady and reset on a
+    shift; ``atm_not_shifted_count`` is the consecutive-stable-cycle count.
+    """
+    print("IS_ATM_STRIKE_SHIFT = {}  mapStrike = {}".format(
+        is_atm_shift, map_strike))
+    print("avgOiPcrList2  = {} atmStrikeNotShiftedCount= {}  (full 17 strikes, "
+          "curr={})".format(
+              [round(x, 2) for x in avg_oipcr_list], atm_not_shifted_count,
+              _fmt(pcr_full, 2)))
+    print("avgOiPcr9List2 = {} atmStrikeNotShiftedCount= {}  (central 9, "
+          "curr={})".format(
+              [round(x, 2) for x in avg_oipcr9_list], atm_not_shifted_count,
+              _fmt(pcr_9, 2)))
+
+
+def log_supp_res_oi(snapshot, oi_deltas, sr_line):
+    """
+    Log the Sensex-equivalent CE/PE OI + OI-change detail AT the S/R line
+    (Req 9.4, 9.7, 9.8).
+
+    Mirrors the Sensex block::
+
+        CEoich val =  48140.0  PEoich val =  84900.0 , CE < PE by 43.3%
+        SUPP_RES TOTAL OI: CE= 894200  PE= 1093900 , CE < PE by 18.3%
+
+    ``CEoich``/``PEoich`` are the bot's OWN same-strike consecutive-snapshot OI
+    deltas (Req 9.8) at the S/R strike; the TOTAL OI line is the current CE/PE
+    open interest (Req 9.7) at that strike. The ``sr_line`` (nearest 1000) is a
+    multiple of the 200 strike step, so it always maps to a chain strike.
+    """
+    rows = snapshot.get("rows") or {}
+    try:
+        sr_key = int(sr_line)
+    except (TypeError, ValueError):
+        sr_key = sr_line
+    pair = rows.get(sr_key) or rows.get(sr_line) or {}
+    call_row = pair.get("call") if isinstance(pair, dict) else None
+    put_row = pair.get("put") if isinstance(pair, dict) else None
+    call_row = call_row if isinstance(call_row, dict) else {}
+    put_row = put_row if isinstance(put_row, dict) else {}
+
+    ce_oi = call_row.get("oi") or 0.0
+    pe_oi = put_row.get("oi") or 0.0
+
+    delta_row = {}
+    if isinstance(oi_deltas, dict):
+        delta_row = oi_deltas.get(sr_key) or oi_deltas.get(sr_line) or {}
+    ce_oich = delta_row.get("call_oi_delta") if isinstance(delta_row, dict) \
+        else None
+    pe_oich = delta_row.get("put_oi_delta") if isinstance(delta_row, dict) \
+        else None
+    ce_oich = ce_oich if ce_oich is not None else 0.0
+    pe_oich = pe_oich if pe_oich is not None else 0.0
+
+    print("CEoich val =  {}  PEoich val =  {} , {}".format(
+        _fmt(ce_oich, 1), _fmt(pe_oich, 1), _compare_ce_pe(ce_oich, pe_oich)))
+    print("SUPP_RES TOTAL OI (strike {}): CE= {}  PE= {} , {}".format(
+        int(sr_line) if isinstance(sr_line, (int, float)) else sr_line,
+        _fmt(ce_oi, 1), _fmt(pe_oi, 1), _compare_ce_pe(ce_oi, pe_oi)))
 
 
 def log_would_have_entered(decision, reason=None, **details):
@@ -852,6 +958,12 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "decision": carried.get("decision"),
             "index_price": carried.get("index_price"),
             "perp_price": carried.get("perp_price"),
+            # ATM-shift + rolling OI-PCR state carried forward unchanged while
+            # a position is being monitored (no new snapshot this branch).
+            "prev_atm": carried.get("prev_atm"),
+            "avg_oipcr_list": carried.get("avg_oipcr_list"),
+            "avg_oipcr9_list": carried.get("avg_oipcr9_list"),
+            "atm_not_shifted_count": carried.get("atm_not_shifted_count"),
             "entry": carried.get("entry"),
             "monitor": monitor_result,
             # Entry-gating + monitoring state (possibly updated by the monitor).
@@ -931,8 +1043,41 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     log_option_chain_table(snapshot, oi_deltas, pcr,
                            index_price=index_price, perp_price=perp_price)
 
+    # ATM-shift tracking + rolling OI-PCR accumulation (Sensex-equivalent
+    # summary, Req 9.7/9.10). The full-17 and central-9 OI PCRs are collected
+    # while the ATM strike holds steady across cycles and reset on a shift.
+    pcr_full = helper.computePCR(snapshot, central=17)
+    curr_atm = snapshot.get("atm_strike")
+    prev_atm = carried.get("prev_atm")
+    is_atm_shift = prev_atm is not None and prev_atm != curr_atm
+    if is_atm_shift:
+        map_strike = {prev_atm: curr_atm}
+        avg_oipcr_list = [pcr_full] if _pcr_is_finite(pcr_full) else []
+        avg_oipcr9_list = [pcr] if _pcr_is_finite(pcr) else []
+        atm_not_shifted_count = 1
+    else:
+        map_strike = {curr_atm: curr_atm}
+        avg_oipcr_list = list(carried.get("avg_oipcr_list") or [])
+        avg_oipcr9_list = list(carried.get("avg_oipcr9_list") or [])
+        if _pcr_is_finite(pcr_full):
+            avg_oipcr_list.append(pcr_full)
+        if _pcr_is_finite(pcr):
+            avg_oipcr9_list.append(pcr)
+        atm_not_shifted_count = (carried.get("atm_not_shifted_count") or 0) + 1
+    # Cap the rolling windows so a long-running (24/7) session can't grow them
+    # without bound; keep the most recent values.
+    avg_oipcr_list = avg_oipcr_list[-ROLLING_PCR_WINDOW:]
+    avg_oipcr9_list = avg_oipcr9_list[-ROLLING_PCR_WINDOW:]
+
+    log_atm_shift_summary(snapshot, pcr_full, pcr, is_atm_shift, map_strike,
+                          avg_oipcr_list, avg_oipcr9_list,
+                          atm_not_shifted_count)
+
     log_support_resistance(index_price, sr_line, sr_role, sr_position,
                            ntl, nth)
+
+    # CE/PE OI + OI-change detail AT the S/R line (Sensex-equivalent).
+    log_supp_res_oi(snapshot, oi_deltas, sr_line)
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
@@ -1016,6 +1161,12 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "decision": decision,
         "index_price": index_price,
         "perp_price": perp_price,
+        # ATM-shift + rolling OI-PCR state carried into the next cycle
+        # (Sensex-equivalent summary; Req 9.7/9.10).
+        "prev_atm": curr_atm,
+        "avg_oipcr_list": avg_oipcr_list,
+        "avg_oipcr9_list": avg_oipcr9_list,
+        "atm_not_shifted_count": atm_not_shifted_count,
         # Entry-gating state carried into the next cycle (Task 14.3).
         "entry": entry,
         "position_open": entry_state.get("position_open", False),
