@@ -45,6 +45,11 @@ TIMEFRAME_MINUTES = 3
 SR_BAND_WIDTH = 1000
 STRIKE_STEP = 200
 
+# S/R line granularity: the single support/resistance line is the nearest
+# multiple of this step to the spot (Sensex-style nearest-level model, but on a
+# 1000-point grid for BTC). e.g. spot 84800 -> line 85000.
+SR_LINE_STEP = 1000
+
 # No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
 NO_TRADE_ZONE_BUFFER = 50
 
@@ -150,43 +155,57 @@ def _now_ist():
 # ============================================================
 def compute_support_resistance(index_price):
     """
-    Derive the S/R band and no-trade dead zone from the ``.DEXBTUSD`` index
-    anchor (Req 9.13, 9.14).
+    Derive the single nearest-1000 S/R line and the spot's role against it
+    (Req 9.13, 9.14) — the Sensex nearest-level model, on a 1000-point grid.
 
-    The 1000-pt (``SR_BAND_WIDTH``) band is centered on the index price:
-      * midpoint    = index_price
-      * support     = midpoint - SR_BAND_WIDTH / 2   (band lower bound)
-      * resistance  = midpoint + SR_BAND_WIDTH / 2   (band upper bound)
-    The no-trade dead zone straddles the midpoint by ``NO_TRADE_ZONE_BUFFER``
-    (±50 pt) — no directional entry is allowed while the index sits inside it
-    (Req 9.14; enforced by the entry gating in 14.3):
-      * no_trade_low  = midpoint - NO_TRADE_ZONE_BUFFER
-      * no_trade_high = midpoint + NO_TRADE_ZONE_BUFFER
+    The S/R line is the nearest ``SR_LINE_STEP`` (1000) level to the spot:
 
-    Returns ``(support, resistance, no_trade_low, no_trade_high, midpoint)`` as
-    floats. Raises ``ValueError`` when the index price is missing/non-positive
-    so a bad anchor is loud rather than silently producing a bogus band.
+        sr_line = round(spot / 1000) * 1000
+
+    The spot's position relative to that line sets the role and the tradable
+    side (``NO_TRADE_ZONE_BUFFER`` straddles the line as a dead zone):
+      * spot within +/- buffer of the line -> AT_LINE  / no_trade_zone
+      * spot BELOW the line  -> line acts as RESISTANCE -> resistance_side (bear)
+      * spot ABOVE the line  -> line acts as SUPPORT    -> support_side   (bull)
+
+    e.g. spot 84800 -> sr_line 85000; spot is below -> 85000 is RESISTANCE and
+    the bot looks for a BEAR trade.
+
+    Returns ``(sr_line, role, position, no_trade_low, no_trade_high)`` where
+    ``role`` is ``RESISTANCE``/``SUPPORT``/``AT_LINE`` and ``position`` is
+    ``resistance_side``/``support_side``/``no_trade_zone`` (consumed by
+    ``derive_directional_bias`` and the entry gating). Raises ``ValueError``
+    when the index price is missing/non-positive so a bad anchor is loud rather
+    than silently producing a bogus line.
     """
     if index_price is None:
         raise ValueError(
             "compute_support_resistance: index_price is required (got None).")
     try:
-        midpoint = float(index_price)
+        spot = float(index_price)
     except (TypeError, ValueError):
         raise ValueError(
             "compute_support_resistance: index_price must be numeric, got "
             "{!r}.".format(index_price))
-    if midpoint <= 0:
+    if spot <= 0:
         raise ValueError(
             "compute_support_resistance: index_price must be positive, got "
             "{!r}.".format(index_price))
 
-    half_band = SR_BAND_WIDTH / 2.0
-    support = midpoint - half_band
-    resistance = midpoint + half_band
-    no_trade_low = midpoint - NO_TRADE_ZONE_BUFFER
-    no_trade_high = midpoint + NO_TRADE_ZONE_BUFFER
-    return support, resistance, no_trade_low, no_trade_high, midpoint
+    sr_line = float(round(spot / SR_LINE_STEP) * SR_LINE_STEP)
+    no_trade_low = sr_line - NO_TRADE_ZONE_BUFFER
+    no_trade_high = sr_line + NO_TRADE_ZONE_BUFFER
+
+    if no_trade_low <= spot <= no_trade_high:
+        role, position = "AT_LINE", "no_trade_zone"
+    elif spot < sr_line:
+        # Spot below the nearest line -> the line is overhead resistance.
+        role, position = "RESISTANCE", "resistance_side"
+    else:
+        # Spot above the nearest line -> the line is support underneath.
+        role, position = "SUPPORT", "support_side"
+
+    return sr_line, role, position, no_trade_low, no_trade_high
 
 
 # ============================================================
@@ -231,114 +250,153 @@ def log_signal(index_price, perp_price=None, pcr=None, bias=None,
     print(line)
 
 
-def _fmt_delta(value):
+def _ratio2(numer, denom):
     """
-    Format an own same-strike OI delta for the consolidated chain table.
+    Two-decimal ratio string for the Sensex-style oipcr / choipcr columns.
 
-    Returns a 1-decimal string for a real value; returns "" (blank) when the
-    delta is missing — e.g. the first cycle, where there is no previous snapshot
-    to diff against (Req 9.8). Kept blank rather than "N/A" so the ``call_oiChg``
-    / ``put_oiChg`` columns read cleanly on the first cycle.
+    Returns ``"nan"`` when the denominator is zero/None or either side is
+    non-numeric (mirrors the Sensex log, where a zero CALL-side value yields a
+    ``nan`` choipcr). Otherwise ``round(numer / denom, 2)`` as a 2-dp string.
     """
-    if value is None:
-        return ""
-    return _fmt(value, 1)
+    try:
+        n = float(numer)
+        d = float(denom)
+    except (TypeError, ValueError):
+        return "nan"
+    if d == 0.0:
+        return "nan"
+    return "{:.2f}".format(round(n / d, 2))
 
 
-def log_option_chain_table(snapshot, oi_deltas, pcr):
+def _fmt_oich(delta):
     """
-    Log ONE consolidated Sensex-style option-chain table per cycle (Req 9.4,
-    9.6, 9.7, 9.8, 9.9).
+    Format a same-strike OI delta as a Sensex-style ``(tag, value)`` pair.
 
-    This single table replaces the three former per-strike tables
-    (CHAIN_SNAPSHOT + PCR_TABLE + the inline OI_DELTA block) with one aligned,
-    ASCII-safe grid. Columns:
+    ``tag`` is ``"added"`` when the OI grew (delta > 0) and ``"unwind"``
+    otherwise (<= 0, including the first-cycle zero). ``value`` is the signed
+    delta to one decimal (OI is in contracts on Delta, so it may be fractional).
+    """
+    try:
+        d = float(delta) if delta is not None else 0.0
+    except (TypeError, ValueError):
+        d = 0.0
+    tag = "added" if d > 0 else "unwind"
+    return tag, _fmt(d, 1)
 
-        #, strike, call_oi, call_px, put_px, put_oi,
-        call_oiChg, put_oiChg, oi_chg_6h*
 
-      * ``#`` numbers the 17 strikes 1..17 ascending; the middle row (#9 of 17)
-        is the ATM strike (``snapshot["atm_strike"]``) and is marked with a
-        trailing " <== ATM".
-      * ``call_oiChg`` / ``put_oiChg`` are the bot's OWN same-strike
-        consecutive-snapshot OI deltas (Req 9.8), looked up per strike from the
-        ``oi_deltas`` dict (``helper.computeSameStrikeOIDelta``); blank on the
-        first cycle when there is no previous snapshot.
-      * ``oi_chg_6h`` is the exchange-provided 6-hour OI-change field, logged for
-        observation ONLY and never used for signals (Req 9.9); marked with a
-        trailing footnote.
+def log_option_chain_table(snapshot, oi_deltas, pcr,
+                           index_price=None, perp_price=None):
+    """
+    Log ONE Sensex-style option-chain block per cycle (Req 9.4, 9.6-9.9).
 
-    The aggregate PCR over the central 9 strikes (Req 9.7) is printed in the
-    header line (``aggregatePCR=...``) so the separate PCR table is no longer
-    needed. Timestamps are displayed in IST (display-only; logic stays UTC).
+    Mirrors the Sensex ``====after 3 min ochain====`` layout: a header line, a
+    column hint, then one ``pcrN`` row per strike (17 strikes printed
+    DESCENDING, high strikes first, so the ATM lands on row #9). Per row:
+
+        pcrN =  BTC-<strike>   <oipcr>   <choipcr> CALL <added|unwind> <ceChg>
+                PUT <added|unwind> <peChg>  CE_OI=<ce_oi> PE_OI=<pe_oi>
+
+      * ``oipcr`` = same-strike OI PCR = PE_OI / CE_OI (Req 9.7).
+      * ``choipcr`` = same-strike change-OI PCR = PUT_oiChg / CALL_oiChg, from
+        the bot's OWN consecutive-snapshot deltas (Req 9.8); ``nan`` when the
+        CALL-side change is zero (first cycle / no CALL activity).
+      * ``CALL/PUT added|unwind`` are those same OI deltas with a direction tag.
+      * ``CE_OI`` / ``PE_OI`` are the current same-strike open interest (Req 9.7).
+
+    Below the table the aggregate PCR over the central 9 strikes (Req 9.7), the
+    sum of the per-strike oipcr, and the BTC spot (``.DEXBTUSD`` index anchor,
+    Req 9.11) + perpetual/future (``BTCUSD``, log-only, Req 9.12) prices are
+    printed. OI is in contracts (1 contract = 0.001 BTC); prices are USD.
+    Timestamps display in IST (logic stays UTC).
     """
     if not isinstance(snapshot, dict):
-        print("OPTION_CHAIN [{ts}] (no snapshot available)".format(
-            ts=_now_ist()))
+        print("====after 3 min ochain==== {} (no snapshot available)".format(
+            _now_ist()))
         return
 
     atm_strike = snapshot.get("atm_strike")
-    print("OPTION_CHAIN [{ts}] ATM={atm} aggregatePCR={pcr} "
-          "(central 9 strikes)".format(
-              ts=_now_ist(), atm=atm_strike, pcr=_fmt(pcr, 4)))
-
     rows = snapshot.get("rows") or {}
     oi_deltas = oi_deltas or {}
-    row_fmt = ("  {:>2} {:>10} {:>12} {:>12} {:>12} {:>12} "
-               "{:>12} {:>12} {:>14}")
-    print(row_fmt.format(
-        "#", "strike", "call_oi", "call_px", "put_px", "put_oi",
-        "call_oiChg", "put_oiChg", "oi_chg_6h*"))
 
-    for i, strike in enumerate(snapshot.get("strikes", []), start=1):
+    print("====after 3 min ochain==== {}".format(_now_ist()))
+    print("                                    oipcr   choipcr   "
+          "CE_OI / PE_OI (same strike)")
+
+    # Print strikes DESCENDING (high -> low) so the ATM sits on row #9 of 17,
+    # matching the Sensex option-chain view.
+    strikes_desc = list(reversed(snapshot.get("strikes", [])))
+    oipcr_sum = 0.0
+
+    for i, strike in enumerate(strikes_desc, start=1):
         pair = rows.get(strike) or {}
         call_row = pair.get("call") if isinstance(pair, dict) else None
         put_row = pair.get("put") if isinstance(pair, dict) else None
         call_row = call_row if isinstance(call_row, dict) else {}
         put_row = put_row if isinstance(put_row, dict) else {}
 
-        # 6-hour OI change is log-only (Req 9.9); prefer the call row, fall
-        # back to the put row so the observation field is captured either way.
-        oi_chg_6h = call_row.get("oi_change_6h")
-        if oi_chg_6h is None:
-            oi_chg_6h = put_row.get("oi_change_6h")
+        ce_oi = call_row.get("oi") or 0.0
+        pe_oi = put_row.get("oi") or 0.0
 
         # Own same-strike consecutive-snapshot OI deltas (Req 9.8), keyed by
-        # strike; tolerate int/str key variants and first-cycle-empty deltas.
+        # strike; tolerate int/str key variants and first-cycle zero deltas.
         delta_row = (oi_deltas.get(strike)
                      or oi_deltas.get(int(strike)) or {}) \
             if isinstance(oi_deltas, dict) else {}
-        call_delta = delta_row.get("call_oi_delta")
-        put_delta = delta_row.get("put_oi_delta")
+        ce_choi = delta_row.get("call_oi_delta")
+        pe_choi = delta_row.get("put_oi_delta")
 
-        line = row_fmt.format(
-            i, strike,
-            _fmt(call_row.get("oi"), 1), _fmt(call_row.get("price")),
-            _fmt(put_row.get("price")), _fmt(put_row.get("oi"), 1),
-            _fmt_delta(call_delta), _fmt_delta(put_delta),
-            _fmt(oi_chg_6h, 1))
+        oipcr = _ratio2(pe_oi, ce_oi)       # PE_OI / CE_OI (same strike)
+        choipcr = _ratio2(pe_choi, ce_choi)  # PUT_chg / CALL_chg (same strike)
+        try:
+            oipcr_sum += float(oipcr)
+        except (TypeError, ValueError):
+            pass
+
+        ce_tag, ce_val = _fmt_oich(ce_choi)
+        pe_tag, pe_val = _fmt_oich(pe_choi)
+
+        line = ("pcr{n} =  BTC-{strike}   {oipcr}   {choipcr} "
+                "CALL {ctag} {cval}   PUT {ptag} {pval}  "
+                "CE_OI={ceoi} PE_OI={peoi}").format(
+                    n=i, strike=int(strike), oipcr=oipcr, choipcr=choipcr,
+                    ctag=ce_tag, cval=ce_val, ptag=pe_tag, pval=pe_val,
+                    ceoi=_fmt(ce_oi, 1), peoi=_fmt(pe_oi, 1))
         if atm_strike is not None and strike == atm_strike:
             line += " <== ATM"
         print(line)
 
-    print("  * oi_chg_6h is exchange-provided, logged for observation only "
-          "(never used for signals).")
+    print("PCRSUM== {}".format(_fmt(oipcr_sum, 2)))
+    print("AVG_OIPCR_9STRIKE= {}  (central 9 strikes, Req 9.7)".format(
+        _fmt(pcr, 2)))
+
+    # Spot (index anchor) + perpetual/future reference, printed after the chain.
+    print("BTC SPOT (.DEXBTUSD)   = {}".format(_fmt(index_price)))
+    print("BTC PERP/FUT (BTCUSD)  = {}".format(_fmt(perp_price)))
 
 
-def log_support_resistance(index_price, support, resistance,
-                           no_trade_low, no_trade_high, midpoint=None):
+def log_support_resistance(index_price, sr_line, role, position,
+                           no_trade_low, no_trade_high):
     """
-    Log the support/resistance band and the no-trade dead zone derived from the
-    index anchor (Req 9.4, 9.13, 9.14).
+    Log the single nearest-1000 S/R line and the spot's role against it
+    (Req 9.4, 9.13, 9.14), Sensex-style ``SUPP_RES===`` line.
+
+    ``role`` is ``RESISTANCE``/``SUPPORT``/``AT_LINE``; the trailing note spells
+    out the directional read (spot below the line -> resistance -> bear; spot
+    above -> support -> bull; at the line -> no trade).
     """
-    print("SUPPORT_RESISTANCE [{ts}] index={ip} midpoint={mid} "
-          "support={sup} resistance={res} "
-          "no_trade_zone=[{ntl}, {nth}] (band_width={bw}, buffer={buf})".format(
-              ts=_now_ist(), ip=_fmt(index_price),
-              mid=_fmt(midpoint if midpoint is not None else index_price),
-              sup=_fmt(support), res=_fmt(resistance),
-              ntl=_fmt(no_trade_low), nth=_fmt(no_trade_high),
-              bw=SR_BAND_WIDTH, buf=NO_TRADE_ZONE_BUFFER))
+    if position == "resistance_side":
+        note = "spot below line => RESISTANCE => look for BEAR trade"
+    elif position == "support_side":
+        note = "spot above line => SUPPORT => look for BULL trade"
+    else:
+        note = ("spot within +/-{} of line => NO-TRADE zone".format(
+            NO_TRADE_ZONE_BUFFER))
+
+    print("SUPP_RES=== {line} role={role} (nearest {step} to spot {spot}) "
+          "no_trade=[{ntl}, {nth}] | {note}".format(
+              line=_fmt(sr_line), role=role, step=SR_LINE_STEP,
+              spot=_fmt(index_price), ntl=_fmt(no_trade_low),
+              nth=_fmt(no_trade_high), note=note))
 
 
 def log_would_have_entered(decision, reason=None, **details):
@@ -471,16 +529,18 @@ def _provisional_pcr_label(pcr):
     return "PCR_NEUTRAL(provisional)"
 
 
-def derive_directional_bias(index_price, pcr, no_trade_low, no_trade_high):
+def derive_directional_bias(index_price, pcr, position, sr_line, role):
     """
-    Derive the directional bias from the PCR together with the index position
-    relative to the 1000-pt S/R band / no-trade zone (Req 9.13).
+    Derive the directional bias from the PCR together with the spot's role
+    against the nearest-1000 S/R line (Req 9.13).
 
-    Position rule (matches the entry-side policy that Task 14.3 will enforce,
-    Req 9.14/9.15 — here we only DERIVE + LOG, never gate an order):
-      * index inside the no-trade zone (ntl <= index <= nth) -> NEUTRAL/no-trade
-      * index below the no-trade zone (support side)         -> BULL permitted
-      * index above the no-trade zone (resistance side)      -> BEAR permitted
+    Position rule (the nearest-level model — spot vs the single S/R line;
+    classified upstream by ``compute_support_resistance``):
+      * spot at the line (``no_trade_zone``)        -> NEUTRAL / no-trade
+      * spot ABOVE the line = SUPPORT (support_side) -> BULL permitted
+      * spot BELOW the line = RESISTANCE (resistance_side) -> BEAR permitted
+
+    e.g. spot 84800 < line 85000 -> RESISTANCE -> look for a BEAR trade.
 
     The PCR is combined provisionally via ``_provisional_pcr_label`` (1.0 pivot)
     WITHOUT hard-gating on the ``[NEEDS INPUT]`` PCR thresholds. The returned
@@ -494,49 +554,49 @@ def derive_directional_bias(index_price, pcr, no_trade_low, no_trade_high):
     pcr_label = _provisional_pcr_label(pcr)
     thresholds_note = "thresholds=[NEEDS INPUT]"
 
-    # Position of the index relative to the no-trade zone / band.
     if index_price is None:
         return ("UNKNOWN", "unknown", "NO_ENTRY",
                 "index price unavailable ({})".format(thresholds_note),
                 pcr_label)
-
     try:
-        idx = float(index_price)
+        float(index_price)
     except (TypeError, ValueError):
         return ("UNKNOWN", "unknown", "NO_ENTRY",
                 "index price non-numeric ({})".format(thresholds_note),
                 pcr_label)
 
-    if no_trade_low <= idx <= no_trade_high:
+    if position == "no_trade_zone":
         return ("NEUTRAL", "no_trade_zone", "NO_ENTRY",
-                "index inside no-trade zone [{}, {}] ({})".format(
-                    _fmt(no_trade_low), _fmt(no_trade_high), thresholds_note),
+                "spot at the {} S/R line {} (within no-trade buffer) ({})".format(
+                    role, _fmt(sr_line), thresholds_note),
                 pcr_label)
 
-    if idx < no_trade_low:
-        # Support side: only a bull bias is permitted by position.
+    if position == "support_side":
+        # Spot above SUPPORT -> only a bull bias is permitted by position.
         provisional_pcr_bull = _pcr_is_finite(pcr) and float(pcr) > 1.0
         provisional_pcr_bull = provisional_pcr_bull or pcr == float("inf")
         if provisional_pcr_bull:
             decision = "WOULD_ENTER(bull, provisional)"
-            reason = ("support side AND {} agrees (bullish); {} — "
-                      "provisional only".format(pcr_label, thresholds_note))
+            reason = ("spot above SUPPORT {} AND {} agrees (bullish); {} - "
+                      "provisional only".format(
+                          _fmt(sr_line), pcr_label, thresholds_note))
         else:
             decision = "NO_ENTRY(bull-side, PCR not bullish)"
-            reason = ("support side but {} does not lean bullish; {}".format(
-                pcr_label, thresholds_note))
+            reason = ("spot above SUPPORT {} but {} does not lean bullish; "
+                      "{}".format(_fmt(sr_line), pcr_label, thresholds_note))
         return ("BULL", "support_side", decision, reason, pcr_label)
 
-    # idx > no_trade_high -> resistance side: only a bear bias is permitted.
+    # resistance_side: spot below RESISTANCE -> only a bear bias is permitted.
     provisional_pcr_bear = _pcr_is_finite(pcr) and float(pcr) < 1.0
     if provisional_pcr_bear:
         decision = "WOULD_ENTER(bear, provisional)"
-        reason = ("resistance side AND {} agrees (bearish); {} — "
-                  "provisional only".format(pcr_label, thresholds_note))
+        reason = ("spot below RESISTANCE {} AND {} agrees (bearish); {} - "
+                  "provisional only".format(
+                      _fmt(sr_line), pcr_label, thresholds_note))
     else:
         decision = "NO_ENTRY(bear-side, PCR not bearish)"
-        reason = ("resistance side but {} does not lean bearish; {}".format(
-            pcr_label, thresholds_note))
+        reason = ("spot below RESISTANCE {} but {} does not lean bearish; "
+                  "{}".format(_fmt(sr_line), pcr_label, thresholds_note))
     return ("BEAR", "resistance_side", decision, reason, pcr_label)
 
 
@@ -843,17 +903,17 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     #    any signal here.
     oi_deltas = helper.computeSameStrikeOIDelta(prev_snapshot, snapshot)
 
-    # 8. S/R band + no-trade zone from the anchor (Req 9.13/9.14).
-    support, resistance, ntl, nth, midpoint = compute_support_resistance(
+    # 8. Nearest-1000 S/R line + role from the anchor (Req 9.13/9.14).
+    sr_line, sr_role, sr_position, ntl, nth = compute_support_resistance(
         index_price)
 
     # 9. Consecutive same-strike PCR change across cycles (Req 9.10).
     pcr_trend = update_pcr_trend(prev_pcr, pcr, prev_pcr_trend)
 
-    # 10. Directional bias from PCR + index position relative to the band
-    #     (Req 9.13). Does NOT hard-gate on the [NEEDS INPUT] PCR thresholds.
+    # 10. Directional bias from PCR + spot position vs the S/R line (Req 9.13).
+    #     Does NOT hard-gate on the [NEEDS INPUT] PCR thresholds.
     bias, position, decision, reason, pcr_label = derive_directional_bias(
-        index_price, pcr, ntl, nth)
+        index_price, pcr, sr_position, sr_line, sr_role)
 
     # 11. Emit the observation-mode logging surface (Req 9.4). No orders.
     log_signal(
@@ -868,10 +928,11 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     # OI deltas, and the log-only exchange 6-hour field, with the aggregate PCR
     # in its header. Replaces the former CHAIN_SNAPSHOT + PCR_TABLE + inline
     # OI_DELTA blocks (now a single table per cycle).
-    log_option_chain_table(snapshot, oi_deltas, pcr)
+    log_option_chain_table(snapshot, oi_deltas, pcr,
+                           index_price=index_price, perp_price=perp_price)
 
-    log_support_resistance(index_price, support, resistance, ntl, nth,
-                           midpoint=midpoint)
+    log_support_resistance(index_price, sr_line, sr_role, sr_position,
+                           ntl, nth)
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
