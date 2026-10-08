@@ -71,12 +71,12 @@ ENTRY_CONFIRM_CYCLES = 2
 # Monitoring poll interval in seconds (Req 9.18).
 LTP_POLL_INTERVAL = 2
 
-# Signal-cycle cadence in seconds — how often the observation loop reads the
-# anchor, rebuilds the chain snapshot, and logs the signal (Task 14.2). Kept
-# separate from the SL/target monitoring poll (LTP_POLL_INTERVAL) so the
-# analysis cadence can align with TIMEFRAME_MINUTES without over-polling the
-# chain. Defaults to the timeframe (in seconds); adjust for a faster/slower
-# observation cadence.
+# Nominal signal-cycle cadence in seconds (one TIMEFRAME_MINUTES candle). The
+# observation loop no longer sleeps a fixed interval from an arbitrary start —
+# it aligns each cycle to the UTC candle close (:00, :03, :06, ...) via
+# `_seconds_until_next_candle_close`, so a cycle fires as each candle closes
+# (mirrors the Sensex `minute % timeFrame == 0` trigger). This constant is kept
+# as the nominal period for reference/logging and as the natural fallback cadence.
 SIGNAL_INTERVAL_SEC = TIMEFRAME_MINUTES * 60
 
 # Trail-to-breakeven trigger as a fraction of target (Req 9.22).
@@ -152,6 +152,35 @@ def _now_ist():
     """
     ist = datetime.now(REFERENCE_TIMEZONE) + _IST_OFFSET
     return ist.strftime("%Y-%m-%d %H:%M:%S") + " IST"
+
+
+def _seconds_until_next_candle_close(interval_min):
+    """
+    Seconds to wait until the next ``interval_min``-minute candle boundary on
+    the UTC wall clock.
+
+    BTC/crypto candles are UTC-aligned, so a 3-minute candle closes at :00, :03,
+    :06, ... of every hour. Sleeping until the boundary makes each signal cycle
+    fire right as a candle closes and evaluate the just-closed candle — mirroring
+    the Sensex bot's ``dt1.minute % timeFrame == 0`` candle-close trigger instead
+    of drifting from an arbitrary start time.
+
+    Alignment is computed from ``datetime.now(REFERENCE_TIMEZONE)`` (UTC); the
+    returned wait is always strictly positive (when called exactly on a boundary
+    it rolls forward to the NEXT boundary so the same candle is never processed
+    twice). For a 3-minute timeframe the UTC and IST boundaries coincide (the
+    +5:30 IST offset is a whole multiple of 3 minutes), so the displayed IST
+    timestamps still land on clean :00/:03/:06 marks.
+    """
+    now = datetime.now(REFERENCE_TIMEZONE)
+    period = interval_min * 60
+    secs_into_period = ((now.minute % interval_min) * 60
+                        + now.second
+                        + now.microsecond / 1_000_000.0)
+    remaining = period - secs_into_period
+    if remaining <= 0.05:
+        remaining += period
+    return remaining
 
 
 # ============================================================
@@ -2078,18 +2107,27 @@ def run():
     print("=" * 60)
 
     # ---- Observation-mode signal-cycle loop (Task 14.2) ------------------
-    # Run the per-cycle signal evaluation every SIGNAL_INTERVAL_SEC, carrying
-    # the previous cycle's snapshot/PCR/trend so the same-strike OI delta
-    # (Req 9.8) and consecutive PCR trend (Req 9.10) diff against the prior
-    # cycle. Each cycle is wrapped so a transient error (e.g. a chain fetch
-    # hiccup) is logged and the loop continues rather than crashing; a
-    # KeyboardInterrupt stops the loop cleanly. Observation-only: no orders.
-    print("SIGNAL_LOOP [{ts}] starting observation cycles every {n}s "
-          "(no orders will be placed).".format(
-              ts=_now_ist(), n=SIGNAL_INTERVAL_SEC))
+    # Fire each per-cycle signal evaluation ALIGNED to the TIMEFRAME_MINUTES
+    # candle close (:00, :03, :06, ... UTC) rather than every SIGNAL_INTERVAL_SEC
+    # from an arbitrary start — so every log corresponds to a just-closed candle,
+    # exactly like the Sensex bot's `minute % timeFrame == 0` trigger. Each cycle
+    # carries the previous cycle's snapshot/PCR/trend so the same-strike OI delta
+    # (Req 9.8) and consecutive PCR trend (Req 9.10) diff against the prior cycle,
+    # and is wrapped so a transient error (e.g. a chain fetch hiccup) is logged
+    # and the loop continues rather than crashing; a KeyboardInterrupt stops the
+    # loop cleanly. Observation-only: no orders. The next-boundary wait is
+    # recomputed from the wall clock every iteration, so a slow cycle never
+    # accumulates drift (it simply targets the following candle).
+    print("SIGNAL_LOOP [{ts}] starting observation cycles aligned to {n}-min "
+          "candle closes (no orders will be placed).".format(
+              ts=_now_ist(), n=TIMEFRAME_MINUTES))
     state = {}
     try:
         while True:
+            wait_s = _seconds_until_next_candle_close(TIMEFRAME_MINUTES)
+            print("SIGNAL_LOOP [{ts}] waiting {w:.1f}s for next {n}-min candle "
+                  "close.".format(ts=_now_ist(), w=wait_s, n=TIMEFRAME_MINUTES))
+            time.sleep(wait_s)
             try:
                 state = checkCriteriaAndTakeTrade(client, state)
             except KeyboardInterrupt:
@@ -2098,7 +2136,6 @@ def run():
                 print("SIGNAL_ERROR [{ts}] signal cycle failed, continuing: "
                       "{typ}: {msg}".format(
                           ts=_now_ist(), typ=type(exc).__name__, msg=exc))
-            time.sleep(SIGNAL_INTERVAL_SEC)
     except KeyboardInterrupt:
         print("SIGNAL_LOOP [{ts}] stopped by operator (KeyboardInterrupt); "
               "no orders were placed.".format(ts=_now_ist()))
