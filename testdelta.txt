@@ -1,7 +1,7 @@
 PS C:\Users\feroz\Documents\Python\DeltaBot> python Strategy_BTC_Options.py
 ============================================================
-STARTUP [2026-09-27 08:15:30] Strategy_BTC_Options starting...
-STARTUP [2026-09-27 08:15:30] Delta client connection established.
+STARTUP [2026-10-09 01:26:46 IST] Strategy_BTC_Options starting...
+STARTUP [2026-10-09 01:26:46 IST] Delta client connection established.
 STARTUP config:
   instrument           = BTC daily options
   underlying_asset     = BTC
@@ -29,129 +29,41 @@ STARTUP risk params (concrete live values are [NEEDS INPUT], Req 9.27):
 ============================================================
 OBSERVATION_MODE is ON: the strategy will LOG signals, the PCR table, the option-chain snapshot, support/resistance levels, and WOULD_HAVE_ENTERED decisions, and will place NO live orders (Req 9.3, 9.4).
 ============================================================
-SIGNAL_LOOP [2026-09-27 08:15:30] starting observation cycles every 180s (no orders will be placed).
-SIGNAL [2026-09-27 08:15:30] index(.DEXBTUSD)=84831.70 perp(BTCUSD)=84796.50 atm_strike=84800 pcr=1.5874 bias=NEUTRAL position=no_trade_zone pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=27-09-2026
-CHAIN_SNAPSHOT [2026-09-27 08:15:30] atm_strike=84800 step=200 strikes=17
-      strike      call_px      call_oi       put_px       put_oi     oi_chg_6h*
-       83200      1643.00          0.5         0.20        104.1       -24853.8
-       83400      1415.00          0.8         0.30        147.1      -259480.0
-       83600      1199.00          1.6         0.80        131.9       -92544.2
-       83800      1022.50          4.5         2.30        201.7        33675.6
-       84000       830.00         24.4         3.20        379.0      -729411.0
-       84200       620.00         27.4         6.90        320.6     -4188409.0
-       84400       411.00         49.8        12.60        333.2      -496905.4
-       84600       255.00         71.2        57.00        273.0      1179917.1
-       84800       133.00        103.9       107.00        102.4      3581655.0
-       85000        62.00        191.9       240.00         25.8      2971084.0
-       85200        29.00        157.9       414.00          3.7      1837142.0
-       85400        13.00        127.9       583.00          3.7     -2787692.1
-       85600         8.20        154.5       798.00          1.5      7539594.2
-       85800         4.00        209.5       976.00          0.1     11449946.5
-       86000         4.90        364.8      1174.00          0.1      5897804.4
-       86200         1.00         31.1      1368.30          0.0            0.0
-       86400         0.40        360.4      1588.00          0.0      3096879.6
-  * oi_chg_6h is exchange-provided, logged for observation only (never used for signals).
-PCR_TABLE [2026-09-27 08:15:30] aggregate_PCR=1.5874 (central 9 strikes)
-      strike         put_oi        call_oi
-       83200          104.1            0.5
-       83400          147.1            0.8
-       83600          131.9            1.6
-       83800          201.7            4.5
-       84000          379.0           24.4
-       84200          320.6           27.4
-       84400          333.2           49.8
-       84600          273.0           71.2
-       84800          102.4          103.9
-       85000           25.8          191.9
-       85200            3.7          157.9
-       85400            3.7          127.9
-       85600            1.5          154.5
-       85800            0.1          209.5
-       86000            0.1          364.8
-       86200            0.0           31.1
-       86400            0.0          360.4
-SUPPORT_RESISTANCE [2026-09-27 08:15:30] index=84831.70 midpoint=84831.70 support=84331.70 resistance=85331.70 no_trade_zone=[84781.70, 84881.70] (band_width=1000, buffer=50)      
-OI_DELTA [2026-09-27 08:15:30] same-strike consecutive-snapshot OI change (own, signal-logic; exchange 6h field is log-only):
-      strike    call_oi_delta     put_oi_delta
-       83200              0.0              0.0
-       83400              0.0              0.0
-       83600              0.0              0.0
-       83800              0.0              0.0
-       84000              0.0              0.0
-       84200              0.0              0.0
-       84400              0.0              0.0
-       84600              0.0              0.0
-       84800              0.0              0.0
-       85000              0.0              0.0
-       85200              0.0              0.0
-       85400              0.0              0.0
-       85600              0.0              0.0
-       85800              0.0              0.0
-       86000              0.0              0.0
-       86200              0.0              0.0
-       86400              0.0              0.0
-PCR_TREND [2026-09-27 08:15:30] direction=flat consecutive_cycles=1 prev_pcr=N/A curr_pcr=1.5874
-WOULD_HAVE_ENTERED [2026-09-27 08:15:30] decision=NO_ENTRY reason=index inside no-trade zone [84781.70, 84881.70] (thresholds=[NEEDS INPUT]) bias=NEUTRAL position=no_trade_zone pcr=1.5874 pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 | OBSERVATION_MODE=True (no live order placed)
-SIGNAL [2026-09-27 08:18:30] index(.DEXBTUSD)=84830.70 perp(BTCUSD)=84792.00 atm_strike=84800 pcr=1.6092 bias=NEUTRAL position=no_trade_zone pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=upx1 expiry=27-09-2026
-CHAIN_SNAPSHOT [2026-09-27 08:18:30] atm_strike=84800 step=200 strikes=17
-      strike      call_px      call_oi       put_px       put_oi     oi_chg_6h*
-       83200      1643.00          0.5         0.20        104.1       -24855.8
-       83400      1415.00          0.8         0.50        146.9      -259501.1
-       83600      1246.00          1.5         1.00        129.3      -107906.3
-       83800      1040.00          4.5         2.20        199.4        35799.1
-       84000       851.00         22.5         2.80        355.0      -894129.3
-       84200       633.00         24.5         6.90        319.0     -4432047.8
-       84400       445.00         47.8        14.00        335.1      -716491.1
-       84600       270.00         61.9        39.00        273.1       387936.7
-       84800       130.00        104.9       107.00        108.4      3654986.7
-       85000        58.00        183.7       224.00         31.9      2384118.5
-       85200        25.00        162.3       381.00          3.7      2222428.7
-       85400        10.00        128.5       558.70          3.3     -2837291.1
-       85600         5.00        153.3       777.00          1.5      7440190.6
-       85800         4.90        209.5       976.00          0.1     11494311.8
-       86000         4.10        366.9      1146.00          0.2      6021290.5
-       86200         1.00         36.2      1369.20          0.0            0.0
-       86400         1.60        360.4      1588.00          0.0      3097131.5
-  * oi_chg_6h is exchange-provided, logged for observation only (never used for signals).
-PCR_TABLE [2026-09-27 08:18:30] aggregate_PCR=1.6092 (central 9 strikes)
-      strike         put_oi        call_oi
-       83200          104.1            0.5
-       83400          146.9            0.8
-       83600          129.3            1.5
-       83800          199.4            4.5
-       84000          355.0           22.5
-       84200          319.0           24.5
-       84400          335.1           47.8
-       84600          273.1           61.9
-       84800          108.4          104.9
-       85000           31.9          183.7
-       85200            3.7          162.3
-       85400            3.3          128.5
-       85600            1.5          153.3
-       85800            0.1          209.5
-       86000            0.2          366.9
-       86200            0.0           36.2
-       86400            0.0          360.4
-SUPPORT_RESISTANCE [2026-09-27 08:18:30] index=84830.70 midpoint=84830.70 support=84330.70 resistance=85330.70 no_trade_zone=[84780.70, 84880.70] (band_width=1000, buffer=50)      
-OI_DELTA [2026-09-27 08:18:30] same-strike consecutive-snapshot OI change (own, signal-logic; exchange 6h field is log-only):
-      strike    call_oi_delta     put_oi_delta
-       83200              0.0              0.0
-       83400              0.0             -0.3
-       83600             -0.2             -2.6
-       83800              0.0             -2.3
-       84000             -1.9            -24.0
-       84200             -3.0             -1.6
-       84400             -2.1              1.8
-       84600             -9.3              0.1
-       84800              1.0              6.0
-       85000             -8.3              6.1
-       85200              4.4              0.0
-       85400              0.6             -0.4
-       85600             -1.2              0.0
-       85800              0.0              0.0
-       86000              2.1              0.1
-       86200              5.0              0.0
-       86400              0.0              0.0
-PCR_TREND [2026-09-27 08:18:30] direction=up consecutive_cycles=1 prev_pcr=1.5874 curr_pcr=1.6092
-WOULD_HAVE_ENTERED [2026-09-27 08:18:30] decision=NO_ENTRY reason=index inside no-trade zone [84780.70, 84880.70] (thresholds=[NEEDS INPUT]) bias=NEUTRAL position=no_trade_zone pcr=1.6092 pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=upx1 | OBSERVATION_MODE=True (no live order placed)
+SIGNAL_LOOP [2026-10-09 01:26:46 IST] starting observation cycles aligned to 3-min candle closes (no orders will be placed).
+SIGNAL_LOOP [2026-10-09 01:26:46 IST] waiting 14.0s for next 3-min candle close.
+SIGNAL [2026-10-09 01:27:00 IST] index(.DEXBTUSD)=81826.50 perp(BTCUSD)=81783.00 atm_strike=81800 pcr=0.6542 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=09-10-2026
+====after 3 min ochain==== 2026-10-09 01:27:00 IST
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BTC-83400   0.01   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=85.9 PE_OI=1.1
+pcr2 =  BTC-83200   0.10   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=62.6 PE_OI=6.3
+pcr3 =  BTC-83000   0.04   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=112.5 PE_OI=4.6
+pcr4 =  BTC-82800   0.85   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=48.9 PE_OI=41.6
+pcr5 =  BTC-82600   0.10   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=21.4 PE_OI=2.2
+pcr6 =  BTC-82400   0.12   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=22.3 PE_OI=2.8
+pcr7 =  BTC-82200   0.13   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=31.5 PE_OI=4.2
+pcr8 =  BTC-82000   0.56   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=33.8 PE_OI=19.1
+pcr9 =  BTC-81800   0.47   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=22.0 PE_OI=10.3 <== ATM
+pcr10 =  BTC-81600   1.36   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=14.3 PE_OI=19.4
+pcr11 =  BTC-81400   0.58   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=12.6 PE_OI=7.2
+pcr12 =  BTC-81200   2.07   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=8.0 PE_OI=16.6
+pcr13 =  BTC-81000   2.10   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=18.6 PE_OI=38.9
+pcr14 =  BTC-80800   1.42   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=6.7 PE_OI=9.5
+pcr15 =  BTC-80600   9.41   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=1.6 PE_OI=14.6
+pcr16 =  BTC-80400   102.00   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=4.4
+pcr17 =  BTC-80200   26.00   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.2 PE_OI=6.1
+PCRSUM== 147.32
+AVG_OIPCR_9STRIKE= 0.65  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81826.50
+BTC PERP/FUT (BTCUSD)  = 81783.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81800: 81800}
+avgOiPcrList2  = [0.42] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.42)
+avgOiPcr9List2 = [0.65] atmStrikeNotShiftedCount= 1  (central 9, curr=0.65)
+SUPP_RES=== 82000.00 role=RESISTANCE (nearest 1000 to spot 81826.50) no_trade=[81950.00, 82050.00] | spot below line => RESISTANCE => look for BEAR trade
+CEoich val =  0.0  PEoich val =  0.0 , CE = PE by 0.0%
+SUPP_RES TOTAL OI (strike 82000): CE= 33.8  PE= 19.1 , CE > PE by 43.6%
+PCR_TREND [2026-10-09 01:27:00 IST] direction=flat consecutive_cycles=1 prev_pcr=N/A curr_pcr=0.6542
+WOULD_HAVE_ENTERED [2026-10-09 01:27:00 IST] decision=NO_ENTRY reason=entry blocked: max_trades_per_day_unset[NEEDS INPUT]; awaiting_confirm(1/2); live_params_unset[NEEDS INPUT]:PC
+R_BULL_THRESHOLD,PCR_BEAR_THRESHOLD,POSITION_SIZE bias=BEAR position=resistance_side pcr=0.6542 pcr_label=PCR_LOW(call-heavy,provisional-bearish) confirm=1/2 blockers=max_trades_pe
+r_day_unset[NEEDS INPUT];awaiting_confirm(1/2);live_params_unset[NEEDS INPUT]:PCR_BULL_THRESHOLD,PCR_BEAR_THRESHOLD,POSITION_SIZE signal_decision=WOULD_ENTER(bear, provisional) pcr_trend=flatx1 | OBSERVATION_MODE=True (no live order placed)
+SIGNAL_LOOP [2026-10-09 01:27:00 IST] waiting 179.8s for next 3-min candle close.
 
