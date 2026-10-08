@@ -301,20 +301,81 @@ def _ratio2(numer, denom):
     return "{:.2f}".format(round(n / d, 2))
 
 
-def _fmt_oich(delta):
+def _fmt_oi_usd(value, signed=False):
     """
-    Format a same-strike OI delta as a Sensex-style ``(tag, value)`` pair.
+    Format a USD-notional OI figure the way the Delta UI does: ``$1.17M`` for
+    millions, ``$835.68K`` for thousands, and ``$3.52`` (two decimals, no
+    suffix) for small values so tiny OI stays precise instead of collapsing to
+    ``0``. With ``signed=True`` a leading ``+``/``-`` is shown (for OI changes).
+    Returns ``None`` when the value is not numeric.
+    """
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    sign = "-" if f < 0 else ("+" if signed else "")
+    a = abs(f)
+    if a >= 1_000_000:
+        body = "${:.2f}M".format(a / 1_000_000.0)
+    elif a >= 1_000:
+        body = "${:.2f}K".format(a / 1_000.0)
+    else:
+        body = "${:.2f}".format(a)
+    return sign + body
 
-    ``tag`` is ``"added"`` when the OI grew (delta > 0) and ``"unwind"``
-    otherwise (<= 0, including the first-cycle zero). ``value`` is the signed
-    delta to one decimal (OI is in contracts on Delta, so it may be fractional).
+
+def _contracts_to_usd(contracts, oi_contracts, oi_usd):
+    """
+    Scale a contract quantity to USD notional using the per-row conversion
+    factor ``oi_usd / oi_contracts`` (which equals ``contract_value * spot`` and
+    is identical for the CE and PE side at a strike). Used so an OI *change*
+    prints on the same USD basis as the OI it sits next to. Returns ``None`` when
+    the factor can't be derived (missing USD value, or zero contract OI).
+    """
+    try:
+        c = float(contracts)
+        oc = float(oi_contracts)
+        ou = float(oi_usd)
+    except (TypeError, ValueError):
+        return None
+    if oc == 0:
+        return None
+    return c * (ou / oc)
+
+
+def _fmt_oi_abs(oi_contracts, oi_usd):
+    """
+    Display absolute OI as USD notional (``oi_value_usd``, matching the Delta
+    UI). Falls back to a higher-precision contract count (3 decimals for tiny
+    sub-1 values, else 1 decimal) when the exchange USD value is unavailable, so
+    the column is still readable. Pure display — ratio math uses raw contracts.
+    """
+    usd = _fmt_oi_usd(oi_usd)
+    if usd is not None:
+        return usd
+    try:
+        c = float(oi_contracts)
+    except (TypeError, ValueError):
+        c = 0.0
+    return "{:.3f}".format(c) if 0 < abs(c) < 1 else "{:.1f}".format(c)
+
+
+def _fmt_oi_change_disp(delta, oi_contracts, oi_usd):
+    """
+    Return a ``(tag, value)`` pair for a same-strike OI change, with ``value``
+    in USD notional when derivable (so it matches the USD OI columns) and a
+    higher-precision signed contract count otherwise. ``tag`` is ``added`` for a
+    positive change, ``unwind`` for <= 0.
     """
     try:
         d = float(delta) if delta is not None else 0.0
     except (TypeError, ValueError):
         d = 0.0
     tag = "added" if d > 0 else "unwind"
-    return tag, _fmt(d, 1)
+    usd = _contracts_to_usd(d, oi_contracts, oi_usd)
+    if usd is not None:
+        return tag, _fmt_oi_usd(usd, signed=True)
+    return tag, _fmt(d, 3 if 0 < abs(d) < 1 else 1)
 
 
 def log_option_chain_table(snapshot, oi_deltas, pcr,
@@ -339,8 +400,11 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
     Below the table the aggregate PCR over the central 9 strikes (Req 9.7), the
     sum of the per-strike oipcr, and the BTC spot (``.DEXBTUSD`` index anchor,
     Req 9.11) + perpetual/future (``BTCUSD``, log-only, Req 9.12) prices are
-    printed. OI is in contracts (1 contract = 0.001 BTC); prices are USD.
-    Timestamps display in IST (logic stays UTC).
+    printed. The CE_OI/PE_OI columns display USD notional (``oi_value_usd``,
+    matching the Delta UI's ``$M``/``$K`` figures); every ratio (oipcr, choipcr,
+    PCR) is still computed on the raw contract OI, which is unit-invariant so the
+    numbers are identical either way. Prices are USD. Timestamps display in IST
+    (logic stays UTC).
     """
     if not isinstance(snapshot, dict):
         print("====after 3 min ochain==== {} (no snapshot available)".format(
@@ -353,7 +417,7 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
 
     print("====after 3 min ochain==== {}".format(_now_ist()))
     print("                                    oipcr   choipcr   "
-          "CE_OI / PE_OI (same strike)")
+          "CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)")
 
     # Print strikes DESCENDING (high -> low) so the ATM sits on row #9 of 17,
     # matching the Sensex option-chain view.
@@ -367,8 +431,12 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
         call_row = call_row if isinstance(call_row, dict) else {}
         put_row = put_row if isinstance(put_row, dict) else {}
 
+        # Raw contract OI drives ALL ratio math (unit-invariant); USD notional
+        # is display-only (matches the Delta UI).
         ce_oi = call_row.get("oi") or 0.0
         pe_oi = put_row.get("oi") or 0.0
+        ce_oi_usd = call_row.get("oi_usd")
+        pe_oi_usd = put_row.get("oi_usd")
 
         # Own same-strike consecutive-snapshot OI deltas (Req 9.8), keyed by
         # strike; tolerate int/str key variants and first-cycle zero deltas.
@@ -378,6 +446,7 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
         ce_choi = delta_row.get("call_oi_delta")
         pe_choi = delta_row.get("put_oi_delta")
 
+        # Ratios computed on raw contracts (the USD factor cancels in a ratio).
         oipcr = _ratio2(pe_oi, ce_oi)       # PE_OI / CE_OI (same strike)
         choipcr = _ratio2(pe_choi, ce_choi)  # PUT_chg / CALL_chg (same strike)
         try:
@@ -385,15 +454,17 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
         except (TypeError, ValueError):
             pass
 
-        ce_tag, ce_val = _fmt_oich(ce_choi)
-        pe_tag, pe_val = _fmt_oich(pe_choi)
+        # Display values in USD notional (OI change on the same USD basis).
+        ce_tag, ce_val = _fmt_oi_change_disp(ce_choi, ce_oi, ce_oi_usd)
+        pe_tag, pe_val = _fmt_oi_change_disp(pe_choi, pe_oi, pe_oi_usd)
 
         line = ("pcr{n} =  BTC-{strike}   {oipcr}   {choipcr} "
                 "CALL {ctag} {cval}   PUT {ptag} {pval}  "
                 "CE_OI={ceoi} PE_OI={peoi}").format(
                     n=i, strike=int(strike), oipcr=oipcr, choipcr=choipcr,
                     ctag=ce_tag, cval=ce_val, ptag=pe_tag, pval=pe_val,
-                    ceoi=_fmt(ce_oi, 1), peoi=_fmt(pe_oi, 1))
+                    ceoi=_fmt_oi_abs(ce_oi, ce_oi_usd),
+                    peoi=_fmt_oi_abs(pe_oi, pe_oi_usd))
         if atm_strike is not None and strike == atm_strike:
             line += " <== ATM"
         print(line)
@@ -514,8 +585,11 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line):
     call_row = call_row if isinstance(call_row, dict) else {}
     put_row = put_row if isinstance(put_row, dict) else {}
 
+    # Raw contracts for the CE/PE comparison (unit-invariant); USD for display.
     ce_oi = call_row.get("oi") or 0.0
     pe_oi = put_row.get("oi") or 0.0
+    ce_oi_usd = call_row.get("oi_usd")
+    pe_oi_usd = put_row.get("oi_usd")
 
     delta_row = {}
     if isinstance(oi_deltas, dict):
@@ -527,11 +601,19 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line):
     ce_oich = ce_oich if ce_oich is not None else 0.0
     pe_oich = pe_oich if pe_oich is not None else 0.0
 
+    # OI changes in USD notional (same basis as the OI columns); % comparison is
+    # computed on raw contracts and is identical in either unit.
+    ce_oich_disp = _fmt_oi_usd(_contracts_to_usd(ce_oich, ce_oi, ce_oi_usd),
+                               signed=True) or _fmt(ce_oich, 1)
+    pe_oich_disp = _fmt_oi_usd(_contracts_to_usd(pe_oich, pe_oi, pe_oi_usd),
+                               signed=True) or _fmt(pe_oich, 1)
+
     print("CEoich val =  {}  PEoich val =  {} , {}".format(
-        _fmt(ce_oich, 1), _fmt(pe_oich, 1), _compare_ce_pe(ce_oich, pe_oich)))
+        ce_oich_disp, pe_oich_disp, _compare_ce_pe(ce_oich, pe_oich)))
     print("SUPP_RES TOTAL OI (strike {}): CE= {}  PE= {} , {}".format(
         int(sr_line) if isinstance(sr_line, (int, float)) else sr_line,
-        _fmt(ce_oi, 1), _fmt(pe_oi, 1), _compare_ce_pe(ce_oi, pe_oi)))
+        _fmt_oi_abs(ce_oi, ce_oi_usd), _fmt_oi_abs(pe_oi, pe_oi_usd),
+        _compare_ce_pe(ce_oi, pe_oi)))
 
 
 def log_would_have_entered(decision, reason=None, **details):

@@ -1477,6 +1477,31 @@ def _extract_oi_change_6h(row):
     return None
 
 
+# Open-interest value expressed in USD notional — the figure the Delta UI shows
+# in its option chain (e.g. "$1.17M"). The ticker exposes `oi_value_usd` (OI
+# converted to USD) and `oi_value` (OI value in the base currency, with
+# `oi_value_symbol` naming that currency). Prefer the explicit USD field, then
+# `oi_value` when its symbol is USD. Captured for DISPLAY only — all PCR / OI
+# ratio math stays on the raw contract `oi` (the USD factor cancels in a ratio),
+# so this never affects signals.
+def _extract_oi_value_usd(row):
+    """
+    Pull the USD-notional open-interest value from a raw ticker row for display
+    (to mirror the Delta UI's $-based OI column). Returns the coerced float, or
+    ``None`` when no USD OI value is available (callers then fall back to showing
+    the raw contract count).
+    """
+    if not isinstance(row, dict):
+        return None
+    usd = _coerce_price(row.get("oi_value_usd"))
+    if usd is not None:
+        return usd
+    symbol = str(row.get("oi_value_symbol") or "").strip().upper()
+    if symbol in ("USD", "USDT", ""):
+        return _coerce_price(row.get("oi_value"))
+    return None
+
+
 def _normalize_chain_row(row):
     """
     Normalize one raw Delta ticker row into a clean option-chain dict.
@@ -1517,6 +1542,7 @@ def _normalize_chain_row(row):
         "contract_type": row.get("contract_type"),
         "strike": strike,
         "oi": oi if oi is not None else 0.0,
+        "oi_usd": _extract_oi_value_usd(row),
         "best_bid": best_bid,
         "best_ask": best_ask,
         "price": price,
