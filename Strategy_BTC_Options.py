@@ -55,6 +55,12 @@ STRIKE_STEP = 200
 # lookup snaps to the nearest 200 strike (see log_supp_res_oi).
 SR_LINE_STEP = 500
 
+# When reading OI AT the S/R line, consider the line and its immediate +/- this
+# offset neighbour strikes (e.g. line 81500 -> candidates 81400 / 81500 / 81600)
+# and pick whichever of those (that is actually listed) carries the largest OI
+# wall as the S/R strike. Only these up-to-3 adjacent strikes are compared.
+SR_SNAP_WINDOW = 100
+
 # Consecutive-trend window for the OI-PCR lists (avgOiPcrList2 / avgOiPcr9List2).
 # Mirrors the Sensex strategy: a PCR increase/decrease is only confirmed over
 # this many consecutive values (3). The window resets to the newest value on an
@@ -669,7 +675,9 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
 
 def _pair_total_oi(pair):
     """Total contract OI (CE + PE) at a snapshot strike `pair`
-    ({"call": row|None, "put": row|None}); missing sides contribute 0."""
+    ({"call": row|None, "put": row|None}); missing sides contribute 0.
+    Used for the OI-wall comparison (unit-invariant: contracts vs USD scale by
+    the same factor, so the larger-contracts strike is the larger-USD strike)."""
     if not isinstance(pair, dict):
         return 0.0
     total = 0.0
@@ -684,17 +692,84 @@ def _pair_total_oi(pair):
     return total
 
 
+def _pair_total_oi_usd(pair):
+    """Total USD-notional OI (CE + PE `oi_usd`) at a strike `pair`, for display;
+    returns ``None`` when neither side has a USD value."""
+    if not isinstance(pair, dict):
+        return None
+    total = None
+    for side in ("call", "put"):
+        row = pair.get(side)
+        if isinstance(row, dict):
+            try:
+                total = (total or 0.0) + float(row.get("oi_usd"))
+            except (TypeError, ValueError):
+                pass
+    return total
+
+
+def _index_chain_by_strike(chain):
+    """
+    Index the RAW option chain (every listed strike for the expiry, not just the
+    200-grid snapshot) into ``{int(strike): {"call": row|None, "put": row|None}}``.
+
+    Needed because the 17-strike snapshot is built on a fixed 200 grid, so it
+    never contains the interim strikes Delta lists near expiry (e.g. 81500). The
+    raw chain does, so the S/R-strike picker consults this index.
+    """
+    idx = {}
+    for row in (chain or []):
+        if not isinstance(row, dict):
+            continue
+        try:
+            key = int(round(float(row.get("strike"))))
+        except (TypeError, ValueError):
+            continue
+        ctype = str(row.get("contract_type") or "").strip().lower()
+        slot = idx.setdefault(key, {"call": None, "put": None})
+        if "call" in ctype or ctype == "c":
+            slot["call"] = row
+        elif "put" in ctype or ctype == "p":
+            slot["put"] = row
+    return idx
+
+
+def _pick_sr_strike(sr_line, strike_index, neighbor=SR_SNAP_WINDOW):
+    """
+    Choose the S/R STRIKE from the line and its two immediate neighbours.
+
+    Candidates are exactly ``[sr_line - neighbor, sr_line, sr_line + neighbor]``
+    (e.g. 81400 / 81500 / 81600 for an 81500 line). Only the candidates ACTUALLY
+    listed in ``strike_index`` are considered — never any farther strike. Among
+    those (3, or 2, or 1 available) the one with the largest total OI wall
+    (CE + PE) wins; a strict OI tie breaks to the higher strike for determinism.
+
+    Returns ``(chosen_strike_or_None, scored)`` where ``scored`` is the list of
+    ``(strike, total_oi)`` candidates considered (for the SR_SNAP log line).
+    """
+    try:
+        line = int(round(float(sr_line)))
+    except (TypeError, ValueError):
+        return None, []
+    candidates = [line - neighbor, line, line + neighbor]
+    scored = []
+    for c in candidates:
+        pair = strike_index.get(c)
+        if isinstance(pair, dict) and (isinstance(pair.get("call"), dict)
+                                       or isinstance(pair.get("put"), dict)):
+            scored.append((c, _pair_total_oi(pair)))
+    if not scored:
+        return None, []
+    # Largest OI wall wins; tie -> higher strike (deterministic).
+    best = max(scored, key=lambda cs: (cs[1], cs[0]))
+    return best[0], scored
+
+
 def _snap_to_chain_strike(snapshot, target):
     """
-    Return the strike actually present in `snapshot` that is nearest to
-    `target`, so the OI lookup self-adjusts to whatever strike grid Delta is
-    listing (200 early, finer near expiry) instead of assuming a fixed step.
-
-    Tie-break: when two strikes are EQUIDISTANT from the target (e.g. S/R line
-    81500 sitting exactly between 81400 and 81600), pick the strike with the
-    greater TOTAL open interest (CE + PE) — the more significant level — rather
-    than letting arbitrary rounding decide. Returns ``None`` when the snapshot
-    has no strikes (caller falls back).
+    Fallback: nearest strike present in the 200-grid `snapshot` to `target`
+    (used only when the raw chain is unavailable). Equidistant tie -> larger
+    total-OI strike. Returns ``None`` when the snapshot has no strikes.
     """
     rows = snapshot.get("rows") or {}
     strikes = snapshot.get("strikes") or list(rows.keys())
@@ -713,12 +788,11 @@ def _snap_to_chain_strike(snapshot, target):
         if best is None or dist < best_dist - 1e-9:
             best, best_dist, best_oi = s, dist, total_oi
         elif abs(dist - best_dist) <= 1e-9 and total_oi > best_oi:
-            # Equidistant tie -> prefer the strike with the larger OI wall.
             best, best_dist, best_oi = s, dist, total_oi
     return best
 
 
-def log_supp_res_oi(snapshot, oi_deltas, sr_line):
+def log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=None):
     """
     Log the Sensex-equivalent CE/PE OI + OI-change detail AT the S/R line
     (Req 9.4, 9.7, 9.8).
@@ -730,29 +804,52 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line):
 
     ``CEoich``/``PEoich`` are the bot's OWN same-strike consecutive-snapshot OI
     deltas (Req 9.8) at the S/R strike; the TOTAL OI line is the current CE/PE
-    open interest (Req 9.7) at that strike. The ``sr_line`` is on the 500-point
-    S/R grid, which does NOT always align to the option strike grid (e.g. 81500),
-    so the OI lookup SNAPS the line to the nearest strike ACTUALLY present in the
-    chain (``_snap_to_chain_strike``) — self-adjusting to Delta's dynamic grid
-    (200 early, finer near expiry). On an exact distance tie the strike with the
-    larger total OI (CE+PE) wins. The snapped strike is printed so the OI source
-    is unambiguous.
+    open interest (Req 9.7) at that strike.
+
+    The ``sr_line`` is on the 500-point S/R grid, which may not be a listed
+    option strike (e.g. 81500). The S/R STRIKE is chosen from the line and its
+    two immediate neighbours — ``[line-100, line, line+100]`` — considering ONLY
+    those that are actually listed in the raw ``chain`` and picking the one with
+    the largest OI wall (CE+PE); see ``_pick_sr_strike``. When ``chain`` is not
+    supplied it falls back to the nearest strike in the 200-grid snapshot. The
+    chosen strike and the candidates compared are logged (``SR_SNAP``) so the OI
+    source is unambiguous.
     """
     rows = snapshot.get("rows") or {}
-    # Snap the 500-grid S/R line to the nearest strike present in the chain; on
-    # an equidistant tie, prefer the side with the larger OI wall. Fall back to
-    # a fixed 200-grid round only if the snapshot has no strikes.
-    sr_key = _snap_to_chain_strike(snapshot, sr_line)
+    # Full raw-chain index (has interim strikes like 81500 the snapshot lacks).
+    strike_index = _index_chain_by_strike(chain) if chain else {}
+
+    sr_key, scored = _pick_sr_strike(sr_line, strike_index)
+    if sr_key is None:
+        # No listed neighbour found (or no chain): fall back to the snapshot.
+        sr_key = _snap_to_chain_strike(snapshot, sr_line)
     if sr_key is None:
         try:
             sr_key = int(round(float(sr_line) / STRIKE_STEP) * STRIKE_STEP)
         except (TypeError, ValueError):
             sr_key = sr_line
-    pair = rows.get(sr_key) or rows.get(sr_line) or {}
+
+    # Prefer the raw-chain row (covers interim strikes); else the snapshot row.
+    pair = strike_index.get(sr_key) or rows.get(sr_key) or rows.get(sr_line) \
+        or {}
     call_row = pair.get("call") if isinstance(pair, dict) else None
     put_row = pair.get("put") if isinstance(pair, dict) else None
     call_row = call_row if isinstance(call_row, dict) else {}
     put_row = put_row if isinstance(put_row, dict) else {}
+
+    # Show which adjacent strikes were compared (total CE+PE OI) and which won.
+    if scored:
+        cand_str = ", ".join(
+            "{}={}".format(
+                s, _fmt_oi_usd(_pair_total_oi_usd(strike_index.get(s)))
+                or _fmt(_pair_total_oi(strike_index.get(s)), 1))
+            for s, _ in scored)
+        try:
+            line_i = int(round(float(sr_line)))
+        except (TypeError, ValueError):
+            line_i = sr_line
+        print("SR_SNAP: line={} candidates[{}] -> picked {} "
+              "(largest OI wall)".format(line_i, cand_str, sr_key))
 
     # Raw contracts for the CE/PE comparison (unit-invariant); USD for display.
     ce_oi = call_row.get("oi") or 0.0
@@ -1376,8 +1473,10 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     log_support_resistance(index_price, sr_line, sr_role, sr_position,
                            ntl, nth)
 
-    # CE/PE OI + OI-change detail AT the S/R line (Sensex-equivalent).
-    log_supp_res_oi(snapshot, oi_deltas, sr_line)
+    # CE/PE OI + OI-change detail AT the S/R line (Sensex-equivalent). Pass the
+    # raw chain so the S/R strike can be picked from the line +/-100 neighbours
+    # (incl. interim strikes the 200-grid snapshot lacks) by largest OI wall.
+    log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=chain)
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
