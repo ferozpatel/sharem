@@ -667,6 +667,57 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
     return avg_oipcr_list, avg_oipcr9_list, inc, dec
 
 
+def _pair_total_oi(pair):
+    """Total contract OI (CE + PE) at a snapshot strike `pair`
+    ({"call": row|None, "put": row|None}); missing sides contribute 0."""
+    if not isinstance(pair, dict):
+        return 0.0
+    total = 0.0
+    for side in ("call", "put"):
+        row = pair.get(side)
+        if isinstance(row, dict):
+            oi = row.get("oi")
+            try:
+                total += float(oi)
+            except (TypeError, ValueError):
+                pass
+    return total
+
+
+def _snap_to_chain_strike(snapshot, target):
+    """
+    Return the strike actually present in `snapshot` that is nearest to
+    `target`, so the OI lookup self-adjusts to whatever strike grid Delta is
+    listing (200 early, finer near expiry) instead of assuming a fixed step.
+
+    Tie-break: when two strikes are EQUIDISTANT from the target (e.g. S/R line
+    81500 sitting exactly between 81400 and 81600), pick the strike with the
+    greater TOTAL open interest (CE + PE) — the more significant level — rather
+    than letting arbitrary rounding decide. Returns ``None`` when the snapshot
+    has no strikes (caller falls back).
+    """
+    rows = snapshot.get("rows") or {}
+    strikes = snapshot.get("strikes") or list(rows.keys())
+    try:
+        t = float(target)
+    except (TypeError, ValueError):
+        return None
+    best = best_dist = best_oi = None
+    for s in strikes:
+        try:
+            dist = abs(float(s) - t)
+        except (TypeError, ValueError):
+            continue
+        pair = rows.get(s) or rows.get(int(s)) or {}
+        total_oi = _pair_total_oi(pair)
+        if best is None or dist < best_dist - 1e-9:
+            best, best_dist, best_oi = s, dist, total_oi
+        elif abs(dist - best_dist) <= 1e-9 and total_oi > best_oi:
+            # Equidistant tie -> prefer the strike with the larger OI wall.
+            best, best_dist, best_oi = s, dist, total_oi
+    return best
+
+
 def log_supp_res_oi(snapshot, oi_deltas, sr_line):
     """
     Log the Sensex-equivalent CE/PE OI + OI-change detail AT the S/R line
@@ -680,19 +731,23 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line):
     ``CEoich``/``PEoich`` are the bot's OWN same-strike consecutive-snapshot OI
     deltas (Req 9.8) at the S/R strike; the TOTAL OI line is the current CE/PE
     open interest (Req 9.7) at that strike. The ``sr_line`` is on the 500-point
-    S/R grid, which does NOT always align to the 200-point option strike grid
-    (e.g. 81500), so the OI lookup SNAPS the line to the nearest 200 strike
-    before reading the chain. The snapped strike is printed so the OI source is
-    unambiguous.
+    S/R grid, which does NOT always align to the option strike grid (e.g. 81500),
+    so the OI lookup SNAPS the line to the nearest strike ACTUALLY present in the
+    chain (``_snap_to_chain_strike``) — self-adjusting to Delta's dynamic grid
+    (200 early, finer near expiry). On an exact distance tie the strike with the
+    larger total OI (CE+PE) wins. The snapped strike is printed so the OI source
+    is unambiguous.
     """
     rows = snapshot.get("rows") or {}
-    # Snap the 500-grid S/R line to the nearest 200-point option strike for the
-    # chain OI lookup (BTC strikes are on STRIKE_STEP=200; a 500 line like 81500
-    # is not a tradeable strike).
-    try:
-        sr_key = int(round(float(sr_line) / STRIKE_STEP) * STRIKE_STEP)
-    except (TypeError, ValueError):
-        sr_key = sr_line
+    # Snap the 500-grid S/R line to the nearest strike present in the chain; on
+    # an equidistant tie, prefer the side with the larger OI wall. Fall back to
+    # a fixed 200-grid round only if the snapshot has no strikes.
+    sr_key = _snap_to_chain_strike(snapshot, sr_line)
+    if sr_key is None:
+        try:
+            sr_key = int(round(float(sr_line) / STRIKE_STEP) * STRIKE_STEP)
+        except (TypeError, ValueError):
+            sr_key = sr_line
     pair = rows.get(sr_key) or rows.get(sr_line) or {}
     call_row = pair.get("call") if isinstance(pair, dict) else None
     put_row = pair.get("put") if isinstance(pair, dict) else None
