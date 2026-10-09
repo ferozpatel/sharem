@@ -46,9 +46,14 @@ SR_BAND_WIDTH = 1000
 STRIKE_STEP = 200
 
 # S/R line granularity: the single support/resistance line is the nearest
-# multiple of this step to the spot (Sensex-style nearest-level model, but on a
-# 1000-point grid for BTC). e.g. spot 84800 -> line 85000.
-SR_LINE_STEP = 1000
+# multiple of this step to the spot (Sensex-style nearest-level model). Matches
+# the Sensex 500-point S/R grid (get_support_resistance step=500). e.g. spot
+# 81800 -> line 82000; spot 81400 -> line 81500. NOTE: BTC option strikes are on
+# a 200-point grid (STRIKE_STEP), and 500 is not a multiple of 200, so a 500-grid
+# S/R line (e.g. 81500) may not be a tradeable strike. The S/R LINE drives the
+# role / no-trade / bias logic on the 500 grid; when OI is read AT the line the
+# lookup snaps to the nearest 200 strike (see log_supp_res_oi).
+SR_LINE_STEP = 500
 
 # Consecutive-trend window for the OI-PCR lists (avgOiPcrList2 / avgOiPcr9List2).
 # Mirrors the Sensex strategy: a PCR increase/decrease is only confirmed over
@@ -191,12 +196,12 @@ def _seconds_until_next_candle_close(interval_min):
 # ============================================================
 def compute_support_resistance(index_price):
     """
-    Derive the single nearest-1000 S/R line and the spot's role against it
-    (Req 9.13, 9.14) — the Sensex nearest-level model, on a 1000-point grid.
+    Derive the single nearest-500 S/R line and the spot's role against it
+    (Req 9.13, 9.14) — the Sensex nearest-level model, on a 500-point grid.
 
-    The S/R line is the nearest ``SR_LINE_STEP`` (1000) level to the spot:
+    The S/R line is the nearest ``SR_LINE_STEP`` (500) level to the spot:
 
-        sr_line = round(spot / 1000) * 1000
+        sr_line = round(spot / 500) * 500
 
     The spot's position relative to that line sets the role and the tradable
     side (``NO_TRADE_ZONE_BUFFER`` straddles the line as a dead zone):
@@ -204,8 +209,8 @@ def compute_support_resistance(index_price):
       * spot BELOW the line  -> line acts as RESISTANCE -> resistance_side (bear)
       * spot ABOVE the line  -> line acts as SUPPORT    -> support_side   (bull)
 
-    e.g. spot 84800 -> sr_line 85000; spot is below -> 85000 is RESISTANCE and
-    the bot looks for a BEAR trade.
+    e.g. spot 81800 -> sr_line 82000; spot is below -> 82000 is RESISTANCE and
+    the bot looks for a BEAR trade. (spot 81400 -> sr_line 81500.)
 
     Returns ``(sr_line, role, position, no_trade_low, no_trade_high)`` where
     ``role`` is ``RESISTANCE``/``SUPPORT``/``AT_LINE`` and ``position`` is
@@ -484,7 +489,7 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
 def log_support_resistance(index_price, sr_line, role, position,
                            no_trade_low, no_trade_high):
     """
-    Log the single nearest-1000 S/R line and the spot's role against it
+    Log the single nearest-500 S/R line and the spot's role against it
     (Req 9.4, 9.13, 9.14), Sensex-style ``SUPP_RES===`` line.
 
     ``role`` is ``RESISTANCE``/``SUPPORT``/``AT_LINE``; the trailing note spells
@@ -674,12 +679,18 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line):
 
     ``CEoich``/``PEoich`` are the bot's OWN same-strike consecutive-snapshot OI
     deltas (Req 9.8) at the S/R strike; the TOTAL OI line is the current CE/PE
-    open interest (Req 9.7) at that strike. The ``sr_line`` (nearest 1000) is a
-    multiple of the 200 strike step, so it always maps to a chain strike.
+    open interest (Req 9.7) at that strike. The ``sr_line`` is on the 500-point
+    S/R grid, which does NOT always align to the 200-point option strike grid
+    (e.g. 81500), so the OI lookup SNAPS the line to the nearest 200 strike
+    before reading the chain. The snapped strike is printed so the OI source is
+    unambiguous.
     """
     rows = snapshot.get("rows") or {}
+    # Snap the 500-grid S/R line to the nearest 200-point option strike for the
+    # chain OI lookup (BTC strikes are on STRIKE_STEP=200; a 500 line like 81500
+    # is not a tradeable strike).
     try:
-        sr_key = int(sr_line)
+        sr_key = int(round(float(sr_line) / STRIKE_STEP) * STRIKE_STEP)
     except (TypeError, ValueError):
         sr_key = sr_line
     pair = rows.get(sr_key) or rows.get(sr_line) or {}
@@ -711,10 +722,19 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line):
     pe_oich_disp = _fmt_oi_usd(_contracts_to_usd(pe_oich, pe_oi, pe_oi_usd),
                                signed=True) or _fmt(pe_oich, 1)
 
+    # Strike label: show the 200-snapped strike where OI was read; note the raw
+    # 500-grid S/R line too when it differs (i.e. the line is not a 200 strike).
+    try:
+        sr_line_i = int(sr_line)
+    except (TypeError, ValueError):
+        sr_line_i = sr_line
+    strike_label = ("{}".format(sr_key) if sr_key == sr_line_i
+                    else "{} (S/R line {})".format(sr_key, sr_line_i))
+
     print("CEoich val =  {}  PEoich val =  {} , {}".format(
         ce_oich_disp, pe_oich_disp, _compare_ce_pe(ce_oich, pe_oich)))
     print("SUPP_RES TOTAL OI (strike {}): CE= {}  PE= {} , {}".format(
-        int(sr_line) if isinstance(sr_line, (int, float)) else sr_line,
+        strike_label,
         _fmt_oi_abs(ce_oi, ce_oi_usd), _fmt_oi_abs(pe_oi, pe_oi_usd),
         _compare_ce_pe(ce_oi, pe_oi)))
 
@@ -852,7 +872,7 @@ def _provisional_pcr_label(pcr):
 def derive_directional_bias(index_price, pcr, position, sr_line, role):
     """
     Derive the directional bias from the PCR together with the spot's role
-    against the nearest-1000 S/R line (Req 9.13).
+    against the nearest-500 S/R line (Req 9.13).
 
     Position rule (the nearest-level model — spot vs the single S/R line;
     classified upstream by ``compute_support_resistance``):
@@ -1231,7 +1251,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     #    any signal here.
     oi_deltas = helper.computeSameStrikeOIDelta(prev_snapshot, snapshot)
 
-    # 8. Nearest-1000 S/R line + role from the anchor (Req 9.13/9.14).
+    # 8. Nearest-500 S/R line + role from the anchor (Req 9.13/9.14).
     sr_line, sr_role, sr_position, ntl, nth = compute_support_resistance(
         index_price)
 
