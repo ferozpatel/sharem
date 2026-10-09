@@ -734,6 +734,29 @@ def _index_chain_by_strike(chain):
     return idx
 
 
+def _chain_oi_map(chain):
+    """
+    Slim ``{int(strike): {"call_oi": float, "put_oi": float}}`` built from the
+    raw chain, carried cycle-to-cycle so the S/R strike's OI CHANGE can be
+    diffed at ANY strike — including interim strikes (e.g. 83500) that the
+    200-grid snapshot omits. Lighter than carrying full rows.
+    """
+    out = {}
+    for strike, pair in _index_chain_by_strike(chain).items():
+        ce = pair.get("call") if isinstance(pair.get("call"), dict) else {}
+        pe = pair.get("put") if isinstance(pair.get("put"), dict) else {}
+        try:
+            ce_oi = float(ce.get("oi"))
+        except (TypeError, ValueError):
+            ce_oi = 0.0
+        try:
+            pe_oi = float(pe.get("oi"))
+        except (TypeError, ValueError):
+            pe_oi = 0.0
+        out[strike] = {"call_oi": ce_oi, "put_oi": pe_oi}
+    return out
+
+
 def _pick_sr_strike(sr_line, strike_index, neighbor=SR_SNAP_WINDOW):
     """
     Choose the S/R STRIKE from the line and its two immediate neighbours.
@@ -792,7 +815,8 @@ def _snap_to_chain_strike(snapshot, target):
     return best
 
 
-def log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=None):
+def log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=None,
+                    prev_chain_oi=None):
     """
     Log the Sensex-equivalent CE/PE OI + OI-change detail AT the S/R line
     (Req 9.4, 9.7, 9.8).
@@ -857,15 +881,26 @@ def log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=None):
     ce_oi_usd = call_row.get("oi_usd")
     pe_oi_usd = put_row.get("oi_usd")
 
-    delta_row = {}
-    if isinstance(oi_deltas, dict):
-        delta_row = oi_deltas.get(sr_key) or oi_deltas.get(sr_line) or {}
-    ce_oich = delta_row.get("call_oi_delta") if isinstance(delta_row, dict) \
-        else None
-    pe_oich = delta_row.get("put_oi_delta") if isinstance(delta_row, dict) \
-        else None
-    ce_oich = ce_oich if ce_oich is not None else 0.0
-    pe_oich = pe_oich if pe_oich is not None else 0.0
+    # OI change AT the selected S/R strike, measured on the SAME strike we
+    # picked. Primary source: diff this cycle's raw-chain OI against the previous
+    # cycle's raw-chain OI (`prev_chain_oi`), so an interim strike like 83500
+    # (absent from the 200-grid snapshot) still gets a real change. Falls back to
+    # the snapshot oi_deltas, then to 0 (first cycle / newly listed strike).
+    prev = (prev_chain_oi or {}).get(sr_key) \
+        if isinstance(prev_chain_oi, dict) else None
+    if isinstance(prev, dict):
+        ce_oich = (ce_oi or 0.0) - (prev.get("call_oi") or 0.0)
+        pe_oich = (pe_oi or 0.0) - (prev.get("put_oi") or 0.0)
+    else:
+        delta_row = {}
+        if isinstance(oi_deltas, dict):
+            delta_row = oi_deltas.get(sr_key) or oi_deltas.get(sr_line) or {}
+        ce_oich = delta_row.get("call_oi_delta") if isinstance(delta_row, dict) \
+            else None
+        pe_oich = delta_row.get("put_oi_delta") if isinstance(delta_row, dict) \
+            else None
+        ce_oich = ce_oich if ce_oich is not None else 0.0
+        pe_oich = pe_oich if pe_oich is not None else 0.0
 
     # OI changes in USD notional (same basis as the OI columns); % comparison is
     # computed on raw contracts and is identical in either unit.
@@ -1352,6 +1387,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "atm_not_shifted_count": carried.get("atm_not_shifted_count"),
             "is_pcr_seq_inc": carried.get("is_pcr_seq_inc", False),
             "is_pcr_seq_dec": carried.get("is_pcr_seq_dec", False),
+            "prev_chain_oi": carried.get("prev_chain_oi"),
             "entry": carried.get("entry"),
             "monitor": monitor_result,
             # Entry-gating + monitoring state (possibly updated by the monitor).
@@ -1475,8 +1511,12 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
 
     # CE/PE OI + OI-change detail AT the S/R line (Sensex-equivalent). Pass the
     # raw chain so the S/R strike can be picked from the line +/-100 neighbours
-    # (incl. interim strikes the 200-grid snapshot lacks) by largest OI wall.
-    log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=chain)
+    # (incl. interim strikes the 200-grid snapshot lacks) by largest OI wall, and
+    # the previous cycle's raw-chain OI so the change is diffed at that same
+    # strike. `curr_chain_oi` is carried forward for the next cycle's diff.
+    curr_chain_oi = _chain_oi_map(chain)
+    log_supp_res_oi(snapshot, oi_deltas, sr_line, chain=chain,
+                    prev_chain_oi=carried.get("prev_chain_oi"))
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
@@ -1568,6 +1608,9 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "atm_not_shifted_count": atm_not_shifted_count,
         "is_pcr_seq_inc": is_pcr_seq_inc,
         "is_pcr_seq_dec": is_pcr_seq_dec,
+        # Previous-cycle raw-chain OI, for diffing the S/R strike's OI change at
+        # any strike (incl. interim strikes absent from the 200-grid snapshot).
+        "prev_chain_oi": curr_chain_oi,
         # Entry-gating state carried into the next cycle (Task 14.3).
         "entry": entry,
         "position_open": entry_state.get("position_open", False),
