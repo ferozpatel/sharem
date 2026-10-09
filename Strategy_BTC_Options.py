@@ -50,9 +50,12 @@ STRIKE_STEP = 200
 # 1000-point grid for BTC). e.g. spot 84800 -> line 85000.
 SR_LINE_STEP = 1000
 
-# Max length of the rolling OI-PCR windows (avgOiPcrList / avgOiPcr9List) kept
-# while the ATM strike holds steady; bounds memory on a long 24/7 session.
-ROLLING_PCR_WINDOW = 50
+# Consecutive-trend window for the OI-PCR lists (avgOiPcrList2 / avgOiPcr9List2).
+# Mirrors the Sensex strategy: a PCR increase/decrease is only confirmed over
+# this many consecutive values (3). The window resets to the newest value on an
+# ATM-strike shift, slides forward (dropping the oldest) when the trend is not
+# monotonic, and is capped at this length so a long 24/7 session can't grow it.
+PCR_TREND_WINDOW = 3
 
 # No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
 NO_TRADE_ZONE_BUFFER = 50
@@ -557,6 +560,106 @@ def log_atm_shift_summary(snapshot, pcr_full, pcr_9, is_atm_shift, map_strike,
           "curr={})".format(
               [round(x, 2) for x in avg_oipcr9_list], atm_not_shifted_count,
               _fmt(pcr_9, 2)))
+
+
+def _seq_pct_steps(window):
+    """Per-step percentage change across a PCR window (e.g. [a, b, c] ->
+    [(b-a)/a*100, (c-b)/b*100]); a 0 denominator yields a 0.0 step."""
+    steps = []
+    for i in range(len(window) - 1):
+        prev, curr = window[i], window[i + 1]
+        steps.append(round((curr - prev) / prev * 100, 1) if prev else 0.0)
+    return steps
+
+
+def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
+                            atm_not_shifted_count, is_atm_shift,
+                            window=PCR_TREND_WINDOW):
+    """
+    Sensex-equivalent consecutive PCR increase/decrease detection + rolling
+    window upkeep (mirrors Strategy_Sensex_May_2026's avgOiPcrList2 /
+    avgOiPcr9List2 handling, Req 9.10).
+
+    The two parallel windows — full-17 (`avg_oipcr_list`) and central-9
+    (`avg_oipcr9_list`) — are kept in lockstep (every trim applies to both). The
+    caller has already appended this cycle's PCRs and, on an ATM-strike shift,
+    reset each window to its newest value. Here:
+
+      * A trend is evaluated only when the ATM strike has held steady for
+        ``>= window`` cycles AND ``window`` values are banked.
+      * Strictly rising across the window -> ``inc=True`` (``PCR_SEQ_INC``);
+        strictly falling -> ``dec=True`` (``PCR_SEQ_DEC``). These are the
+        Sensex ``IS_CONSECUTIVELY_..._PCR_INCREASED/DECREASED`` flags.
+      * Not monotonic -> flags clear and the window slides forward: drop the
+        oldest value (keep the recent ones) so a fresh run can form, or — when
+        the last two are equal (fully stalled) — keep only the newest value.
+      * A safety cap keeps at most ``window`` most-recent values so a long 24/7
+        session can't grow the lists without bound.
+
+    The central-9 window is reported read-only (``PCR9_SEQ_*``) and trimmed in
+    lockstep with the full-17 window, exactly like the Sensex shadow list.
+
+    Returns ``(avg_oipcr_list, avg_oipcr9_list, inc, dec)`` with the (possibly
+    trimmed) windows and the full-17 increase/decrease flags.
+    """
+    inc = dec = False
+
+    # Safety cap: never carry more than `window` most-recent values.
+    if len(avg_oipcr_list) > window:
+        avg_oipcr_list = avg_oipcr_list[-window:]
+    if len(avg_oipcr9_list) > window:
+        avg_oipcr9_list = avg_oipcr9_list[-window:]
+
+    gate = (not is_atm_shift) and atm_not_shifted_count >= window
+
+    # Central-9 read-only trend report (shadows the shared window).
+    if gate and len(avg_oipcr9_list) == window:
+        q = avg_oipcr9_list
+        if all(q[i] < q[i + 1] for i in range(len(q) - 1)):
+            print("PCR9_SEQ_INC: {} (central 9 rising)".format(
+                " -> ".join(_fmt(x, 2) for x in q)))
+        elif all(q[i] > q[i + 1] for i in range(len(q) - 1)):
+            print("PCR9_SEQ_DEC: {} (central 9 falling)".format(
+                " -> ".join(_fmt(x, 2) for x in q)))
+        else:
+            print("PCR9_SEQ_FLAT: {} (not monotonic)".format(
+                " -> ".join(_fmt(x, 2) for x in q)))
+
+    # Full-17 trend detection + shared window trim.
+    if gate and len(avg_oipcr_list) == window:
+        p = avg_oipcr_list
+        steps = _seq_pct_steps(p)
+        seq = " -> ".join(_fmt(x, 2) for x in p)
+        step_str = " | ".join("step{} {:+}%".format(i + 1, s)
+                              for i, s in enumerate(steps))
+        if all(p[i] < p[i + 1] for i in range(len(p) - 1)):
+            inc = True
+            print("PCR_SEQ_INC: {} | {}".format(seq, step_str))
+            print("isPcrInc = True")
+        elif all(p[i] > p[i + 1] for i in range(len(p) - 1)):
+            dec = True
+            print("PCR_SEQ_DEC: {} | {}".format(seq, step_str))
+            print("isPcrDecr = True")
+        else:
+            print("PCR_SEQ_FLAT: {} (not monotonic)".format(seq))
+            # Slide forward: drop the oldest (keep recent run) unless the last
+            # two are equal (fully stalled), in which case keep only the newest.
+            if p[-2] != p[-1]:
+                avg_oipcr_list = avg_oipcr_list[1:]
+                avg_oipcr9_list = avg_oipcr9_list[1:]
+            else:
+                avg_oipcr_list = avg_oipcr_list[-1:]
+                avg_oipcr9_list = avg_oipcr9_list[-1:]
+    elif len(avg_oipcr_list) == window:
+        # Window full but the ATM has not yet held steady for `window` cycles
+        # (recent shift): drop the stale leading values so length tracks the
+        # not-shifted count. Both windows trimmed in lockstep.
+        remove = max(0, window - atm_not_shifted_count)
+        if remove:
+            avg_oipcr_list = avg_oipcr_list[remove:]
+            avg_oipcr9_list = avg_oipcr9_list[remove:]
+
+    return avg_oipcr_list, avg_oipcr9_list, inc, dec
 
 
 def log_supp_res_oi(snapshot, oi_deltas, sr_line):
@@ -1075,6 +1178,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "avg_oipcr_list": carried.get("avg_oipcr_list"),
             "avg_oipcr9_list": carried.get("avg_oipcr9_list"),
             "atm_not_shifted_count": carried.get("atm_not_shifted_count"),
+            "is_pcr_seq_inc": carried.get("is_pcr_seq_inc", False),
+            "is_pcr_seq_dec": carried.get("is_pcr_seq_dec", False),
             "entry": carried.get("entry"),
             "monitor": monitor_result,
             # Entry-gating + monitoring state (possibly updated by the monitor).
@@ -1161,28 +1266,37 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     curr_atm = snapshot.get("atm_strike")
     prev_atm = carried.get("prev_atm")
     is_atm_shift = prev_atm is not None and prev_atm != curr_atm
+
+    # Append this cycle's PCRs onto the carried windows (full-17 + central-9),
+    # mirroring the Sensex append that happens BEFORE shift handling.
+    avg_oipcr_list = list(carried.get("avg_oipcr_list") or [])
+    avg_oipcr9_list = list(carried.get("avg_oipcr9_list") or [])
+    if _pcr_is_finite(pcr_full):
+        avg_oipcr_list.append(pcr_full)
+    if _pcr_is_finite(pcr):
+        avg_oipcr9_list.append(pcr)
+
     if is_atm_shift:
+        # ATM strike moved: discard the stale run, keep only the newest value
+        # (Sensex `avgOiPcrList2[-1:]`), and restart the consecutive counter.
         map_strike = {prev_atm: curr_atm}
-        avg_oipcr_list = [pcr_full] if _pcr_is_finite(pcr_full) else []
-        avg_oipcr9_list = [pcr] if _pcr_is_finite(pcr) else []
+        avg_oipcr_list = avg_oipcr_list[-1:]
+        avg_oipcr9_list = avg_oipcr9_list[-1:]
         atm_not_shifted_count = 1
     else:
         map_strike = {curr_atm: curr_atm}
-        avg_oipcr_list = list(carried.get("avg_oipcr_list") or [])
-        avg_oipcr9_list = list(carried.get("avg_oipcr9_list") or [])
-        if _pcr_is_finite(pcr_full):
-            avg_oipcr_list.append(pcr_full)
-        if _pcr_is_finite(pcr):
-            avg_oipcr9_list.append(pcr)
         atm_not_shifted_count = (carried.get("atm_not_shifted_count") or 0) + 1
-    # Cap the rolling windows so a long-running (24/7) session can't grow them
-    # without bound; keep the most recent values.
-    avg_oipcr_list = avg_oipcr_list[-ROLLING_PCR_WINDOW:]
-    avg_oipcr9_list = avg_oipcr9_list[-ROLLING_PCR_WINDOW:]
 
+    # Log the summary (pre-trim windows, as Sensex prints), then run the
+    # Sensex-equivalent consecutive inc/dec detection + rolling-window trim.
     log_atm_shift_summary(snapshot, pcr_full, pcr, is_atm_shift, map_strike,
                           avg_oipcr_list, avg_oipcr9_list,
                           atm_not_shifted_count)
+
+    (avg_oipcr_list, avg_oipcr9_list,
+     is_pcr_seq_inc, is_pcr_seq_dec) = update_pcr_trend_window(
+         avg_oipcr_list, avg_oipcr9_list,
+         atm_not_shifted_count, is_atm_shift)
 
     log_support_resistance(index_price, sr_line, sr_role, sr_position,
                            ntl, nth)
@@ -1278,6 +1392,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "avg_oipcr_list": avg_oipcr_list,
         "avg_oipcr9_list": avg_oipcr9_list,
         "atm_not_shifted_count": atm_not_shifted_count,
+        "is_pcr_seq_inc": is_pcr_seq_inc,
+        "is_pcr_seq_dec": is_pcr_seq_dec,
         # Entry-gating state carried into the next cycle (Task 14.3).
         "entry": entry,
         "position_open": entry_state.get("position_open", False),
