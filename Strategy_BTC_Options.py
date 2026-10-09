@@ -577,12 +577,12 @@ def log_atm_shift_summary(snapshot, pcr_full, pcr_9, is_atm_shift, map_strike,
         is_atm_shift, map_strike))
     print("avgOiPcrList2  = {} atmStrikeNotShiftedCount= {}  (full 17 strikes, "
           "curr={})".format(
-              [round(x, 2) for x in avg_oipcr_list], atm_not_shifted_count,
-              _fmt(pcr_full, 2)))
+              [round(x, 3) for x in avg_oipcr_list], atm_not_shifted_count,
+              _fmt(pcr_full, 3)))
     print("avgOiPcr9List2 = {} atmStrikeNotShiftedCount= {}  (central 9, "
           "curr={})".format(
-              [round(x, 2) for x in avg_oipcr9_list], atm_not_shifted_count,
-              _fmt(pcr_9, 2)))
+              [round(x, 3) for x in avg_oipcr9_list], atm_not_shifted_count,
+              _fmt(pcr_9, 3)))
 
 
 def _seq_pct_steps(window):
@@ -640,19 +640,19 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
         q = avg_oipcr9_list
         if all(q[i] < q[i + 1] for i in range(len(q) - 1)):
             print("PCR9_SEQ_INC: {} (central 9 rising)".format(
-                " -> ".join(_fmt(x, 2) for x in q)))
+                " -> ".join(_fmt(x, 3) for x in q)))
         elif all(q[i] > q[i + 1] for i in range(len(q) - 1)):
             print("PCR9_SEQ_DEC: {} (central 9 falling)".format(
-                " -> ".join(_fmt(x, 2) for x in q)))
+                " -> ".join(_fmt(x, 3) for x in q)))
         else:
             print("PCR9_SEQ_FLAT: {} (not monotonic)".format(
-                " -> ".join(_fmt(x, 2) for x in q)))
+                " -> ".join(_fmt(x, 3) for x in q)))
 
     # Full-17 trend detection + shared window trim.
     if gate and len(avg_oipcr_list) == window:
         p = avg_oipcr_list
         steps = _seq_pct_steps(p)
-        seq = " -> ".join(_fmt(x, 2) for x in p)
+        seq = " -> ".join(_fmt(x, 3) for x in p)
         step_str = " | ".join("step{} {:+}%".format(i + 1, s)
                               for i, s in enumerate(steps))
         if all(p[i] < p[i + 1] for i in range(len(p) - 1)):
