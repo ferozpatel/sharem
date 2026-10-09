@@ -685,6 +685,44 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
     return avg_oipcr_list, avg_oipcr9_list, inc, dec
 
 
+def _update_dominance_streak(curr, prev, up_streak, down_streak, is_atm_shift,
+                             eps=1e-9):
+    """
+    Update a consecutive PCR rise/fall streak (Sensex-style once/twice/thrice).
+
+    A rising PCR means puts are growing faster than calls -> PE-side dominance
+    (bullish); a falling PCR -> CE-side dominance (bearish). The streak counts
+    consecutive cycles in the same direction and resets to 0 on an ATM-strike
+    shift, a non-finite value, or a flat step. Returns ``(up_streak, down_streak)``
+    (only one is ever non-zero).
+    """
+    if is_atm_shift or not _pcr_is_finite(curr) or not _pcr_is_finite(prev):
+        return 0, 0
+    delta = float(curr) - float(prev)
+    if delta > eps:
+        return up_streak + 1, 0
+    if delta < -eps:
+        return 0, down_streak + 1
+    return 0, 0
+
+
+def _log_pcr_dominance(label, up_streak, down_streak):
+    """
+    Sensex-style once/twice/thrice dominance print for a PCR series. A rising
+    streak logs PE dominance (bullish lean); a falling streak logs CE dominance
+    (bearish lean); nothing is printed on a flat/first cycle.
+    """
+    if up_streak >= 1:
+        print("{}: PE_dominant (PCR rising) once={} twice={} thrice={} "
+              "(up_streak={})".format(label, up_streak >= 1, up_streak >= 2,
+                                      up_streak >= 3, up_streak))
+    elif down_streak >= 1:
+        print("{}: CE_dominant (PCR falling) once={} twice={} thrice={} "
+              "(down_streak={})".format(label, down_streak >= 1,
+                                        down_streak >= 2, down_streak >= 3,
+                                        down_streak))
+
+
 def _index_chain_by_strike(chain):
     """
     Index the RAW option chain (every listed strike for the expiry, not just the
@@ -1384,6 +1422,11 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "atm_not_shifted_count": carried.get("atm_not_shifted_count"),
             "is_pcr_seq_inc": carried.get("is_pcr_seq_inc", False),
             "is_pcr_seq_dec": carried.get("is_pcr_seq_dec", False),
+            "pcr_full": carried.get("pcr_full"),
+            "pcr17_up_streak": carried.get("pcr17_up_streak", 0),
+            "pcr17_down_streak": carried.get("pcr17_down_streak", 0),
+            "pcr9_up_streak": carried.get("pcr9_up_streak", 0),
+            "pcr9_down_streak": carried.get("pcr9_down_streak", 0),
             "prev_chain_oi": carried.get("prev_chain_oi"),
             "entry": carried.get("entry"),
             "monitor": monitor_result,
@@ -1513,6 +1556,21 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
          avg_oipcr_list, avg_oipcr9_list,
          atm_not_shifted_count, is_atm_shift)
 
+    # Consecutive PCR rise/fall dominance streaks (once/twice/thrice), tracked
+    # separately for the full-17 PCR and the central-9 PCR (Sensex-style). A
+    # rising PCR -> PE dominance (bull lean); falling -> CE dominance (bear
+    # lean). Both reset on an ATM-strike shift.
+    pcr17_up_streak, pcr17_down_streak = _update_dominance_streak(
+        pcr_full, carried.get("pcr_full"),
+        carried.get("pcr17_up_streak", 0) or 0,
+        carried.get("pcr17_down_streak", 0) or 0, is_atm_shift)
+    pcr9_up_streak, pcr9_down_streak = _update_dominance_streak(
+        pcr, prev_pcr,
+        carried.get("pcr9_up_streak", 0) or 0,
+        carried.get("pcr9_down_streak", 0) or 0, is_atm_shift)
+    _log_pcr_dominance("PCR17_DOMINANCE", pcr17_up_streak, pcr17_down_streak)
+    _log_pcr_dominance("PCR9_DOMINANCE", pcr9_up_streak, pcr9_down_streak)
+
     log_support_resistance(index_price, sr_line, sr_role, sr_position,
                            ntl, nth)
 
@@ -1615,6 +1673,13 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "atm_not_shifted_count": atm_not_shifted_count,
         "is_pcr_seq_inc": is_pcr_seq_inc,
         "is_pcr_seq_dec": is_pcr_seq_dec,
+        # Full-17 PCR + consecutive rise/fall dominance streaks (once/twice/
+        # thrice) for both the 17- and 9-strike PCRs, carried for the next cycle.
+        "pcr_full": pcr_full,
+        "pcr17_up_streak": pcr17_up_streak,
+        "pcr17_down_streak": pcr17_down_streak,
+        "pcr9_up_streak": pcr9_up_streak,
+        "pcr9_down_streak": pcr9_down_streak,
         # Previous-cycle raw-chain OI, for diffing the S/R strike's OI change at
         # any strike (incl. interim strikes absent from the 200-grid snapshot).
         "prev_chain_oi": curr_chain_oi,
