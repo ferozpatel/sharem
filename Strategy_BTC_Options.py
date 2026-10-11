@@ -496,6 +496,7 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
         print(line)
 
     print("PCRSUM== {}".format(_fmt(oipcr_sum, 2)))
+    print()
     print("AVG_OIPCR_9STRIKE= {}  (central 9 strikes, Req 9.7)".format(
         _fmt(pcr, 2)))
 
@@ -583,6 +584,7 @@ def log_atm_shift_summary(snapshot, pcr_full, pcr_9, is_atm_shift, map_strike,
           "curr={})".format(
               [round(x, 3) for x in avg_oipcr9_list], atm_not_shifted_count,
               _fmt(pcr_9, 3)))
+    print("==== PCR trend check {} ====".format(_now_ist()))
 
 
 def _seq_pct_steps(window):
@@ -641,9 +643,11 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
         if all(q[i] < q[i + 1] for i in range(len(q) - 1)):
             print("PCR9_SEQ_INC: {} (central 9 rising)".format(
                 " -> ".join(_fmt(x, 3) for x in q)))
+            print("is9PcrInc = True")
         elif all(q[i] > q[i + 1] for i in range(len(q) - 1)):
             print("PCR9_SEQ_DEC: {} (central 9 falling)".format(
                 " -> ".join(_fmt(x, 3) for x in q)))
+            print("is9PcrDecr = True")
         else:
             print("PCR9_SEQ_FLAT: {} (not monotonic)".format(
                 " -> ".join(_fmt(x, 3) for x in q)))
@@ -920,6 +924,7 @@ def log_supp_res_oi(snapshot, sr_strike, side, scored, sr_line_orig,
         print("SR_SNAP: line={} {} candidates[{}] -> picked {} "
               "(bigger {} wall)".format(
                   sr_line_orig, role_txt, cand_str, sr_key, side_label))
+        print()
 
     # Raw contracts for the CE/PE comparison (unit-invariant); USD for display.
     ce_oi = call_row.get("oi") or 0.0
@@ -1568,6 +1573,9 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         pcr, prev_pcr,
         carried.get("pcr9_up_streak", 0) or 0,
         carried.get("pcr9_down_streak", 0) or 0, is_atm_shift)
+    if (pcr17_up_streak or pcr17_down_streak
+            or pcr9_up_streak or pcr9_down_streak):
+        print()
     _log_pcr_dominance("PCR17_DOMINANCE", pcr17_up_streak, pcr17_down_streak)
     _log_pcr_dominance("PCR9_DOMINANCE", pcr9_up_streak, pcr9_down_streak)
 
@@ -1589,6 +1597,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
               ts=_now_ist(), dir=pcr_trend.get("direction"),
               streak=pcr_trend.get("streak"),
               prev=_fmt(prev_pcr, 4), curr=_fmt(pcr, 4)))
+    print()
 
     # 12. Entry gating (Req 9.14-9.17) — Task 14.3. Carry the entry-gating
     #     state (open-position flag, consecutive-confirm streak, per-day trade
