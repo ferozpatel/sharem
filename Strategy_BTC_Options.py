@@ -11,6 +11,8 @@ logic is implemented across Task 14. Task 14.1 adds the startup routine,
 config-constant initialization, and the observation-mode logging surface.
 """
 
+import os
+import sys
 import time
 from datetime import datetime, timedelta
 
@@ -92,6 +94,14 @@ LTP_POLL_INTERVAL = 2
 # (mirrors the Sensex `minute % timeFrame == 0` trigger). This constant is kept
 # as the nominal period for reference/logging and as the natural fallback cadence.
 SIGNAL_INTERVAL_SEC = TIMEFRAME_MINUTES * 60
+
+# Per-contract dated logging (Option C): tee all stdout to a dated log file that
+# ROLLS at the 12:00 UTC daily-expiry boundary (17:30 IST), so each BTC contract
+# day gets its own file — logs/delta_btc_<expiry YYYY-MM-DD>.log — instead of a
+# calendar-date file that would split one contract across two files. Set
+# LOG_TO_FILE = False to log to console only.
+LOG_TO_FILE = True
+LOG_DIR = "logs"
 
 # Trail-to-breakeven trigger as a fraction of target (Req 9.22).
 TRAIL_TRIGGER_TARGET_FRACTION = 0.60
@@ -195,6 +205,114 @@ def _seconds_until_next_candle_close(interval_min):
     if remaining <= 0.05:
         remaining += period
     return remaining
+
+
+# ============================================================
+# PER-CONTRACT DATED LOGGING (Option C) — rolls at 12:00 UTC / 17:30 IST
+# ============================================================
+# All strategy output is print()-based; rather than touch every log call we tee
+# sys.stdout to a per-contract log file. The file is labelled by the CURRENT
+# daily-expiry date (``helper.getDailyExpiry`` rolls at >= 12:00 UTC), so a fresh
+# file opens exactly when a new BTC contract begins (17:30 IST) and each file
+# holds one full 24h contract session. ``roll_contract_log`` is called once per
+# cycle (cheap) to switch files at the boundary; ``_Tee.write`` just mirrors each
+# line to whatever file is currently open (no per-write date math). All of this
+# is fully guarded — any file error degrades to console-only, never crashing the
+# strategy.
+_log_fh = None
+_log_label = None
+
+
+def _current_contract_label():
+    """Current BTC contract's expiry date as ``YYYY-MM-DD`` (rolls at 12:00 UTC
+    via ``helper.getDailyExpiry``'s DDMMYY), used as the log-file label."""
+    ddmmyy = helper.getDailyExpiry()
+    return "20{}-{}-{}".format(ddmmyy[4:6], ddmmyy[2:4], ddmmyy[0:2])
+
+
+def roll_contract_log():
+    """
+    Open or rotate the per-contract log file. The file rolls at the 12:00 UTC
+    (17:30 IST) contract boundary — when the daily expiry date changes a fresh
+    ``logs/delta_btc_<expiry>.log`` is opened and the previous one closed. Safe
+    no-op when ``LOG_TO_FILE`` is off; degrades to console-only on any error.
+    """
+    global _log_fh, _log_label
+    if not LOG_TO_FILE:
+        return
+    label = _current_contract_label()
+    if label == _log_label and _log_fh is not None:
+        return
+    if _log_fh is not None:
+        try:
+            _log_fh.flush()
+            _log_fh.close()
+        except Exception:  # noqa: BLE001 - logging must never crash the bot
+            pass
+        _log_fh = None
+    try:
+        os.makedirs(LOG_DIR, exist_ok=True)
+        path = os.path.join(LOG_DIR, "delta_btc_{}.log".format(label))
+        _log_fh = open(path, "a", encoding="utf-8")
+        _log_label = label
+        _log_fh.write("==== CONTRACT LOG {} opened {} (rolls at 12:00 UTC / "
+                      "17:30 IST) ====\n".format(label, _now_ist()))
+        _log_fh.flush()
+    except Exception as exc:  # noqa: BLE001
+        _log_fh = None
+        try:
+            sys.__stdout__.write(
+                "LOG_FILE_ERROR: could not open log for {}: {}\n".format(
+                    label, exc))
+        except Exception:  # noqa: BLE001
+            pass
+
+
+class _Tee(object):
+    """Mirror writes to the original stream AND the current contract log file.
+    Reads the module-level ``_log_fh`` at write time so file rotation is picked
+    up automatically. Every operation is guarded so logging never crashes the
+    strategy."""
+
+    def __init__(self, stream):
+        self._stream = stream
+
+    def write(self, data):
+        try:
+            self._stream.write(data)
+        except Exception:  # noqa: BLE001
+            pass
+        fh = _log_fh
+        if fh is not None:
+            try:
+                fh.write(data)
+            except Exception:  # noqa: BLE001
+                pass
+
+    def flush(self):
+        try:
+            self._stream.flush()
+        except Exception:  # noqa: BLE001
+            pass
+        fh = _log_fh
+        if fh is not None:
+            try:
+                fh.flush()
+            except Exception:  # noqa: BLE001
+                pass
+
+    def isatty(self):
+        return getattr(self._stream, "isatty", lambda: False)()
+
+
+def install_contract_logging():
+    """Open the first contract log file and tee ``sys.stdout`` to it so every
+    print goes to BOTH the console and the dated file. Idempotent + guarded."""
+    if not LOG_TO_FILE:
+        return
+    roll_contract_log()
+    if not isinstance(sys.stdout, _Tee):
+        sys.stdout = _Tee(sys.stdout)
 
 
 # ============================================================
@@ -2584,6 +2702,11 @@ def run():
     above each cycle) is driven by Task 14.2 — this function deliberately does
     not implement that loop, and NO orders are placed anywhere here.
     """
+    # Per-contract dated logging (Option C): tee stdout to logs/delta_btc_
+    # <expiry>.log, rolling at the 12:00 UTC / 17:30 IST contract boundary. Do
+    # this FIRST so the startup banner is captured in the file too.
+    install_contract_logging()
+
     client = startup()
     if client is None:
         # Startup already logged the connection failure and abort reason
@@ -2624,6 +2747,9 @@ def run():
             print("SIGNAL_LOOP [{ts}] waiting {w:.1f}s for next {n}-min candle "
                   "close.".format(ts=_now_ist(), w=wait_s, n=TIMEFRAME_MINUTES))
             time.sleep(wait_s)
+            # Roll the per-contract log file at the 12:00 UTC / 17:30 IST
+            # boundary so this cycle's output lands in the right contract file.
+            roll_contract_log()
             try:
                 state = checkCriteriaAndTakeTrade(client, state)
             except KeyboardInterrupt:
