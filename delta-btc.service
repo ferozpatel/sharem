@@ -1,0 +1,27 @@
+[Unit]
+Description=Delta Exchange BTC Daily-Options Bot (24/7)
+# Wait for network + a synced clock: Delta rejects HMAC signatures >5s off.
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+
+# --- Paths: adjust if you deploy the Delta bot elsewhere ---
+# Keep the Delta bot in its OWN folder so its helper_*/Strategy_* files never
+# clash with the Fyers bot's files.
+WorkingDirectory=/home/ubuntu/trading-bot/delta
+ExecStart=/home/ubuntu/trading-bot/delta/venv/bin/python3 -u Strategy_BTC_Options.py
+
+# Keep it alive 24/7: restart on any crash/exit, and on reboot.
+Restart=always
+RestartSec=10
+
+# The bot writes its own per-contract files to logs/delta_btc_<expiry>.log;
+# journald also captures stdout (view with: journalctl -u delta-btc -f).
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
