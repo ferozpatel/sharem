@@ -1,0 +1,126 @@
+================================================================
+EC2 SETUP — Delta BTC bot as a 24/7 systemd service
+================================================================
+Paths assumed (adjust if yours differ):
+  code   : /home/ubuntu/trading-bot/delta
+  venv   : /home/ubuntu/trading-bot/venv     (shared with the Fyers bot)
+
+Current directory does NOT matter for these commands, and the venv does
+NOT need activating — systemctl/tee are Linux admin commands and the
+service file carries its own absolute paths.
+
+Prerequisites (should already be done):
+  - 6 code files + requirements.txt in /home/ubuntu/trading-bot/delta
+  - delta_api_key.txt + delta_api_secret.txt created (chmod 600)
+  - delta_auth.py run once -> delta_session.json exists
+  - a manual run of Strategy_BTC_Options.py worked (then Ctrl-C'd)
+
+
+----------------------------------------------------------------
+STEP 1 — Create the systemd service file
+----------------------------------------------------------------
+Copy-paste this ENTIRE block (including the final EOF line):
+
+sudo tee /etc/systemd/system/delta-btc.service > /dev/null <<'EOF'
+[Unit]
+Description=Delta Exchange BTC Daily-Options Bot (24/7)
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/trading-bot/delta
+ExecStart=/home/ubuntu/trading-bot/venv/bin/python3 -u Strategy_BTC_Options.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+----------------------------------------------------------------
+STEP 2 — Load, enable and start it
+----------------------------------------------------------------
+sudo systemctl daemon-reload
+sudo systemctl enable --now delta-btc
+sudo systemctl status delta-btc
+
+Expect "active (running)" in green. Press q to exit the status view.
+
+
+----------------------------------------------------------------
+STEP 3 — Verify it's ticking over
+----------------------------------------------------------------
+# live console output from the service
+journalctl -u delta-btc -f
+
+# or tail today's per-contract log file
+tail -f /home/ubuntu/trading-bot/delta/logs/delta_btc_$(date +%F).log
+
+Within ~3 minutes you should see a SIGNAL line + the option-chain table.
+NOTE: Ctrl-C here only stops the log view — the bot keeps running.
+
+
+----------------------------------------------------------------
+EVERYDAY COMMANDS
+----------------------------------------------------------------
+sudo systemctl status delta-btc              # running?
+sudo systemctl restart delta-btc             # after a git pull / code update
+sudo systemctl stop delta-btc                # pause the bot
+sudo systemctl start delta-btc               # resume
+sudo systemctl disable delta-btc             # don't auto-start on boot
+journalctl -u delta-btc --since "1 hour ago" # recent logs
+journalctl -u delta-btc -n 200               # last 200 log lines
+
+
+----------------------------------------------------------------
+KEEP THE EC2 RUNNING 24/7 (crypto never closes)
+----------------------------------------------------------------
+The Fyers scheduler stops the box via evening_job() -> stop_ec2()
+("sudo shutdown"). To stay up 24/7, remove the STOP trigger:
+
+  - If it's a cron on the instance, edit with:  crontab -e
+    and DELETE the stop line, e.g.:
+      35 15 * * 1-5 cd /home/ubuntu/trading-bot && python3 trading_scheduler.py stop
+
+  - If the stop is external (AWS EventBridge / Lambda / Instance
+    Scheduler), disable the "stop" schedule in the AWS console.
+
+  - KEEP the morning start cron so Sensex still launches daily:
+      05 09 * * 1-5 cd /home/ubuntu/trading-bot && python3 trading_scheduler.py start
+
+Check the clock is NTP-synced (Delta rejects signatures >5s off):
+  timedatectl        # want: "System clock synchronized: yes"
+
+
+----------------------------------------------------------------
+TROUBLESHOOTING
+----------------------------------------------------------------
+If status shows "failed" or it keeps restarting, read the error:
+  journalctl -u delta-btc -n 50 --no-pager
+
+Common causes:
+  - wrong python path   -> ls /home/ubuntu/trading-bot/venv/bin/python3
+  - wrong code path     -> ls /home/ubuntu/trading-bot/delta/Strategy_BTC_Options.py
+  - missing deps        -> /home/ubuntu/trading-bot/venv/bin/pip install -r \
+                             /home/ubuntu/trading-bot/delta/requirements.txt
+  - missing credentials -> ls -l /home/ubuntu/trading-bot/delta/delta_api_*.txt
+  - IP not whitelisted  -> curl -s https://checkip.amazonaws.com
+                           then add that IP to the API key in the Delta dashboard
+
+After editing /etc/systemd/system/delta-btc.service always run:
+  sudo systemctl daemon-reload && sudo systemctl restart delta-btc
+
+
+----------------------------------------------------------------
+REMINDER
+----------------------------------------------------------------
+OBSERVATION_MODE = True in Strategy_BTC_Options.py — the bot places
+NO live orders. Going live later needs BOTH:
+  1. OBSERVATION_MODE = False, and
+  2. the [NEEDS INPUT] risk params filled (PCR thresholds, SL/target,
+     position size, max trades/day).
