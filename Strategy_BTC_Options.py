@@ -812,6 +812,93 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
     return avg_oipcr_list, avg_oipcr9_list, inc, dec, inc9, dec9
 
 
+# ============================================================
+# INVARIANT-WINDOW PCR TREND (parallel, observation-only)
+# ============================================================
+# The existing avgOiPcrList2 / avgOiPcr9List2 + isPcrInc/is9PcrInc track the PCR
+# AS MEASURED each cycle, so when the ATM shifts the strike set changes and the
+# PCR jumps for a reason that is NOT an OI change (one high-OI strike leaves the
+# window, another enters). Those series are left exactly as-is.
+#
+# This parallel track removes that artifact: it keeps the last few raw-chain OI
+# snapshots and, every cycle, RE-COMPUTES the whole PCR series over the CURRENT
+# strike set. Every value in the series then sits on the same basis, so a rise /
+# fall reflects ONLY open-interest change at those strikes. No reset is needed on
+# an ATM shift, so a genuine trend can run uninterrupted. Observation-only.
+def _pcr_from_oi_map(oi_map, strikes):
+    """PCR = (Σ put OI) / (Σ call OI) over `strikes`, read from a slim
+    ``{strike: {"call_oi", "put_oi"}}`` map. ``None`` when the call side is
+    zero/absent (ratio undefined)."""
+    if not isinstance(oi_map, dict):
+        return None
+    ce = pe = 0.0
+    for s in strikes or []:
+        try:
+            row = oi_map.get(int(s))
+        except (TypeError, ValueError):
+            row = None
+        if isinstance(row, dict):
+            ce += row.get("call_oi") or 0.0
+            pe += row.get("put_oi") or 0.0
+    if ce <= 0:
+        return None
+    return pe / ce
+
+
+def invariant_pcr_series(chain_oi_history, strikes):
+    """
+    Re-compute the PCR for each snapshot in ``chain_oi_history`` (oldest first)
+    over the SAME, current ``strikes``. Returns the series oldest->newest with
+    unusable values dropped — every element is directly comparable.
+    """
+    series = []
+    for oi_map in (chain_oi_history or []):
+        value = _pcr_from_oi_map(oi_map, strikes)
+        if _pcr_is_finite(value):
+            series.append(value)
+    return series
+
+
+def log_invariant_pcr_trend(label, series, prev_inc_streak, prev_dec_streak,
+                            window=PCR_TREND_WINDOW):
+    """
+    Detect + log a strictly rising/falling run on an invariant PCR series and
+    maintain its consecutive-occurrence streaks.
+
+    Prints ``<label>_SEQ_INC_InvariantWindow`` / ``..._DEC_InvariantWindow`` with
+    the series and per-step %, the ``is...Inc_InvariantWindow`` flag, and the
+    streak count. Needs ``window`` comparable values; no ATM-shift reset applies
+    because every value is already on the current strike set.
+
+    Returns ``(inc, dec, inc_streak, dec_streak)``.
+    """
+    if len(series) < window:
+        return False, False, 0, 0
+    s = series[-window:]
+    seq = " -> ".join(_fmt(x, 3) for x in s)
+    inc = all(s[i] < s[i + 1] for i in range(len(s) - 1))
+    dec = all(s[i] > s[i + 1] for i in range(len(s) - 1))
+    inc_streak = _update_flag_streak(inc, prev_inc_streak)
+    dec_streak = _update_flag_streak(dec, prev_dec_streak)
+
+    if inc:
+        steps = " | ".join("step{} {:+}%".format(i + 1, v)
+                           for i, v in enumerate(_seq_pct_steps(s)))
+        print("{}_SEQ_INC_InvariantWindow: {} | {}".format(label, seq, steps))
+        print("is{}PcrInc_InvariantWindow = True  (streak={} consecutive "
+              "cycle(s) rising)".format(label, inc_streak))
+    elif dec:
+        steps = " | ".join("step{} {:+}%".format(i + 1, v)
+                           for i, v in enumerate(_seq_pct_steps(s)))
+        print("{}_SEQ_DEC_InvariantWindow: {} | {}".format(label, seq, steps))
+        print("is{}PcrDecr_InvariantWindow = True  (streak={} consecutive "
+              "cycle(s) falling)".format(label, dec_streak))
+    else:
+        print("{}_SEQ_FLAT_InvariantWindow: {} (not monotonic)".format(
+            label, seq))
+    return inc, dec, inc_streak, dec_streak
+
+
 def _update_flag_streak(flag_true, prev_streak):
     """Increment a consecutive-occurrence counter while `flag_true` holds; reset
     to 0 the moment it stops (the streak is 'disqualified')."""
@@ -1647,6 +1734,15 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "pcr_dec_streak": carried.get("pcr_dec_streak", 0),
             "pcr9_inc_streak": carried.get("pcr9_inc_streak", 0),
             "pcr9_dec_streak": carried.get("pcr9_dec_streak", 0),
+            "chain_oi_history": carried.get("chain_oi_history"),
+            "is_pcr9_inc_inv": carried.get("is_pcr9_inc_inv", False),
+            "is_pcr9_dec_inv": carried.get("is_pcr9_dec_inv", False),
+            "is_pcr_inc_inv": carried.get("is_pcr_inc_inv", False),
+            "is_pcr_dec_inv": carried.get("is_pcr_dec_inv", False),
+            "pcr9_inc_streak_inv": carried.get("pcr9_inc_streak_inv", 0),
+            "pcr9_dec_streak_inv": carried.get("pcr9_dec_streak_inv", 0),
+            "pcr_inc_streak_inv": carried.get("pcr_inc_streak_inv", 0),
+            "pcr_dec_streak_inv": carried.get("pcr_dec_streak_inv", 0),
             "pcr_full": carried.get("pcr_full"),
             "pcr17_up_streak": carried.get("pcr17_up_streak", 0),
             "pcr17_down_streak": carried.get("pcr17_down_streak", 0),
@@ -1799,6 +1895,35 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     _log_seq_streaks("PCR9_SEQ", pcr9_inc_streak, pcr9_dec_streak)
     _log_seq_streaks("PCR_SEQ", pcr_inc_streak, pcr_dec_streak)
 
+    # ---- Parallel INVARIANT-WINDOW PCR trend (observation-only) ------------
+    # Re-measure the last PCR_TREND_WINDOW cycles' OI over the CURRENT strike
+    # set, so an ATM shift cannot fake a PCR move. The existing series/flags
+    # above are untouched; these are additional, independently-streaked signals.
+    chain_oi_history = list(carried.get("chain_oi_history") or [])
+    chain_oi_history.append(curr_chain_oi)
+    chain_oi_history = chain_oi_history[-PCR_TREND_WINDOW:]
+
+    strikes_17 = snapshot.get("strikes") or []
+    strikes_9 = helper._central_strikes(snapshot, 9)
+    series_17 = invariant_pcr_series(chain_oi_history, strikes_17)
+    series_9 = invariant_pcr_series(chain_oi_history, strikes_9)
+
+    if series_9:
+        print("avgOiPcr9List2_InvariantWindow  = {}  (central 9, re-measured on "
+              "current strikes)".format([round(x, 3) for x in series_9]))
+    if series_17:
+        print("avgOiPcrList2_InvariantWindow   = {}  (full 17, re-measured on "
+              "current strikes)".format([round(x, 3) for x in series_17]))
+
+    (is_pcr9_inc_inv, is_pcr9_dec_inv,
+     pcr9_inc_streak_inv, pcr9_dec_streak_inv) = log_invariant_pcr_trend(
+         "9", series_9,
+         carried.get("pcr9_inc_streak_inv"), carried.get("pcr9_dec_streak_inv"))
+    (is_pcr_inc_inv, is_pcr_dec_inv,
+     pcr_inc_streak_inv, pcr_dec_streak_inv) = log_invariant_pcr_trend(
+         "17", series_17,
+         carried.get("pcr_inc_streak_inv"), carried.get("pcr_dec_streak_inv"))
+
     # Consecutive PCR rise/fall dominance streaks (once/twice/thrice), tracked
     # separately for the full-17 PCR and the central-9 PCR (Sensex-style). A
     # rising PCR -> PE dominance (bull lean); falling -> CE dominance (bear
@@ -1944,6 +2069,18 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "pcr_dec_streak": pcr_dec_streak,
         "pcr9_inc_streak": pcr9_inc_streak,
         "pcr9_dec_streak": pcr9_dec_streak,
+        # Invariant-window track: rolling raw-chain OI snapshots + its own
+        # flags/streaks (no ATM-shift reset — every value is re-measured on the
+        # current strike set).
+        "chain_oi_history": chain_oi_history,
+        "is_pcr9_inc_inv": is_pcr9_inc_inv,
+        "is_pcr9_dec_inv": is_pcr9_dec_inv,
+        "is_pcr_inc_inv": is_pcr_inc_inv,
+        "is_pcr_dec_inv": is_pcr_dec_inv,
+        "pcr9_inc_streak_inv": pcr9_inc_streak_inv,
+        "pcr9_dec_streak_inv": pcr9_dec_streak_inv,
+        "pcr_inc_streak_inv": pcr_inc_streak_inv,
+        "pcr_dec_streak_inv": pcr_dec_streak_inv,
         # Full-17 PCR + consecutive rise/fall dominance streaks (once/twice/
         # thrice) for both the 17- and 9-strike PCRs, carried for the next cycle.
         "pcr_full": pcr_full,
