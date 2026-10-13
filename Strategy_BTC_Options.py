@@ -1984,6 +1984,9 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     # Re-measure the last PCR_TREND_WINDOW cycles' OI over the CURRENT strike
     # set, so an ATM shift cannot fake a PCR move. The existing series/flags
     # above are untouched; these are additional, independently-streaked signals.
+    # NOTE: `curr_chain_oi` (slim raw-chain OI map) is built HERE because it is
+    # the first consumer; the S/R-OI block and the carried state reuse it below.
+    curr_chain_oi = _chain_oi_map(chain)
     chain_oi_history = list(carried.get("chain_oi_history") or [])
     chain_oi_history.append(curr_chain_oi)
     chain_oi_history = chain_oi_history[-PCR_TREND_WINDOW:]
@@ -2058,8 +2061,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     # raw chain so the S/R strike can be picked from the line +/-100 neighbours
     # (incl. interim strikes the 200-grid snapshot lacks) by largest OI wall, and
     # the previous cycle's raw-chain OI so the change is diffed at that same
-    # strike. `curr_chain_oi` is carried forward for the next cycle's diff.
-    curr_chain_oi = _chain_oi_map(chain)
+    # strike. `curr_chain_oi` (built above) is carried forward for the next
+    # cycle's diff.
 
     # Contract-start OI baseline for the CUMULATIVE change-in-OI measure. Delta
     # has no since-day-start OI-change column, so we capture the chain's OI at
