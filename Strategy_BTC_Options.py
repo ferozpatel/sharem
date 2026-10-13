@@ -742,10 +742,13 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
     The central-9 window is reported read-only (``PCR9_SEQ_*``) and trimmed in
     lockstep with the full-17 window, exactly like the Sensex shadow list.
 
-    Returns ``(avg_oipcr_list, avg_oipcr9_list, inc, dec)`` with the (possibly
-    trimmed) windows and the full-17 increase/decrease flags.
+    Returns ``(avg_oipcr_list, avg_oipcr9_list, inc, dec, inc9, dec9)`` with the
+    (possibly trimmed) windows, the full-17 increase/decrease flags (``inc``/
+    ``dec`` = isPcrInc/isPcrDecr) and the central-9 flags (``inc9``/``dec9`` =
+    is9PcrInc/is9PcrDecr).
     """
     inc = dec = False
+    inc9 = dec9 = False
 
     # Safety cap: never carry more than `window` most-recent values.
     if len(avg_oipcr_list) > window:
@@ -759,10 +762,12 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
     if gate and len(avg_oipcr9_list) == window:
         q = avg_oipcr9_list
         if all(q[i] < q[i + 1] for i in range(len(q) - 1)):
+            inc9 = True
             print("PCR9_SEQ_INC: {} (central 9 rising)".format(
                 " -> ".join(_fmt(x, 3) for x in q)))
             print("is9PcrInc = True")
         elif all(q[i] > q[i + 1] for i in range(len(q) - 1)):
+            dec9 = True
             print("PCR9_SEQ_DEC: {} (central 9 falling)".format(
                 " -> ".join(_fmt(x, 3) for x in q)))
             print("is9PcrDecr = True")
@@ -804,7 +809,27 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
             avg_oipcr_list = avg_oipcr_list[remove:]
             avg_oipcr9_list = avg_oipcr9_list[remove:]
 
-    return avg_oipcr_list, avg_oipcr9_list, inc, dec
+    return avg_oipcr_list, avg_oipcr9_list, inc, dec, inc9, dec9
+
+
+def _update_flag_streak(flag_true, prev_streak):
+    """Increment a consecutive-occurrence counter while `flag_true` holds; reset
+    to 0 the moment it stops (the streak is 'disqualified')."""
+    return (prev_streak or 0) + 1 if flag_true else 0
+
+
+def _log_seq_streaks(label, inc_streak, dec_streak):
+    """
+    Log how many CONSECUTIVE cycles a PCR_SEQ inc/dec verdict has held, so a
+    sustained bullish/bearish run is visible at a glance. Prints only while a
+    run is alive; nothing on a flat/disqualified cycle. Observation-only.
+    """
+    if inc_streak >= 1:
+        print("{}_INC_STREAK = {} consecutive cycle(s) rising "
+              "(bullish trend building)".format(label, inc_streak))
+    elif dec_streak >= 1:
+        print("{}_DEC_STREAK = {} consecutive cycle(s) falling "
+              "(bearish trend building)".format(label, dec_streak))
 
 
 def _update_dominance_streak(curr, prev, up_streak, down_streak, is_atm_shift,
@@ -1616,6 +1641,12 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "atm_not_shifted_count": carried.get("atm_not_shifted_count"),
             "is_pcr_seq_inc": carried.get("is_pcr_seq_inc", False),
             "is_pcr_seq_dec": carried.get("is_pcr_seq_dec", False),
+            "is_pcr9_seq_inc": carried.get("is_pcr9_seq_inc", False),
+            "is_pcr9_seq_dec": carried.get("is_pcr9_seq_dec", False),
+            "pcr_inc_streak": carried.get("pcr_inc_streak", 0),
+            "pcr_dec_streak": carried.get("pcr_dec_streak", 0),
+            "pcr9_inc_streak": carried.get("pcr9_inc_streak", 0),
+            "pcr9_dec_streak": carried.get("pcr9_dec_streak", 0),
             "pcr_full": carried.get("pcr_full"),
             "pcr17_up_streak": carried.get("pcr17_up_streak", 0),
             "pcr17_down_streak": carried.get("pcr17_down_streak", 0),
@@ -1748,9 +1779,25 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
                           atm_not_shifted_count)
 
     (avg_oipcr_list, avg_oipcr9_list,
-     is_pcr_seq_inc, is_pcr_seq_dec) = update_pcr_trend_window(
+     is_pcr_seq_inc, is_pcr_seq_dec,
+     is_pcr9_seq_inc, is_pcr9_seq_dec) = update_pcr_trend_window(
          avg_oipcr_list, avg_oipcr9_list,
          atm_not_shifted_count, is_atm_shift)
+
+    # Consecutive-occurrence counters for the SEQ verdicts: how many cycles in a
+    # row isPcrInc / isPcrDecr / is9PcrInc / is9PcrDecr has stayed True. A longer
+    # run = a more sustained bullish/bearish PCR trend; the counter resets to 0
+    # the moment the verdict is disqualified. Observation-only logging.
+    pcr_inc_streak = _update_flag_streak(
+        is_pcr_seq_inc, carried.get("pcr_inc_streak"))
+    pcr_dec_streak = _update_flag_streak(
+        is_pcr_seq_dec, carried.get("pcr_dec_streak"))
+    pcr9_inc_streak = _update_flag_streak(
+        is_pcr9_seq_inc, carried.get("pcr9_inc_streak"))
+    pcr9_dec_streak = _update_flag_streak(
+        is_pcr9_seq_dec, carried.get("pcr9_dec_streak"))
+    _log_seq_streaks("PCR9_SEQ", pcr9_inc_streak, pcr9_dec_streak)
+    _log_seq_streaks("PCR_SEQ", pcr_inc_streak, pcr_dec_streak)
 
     # Consecutive PCR rise/fall dominance streaks (once/twice/thrice), tracked
     # separately for the full-17 PCR and the central-9 PCR (Sensex-style). A
@@ -1889,6 +1936,14 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "atm_not_shifted_count": atm_not_shifted_count,
         "is_pcr_seq_inc": is_pcr_seq_inc,
         "is_pcr_seq_dec": is_pcr_seq_dec,
+        "is_pcr9_seq_inc": is_pcr9_seq_inc,
+        "is_pcr9_seq_dec": is_pcr9_seq_dec,
+        # Consecutive-occurrence counters for the SEQ verdicts (how long the
+        # rising/falling run has held); reset to 0 when disqualified.
+        "pcr_inc_streak": pcr_inc_streak,
+        "pcr_dec_streak": pcr_dec_streak,
+        "pcr9_inc_streak": pcr9_inc_streak,
+        "pcr9_dec_streak": pcr9_dec_streak,
         # Full-17 PCR + consecutive rise/fall dominance streaks (once/twice/
         # thrice) for both the 17- and 9-strike PCRs, carried for the next cycle.
         "pcr_full": pcr_full,
