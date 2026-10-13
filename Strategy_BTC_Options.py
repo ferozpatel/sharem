@@ -995,16 +995,47 @@ def refine_sr_line_by_oi(sr_line, spot, position, chain,
     return chosen, side, scored
 
 
+def _dominance_hint(dom, role):
+    """
+    Map fresh-flow dominance at an S/R level to a confirm/warning verdict
+    (Sensex ``INCR_CHOI`` hint table):
+      * SUPPORT    + PE dominant -> support HOLDING (bullish)
+      * SUPPORT    + CE dominant -> support UNDERMINED (bearish warning)
+      * RESISTANCE + CE dominant -> resistance HOLDING (bearish)
+      * RESISTANCE + PE dominant -> resistance CHALLENGED (bullish warning)
+    """
+    if dom == "FLAT":
+        return "neutral"
+    if role == "SUPPORT":
+        return ("support HOLDING (bullish)" if dom == "PE"
+                else "support UNDERMINED (bearish warning)")
+    if role == "RESISTANCE":
+        return ("resistance HOLDING (bearish)" if dom == "CE"
+                else "resistance CHALLENGED (bullish warning)")
+    return "n/a"
+
+
 def log_supp_res_oi(snapshot, sr_strike, side, scored, sr_line_orig,
-                    chain=None, prev_chain_oi=None):
+                    chain=None, prev_chain_oi=None, baseline_chain_oi=None,
+                    sr_role=None):
     """
     Log the Sensex-equivalent CE/PE OI + OI-change detail AT the chosen S/R
     strike (Req 9.4, 9.7, 9.8).
 
     Mirrors the Sensex block::
 
-        CEoich val =  48140.0  PEoich val =  84900.0 , CE < PE by 43.3%
-        SUPP_RES TOTAL OI: CE= 894200  PE= 1093900 , CE < PE by 18.3%
+        CEoich val =  +$691.76K  PEoich val =  +$973.64K , CE < PE by 29.0%
+            (cumulative since contract start)
+        SUPP_RES TOTAL OI (strike 83000): CE= $1.43M  PE= $2.09M , CE < PE by 31.4%
+        INCR_CHOI: SUPP_RES=83000 role=SUPPORT fresh_CE=+$376.62K
+            fresh_PE=+$575.34K -> PE_dominant by 34.5%
+            (support HOLDING (bullish)) | cumulative CE=... PE=...
+
+    Three distinct measures: the CUMULATIVE change-in-OI since CONTRACT START
+    (the "stock" — Delta has no since-day-start OI-change column, so it is
+    computed locally against a 12:00-UTC baseline that resets each contract),
+    the ABSOLUTE OI at the strike, and the FRESH per-cycle flow with a
+    role-aware dominance verdict (the "flow", which leads the stock).
 
     The S/R STRIKE was already resolved upstream (``refine_sr_line_by_oi``) via
     the 2-strike, role-side rule: among the 500 line and one spot-side neighbour,
@@ -1050,23 +1081,45 @@ def log_supp_res_oi(snapshot, sr_strike, side, scored, sr_line_orig,
     ce_oi_usd = call_row.get("oi_usd")
     pe_oi_usd = put_row.get("oi_usd")
 
-    # OI change AT the chosen S/R strike, diffed vs the previous cycle's raw
-    # chain (`prev_chain_oi`) so interim strikes (absent from the 200-grid
-    # snapshot) still get a real change; 0 on the first cycle / newly listed.
+    # ---- Two DIFFERENT OI-change measures at the chosen S/R strike ----------
+    # Delta exposes NO cumulative since-day-start OI-change column (only a
+    # rolling `oi_change_usd_6h`, log-only), so BOTH are computed locally from
+    # the raw chain:
+    #
+    #   * CUMULATIVE ("stock", Sensex `CEoich`/`PEoich`): current OI minus the
+    #     OI captured at CONTRACT START (12:00 UTC baseline). Shows total
+    #     buildup/unwind over this contract day; resets at each rollover.
+    #   * FRESH ("flow", Sensex `fresh_CE`/`fresh_PE`): current OI minus the
+    #     PREVIOUS CYCLE's OI — who is writing RIGHT NOW at the level. Flow
+    #     leads the stock, so this is the higher-quality confirmation.
+    base = (baseline_chain_oi or {}).get(sr_key) \
+        if isinstance(baseline_chain_oi, dict) else None
+    if isinstance(base, dict):
+        ce_cum = (ce_oi or 0.0) - (base.get("call_oi") or 0.0)
+        pe_cum = (pe_oi or 0.0) - (base.get("put_oi") or 0.0)
+    else:
+        ce_cum = pe_cum = 0.0
+
     prev = (prev_chain_oi or {}).get(sr_key) \
         if isinstance(prev_chain_oi, dict) else None
     if isinstance(prev, dict):
-        ce_oich = (ce_oi or 0.0) - (prev.get("call_oi") or 0.0)
-        pe_oich = (pe_oi or 0.0) - (prev.get("put_oi") or 0.0)
+        ce_fresh = (ce_oi or 0.0) - (prev.get("call_oi") or 0.0)
+        pe_fresh = (pe_oi or 0.0) - (prev.get("put_oi") or 0.0)
+        fresh_known = True
     else:
-        ce_oich = pe_oich = 0.0
+        ce_fresh = pe_fresh = 0.0
+        fresh_known = False
 
-    # OI changes in USD notional (same basis as the OI columns); % comparison is
-    # computed on raw contracts and is identical in either unit.
-    ce_oich_disp = _fmt_oi_usd(_contracts_to_usd(ce_oich, ce_oi, ce_oi_usd),
-                               signed=True) or _fmt(ce_oich, 1)
-    pe_oich_disp = _fmt_oi_usd(_contracts_to_usd(pe_oich, pe_oi, pe_oi_usd),
-                               signed=True) or _fmt(pe_oich, 1)
+    # Display in USD notional (same basis as the OI columns); the % comparisons
+    # are computed on raw contracts and are identical in either unit.
+    def _chg(val, oi_ref, usd_ref):
+        return _fmt_oi_usd(_contracts_to_usd(val, oi_ref, usd_ref),
+                           signed=True) or _fmt(val, 1)
+
+    ce_cum_disp = _chg(ce_cum, ce_oi, ce_oi_usd)
+    pe_cum_disp = _chg(pe_cum, pe_oi, pe_oi_usd)
+    ce_fresh_disp = _chg(ce_fresh, ce_oi, ce_oi_usd)
+    pe_fresh_disp = _chg(pe_fresh, pe_oi, pe_oi_usd)
 
     # Strike label: the chosen strike, noting the raw 500 line when it differs.
     try:
@@ -1076,12 +1129,30 @@ def log_supp_res_oi(snapshot, sr_strike, side, scored, sr_line_orig,
     strike_label = ("{}".format(sr_key) if sr_key == line_i
                     else "{} (S/R line {})".format(sr_key, line_i))
 
-    print("CEoich val =  {}  PEoich val =  {} , {}".format(
-        ce_oich_disp, pe_oich_disp, _compare_ce_pe(ce_oich, pe_oich)))
+    # 1) CUMULATIVE change in OI since contract start (Sensex line 1).
+    print("CEoich val =  {}  PEoich val =  {} , {}  (cumulative since contract "
+          "start)".format(ce_cum_disp, pe_cum_disp,
+                          _compare_ce_pe(ce_cum, pe_cum)))
+    # 2) Absolute OI at the S/R strike (Sensex line 2).
     print("SUPP_RES TOTAL OI (strike {}): CE= {}  PE= {} , {}".format(
         strike_label,
         _fmt_oi_abs(ce_oi, ce_oi_usd), _fmt_oi_abs(pe_oi, pe_oi_usd),
         _compare_ce_pe(ce_oi, pe_oi)))
+    # 3) FRESH per-cycle flow + dominance verdict (Sensex line 3 INCR_CHOI).
+    if fresh_known:
+        dom = ("CE" if ce_fresh > pe_fresh
+               else "PE" if pe_fresh > ce_fresh else "FLAT")
+        den = max(abs(ce_fresh), abs(pe_fresh)) or 1
+        gap = round(abs(ce_fresh - pe_fresh) / den * 100, 1)
+        print("INCR_CHOI: SUPP_RES={} role={} fresh_CE={} fresh_PE={} -> "
+              "{}_dominant by {}% ({}) | cumulative CE={} PE={}".format(
+                  sr_key, sr_role or "n/a", ce_fresh_disp, pe_fresh_disp,
+                  dom, gap, _dominance_hint(dom, sr_role),
+                  ce_cum_disp, pe_cum_disp))
+    else:
+        print("INCR_CHOI: SUPP_RES={} role={} first sighting (no prev cycle to "
+              "diff) | cumulative CE={} PE={}".format(
+                  sr_key, sr_role or "n/a", ce_cum_disp, pe_cum_disp))
 
 
 def log_would_have_entered(decision, reason=None, **details):
@@ -1551,6 +1622,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "pcr9_up_streak": carried.get("pcr9_up_streak", 0),
             "pcr9_down_streak": carried.get("pcr9_down_streak", 0),
             "prev_chain_oi": carried.get("prev_chain_oi"),
+            "baseline_chain_oi": carried.get("baseline_chain_oi"),
+            "baseline_contract": carried.get("baseline_contract"),
             "entry": carried.get("entry"),
             "monitor": monitor_result,
             # Entry-gating + monitoring state (possibly updated by the monitor).
@@ -1706,8 +1779,24 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     # the previous cycle's raw-chain OI so the change is diffed at that same
     # strike. `curr_chain_oi` is carried forward for the next cycle's diff.
     curr_chain_oi = _chain_oi_map(chain)
+
+    # Contract-start OI baseline for the CUMULATIVE change-in-OI measure. Delta
+    # has no since-day-start OI-change column, so we capture the chain's OI at
+    # the FIRST cycle of each contract day and diff against it. When the daily
+    # contract rolls (12:00 UTC / 17:30 IST) the label changes and the baseline
+    # re-captures, so cumulative CHOI automatically resets per contract.
+    contract_label = _current_contract_label()
+    if carried.get("baseline_contract") != contract_label:
+        baseline_chain_oi = curr_chain_oi
+        print("CHOI_BASELINE [{ts}] captured contract-start OI baseline for "
+              "{lbl} ({n} strikes); cumulative CHOI resets from here.".format(
+                  ts=_now_ist(), lbl=contract_label, n=len(curr_chain_oi)))
+    else:
+        baseline_chain_oi = carried.get("baseline_chain_oi") or curr_chain_oi
+
     log_supp_res_oi(snapshot, sr_wall, sr_side, sr_scored, sr_line,
-                    chain=chain, prev_chain_oi=carried.get("prev_chain_oi"))
+                    chain=chain, prev_chain_oi=carried.get("prev_chain_oi"),
+                    baseline_chain_oi=baseline_chain_oi, sr_role=sr_role)
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
@@ -1810,6 +1899,10 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         # Previous-cycle raw-chain OI, for diffing the S/R strike's OI change at
         # any strike (incl. interim strikes absent from the 200-grid snapshot).
         "prev_chain_oi": curr_chain_oi,
+        # Contract-start OI baseline + its contract label, for the CUMULATIVE
+        # change-in-OI measure (re-captured automatically on daily rollover).
+        "baseline_chain_oi": baseline_chain_oi,
+        "baseline_contract": contract_label,
         # Entry-gating state carried into the next cycle (Task 14.3).
         "entry": entry,
         "position_open": entry_state.get("position_open", False),
