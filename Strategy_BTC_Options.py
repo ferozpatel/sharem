@@ -70,10 +70,11 @@ SR_SNAP_WINDOW = 100
 # monotonic, and is capped at this length so a long 24/7 session can't grow it.
 PCR_TREND_WINDOW = 3
 
-# Rolling window for the FULL-CHAIN (total) PCR series. The total PCR has no ATM
-# dependency (it sums every listed strike), so its window never needs resetting
-# and a slightly longer run is useful. Observation-only.
-TOTAL_PCR_WINDOW = 4
+# Rolling window for the FULL-CHAIN (total) PCR series — kept at 3 to match the
+# 9/17-strike PCRs: a strictly rising/falling run over the latest 3 values sets
+# isTotalPcrInc / isTotalPcrDecr. The total PCR has no ATM dependency (it sums
+# every listed strike), so its window never needs resetting. Observation-only.
+TOTAL_PCR_WINDOW = 3
 
 # No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
 NO_TRADE_ZONE_BUFFER = 50
