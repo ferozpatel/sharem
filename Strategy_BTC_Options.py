@@ -70,6 +70,11 @@ SR_SNAP_WINDOW = 100
 # monotonic, and is capped at this length so a long 24/7 session can't grow it.
 PCR_TREND_WINDOW = 3
 
+# Rolling window for the FULL-CHAIN (total) PCR series. The total PCR has no ATM
+# dependency (it sums every listed strike), so its window never needs resetting
+# and a slightly longer run is useful. Observation-only.
+TOTAL_PCR_WINDOW = 4
+
 # No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
 NO_TRADE_ZONE_BUFFER = 50
 
@@ -857,6 +862,79 @@ def invariant_pcr_series(chain_oi_history, strikes):
         if _pcr_is_finite(value):
             series.append(value)
     return series
+
+
+def total_chain_pcr(chain):
+    """
+    FULL-CHAIN (total) PCR = (Σ put OI) / (Σ call OI) over EVERY listed strike of
+    the expiry — the standard "PCR (OI)" definition. Delta exposes no aggregate
+    PCR endpoint, so this is summed locally from the already-fetched chain (zero
+    extra API calls).
+
+    Unlike the 9/17-strike PCRs this has NO ATM dependency, so its value never
+    jumps because a window moved — but it DOES include far-OTM strangle/premium-
+    selling OI, which dilutes the near-the-money directional signal. Logged for
+    comparison only.
+
+    Returns ``(pcr, ce_contracts, pe_contracts, ce_usd, pe_usd)``; ``pcr`` is
+    ``None`` when the call side is zero.
+    """
+    ce = pe = 0.0
+    ce_usd = pe_usd = 0.0
+    for pair in _index_chain_by_strike(chain).values():
+        for side, acc in (("call", "ce"), ("put", "pe")):
+            row = pair.get(side)
+            if not isinstance(row, dict):
+                continue
+            try:
+                oi = float(row.get("oi"))
+            except (TypeError, ValueError):
+                oi = 0.0
+            try:
+                usd = float(row.get("oi_usd"))
+            except (TypeError, ValueError):
+                usd = 0.0
+            if acc == "ce":
+                ce += oi
+                ce_usd += usd
+            else:
+                pe += oi
+                pe_usd += usd
+    if ce <= 0:
+        return None, ce, pe, ce_usd, pe_usd
+    return pe / ce, ce, pe, ce_usd, pe_usd
+
+
+def log_total_pcr_trend(series, prev_inc_streak, prev_dec_streak,
+                        window=TOTAL_PCR_WINDOW):
+    """
+    Detect + log a strictly rising/falling run on the FULL-CHAIN PCR series and
+    maintain its consecutive-occurrence streaks. Needs ``window`` (4) values; no
+    ATM-shift reset applies because the total PCR has no window dependency.
+
+    Returns ``(inc, dec, inc_streak, dec_streak)``.
+    """
+    if len(series) < window:
+        return False, False, 0, 0
+    s = series[-window:]
+    seq = " -> ".join(_fmt(x, 3) for x in s)
+    inc = all(s[i] < s[i + 1] for i in range(len(s) - 1))
+    dec = all(s[i] > s[i + 1] for i in range(len(s) - 1))
+    inc_streak = _update_flag_streak(inc, prev_inc_streak)
+    dec_streak = _update_flag_streak(dec, prev_dec_streak)
+    steps = " | ".join("step{} {:+}%".format(i + 1, v)
+                       for i, v in enumerate(_seq_pct_steps(s)))
+    if inc:
+        print("TOTAL_PCR_SEQ_INC: {} | {}".format(seq, steps))
+        print("isTotalPcrInc = True  (streak={} consecutive cycle(s) "
+              "rising)".format(inc_streak))
+    elif dec:
+        print("TOTAL_PCR_SEQ_DEC: {} | {}".format(seq, steps))
+        print("isTotalPcrDecr = True  (streak={} consecutive cycle(s) "
+              "falling)".format(dec_streak))
+    else:
+        print("TOTAL_PCR_SEQ_FLAT: {} (not monotonic)".format(seq))
+    return inc, dec, inc_streak, dec_streak
 
 
 def log_invariant_pcr_trend(label, series, prev_inc_streak, prev_dec_streak,
@@ -1743,6 +1821,12 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "pcr9_dec_streak_inv": carried.get("pcr9_dec_streak_inv", 0),
             "pcr_inc_streak_inv": carried.get("pcr_inc_streak_inv", 0),
             "pcr_dec_streak_inv": carried.get("pcr_dec_streak_inv", 0),
+            "total_pcr": carried.get("total_pcr"),
+            "total_pcr_list": carried.get("total_pcr_list"),
+            "is_total_pcr_inc": carried.get("is_total_pcr_inc", False),
+            "is_total_pcr_dec": carried.get("is_total_pcr_dec", False),
+            "total_pcr_inc_streak": carried.get("total_pcr_inc_streak", 0),
+            "total_pcr_dec_streak": carried.get("total_pcr_dec_streak", 0),
             "pcr_full": carried.get("pcr_full"),
             "pcr17_up_streak": carried.get("pcr17_up_streak", 0),
             "pcr17_down_streak": carried.get("pcr17_down_streak", 0),
@@ -1924,6 +2008,30 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
          "17", series_17,
          carried.get("pcr_inc_streak_inv"), carried.get("pcr_dec_streak_inv"))
 
+    # ---- FULL-CHAIN (total) PCR, observation-only --------------------------
+    # Σ PE OI / Σ CE OI over EVERY listed strike. No ATM dependency, so no reset
+    # and no window artifact — but it includes far-OTM strangle OI, which dilutes
+    # the near-the-money directional read. Kept purely for comparison against the
+    # 9/17-strike PCRs over the observation period.
+    total_pcr, t_ce, t_pe, t_ce_usd, t_pe_usd = total_chain_pcr(chain)
+    total_pcr_list = list(carried.get("total_pcr_list") or [])
+    if _pcr_is_finite(total_pcr):
+        total_pcr_list.append(total_pcr)
+    total_pcr_list = total_pcr_list[-TOTAL_PCR_WINDOW:]
+
+    print("TOTAL_PCR (full chain) = {}  [total CE_OI= {}  total PE_OI= {}]"
+          .format(_fmt(total_pcr, 3),
+                  _fmt_oi_usd(t_ce_usd) or _fmt(t_ce, 1),
+                  _fmt_oi_usd(t_pe_usd) or _fmt(t_pe, 1)))
+    print("totalPcrList = {}  (full chain, last {} cycles)".format(
+        [round(x, 3) for x in total_pcr_list], TOTAL_PCR_WINDOW))
+
+    (is_total_pcr_inc, is_total_pcr_dec,
+     total_pcr_inc_streak, total_pcr_dec_streak) = log_total_pcr_trend(
+         total_pcr_list,
+         carried.get("total_pcr_inc_streak"),
+         carried.get("total_pcr_dec_streak"))
+
     # Consecutive PCR rise/fall dominance streaks (once/twice/thrice), tracked
     # separately for the full-17 PCR and the central-9 PCR (Sensex-style). A
     # rising PCR -> PE dominance (bull lean); falling -> CE dominance (bear
@@ -2081,6 +2189,13 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "pcr9_dec_streak_inv": pcr9_dec_streak_inv,
         "pcr_inc_streak_inv": pcr_inc_streak_inv,
         "pcr_dec_streak_inv": pcr_dec_streak_inv,
+        # Full-chain (total) PCR track — no ATM dependency, so no reset.
+        "total_pcr": total_pcr,
+        "total_pcr_list": total_pcr_list,
+        "is_total_pcr_inc": is_total_pcr_inc,
+        "is_total_pcr_dec": is_total_pcr_dec,
+        "total_pcr_inc_streak": total_pcr_inc_streak,
+        "total_pcr_dec_streak": total_pcr_dec_streak,
         # Full-17 PCR + consecutive rise/fall dominance streaks (once/twice/
         # thrice) for both the 17- and 9-strike PCRs, carried for the next cycle.
         "pcr_full": pcr_full,
