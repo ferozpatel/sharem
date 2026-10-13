@@ -1,0 +1,480 @@
+==== CONTRACT LOG 2026-10-14 opened 2026-10-13 23:15:15 IST (rolls at 12:00 UTC / 17:30 IST) ====
+==== CONTRACT LOG 2026-10-14 opened 2026-10-13 23:19:48 IST (rolls at 12:00 UTC / 17:30 IST) ====
+==== CONTRACT LOG 2026-10-14 opened 2026-10-13 23:21:55 IST (rolls at 12:00 UTC / 17:30 IST) ====
+============================================================
+STARTUP [2026-10-13 23:21:55 IST] Strategy_BTC_Options starting...
+STARTUP [2026-10-13 23:21:55 IST] Delta client connection established.
+STARTUP config:
+  instrument           = BTC daily options
+  underlying_asset     = BTC
+  index_anchor         = .DEXBTUSD
+  perpetual (log-only) = BTCUSD
+  timeframe_minutes    = 3
+  strike_step          = 200
+  sr_band_width        = 1000
+  no_trade_buffer      = 50
+  sl_confirm_ticks     = 2
+  tgt_confirm_ticks    = 2
+  ltp_poll_interval    = 2s
+  trail_trigger_frac   = 0.6
+  always_credit        = True
+  pre_expiry_lead_min  = 15
+  reference_timezone   = UTC
+  OBSERVATION_MODE     = True
+STARTUP risk params (concrete live values are [NEEDS INPUT], Req 9.27):
+  PCR_BULL_THRESHOLD   = None [NEEDS INPUT]
+  PCR_BEAR_THRESHOLD   = None [NEEDS INPUT]
+  STOP_LOSS_POINTS     = None [NEEDS INPUT]
+  TARGET_POINTS        = None [NEEDS INPUT]
+  POSITION_SIZE        = None [NEEDS INPUT]
+  MAX_TRADES_PER_DAY   = None [NEEDS INPUT]
+============================================================
+OBSERVATION_MODE is ON: the strategy will LOG signals, the PCR table, the option-chain snapshot, support/resistance levels, and WOULD_HAVE_ENTERED decisions, and will place NO live orders (Req 9.3, 9.4).
+============================================================
+SIGNAL_LOOP [2026-10-13 23:21:55 IST] starting observation cycles aligned to 3-min candle closes (no orders will be placed).
+SIGNAL_LOOP [2026-10-13 23:21:55 IST] waiting 124.7s for next 3-min candle close.
+SIGNAL [2026-10-13 23:24:00 IST] index(.DEXBTUSD)=82981.80 perp(BTCUSD)=82938.00 atm_strike=83000 pcr=1.6269 bias=NEUTRAL position=no_trade_zone pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:24:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.21M PE_OI=$235.97K
+pcr2 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.91M PE_OI=$312.67K
+pcr3 =  BTC-84200   0.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.38M PE_OI=$99.34K
+pcr4 =  BTC-84000   0.15   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.42M PE_OI=$1.12M
+pcr5 =  BTC-83800   0.16   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.38M PE_OI=$868.43K
+pcr6 =  BTC-83600   1.72   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.87M PE_OI=$6.65M
+pcr7 =  BTC-83400   1.11   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.09M PE_OI=$4.52M
+pcr8 =  BTC-83200   1.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.69M PE_OI=$3.05M
+pcr9 =  BTC-83000   1.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.18M PE_OI=$5.58M <== ATM
+pcr10 =  BTC-82800   5.54   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$441.83K PE_OI=$2.45M
+pcr11 =  BTC-82600   6.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$694.86K PE_OI=$4.69M
+pcr12 =  BTC-82400   16.37   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$204.97K PE_OI=$3.36M
+pcr13 =  BTC-82200   9.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$308.32K PE_OI=$2.78M
+pcr14 =  BTC-82000   42.59   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$189.67K PE_OI=$8.08M
+pcr15 =  BTC-81800   27.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$271.97K PE_OI=$7.34M
+pcr16 =  BTC-81600   2494.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.39K PE_OI=$18.43M
+pcr17 =  BTC-81400   103141.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$249.59 PE_OI=$25.68M
+PCRSUM== 105748.51
+
+AVG_OIPCR_9STRIKE= 1.63  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 82981.80
+BTC PERP/FUT (BTCUSD)  = 82938.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83000: 83000}
+avgOiPcrList2  = [2.059] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=2.059)
+avgOiPcr9List2 = [1.627] atmStrikeNotShiftedCount= 1  (central 9, curr=1.627)
+==== PCR trend check 2026-10-13 23:24:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:24:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:24:00 IST] waiting 179.8s for next 3-min candle close.
+SIGNAL [2026-10-13 23:27:00 IST] index(.DEXBTUSD)=83059.50 perp(BTCUSD)=83026.00 atm_strike=83000 pcr=1.4706 bias=BULL position=support_side pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:27:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.22M PE_OI=$235.06K
+pcr2 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.14M PE_OI=$312.67K
+pcr3 =  BTC-84200   0.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.52M PE_OI=$99.34K
+pcr4 =  BTC-84000   0.15   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.68M PE_OI=$1.14M
+pcr5 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.31M PE_OI=$951.78K
+pcr6 =  BTC-83600   1.17   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.92M PE_OI=$4.59M
+pcr7 =  BTC-83400   1.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.17M PE_OI=$4.19M
+pcr8 =  BTC-83200   0.99   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.76M PE_OI=$2.74M
+pcr9 =  BTC-83000   1.59   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.41M PE_OI=$5.42M <== ATM
+pcr10 =  BTC-82800   5.88   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$442.22K PE_OI=$2.60M
+pcr11 =  BTC-82600   6.71   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$697.11K PE_OI=$4.68M
+pcr12 =  BTC-82400   16.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$204.94K PE_OI=$3.29M
+pcr13 =  BTC-82200   8.87   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$308.98K PE_OI=$2.74M
+pcr14 =  BTC-82000   41.81   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$196.71K PE_OI=$8.22M
+pcr15 =  BTC-81800   27.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$271.97K PE_OI=$7.35M
+pcr16 =  BTC-81600   2496.51   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.39K PE_OI=$18.46M
+pcr17 =  BTC-81400   103029.67   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$249.59 PE_OI=$25.66M
+PCRSUM== 105637.71
+
+AVG_OIPCR_9STRIKE= 1.47  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83059.50
+BTC PERP/FUT (BTCUSD)  = 83026.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83000: 83000}
+avgOiPcrList2  = [1.962] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.962)
+avgOiPcr9List2 = [1.471] atmStrikeNotShiftedCount= 1  (central 9, curr=1.471)
+==== PCR trend check 2026-10-13 23:27:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:27:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:27:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-13 23:30:00 IST] index(.DEXBTUSD)=83100.50 perp(BTCUSD)=83062.50 atm_strike=83200 pcr=1.0646 bias=BULL position=support_side pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:30:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$12.45M PE_OI=$332.36
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.21M PE_OI=$235.06K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.14M PE_OI=$312.67K
+pcr4 =  BTC-84200   0.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.52M PE_OI=$98.65K
+pcr5 =  BTC-84000   0.15   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.73M PE_OI=$1.14M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.31M PE_OI=$951.88K
+pcr7 =  BTC-83600   1.19   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.97M PE_OI=$4.74M
+pcr8 =  BTC-83400   1.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.18M PE_OI=$4.18M
+pcr9 =  BTC-83200   1.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.76M PE_OI=$2.83M <== ATM
+pcr10 =  BTC-83000   1.60   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.52M PE_OI=$5.62M
+pcr11 =  BTC-82800   7.34   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$442.22K PE_OI=$3.25M
+pcr12 =  BTC-82600   6.64   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$705.81K PE_OI=$4.69M
+pcr13 =  BTC-82400   16.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$205.12K PE_OI=$3.28M
+pcr14 =  BTC-82200   8.93   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$311.00K PE_OI=$2.78M
+pcr15 =  BTC-82000   41.09   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$197.59K PE_OI=$8.12M
+pcr16 =  BTC-81800   27.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$271.97K PE_OI=$7.35M
+pcr17 =  BTC-81600   71.93   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.46M
+PCRSUM== 184.23
+
+AVG_OIPCR_9STRIKE= 1.06  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83100.50
+BTC PERP/FUT (BTCUSD)  = 83062.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [1.131] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.131)
+avgOiPcr9List2 = [1.065] atmStrikeNotShiftedCount= 1  (central 9, curr=1.065)
+==== PCR trend check 2026-10-13 23:30:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:30:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:30:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-13 23:33:00 IST] index(.DEXBTUSD)=83154.30 perp(BTCUSD)=83118.50 atm_strike=83200 pcr=0.9649 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:33:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$14.31M PE_OI=$332.36
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.26M PE_OI=$235.06K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.28M PE_OI=$312.67K
+pcr4 =  BTC-84200   0.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.67M PE_OI=$98.65K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.73M PE_OI=$1.10M
+pcr6 =  BTC-83800   0.17   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.46M PE_OI=$951.88K
+pcr7 =  BTC-83600   1.15   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.10M PE_OI=$4.73M
+pcr8 =  BTC-83400   0.59   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.11M PE_OI=$4.18M
+pcr9 =  BTC-83200   1.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.75M PE_OI=$2.78M <== ATM
+pcr10 =  BTC-83000   1.67   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.57M PE_OI=$5.97M
+pcr11 =  BTC-82800   7.41   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$442.22K PE_OI=$3.28M
+pcr12 =  BTC-82600   6.60   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$709.85K PE_OI=$4.68M
+pcr13 =  BTC-82400   15.84   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$206.48K PE_OI=$3.27M
+pcr14 =  BTC-82200   8.20   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.64K PE_OI=$2.56M
+pcr15 =  BTC-82000   41.40   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$195.06K PE_OI=$8.07M
+pcr16 =  BTC-81800   27.22   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.15K PE_OI=$7.41M
+pcr17 =  BTC-81600   72.37   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.59M
+PCRSUM== 183.89
+
+AVG_OIPCR_9STRIKE= 0.96  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83154.30
+BTC PERP/FUT (BTCUSD)  = 83118.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [1.04] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.040)
+avgOiPcr9List2 = [0.965] atmStrikeNotShiftedCount= 1  (central 9, curr=0.965)
+==== PCR trend check 2026-10-13 23:33:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:33:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:33:00 IST] waiting 179.8s for next 3-min candle close.
+SIGNAL [2026-10-13 23:36:00 IST] index(.DEXBTUSD)=83185.70 perp(BTCUSD)=83148.00 atm_strike=83200 pcr=0.9087 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:36:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$14.32M PE_OI=$332.36
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.26M PE_OI=$235.06K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.28M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.46M PE_OI=$98.65K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.73M PE_OI=$1.10M
+pcr6 =  BTC-83800   0.16   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.93M PE_OI=$952.63K
+pcr7 =  BTC-83600   1.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.10M PE_OI=$4.85M
+pcr8 =  BTC-83400   0.59   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.13M PE_OI=$4.21M
+pcr9 =  BTC-83200   1.08   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.75M PE_OI=$2.97M <== ATM
+pcr10 =  BTC-83000   1.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.66M PE_OI=$6.08M
+pcr11 =  BTC-82800   7.52   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$443.12K PE_OI=$3.33M
+pcr12 =  BTC-82600   6.62   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$709.85K PE_OI=$4.70M
+pcr13 =  BTC-82400   15.80   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$208.19K PE_OI=$3.29M
+pcr14 =  BTC-82200   8.19   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.64K PE_OI=$2.56M
+pcr15 =  BTC-82000   41.05   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$195.06K PE_OI=$8.01M
+pcr16 =  BTC-81800   27.21   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.41M
+pcr17 =  BTC-81600   72.71   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.67M
+PCRSUM== 183.43
+
+AVG_OIPCR_9STRIKE= 0.91  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83185.70
+BTC PERP/FUT (BTCUSD)  = 83148.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [0.997] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.997)
+avgOiPcr9List2 = [0.909] atmStrikeNotShiftedCount= 1  (central 9, curr=0.909)
+==== PCR trend check 2026-10-13 23:36:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:36:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:36:00 IST] waiting 179.8s for next 3-min candle close.
+SIGNAL [2026-10-13 23:39:00 IST] index(.DEXBTUSD)=83251.80 perp(BTCUSD)=83208.00 atm_strike=83200 pcr=0.9381 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:39:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$14.36M PE_OI=$332.36
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.24M PE_OI=$236.01K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.01M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.49M PE_OI=$98.65K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.71M PE_OI=$1.08M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.30M PE_OI=$951.47K
+pcr7 =  BTC-83600   1.19   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.06M PE_OI=$4.85M
+pcr8 =  BTC-83400   0.65   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.17M PE_OI=$4.67M
+pcr9 =  BTC-83200   1.08   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.68M PE_OI=$2.89M <== ATM
+pcr10 =  BTC-83000   1.11   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.09M PE_OI=$5.64M
+pcr11 =  BTC-82800   6.90   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$443.87K PE_OI=$3.06M
+pcr12 =  BTC-82600   6.72   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$705.92K PE_OI=$4.74M
+pcr13 =  BTC-82400   18.48   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$182.75K PE_OI=$3.38M
+pcr14 =  BTC-82200   8.34   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$311.42K PE_OI=$2.60M
+pcr15 =  BTC-82000   42.19   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$191.38K PE_OI=$8.07M
+pcr16 =  BTC-81800   27.23   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.43M
+pcr17 =  BTC-81600   72.79   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.73M
+PCRSUM== 187.11
+
+AVG_OIPCR_9STRIKE= 0.94  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83251.80
+BTC PERP/FUT (BTCUSD)  = 83208.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [1.019] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.019)
+avgOiPcr9List2 = [0.938] atmStrikeNotShiftedCount= 1  (central 9, curr=0.938)
+==== PCR trend check 2026-10-13 23:39:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:39:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:39:00 IST] waiting 179.8s for next 3-min candle close.
+SIGNAL [2026-10-13 23:42:00 IST] index(.DEXBTUSD)=83267.80 perp(BTCUSD)=83227.50 atm_strike=83200 pcr=0.9276 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:42:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$14.34M PE_OI=$332.36
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.24M PE_OI=$236.01K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.98M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.49M PE_OI=$98.65K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.72M PE_OI=$1.08M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.30M PE_OI=$950.25K
+pcr7 =  BTC-83600   1.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.57M PE_OI=$4.85M
+pcr8 =  BTC-83400   0.62   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.30M PE_OI=$4.51M
+pcr9 =  BTC-83200   1.28   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.52M PE_OI=$3.22M <== ATM
+pcr10 =  BTC-83000   1.12   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.11M PE_OI=$5.70M
+pcr11 =  BTC-82800   6.81   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$451.54K PE_OI=$3.07M
+pcr12 =  BTC-82600   6.72   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$705.10K PE_OI=$4.74M
+pcr13 =  BTC-82400   15.58   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$211.21K PE_OI=$3.29M
+pcr14 =  BTC-82200   8.34   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$311.42K PE_OI=$2.60M
+pcr15 =  BTC-82000   36.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$221.32K PE_OI=$7.98M
+pcr16 =  BTC-81800   27.23   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.42M
+pcr17 =  BTC-81600   73.21   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.82M
+PCRSUM== 178.46
+
+AVG_OIPCR_9STRIKE= 0.93  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83267.80
+BTC PERP/FUT (BTCUSD)  = 83227.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [1.013] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.013)
+avgOiPcr9List2 = [0.928] atmStrikeNotShiftedCount= 1  (central 9, curr=0.928)
+==== PCR trend check 2026-10-13 23:42:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:42:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:42:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-13 23:45:00 IST] index(.DEXBTUSD)=83170.80 perp(BTCUSD)=83126.00 atm_strike=83200 pcr=0.9074 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:45:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$15.29M PE_OI=$332.36
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.23M PE_OI=$233.17K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.94M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.75M PE_OI=$102.68K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.72M PE_OI=$1.08M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.29M PE_OI=$954.36K
+pcr7 =  BTC-83600   1.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.67M PE_OI=$4.84M
+pcr8 =  BTC-83400   0.62   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.34M PE_OI=$4.54M
+pcr9 =  BTC-83200   1.26   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.56M PE_OI=$3.21M <== ATM
+pcr10 =  BTC-83000   1.11   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.11M PE_OI=$5.66M
+pcr11 =  BTC-82800   5.72   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$451.72K PE_OI=$2.58M
+pcr12 =  BTC-82600   6.74   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$703.79K PE_OI=$4.74M
+pcr13 =  BTC-82400   15.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$218.19K PE_OI=$3.29M
+pcr14 =  BTC-82200   8.31   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.75K PE_OI=$2.60M
+pcr15 =  BTC-82000   36.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$221.32K PE_OI=$7.97M
+pcr16 =  BTC-81800   27.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.45M
+pcr17 =  BTC-81600   73.21   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.81M
+PCRSUM== 176.85
+
+AVG_OIPCR_9STRIKE= 0.91  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83170.80
+BTC PERP/FUT (BTCUSD)  = 83126.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [0.986] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.986)
+avgOiPcr9List2 = [0.907] atmStrikeNotShiftedCount= 1  (central 9, curr=0.907)
+==== PCR trend check 2026-10-13 23:45:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:45:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:45:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-13 23:48:00 IST] index(.DEXBTUSD)=83192.70 perp(BTCUSD)=83156.50 atm_strike=83200 pcr=0.9023 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:48:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$16.02M PE_OI=$1.16K
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.25M PE_OI=$233.75K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.98M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.84M PE_OI=$98.78K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.74M PE_OI=$1.12M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.27M PE_OI=$949.22K
+pcr7 =  BTC-83600   1.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.68M PE_OI=$4.84M
+pcr8 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.74M PE_OI=$4.38M
+pcr9 =  BTC-83200   1.34   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.47M PE_OI=$3.30M <== ATM
+pcr10 =  BTC-83000   1.12   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.10M PE_OI=$5.73M
+pcr11 =  BTC-82800   5.77   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$463.79K PE_OI=$2.68M
+pcr12 =  BTC-82600   6.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$703.03K PE_OI=$4.74M
+pcr13 =  BTC-82400   15.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$218.22K PE_OI=$3.29M
+pcr14 =  BTC-82200   8.31   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.75K PE_OI=$2.60M
+pcr15 =  BTC-82000   43.96   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$190.93K PE_OI=$8.40M
+pcr16 =  BTC-81800   27.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.45M
+pcr17 =  BTC-81600   73.21   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.51K PE_OI=$18.81M
+PCRSUM== 184.88
+
+AVG_OIPCR_9STRIKE= 0.90  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83192.70
+BTC PERP/FUT (BTCUSD)  = 83156.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [0.977] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.977)
+avgOiPcr9List2 = [0.902] atmStrikeNotShiftedCount= 1  (central 9, curr=0.902)
+==== PCR trend check 2026-10-13 23:48:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:48:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:48:00 IST] waiting 179.8s for next 3-min candle close.
+SIGNAL [2026-10-13 23:51:00 IST] index(.DEXBTUSD)=83148.40 perp(BTCUSD)=83105.50 atm_strike=83200 pcr=0.8981 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:51:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$16.03M PE_OI=$1.16K
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.25M PE_OI=$233.75K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.06M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.90M PE_OI=$100.07K
+pcr5 =  BTC-84000   0.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.81M PE_OI=$1.12M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.33M PE_OI=$949.61K
+pcr7 =  BTC-83600   1.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.68M PE_OI=$4.82M
+pcr8 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.75M PE_OI=$4.37M
+pcr9 =  BTC-83200   1.34   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.47M PE_OI=$3.32M <== ATM
+pcr10 =  BTC-83000   1.12   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.10M PE_OI=$5.71M
+pcr11 =  BTC-82800   6.09   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$438.81K PE_OI=$2.67M
+pcr12 =  BTC-82600   6.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$703.03K PE_OI=$4.75M
+pcr13 =  BTC-82400   15.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$218.32K PE_OI=$3.29M
+pcr14 =  BTC-82200   8.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.61K PE_OI=$2.60M
+pcr15 =  BTC-82000   44.09   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$190.93K PE_OI=$8.42M
+pcr16 =  BTC-81800   27.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.44M
+pcr17 =  BTC-81600   73.21   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.96K PE_OI=$18.81M
+PCRSUM== 185.35
+
+AVG_OIPCR_9STRIKE= 0.90  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83148.40
+BTC PERP/FUT (BTCUSD)  = 83105.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [0.974] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.974)
+avgOiPcr9List2 = [0.898] atmStrikeNotShiftedCount= 1  (central 9, curr=0.898)
+==== PCR trend check 2026-10-13 23:51:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:51:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:51:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-13 23:54:00 IST] index(.DEXBTUSD)=83127.90 perp(BTCUSD)=83085.50 atm_strike=83200 pcr=0.8897 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:54:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$16.01M PE_OI=$1.16K
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.25M PE_OI=$233.75K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.04M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.91M PE_OI=$100.07K
+pcr5 =  BTC-84000   0.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$8.44M PE_OI=$1.12M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.35M PE_OI=$948.26K
+pcr7 =  BTC-83600   1.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.50M PE_OI=$4.82M
+pcr8 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.85M PE_OI=$4.37M
+pcr9 =  BTC-83200   1.39   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.45M PE_OI=$3.40M <== ATM
+pcr10 =  BTC-83000   1.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.22M PE_OI=$5.91M
+pcr11 =  BTC-82800   6.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$442.29K PE_OI=$2.67M
+pcr12 =  BTC-82600   6.28   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$755.60K PE_OI=$4.74M
+pcr13 =  BTC-82400   15.24   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$219.36K PE_OI=$3.34M
+pcr14 =  BTC-82200   8.37   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.61K PE_OI=$2.62M
+pcr15 =  BTC-82000   37.26   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$225.58K PE_OI=$8.40M
+pcr16 =  BTC-81800   27.32   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.43M
+pcr17 =  BTC-81600   73.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.96K PE_OI=$18.78M
+PCRSUM== 178.21
+
+AVG_OIPCR_9STRIKE= 0.89  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83127.90
+BTC PERP/FUT (BTCUSD)  = 83085.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [0.968] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.968)
+avgOiPcr9List2 = [0.89] atmStrikeNotShiftedCount= 1  (central 9, curr=0.890)
+==== PCR trend check 2026-10-13 23:54:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:54:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:54:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-13 23:57:00 IST] index(.DEXBTUSD)=83147.70 perp(BTCUSD)=83103.50 atm_strike=83200 pcr=0.8876 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-13 23:57:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84800   0.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$16.02M PE_OI=$1.16K
+pcr2 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.25M PE_OI=$233.75K
+pcr3 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.08M PE_OI=$313.35K
+pcr4 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.91M PE_OI=$100.07K
+pcr5 =  BTC-84000   0.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$8.53M PE_OI=$1.12M
+pcr6 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.38M PE_OI=$948.26K
+pcr7 =  BTC-83600   1.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.54M PE_OI=$4.81M
+pcr8 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.85M PE_OI=$4.40M
+pcr9 =  BTC-83200   1.37   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.49M PE_OI=$3.41M <== ATM
+pcr10 =  BTC-83000   1.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.32M PE_OI=$6.07M
+pcr11 =  BTC-82800   6.04   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$442.32K PE_OI=$2.67M
+pcr12 =  BTC-82600   6.28   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$755.60K PE_OI=$4.74M
+pcr13 =  BTC-82400   15.28   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$219.36K PE_OI=$3.35M
+pcr14 =  BTC-82200   8.37   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.61K PE_OI=$2.62M
+pcr15 =  BTC-82000   37.26   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$225.58K PE_OI=$8.40M
+pcr16 =  BTC-81800   27.32   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.43M
+pcr17 =  BTC-81600   73.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.96K PE_OI=$18.78M
+PCRSUM== 178.23
+
+AVG_OIPCR_9STRIKE= 0.89  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83147.70
+BTC PERP/FUT (BTCUSD)  = 83103.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83200: 83200}
+avgOiPcrList2  = [0.966] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.966)
+avgOiPcr9List2 = [0.888] atmStrikeNotShiftedCount= 1  (central 9, curr=0.888)
+==== PCR trend check 2026-10-13 23:57:00 IST ====
+SIGNAL_ERROR [2026-10-13 23:57:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-13 23:57:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-14 00:00:00 IST] index(.DEXBTUSD)=83087.30 perp(BTCUSD)=83035.00 atm_strike=83000 pcr=1.1907 bias=BULL position=support_side pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-14 00:00:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.25M PE_OI=$233.75K
+pcr2 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.07M PE_OI=$313.35K
+pcr3 =  BTC-84200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.94M PE_OI=$100.07K
+pcr4 =  BTC-84000   0.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$8.48M PE_OI=$1.11M
+pcr5 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.38M PE_OI=$948.25K
+pcr6 =  BTC-83600   1.00   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.79M PE_OI=$4.81M
+pcr7 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.87M PE_OI=$4.40M
+pcr8 =  BTC-83200   1.35   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.50M PE_OI=$3.37M
+pcr9 =  BTC-83000   1.14   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.33M PE_OI=$6.09M <== ATM
+pcr10 =  BTC-82800   5.88   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$442.21K PE_OI=$2.60M
+pcr11 =  BTC-82600   6.27   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$756.71K PE_OI=$4.74M
+pcr12 =  BTC-82400   15.09   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$219.44K PE_OI=$3.31M
+pcr13 =  BTC-82200   8.32   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.61K PE_OI=$2.60M
+pcr14 =  BTC-82000   43.85   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$190.97K PE_OI=$8.37M
+pcr15 =  BTC-81800   27.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.44M
+pcr16 =  BTC-81600   73.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.96K PE_OI=$18.74M
+pcr17 =  BTC-81400   103.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$266.26K PE_OI=$27.40M
+PCRSUM== 287.27
+
+AVG_OIPCR_9STRIKE= 1.19  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83087.30
+BTC PERP/FUT (BTCUSD)  = 83035.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83000: 83000}
+avgOiPcrList2  = [1.715] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.715)
+avgOiPcr9List2 = [1.191] atmStrikeNotShiftedCount= 1  (central 9, curr=1.191)
+==== PCR trend check 2026-10-14 00:00:00 IST ====
+SIGNAL_ERROR [2026-10-14 00:00:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-14 00:00:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-14 00:03:00 IST] index(.DEXBTUSD)=83028.70 perp(BTCUSD)=82987.50 atm_strike=83000 pcr=1.0710 bias=NEUTRAL position=no_trade_zone pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-14 00:03:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.30M PE_OI=$234.30K
+pcr2 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.04M PE_OI=$313.35K
+pcr3 =  BTC-84200   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.93M PE_OI=$97.84K
+pcr4 =  BTC-84000   0.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$8.60M PE_OI=$1.10M
+pcr5 =  BTC-83800   0.18   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.37M PE_OI=$948.25K
+pcr6 =  BTC-83600   0.98   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.91M PE_OI=$4.81M
+pcr7 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.86M PE_OI=$4.43M
+pcr8 =  BTC-83200   1.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.56M PE_OI=$3.39M
+pcr9 =  BTC-83000   1.15   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.42M PE_OI=$6.21M <== ATM
+pcr10 =  BTC-82800   0.76   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.40M PE_OI=$2.60M
+pcr11 =  BTC-82600   6.22   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$757.86K PE_OI=$4.71M
+pcr12 =  BTC-82400   15.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$219.32K PE_OI=$3.29M
+pcr13 =  BTC-82200   8.35   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$312.56K PE_OI=$2.61M
+pcr14 =  BTC-82000   43.37   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$190.81K PE_OI=$8.28M
+pcr15 =  BTC-81800   27.33   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$272.29K PE_OI=$7.44M
+pcr16 =  BTC-81600   73.19   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$256.96K PE_OI=$18.78M
+pcr17 =  BTC-81400   103.08   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$266.26K PE_OI=$27.40M
+PCRSUM== 281.74
+
+AVG_OIPCR_9STRIKE= 1.07  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 83028.70
+BTC PERP/FUT (BTCUSD)  = 82987.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {83000: 83000}
+avgOiPcrList2  = [1.619] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=1.619)
+avgOiPcr9List2 = [1.071] atmStrikeNotShiftedCount= 1  (central 9, curr=1.071)
+==== PCR trend check 2026-10-14 00:03:00 IST ====
+SIGNAL_ERROR [2026-10-14 00:03:00 IST] signal cycle failed, continuing: UnboundLocalError: cannot access local variable 'curr_chain_oi' where it is not associated with a value
+SIGNAL_LOOP [2026-10-14 00:03:00 IST] waiting 179.8s for next 3-min candle close.
+SIGNAL [2026-10-14 00:06:00 IST] index(.DEXBTUSD)=83052.50 perp(BTCUSD)=83014.00 atm_strike=83000 pcr=1.0546 bias=BULL position=support_side pcr_label=PCR_HIGH(put-heavy,provisional-bullish) pcr_trend=flatx1 expiry=14-10-2026
+====after 3 min ochain==== 2026-10-14 00:06:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84600   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$10.41M PE_OI=$234.29K
+pcr2 =  BTC-84400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.33M PE_OI=$313.35K
+pcr3 =  BTC-84200   0.02   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$3.93M PE_OI=$97.84K
+pcr4 =  BTC-84000   0.13   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$8.72M PE_OI=$1.12M
+pcr5 =  BTC-83800   0.17   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.46M PE_OI=$948.25K
+pcr6 =  BTC-83600   0.98   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$4.92M PE_OI=$4.82M
+pcr7 =  BTC-83400   0.56   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$7.92M PE_OI=$4.41M
+pcr8 =  BTC-83200   1.26   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.69M PE_OI=$3.40M
