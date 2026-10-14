@@ -76,6 +76,15 @@ PCR_TREND_WINDOW = 3
 # every listed strike), so its window never needs resetting. Observation-only.
 TOTAL_PCR_WINDOW = 3
 
+# Minimum per-step move (in %) for a PCR inc/dec run to be considered
+# ECONOMICALLY meaningful rather than numerical drift. The base isPcrInc /
+# isPcrDecr flags use a STRICT comparison, so a 4th-decimal wiggle (e.g.
+# 0.8643 -> 0.8641, a -0.02% step) technically qualifies as "falling". The
+# parallel `..._MinMove` flags additionally require EVERY step to exceed this
+# threshold, filtering that noise. Observation-only for now — tune once the
+# logs show which magnitude actually precedes a real move.
+PCR_MIN_STEP_PCT = 0.1
+
 # No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
 NO_TRADE_ZONE_BUFFER = 50
 
@@ -702,23 +711,46 @@ def log_atm_shift_summary(snapshot, pcr_full, pcr_9, is_atm_shift, map_strike,
         is_atm_shift, map_strike))
     print("avgOiPcrList2  = {} atmStrikeNotShiftedCount= {}  (full 17 strikes, "
           "curr={})".format(
-              [round(x, 3) for x in avg_oipcr_list], atm_not_shifted_count,
-              _fmt(pcr_full, 3)))
+              [round(x, 4) for x in avg_oipcr_list], atm_not_shifted_count,
+              _fmt(pcr_full, 4)))
     print("avgOiPcr9List2 = {} atmStrikeNotShiftedCount= {}  (central 9, "
           "curr={})".format(
-              [round(x, 3) for x in avg_oipcr9_list], atm_not_shifted_count,
-              _fmt(pcr_9, 3)))
+              [round(x, 4) for x in avg_oipcr9_list], atm_not_shifted_count,
+              _fmt(pcr_9, 4)))
     print("==== PCR trend check {} ====".format(_now_ist()))
 
 
 def _seq_pct_steps(window):
     """Per-step percentage change across a PCR window (e.g. [a, b, c] ->
-    [(b-a)/a*100, (c-b)/b*100]); a 0 denominator yields a 0.0 step."""
+    [(b-a)/a*100, (c-b)/b*100]); a 0 denominator yields a 0.0 step. Rounded to
+    2 decimals so a sub-0.1% step is visible instead of showing as -0.0%."""
     steps = []
     for i in range(len(window) - 1):
         prev, curr = window[i], window[i + 1]
-        steps.append(round((curr - prev) / prev * 100, 1) if prev else 0.0)
+        steps.append(round((curr - prev) / prev * 100, 2) if prev else 0.0)
     return steps
+
+
+def _fmt_steps(window):
+    """Render a PCR window's per-step % changes as ``step1 +1.17% | step2 -0.02%``."""
+    return " | ".join("step{} {:+}%".format(i + 1, v)
+                      for i, v in enumerate(_seq_pct_steps(window)))
+
+
+def _log_min_move(flag_label, window, min_pct=PCR_MIN_STEP_PCT):
+    """
+    Log whether an already-detected inc/dec run clears the ``min_pct`` per-step
+    threshold, i.e. whether it is an economically meaningful move rather than
+    4th-decimal drift. Prints ``<flag>_MinMove = True/False`` with the smallest
+    step so the verdict is self-explanatory. Returns the boolean.
+    """
+    steps = [abs(s) for s in _seq_pct_steps(window)]
+    smallest = min(steps) if steps else 0.0
+    ok = bool(steps) and smallest >= min_pct
+    print("{}_MinMove = {}  (smallest step {:.2f}% vs {:.2f}% threshold -> "
+          "{})".format(flag_label, ok, smallest, min_pct,
+                       "meaningful" if ok else "drift/noise"))
+    return ok
 
 
 def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
@@ -769,33 +801,35 @@ def update_pcr_trend_window(avg_oipcr_list, avg_oipcr9_list,
         q = avg_oipcr9_list
         if all(q[i] < q[i + 1] for i in range(len(q) - 1)):
             inc9 = True
-            print("PCR9_SEQ_INC: {} (central 9 rising)".format(
-                " -> ".join(_fmt(x, 3) for x in q)))
+            print("PCR9_SEQ_INC: {} | {} (central 9 rising)".format(
+                " -> ".join(_fmt(x, 4) for x in q), _fmt_steps(q)))
             print("is9PcrInc = True")
+            _log_min_move("is9PcrInc", q)
         elif all(q[i] > q[i + 1] for i in range(len(q) - 1)):
             dec9 = True
-            print("PCR9_SEQ_DEC: {} (central 9 falling)".format(
-                " -> ".join(_fmt(x, 3) for x in q)))
+            print("PCR9_SEQ_DEC: {} | {} (central 9 falling)".format(
+                " -> ".join(_fmt(x, 4) for x in q), _fmt_steps(q)))
             print("is9PcrDecr = True")
+            _log_min_move("is9PcrDecr", q)
         else:
             print("PCR9_SEQ_FLAT: {} (not monotonic)".format(
-                " -> ".join(_fmt(x, 3) for x in q)))
+                " -> ".join(_fmt(x, 4) for x in q)))
 
     # Full-17 trend detection + shared window trim.
     if gate and len(avg_oipcr_list) == window:
         p = avg_oipcr_list
-        steps = _seq_pct_steps(p)
-        seq = " -> ".join(_fmt(x, 3) for x in p)
-        step_str = " | ".join("step{} {:+}%".format(i + 1, s)
-                              for i, s in enumerate(steps))
+        seq = " -> ".join(_fmt(x, 4) for x in p)
+        step_str = _fmt_steps(p)
         if all(p[i] < p[i + 1] for i in range(len(p) - 1)):
             inc = True
             print("PCR_SEQ_INC: {} | {}".format(seq, step_str))
             print("isPcrInc = True")
+            _log_min_move("isPcrInc", p)
         elif all(p[i] > p[i + 1] for i in range(len(p) - 1)):
             dec = True
             print("PCR_SEQ_DEC: {} | {}".format(seq, step_str))
             print("isPcrDecr = True")
+            _log_min_move("isPcrDecr", p)
         else:
             print("PCR_SEQ_FLAT: {} (not monotonic)".format(seq))
             # Slide forward: drop the oldest (keep recent run) unless the last
@@ -918,21 +952,21 @@ def log_total_pcr_trend(series, prev_inc_streak, prev_dec_streak,
     if len(series) < window:
         return False, False, 0, 0
     s = series[-window:]
-    seq = " -> ".join(_fmt(x, 3) for x in s)
+    seq = " -> ".join(_fmt(x, 4) for x in s)
     inc = all(s[i] < s[i + 1] for i in range(len(s) - 1))
     dec = all(s[i] > s[i + 1] for i in range(len(s) - 1))
     inc_streak = _update_flag_streak(inc, prev_inc_streak)
     dec_streak = _update_flag_streak(dec, prev_dec_streak)
-    steps = " | ".join("step{} {:+}%".format(i + 1, v)
-                       for i, v in enumerate(_seq_pct_steps(s)))
     if inc:
-        print("TOTAL_PCR_SEQ_INC: {} | {}".format(seq, steps))
+        print("TOTAL_PCR_SEQ_INC: {} | {}".format(seq, _fmt_steps(s)))
         print("isTotalPcrInc = True  (streak={} consecutive cycle(s) "
               "rising)".format(inc_streak))
+        _log_min_move("isTotalPcrInc", s)
     elif dec:
-        print("TOTAL_PCR_SEQ_DEC: {} | {}".format(seq, steps))
+        print("TOTAL_PCR_SEQ_DEC: {} | {}".format(seq, _fmt_steps(s)))
         print("isTotalPcrDecr = True  (streak={} consecutive cycle(s) "
               "falling)".format(dec_streak))
+        _log_min_move("isTotalPcrDecr", s)
     else:
         print("TOTAL_PCR_SEQ_FLAT: {} (not monotonic)".format(seq))
     return inc, dec, inc_streak, dec_streak
@@ -954,24 +988,24 @@ def log_invariant_pcr_trend(label, series, prev_inc_streak, prev_dec_streak,
     if len(series) < window:
         return False, False, 0, 0
     s = series[-window:]
-    seq = " -> ".join(_fmt(x, 3) for x in s)
+    seq = " -> ".join(_fmt(x, 4) for x in s)
     inc = all(s[i] < s[i + 1] for i in range(len(s) - 1))
     dec = all(s[i] > s[i + 1] for i in range(len(s) - 1))
     inc_streak = _update_flag_streak(inc, prev_inc_streak)
     dec_streak = _update_flag_streak(dec, prev_dec_streak)
 
     if inc:
-        steps = " | ".join("step{} {:+}%".format(i + 1, v)
-                           for i, v in enumerate(_seq_pct_steps(s)))
-        print("{}_SEQ_INC_InvariantWindow: {} | {}".format(label, seq, steps))
+        print("{}_SEQ_INC_InvariantWindow: {} | {}".format(
+            label, seq, _fmt_steps(s)))
         print("is{}PcrInc_InvariantWindow = True  (streak={} consecutive "
               "cycle(s) rising)".format(label, inc_streak))
+        _log_min_move("is{}PcrInc_InvariantWindow".format(label), s)
     elif dec:
-        steps = " | ".join("step{} {:+}%".format(i + 1, v)
-                           for i, v in enumerate(_seq_pct_steps(s)))
-        print("{}_SEQ_DEC_InvariantWindow: {} | {}".format(label, seq, steps))
+        print("{}_SEQ_DEC_InvariantWindow: {} | {}".format(
+            label, seq, _fmt_steps(s)))
         print("is{}PcrDecr_InvariantWindow = True  (streak={} consecutive "
               "cycle(s) falling)".format(label, dec_streak))
+        _log_min_move("is{}PcrDecr_InvariantWindow".format(label), s)
     else:
         print("{}_SEQ_FLAT_InvariantWindow: {} (not monotonic)".format(
             label, seq))
@@ -1998,10 +2032,10 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
 
     if series_9:
         print("avgOiPcr9List2_InvariantWindow  = {}  (central 9, re-measured on "
-              "current strikes)".format([round(x, 3) for x in series_9]))
+              "current strikes)".format([round(x, 4) for x in series_9]))
     if series_17:
         print("avgOiPcrList2_InvariantWindow   = {}  (full 17, re-measured on "
-              "current strikes)".format([round(x, 3) for x in series_17]))
+              "current strikes)".format([round(x, 4) for x in series_17]))
 
     (is_pcr9_inc_inv, is_pcr9_dec_inv,
      pcr9_inc_streak_inv, pcr9_dec_streak_inv) = log_invariant_pcr_trend(
@@ -2024,11 +2058,11 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     total_pcr_list = total_pcr_list[-TOTAL_PCR_WINDOW:]
 
     print("TOTAL_PCR (full chain) = {}  [total CE_OI= {}  total PE_OI= {}]"
-          .format(_fmt(total_pcr, 3),
+          .format(_fmt(total_pcr, 4),
                   _fmt_oi_usd(t_ce_usd) or _fmt(t_ce, 1),
                   _fmt_oi_usd(t_pe_usd) or _fmt(t_pe, 1)))
     print("totalPcrList = {}  (full chain, last {} cycles)".format(
-        [round(x, 3) for x in total_pcr_list], TOTAL_PCR_WINDOW))
+        [round(x, 4) for x in total_pcr_list], TOTAL_PCR_WINDOW))
 
     (is_total_pcr_inc, is_total_pcr_dec,
      total_pcr_inc_streak, total_pcr_dec_streak) = log_total_pcr_trend(
