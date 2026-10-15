@@ -152,20 +152,43 @@ TGT_CONFIRM_TICKS = 2   # consecutive polls needed to trigger target exit
 # trailing). Refuses to let a solid winner that has covered most of the distance to target
 # turn back into a loss, while still giving the trade room in the first half of the move.
 TRAIL_TRIGGER_TARGET_FRACTION = 0.50
-# Target multiplier on the option's median HIGH-LOW range, per DIRECTION (SL stays 1.6x for both).
 # SL/target multipliers on the option's median HIGH-LOW range, per DIRECTION. These feed BOTH the
 # pre-entry qty sizing (effective_sl_pre in takeEntryCredit/Debit) and the post-entry SL/target,
-# so the two always agree. BULL: wider stop + nearer target (survive the counter-wiggle, bank the
-# move). BEAR: unchanged.
-SL_MULT_BULL = 1.8       # bull: wider stop (more room against the counter-wiggle)
-TARGET_MULT_BULL = 2.1   # bull: nearer target -> R:R ~1.17
-SL_MULT_BEAR = 1.6       # bear: unchanged
-TARGET_MULT_BEAR = 3.0   # bear: unchanged -> R:R ~1.88
+# so the two always agree. Any change here MUST be made to the SL and TARGET pair together.
+#
+# 2026-10-15: widened to 2.4 / 4.0 for BOTH directions (was bull 1.8/2.1, bear 1.6/3.0) to give
+# trades room to survive the ~150-spot-point counter-wiggle that was stopping out otherwise-correct
+# entries within 2-3 candles. R:R ~1:1.67.
+#
+# These multipliers are only safe because the median itself is now sanity-checked — see the
+# LOW-SAMPLE guard below. On 2026-10-15 a 2-candle median of 67.55 combined with these same
+# multipliers produced SL=377 (premium had to rise 75%) and a NEGATIVE target of -54.95. The
+# multipliers were not the problem; the unguarded median was.
+SL_MULT_BULL = 2.4
+TARGET_MULT_BULL = 4.0
+SL_MULT_BEAR = 2.4
+TARGET_MULT_BEAR = 4.0
 # Trailing SL (move SL to breakeven once TRAIL_TRIGGER_TARGET_FRACTION of target is covered) is
 # DISABLED for BOTH directions: trailing kept exiting trades at breakeven on a normal pullback
 # instead of letting them reach target. Every trade now keeps its ORIGINAL SL for the whole trade.
 TRAIL_SL_FOR_BULL = False
 TRAIL_SL_FOR_BEAR = False
+
+# ============================================================
+# MEDIAN-RANGE LOW-SAMPLE GUARD (see get_option_candle_range)
+# ============================================================
+# The median option candle range drives BOTH sizing and SL/target. It needs enough candles
+# to be meaningful. An entry before ~9:40 leaves only 2-3 completed candles after the
+# first-candle skip, and all of them are opening volatility -> inflated median.
+#
+# Evidence (98 OPT_RANGE_DEBUG samples, all past sessions): avg median by sample count is
+# 26.02 at 2 candles vs 14.27 at 10 candles. Only 3 samples ever reached 40+:
+#   2026-10-15 -> 67.55 on 2 candles   (sampling artifact — this guard targets it)
+#   2026-06-24 -> 43.43 on 10 candles  (real volatility — left untouched by design)
+#   2026-09-30 -> 40.30 on 4 candles   (meets the minimum, so NOT halved)
+MIN_MEDIAN_CANDLES = 4            # a median below this many candles is treated as unreliable
+LOW_SAMPLE_MEDIAN_THRESHOLD = 40  # only halve a thin-window median if it exceeds this
+LOW_SAMPLE_MEDIAN_FACTOR = 0.5    # halve it (67.55 -> 33.78)
 
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
@@ -254,10 +277,15 @@ USE_CHOI_DOMINANCE_GATE = True
 # midpoint split (no dead zone). Can only REMOVE trades, never add — it's risk-reducing.
 USE_NO_TRADE_ZONE = True
 NO_TRADE_ZONE_BUFFER = 20
-# CREDIT-spread main (sell) leg offset from the synthetic ATM. 0 = sell AT the synthetic ATM
-# (current). Set to 100 to sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100) — lowers the
-# sold delta (~0.5 -> ~0.4) for a slightly-OTM, higher-probability short leg. All the plumbing
-# is in place; flip this to 100 when ready. DEBIT is unaffected either way.
+# CREDIT-spread main (sell) leg offset from the synthetic ATM.
+#   0   = sell AT the synthetic ATM (highest premium, highest gamma)
+#   100 = sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100)  <-- ACTIVE
+# 1-OTM lowers the sold delta (~0.5 -> ~0.4) for a higher-probability short leg with less
+# gamma whipsaw. DEBIT is unaffected either way.
+# DO NOT set back to 0. The EC2 copy was found running ONE_OTM=0 on 2026-10-15 (sold ATM
+# 73100PE at delta -0.49) while 09-28/09-29/09-30 had correctly run ONE_OTM=100 — an
+# undetected drift between the local and server copies. Always deploy by copying this file
+# to sharem/ and pushing; never hand-edit constants on the server.
 ONE_OTM = 100
 FIXED_RISK_PER_TRADE = 4000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
@@ -1219,6 +1247,17 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
     - top_k param kept for backward compat but unused (top-K logic removed —
       was over-weighting active candles and inflating SL)
 
+    LOW-SAMPLE GUARD: if fewer than MIN_MEDIAN_CANDLES (4) valid candles fed the
+    median AND the result exceeds LOW_SAMPLE_MEDIAN_THRESHOLD (40), the median is
+    halved (LOW_SAMPLE_MEDIAN_FACTOR). A thin window only exists on early entries,
+    where every surviving candle is opening volatility. A full window is never
+    shaved — a high median there is real volatility. Logged as
+    LOW_SAMPLE_MEDIAN_HALVED / LOW_SAMPLE_MEDIAN_OK.
+
+    The returned value is the single source for BOTH qty sizing (effective_sl_pre)
+    and post-entry SL/Target (via tradeOptRange), so the guard cannot make the two
+    disagree.
+
     Falls back to IV formula only if zero candles or fetch fails.
 
     Returns:
@@ -1256,6 +1295,37 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
 
         # MEDIAN OF ALL valid candle ranges (was top-K median, simplified for stability)
         representative_range = float(np.median(ranges))
+        raw_median = representative_range
+        low_sample_halved = False
+
+        # ============================================================
+        # LOW-SAMPLE OPENING-VOLATILITY GUARD
+        # ============================================================
+        # A median needs enough samples to mean anything. Early entries (before ~9:40) leave
+        # only 2-3 completed candles after the 1st-candle skip, and those survivors are ALL
+        # opening volatility — so the "median" is really just peak-open range.
+        #
+        # Measured over 98 OPT_RANGE_DEBUG samples from every past session:
+        #   2 candles -> avg median 26.02 (max 67.55) | 3 -> 16.89 | 10 -> 14.27
+        # Low-sample windows run ~1.8x richer than a full window.
+        #
+        # Live failure this produced (2026-10-15, 09:24 entry, 2 candles, median 67.55):
+        #   SL  = 215.05 + (67.55 x 2.4) = 377.05  -> premium had to RISE 75% to stop out
+        #   Tgt = 215.05 - (67.55 x 4.0) = -54.95  -> NEGATIVE, unreachable (premium floors at 0)
+        #   qty = 1 lot (risked only 2,182 of the 4,000 budget)
+        # The trade had no exit path but SL or the 3:24 EOD square-off.
+        #
+        # RULE: when the window is thin (< MIN_MEDIAN_CANDLES) AND the median came out
+        # implausibly large (> LOW_SAMPLE_MEDIAN_THRESHOLD), halve it. Only 1 of the 12
+        # historical sub-4-candle samples would have tripped this, so it fires rarely and
+        # only on the pathological case.
+        #
+        # Deliberately NOT applied when the window is full: 2026-06-24 produced median 43.43
+        # off a complete 10-candle window — that was real volatility, not a sampling artifact,
+        # and must not be shaved.
+        if len(ranges) < MIN_MEDIAN_CANDLES and representative_range > LOW_SAMPLE_MEDIAN_THRESHOLD:
+            representative_range = representative_range * LOW_SAMPLE_MEDIAN_FACTOR
+            low_sample_halved = True
 
         # Diagnostic logging — audit raw data driving SL calculation
         all_ranges_rounded = [round(float(r), 2) for r in ranges]
@@ -1263,6 +1333,18 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
               f"| total_candles_after_skip1st={len(ranges)}",
               f"| ranges={all_ranges_rounded}",
               f"| median_all={round(representative_range, 2)}")
+
+        if low_sample_halved:
+            print(f"LOW_SAMPLE_MEDIAN_HALVED: symbol={option_symbol}",
+                  f"| candles={len(ranges)} (< {MIN_MEDIAN_CANDLES})",
+                  f"| raw_median={round(raw_median, 2)} (> {LOW_SAMPLE_MEDIAN_THRESHOLD})",
+                  f"-> used_median={round(representative_range, 2)}",
+                  f"| reason=thin window dominated by opening volatility")
+        elif len(ranges) < MIN_MEDIAN_CANDLES:
+            print(f"LOW_SAMPLE_MEDIAN_OK: symbol={option_symbol}",
+                  f"| candles={len(ranges)} (< {MIN_MEDIAN_CANDLES})",
+                  f"| median={round(representative_range, 2)} (<= {LOW_SAMPLE_MEDIAN_THRESHOLD})",
+                  f"-> kept as-is")
 
         # === MAIN-LEG OPTION CHART OHLC (single line at entry) — kept for future analysis ===
         # Full open/high/low/close of the exact traded (main/ATM) leg at entry time, so we can
@@ -3244,9 +3326,9 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # BULL: SL = median x SL_MULT_BULL (1.8 — wider stop for the counter-wiggle),
-                # Target = median x TARGET_MULT_BULL (2.1 — nearer target so bull trades bank the
-                # move instead of round-tripping). Median is the HIGH-LOW range. Reuse
+                # BULL: SL = median x SL_MULT_BULL (2.4 — wide stop so the counter-wiggle can't
+                # take us out), Target = median x TARGET_MULT_BULL (4.0). Median is the HIGH-LOW
+                # range, already sanity-checked by the low-sample guard. Reuse
                 # tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact traded
                 # strike, right before qty/margin sizing, so SL/Target and qty sizing agree.
                 opt_range = tradeOptRange
@@ -3389,8 +3471,8 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # BEAR: SL = median x SL_MULT_BEAR (1.6), Target = median x TARGET_MULT_BEAR (3.0)
-                # — both unchanged. Median is HIGH-LOW range. Reuse tradeOptRange — computed ONCE
+                # BEAR: SL = median x SL_MULT_BEAR (2.4), Target = median x TARGET_MULT_BEAR (4.0)
+                # — same as bull. Median is HIGH-LOW range. Reuse tradeOptRange — computed ONCE
                 # inside takeEntryCredit/Debit on the exact traded strike, right before sizing.
                 opt_range = tradeOptRange
                 if opt_range is not None and opt_range > 0:
