@@ -278,15 +278,13 @@ USE_CHOI_DOMINANCE_GATE = True
 USE_NO_TRADE_ZONE = True
 NO_TRADE_ZONE_BUFFER = 20
 # CREDIT-spread main (sell) leg offset from the synthetic ATM.
-#   0   = sell AT the synthetic ATM (highest premium, highest gamma)
-#   100 = sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100)  <-- ACTIVE
-# 1-OTM lowers the sold delta (~0.5 -> ~0.4) for a higher-probability short leg with less
-# gamma whipsaw. DEBIT is unaffected either way.
-# DO NOT set back to 0. The EC2 copy was found running ONE_OTM=0 on 2026-10-15 (sold ATM
-# 73100PE at delta -0.49) while 09-28/09-29/09-30 had correctly run ONE_OTM=100 — an
-# undetected drift between the local and server copies. Always deploy by copying this file
-# to sharem/ and pushing; never hand-edit constants on the server.
-ONE_OTM = 100
+#   0   = sell AT the synthetic ATM (highest premium, highest gamma)  <-- ACTIVE
+#   100 = sell 1-OTM (bull PE at ATM-100, bear CE at ATM+100)
+# ATM gives the richest premium (so the SL/target distances are larger in absolute points),
+# at the cost of higher gamma. 1-OTM lowers the sold delta (~0.5 -> ~0.4) for a
+# higher-probability short leg with less gamma whipsaw. DEBIT is unaffected either way.
+# Always deploy by copying this file to sharem/ and pushing; never hand-edit on the server.
+ONE_OTM = 0
 FIXED_RISK_PER_TRADE = 4000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
