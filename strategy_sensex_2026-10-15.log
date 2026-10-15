@@ -1,0 +1,989 @@
+checkInstrument =  BSE:SENSEX-INDEX
+sensexExpDate =  26O15
+BNFut (Sensex futures auto) = BSE:SENSEX26OCTFUT
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 6
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 7
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 8
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 9
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 10
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 11
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 12
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 13
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 14
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 15
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+ -- not entered waiting for time--- 9 : 16
+Waiting for first candle to form. Current Second ==  0    2
+Waiting for first candle to form. Current Second ==  1    2
+Waiting for first candle to form. Current Second ==  2    2
+Waiting for first candle to form. Current Second ==  3    2
+Waiting for first candle to form. Current Second ==  4    2
+Waiting for first candle to form. Current Second ==  5    2
+Waiting for first candle to form. Current Second ==  6    2
+Waiting for first candle to form. Current Second ==  7    2
+Waiting for first candle to form. Current Second ==  8    2
+Waiting for first candle to form. Current Second ==  9    2
+Waiting for first candle to form. Current Second ==  10    2
+Waiting for first candle to form. Current Second ==  11    2
+Waiting for first candle to form. Current Second ==  12    2
+Waiting for first candle to form. Current Second ==  13    2
+Waiting for first candle to form. Current Second ==  14    2
+Waiting for first candle to form. Current Second ==  15    2
+Waiting for first candle to form. Current Second ==  16    2
+Waiting for first candle to form. Current Second ==  17    2
+Waiting for first candle to form. Current Second ==  18    2
+Waiting for first candle to form. Current Second ==  19    2
+Waiting for first candle to form. Current Second ==  20    2
+Waiting for first candle to form. Current Second ==  21    2
+Waiting for first candle to form. Current Second ==  22    2
+Waiting for first candle to form. Current Second ==  23    2
+Waiting for first candle to form. Current Second ==  24    2
+Waiting for first candle to form. Current Second ==  25    2
+Waiting for first candle to form. Current Second ==  26    2
+Waiting for first candle to form. Current Second ==  27    2
+Waiting for first candle to form. Current Second ==  28    2
+Waiting for first candle to form. Current Second ==  29    2
+Waiting for first candle to form. Current Second ==  30    2
+Waiting for first candle to form. Current Second ==  31    2
+Waiting for first candle to form. Current Second ==  32    2
+Waiting for first candle to form. Current Second ==  33    2
+Waiting for first candle to form. Current Second ==  34    2
+Waiting for first candle to form. Current Second ==  35    2
+Waiting for first candle to form. Current Second ==  36    2
+Waiting for first candle to form. Current Second ==  37    2
+Waiting for first candle to form. Current Second ==  38    2
+Waiting for first candle to form. Current Second ==  39    2
+Waiting for first candle to form. Current Second ==  40    2
+Waiting for first candle to form. Current Second ==  41    2
+Waiting for first candle to form. Current Second ==  42    2
+Waiting for first candle to form. Current Second ==  43    2
+Waiting for first candle to form. Current Second ==  44    2
+Waiting for first candle to form. Current Second ==  45    2
+Waiting for first candle to form. Current Second ==  46    2
+Waiting for first candle to form. Current Second ==  47    2
+Waiting for first candle to form. Current Second ==  48    2
+Waiting for first candle to form. Current Second ==  49    2
+Waiting for first candle to form. Current Second ==  50    2
+Waiting for first candle to form. Current Second ==  51    2
+Waiting for first candle to form. Current Second ==  52    2
+Waiting for first candle to form. Current Second ==  53    2
+Waiting for first candle to form. Current Second ==  54    2
+Waiting for first candle to form. Current Second ==  55    2
+Waiting for first candle to form. Current Second ==  56    2
+Waiting for first candle to form. Current Second ==  57    2
+Waiting for first candle to form. Current Second ==  58    2
+Waiting for first candle to form. Current Second ==  59    2
+India VIX = 14.69  Spot Price = 73122.14
+VIX_PERCENTILES_FETCHED: P25= 12.29  P50= 13.59  P75= 14.44  Min= 10.38  Max= 15.25
+IV Regime = HIGH (ADAPTIVE: P25= 12.29  P50= 13.59  P75= 14.44 ) | DailyRange = 1534.5 | 3minCandleRange = 80.8 (theoretical= 134.6 ) | ATMoptionMove = 36.3 | SL = 127 | Target = 127 | TrailTrigger = 36 | Spread = 400 | Buffer = 65
+IV Params refreshed: {'vix': 14.69, 'bn_price': 73122.14, 'regime': 'HIGH', 'regime_thresholds': 'P25=12.29 P50=13.59 P75=14.44', 'daily_range': 1534.5, 'candle_range': 80.8, 'atm_option_move': 36.3, 'sl_point': 127, 'target_point': 127, 'sl_pct_of_premium': 0.1, 'trail_trigger': 36, 'spread_width': 400, 'support_resistance_buffer': 65}
+IV_RANK_DATA: VIX_30d_High= 15.25  VIX_30d_Low= 10.38  Current= 14.69  IV_Rank= 0.89
+===
+====after 3 min ochain==== 2026-10-15 09:18:00.966905
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26O1573900PE   0.01   -0.01 CALL added 264460   PUT unwind -3720  CE_OI=1031740 PE_OI=9100
+pcr2 =  BSE:SENSEX26O1573800PE   0.01   0.12 CALL unwind -42100   PUT unwind -4960  CE_OI=1327420 PE_OI=12280
+pcr3 =  BSE:SENSEX26O1573700CE   0.03   -0.02 CALL added 132320   PUT unwind -2620  CE_OI=1251220 PE_OI=34620
+pcr4 =  BSE:SENSEX26O1573600PE   0.04   0.02 CALL added 197620   PUT added 3020  CE_OI=1053540 PE_OI=43320
+pcr5 =  BSE:SENSEX26O1573500PE   0.08   0.05 CALL added 549020   PUT added 28380  CE_OI=2329780 PE_OI=178520
+pcr6 =  BSE:SENSEX26O1573400PE   0.08    0.05 CALL added 334320   PUT added 15560  CE_OI=1069540 PE_OI=89960
+pcr7 =  BSE:SENSEX26O1573300PE   0.12   0.08 CALL added 325580   PUT added 27260  CE_OI=1283680 PE_OI=155760
+pcr8 =  BSE:SENSEX26O1573200PE   0.18   0.71 CALL added 82060   PUT added 58300  CE_OI=1590300 PE_OI=282720
+pcr9 =  BSE:SENSEX26O1573100PE   0.26   0.36 CALL added 465540   PUT added 168060  CE_OI=1574760 PE_OI=408360
+pcr10 =  BSE:SENSEX26O1573000PE   0.65   1.68 CALL added 592280   PUT added 996080  CE_OI=2713580 PE_OI=1757960
+pcr11 =  BSE:SENSEX26O1572900CE   1.23   5.7 CALL added 97380   PUT added 554780  CE_OI=930180 PE_OI=1147780
+pcr12 =  BSE:SENSEX26O1572800PE   1.55   -4.38 CALL unwind -101600   PUT added 444860  CE_OI=874420 PE_OI=1356020
+pcr13 =  BSE:SENSEX26O1572700CE   2.56   -4.11 CALL unwind -86520   PUT added 355800  CE_OI=519100 PE_OI=1330200
+pcr14 =  BSE:SENSEX26O1572600CE   4.63   -10.05 CALL unwind -36420   PUT added 366060  CE_OI=294860 PE_OI=1366080
+pcr15 =  BSE:SENSEX26O1572500PE   5.62   245.21 CALL added 3140   PUT added 769960  CE_OI=395080 PE_OI=2221180
+pcr16 =  BSE:SENSEX26O1572400PE   3.21   -129.98 CALL unwind -1820   PUT added 236560  CE_OI=429880 PE_OI=1379000
+pcr17 =  BSE:SENSEX26O1572300PE   12.07   -89.9 CALL unwind -2480   PUT added 222960  CE_OI=104040 PE_OI=1255360
+PCRSUM== 32.33
+pcrSummation== 6.71
+spotLTP =  73126.88  ATM_STRIKE =  73100
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73100: 73100}
+avgOiPcrList2 = [np.float64(1.9)] atmStrikeNotShiftedCount= 1
+avgOiPcr9List2 = [np.float64(0.75)] atmStrikeNotShiftedCount= 1
+False   1   1
+SUPP_RES=== 73000  Buffer= 65
+ANCHOR_COMPARE: spot=73126.88 fut=73275.0 basis(fut-spot)=148.12 | SR_spot(PRIMARY)=73000 SR_future=73500 SR_diff(fut-spot)=500 | PCRwin_spot(PRIMARY)=73100 PCRwin_future=73300
+CEoich val =  592280.0  PEoich val =  996080.0 , CE < PE by 40.5%
+SUPP_RES TOTAL OI: CE= 2713580  PE= 1757960 , CE > PE by 35.2%
+INCR_CHOI: SUPP_RES=73000 role=SUPPORT first sighting (no prev cycle to diff) | cumulative CE=592280.0 PE=996080.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73275.0 ) Buffer= 65
+FUT CEoich val =  549020.0  PEoich val =  28380.0 , CE > PE by 94.8%
+FUT_SUPP_RES TOTAL OI: CE= 2329780  PE= 178520 , CE > PE by 92.3%
+OI_SUPP_RES: spot=73126.88 ATM=73100 (win=±500 mode=OI) (ATM_CE_OI=1574760 ATM_PE_OI=408360) | SUPPORT=73000PE OI=1757960 (dist=-100) | RESISTANCE=73500CE OI=2329780 (dist=400)
+OI_SUPPORT=== 73000
+OI_SUPPORT CEoich val = 592280.0  PEoich val = 996080.0 , CE < PE by 40.5%
+OI_SUPPORT TOTAL OI: CE= 2713580  PE= 1757960 , CE > PE by 35.2%
+OI_RESISTANCE=== 73500
+OI_RESISTANCE CEoich val = 549020.0  PEoich val = 28380.0 , CE > PE by 94.8%
+OI_RESISTANCE TOTAL OI: CE= 2329780  PE= 178520 , CE > PE by 92.3%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-15 09:18:02.325643
+CHART_PATTERN_DETECTED: THREE_WHITE_SOLDIERS | DOUBLE_BOTTOM_FORMING | STRONG_MOMENTUM_BULL
+  PATTERN_CONTEXT: Body= 262.6  Range= 351.0  ExpectedRange= 80.8  RangeRatio= 4.34  O= 73000.0  H= 73342.0  L= 72991.0  C= 73262.6
+ATMStrike =  73100
+AVG_OIPCR= 0.75
+avgoiPCROld=  1.9
+AVG_OIPCR_9STRIKE= 0.75  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73000
+spotLTP = 73126.88
+FUT LTP = 73275.0
+CEchoi  PechOi = 592280.0    996080.0
+====================================
+atmPCR= 0.08  belowATM  0.08
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= 0 | isCE_DomRes_once= False  fresh_CE= 0
+India VIX = 14.8  Spot Price = 73055.2
+IV Regime = HIGH (ADAPTIVE: P25= 12.29  P50= 13.59  P75= 14.44 ) | DailyRange = 1544.6 | 3minCandleRange = 81.3 (theoretical= 135.5 ) | ATMoptionMove = 36.6 | SL = 128 | Target = 128 | TrailTrigger = 37 | Spread = 400 | Buffer = 65
+IV Params refreshed: {'vix': 14.8, 'bn_price': 73055.2, 'regime': 'HIGH', 'regime_thresholds': 'P25=12.29 P50=13.59 P75=14.44', 'daily_range': 1544.6, 'candle_range': 81.3, 'atm_option_move': 36.6, 'sl_point': 128, 'target_point': 128, 'sl_pct_of_premium': 0.1, 'trail_trigger': 37, 'spread_width': 400, 'support_resistance_buffer': 65}
+===
+====after 3 min ochain==== 2026-10-15 09:21:00.000003
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26O1573900PE   0.01   -0.01 CALL added 622120   PUT unwind -3180  CE_OI=1389400 PE_OI=9640
+pcr2 =  BSE:SENSEX26O1573800PE   0.01   -0.03 CALL added 88380   PUT unwind -2760  CE_OI=1457900 PE_OI=14480
+pcr3 =  BSE:SENSEX26O1573700CE   0.03   0.03 CALL added 376180   PUT added 11400  CE_OI=1495080 PE_OI=48640
+pcr4 =  BSE:SENSEX26O1573600PE   0.03   0.02 CALL added 563780   PUT added 9280  CE_OI=1419700 PE_OI=49580
+pcr5 =  BSE:SENSEX26O1573500PE   0.08   0.08 CALL added 1231600   PUT added 96800  CE_OI=3012360 PE_OI=246940
+pcr6 =  BSE:SENSEX26O1573400PE   0.13    0.16 CALL added 636160   PUT added 100180  CE_OI=1371380 PE_OI=174580
+pcr7 =  BSE:SENSEX26O1573300PE   0.18   0.28 CALL added 522880   PUT added 144180  CE_OI=1480980 PE_OI=272680
+pcr8 =  BSE:SENSEX26O1573200PE   0.34   0.82 CALL added 621040   PUT added 509080  CE_OI=2129280 PE_OI=733500
+pcr9 =  BSE:SENSEX26O1573100PE   0.6   1.04 CALL added 965700   PUT added 1000060  CE_OI=2074920 PE_OI=1240360
+pcr10 =  BSE:SENSEX26O1573000PE   1.09   4.18 CALL added 502280   PUT added 2101140  CE_OI=2623580 PE_OI=2863020
+pcr11 =  BSE:SENSEX26O1572900CE   2.18   -12.32 CALL unwind -84260   PUT added 1037860  CE_OI=748540 PE_OI=1630860
+pcr12 =  BSE:SENSEX26O1572800PE   2.55   -3.39 CALL unwind -265880   PUT added 900200  CE_OI=710140 PE_OI=1811360
+pcr13 =  BSE:SENSEX26O1572700CE   3.85   -5.43 CALL unwind -146520   PUT added 795400  CE_OI=459100 PE_OI=1769800
+pcr14 =  BSE:SENSEX26O1572600CE   6.69   -12.24 CALL unwind -64220   PUT added 786260  CE_OI=267060 PE_OI=1786280
+pcr15 =  BSE:SENSEX26O1572500PE   9.06   -90.58 CALL unwind -21060   PUT added 1907660  CE_OI=370880 PE_OI=3358880
+pcr16 =  BSE:SENSEX26O1572400PE   4.14   -10.43 CALL unwind -44360   PUT added 462820  CE_OI=387340 PE_OI=1605260
+pcr17 =  BSE:SENSEX26O1572300PE   14.14   384.28 CALL added 1280   PUT added 491880  CE_OI=107800 PE_OI=1524280
+PCRSUM== 45.11
+pcrSummation== 11.0
+spotLTP =  73055.2  ATM_STRIKE =  73100
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73100: 73100}
+avgOiPcrList2 = [np.float64(1.9), np.float64(2.65)] atmStrikeNotShiftedCount= 2
+avgOiPcr9List2 = [np.float64(0.75), np.float64(1.22)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 73000  Buffer= 65
+ANCHOR_COMPARE: spot=73055.2 fut=73261.0 basis(fut-spot)=205.8 | SR_spot(PRIMARY)=73000 SR_future=NOTRADEZONE SR_diff(fut-spot)=NA | PCRwin_spot(PRIMARY)=73100 PCRwin_future=73300
+CEoich val =  502280.0  PEoich val =  2101140.0 , CE < PE by 76.1%
+SUPP_RES TOTAL OI: CE= 2623580  PE= 2863020 , CE < PE by 8.4%
+INCR_CHOI: SUPP_RES=73000 role=SUPPORT fresh_CE=-90000 fresh_PE=1105060 -> PE_dominant by 108.1% (support HOLDING (bullish)) | cumulative CE=502280.0 PE=2101140.0
+FUT_SUPP_RES=== NOTRADEZONE
+OI_SUPP_RES: spot=73055.2 ATM=73100 (win=±500 mode=OI) (ATM_CE_OI=2074920 ATM_PE_OI=1240360) | SUPPORT=73000PE OI=2863020 (dist=-100) | RESISTANCE=73500CE OI=3012360 (dist=400)
+OI_SUPPORT=== 73000
+OI_SUPPORT CEoich val = 502280.0  PEoich val = 2101140.0 , CE < PE by 76.1%
+OI_SUPPORT TOTAL OI: CE= 2623580  PE= 2863020 , CE < PE by 8.4%
+OI_RESISTANCE=== 73500
+OI_RESISTANCE CEoich val = 1231600.0  PEoich val = 96800.0 , CE > PE by 92.1%
+OI_RESISTANCE TOTAL OI: CE= 3012360  PE= 246940 , CE > PE by 91.8%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-15 09:21:00.681561
+CHART_PATTERN_DETECTED: INSIDE_BAR
+  PATTERN_CONTEXT: Body= -14.0  Range= 25.8  ExpectedRange= 81.3  RangeRatio= 0.32  O= 73275.0  H= 73285.8  L= 73260.0  C= 73261.0
+isPE_DominantAtSupp_once = True  isPE_DominantAtSupp_twice = False  isPE_DominantAtSupp_trice = False (PE_supp_streak= 1 )
+ATMStrike =  73100
+AVG_OIPCR= 1.22
+avgoiPCROld=  2.65
+AVG_OIPCR_9STRIKE= 1.22  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73000
+spotLTP = 73055.2
+FUT LTP = 73261.0
+CEchoi  PechOi = 502280.0    2101140.0
+====================================
+atmPCR= 0.08  belowATM  0.13
+CHOI_DOM_GATE: gate_on= True  bull_ok= True  bear_ok= False | isPE_DomSupp_once= True  fresh_PE= 1105060 | isCE_DomRes_once= False  fresh_CE= -90000
+India VIX = 14.78  Spot Price = 73126.9
+IV Regime = HIGH (ADAPTIVE: P25= 12.29  P50= 13.59  P75= 14.44 ) | DailyRange = 1544.0 | 3minCandleRange = 81.3 (theoretical= 135.4 ) | ATMoptionMove = 36.6 | SL = 128 | Target = 128 | TrailTrigger = 37 | Spread = 400 | Buffer = 65
+IV Params refreshed: {'vix': 14.78, 'bn_price': 73126.9, 'regime': 'HIGH', 'regime_thresholds': 'P25=12.29 P50=13.59 P75=14.44', 'daily_range': 1544.0, 'candle_range': 81.3, 'atm_option_move': 36.6, 'sl_point': 128, 'target_point': 128, 'sl_pct_of_premium': 0.1, 'trail_trigger': 37, 'spread_width': 400, 'support_resistance_buffer': 65}
+===
+====after 3 min ochain==== 2026-10-15 09:24:00.000001
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26O1573900PE   0.01   -0.0 CALL added 802740   PUT unwind -2960  CE_OI=1570020 PE_OI=9860
+pcr2 =  BSE:SENSEX26O1573800PE   0.01   -0.0 CALL added 234520   PUT unwind -1100  CE_OI=1604040 PE_OI=16140
+pcr3 =  BSE:SENSEX26O1573700CE   0.03   0.02 CALL added 648540   PUT added 14660  CE_OI=1767440 PE_OI=51900
+pcr4 =  BSE:SENSEX26O1573600PE   0.04   0.02 CALL added 861040   PUT added 20620  CE_OI=1716960 PE_OI=60920
+pcr5 =  BSE:SENSEX26O1573500PE   0.07   0.06 CALL added 1918080   PUT added 114940  CE_OI=3698840 PE_OI=265080
+pcr6 =  BSE:SENSEX26O1573400PE   0.11    0.11 CALL added 992320   PUT added 111040  CE_OI=1727540 PE_OI=185440
+pcr7 =  BSE:SENSEX26O1573300PE   0.18   0.24 CALL added 811320   PUT added 195320  CE_OI=1769420 PE_OI=323820
+pcr8 =  BSE:SENSEX26O1573200PE   0.33   0.56 CALL added 1135300   PUT added 636140  CE_OI=2643540 PE_OI=860560
+pcr9 =  BSE:SENSEX26O1573100PE   0.58   0.81 CALL added 1790720   PUT added 1453340  CE_OI=2899940 PE_OI=1693640
+pcr10 =  BSE:SENSEX26O1573000PE   1.12   2.89 CALL added 911280   PUT added 2629080  CE_OI=3032580 PE_OI=3390960
+pcr11 =  BSE:SENSEX26O1572900CE   2.13   -34.72 CALL unwind -31980   PUT added 1110280  CE_OI=800820 PE_OI=1703280
+pcr12 =  BSE:SENSEX26O1572800PE   2.73   -3.64 CALL unwind -275260   PUT added 1001140  CE_OI=700760 PE_OI=1912300
+pcr13 =  BSE:SENSEX26O1572700CE   4.53   -6.13 CALL unwind -165980   PUT added 1017780  CE_OI=439640 PE_OI=1992180
+pcr14 =  BSE:SENSEX26O1572600CE   7.64   -15.33 CALL unwind -66680   PUT added 1022460  CE_OI=264600 PE_OI=2022480
+pcr15 =  BSE:SENSEX26O1572500PE   10.23   -136.08 CALL unwind -17480   PUT added 2378640  CE_OI=374460 PE_OI=3829860
+pcr16 =  BSE:SENSEX26O1572400PE   5.15   -5.55 CALL unwind -101040   PUT added 560960  CE_OI=330660 PE_OI=1703400
+pcr17 =  BSE:SENSEX26O1572300PE   15.63   192.37 CALL added 3580   PUT added 688680  CE_OI=110100 PE_OI=1721080
+PCRSUM== 50.52
+pcrSummation== 11.78
+spotLTP =  73126.9  ATM_STRIKE =  73100
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73100: 73100}
+avgOiPcrList2 = [np.float64(1.9), np.float64(2.65), np.float64(2.97)] atmStrikeNotShiftedCount= 3
+avgOiPcr9List2 = [np.float64(0.75), np.float64(1.22), np.float64(1.31)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 73000  Buffer= 65
+ANCHOR_COMPARE: spot=73126.9 fut=73223.5 basis(fut-spot)=96.6 | SR_spot(PRIMARY)=73000 SR_future=73000 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73100 PCRwin_future=73200
+CEoich val =  911280.0  PEoich val =  2629080.0 , CE < PE by 65.3%
+SUPP_RES TOTAL OI: CE= 3032580  PE= 3390960 , CE < PE by 10.6%
+INCR_CHOI: SUPP_RES=73000 role=SUPPORT fresh_CE=409000 fresh_PE=527940 -> PE_dominant by 22.5% (support HOLDING (bullish)) | cumulative CE=911280.0 PE=2629080.0
+==========================
+FUT_SUPP_RES=== 73000  (FUT_LTP= 73223.5 ) Buffer= 65
+FUT CEoich val =  911280.0  PEoich val =  2629080.0 , CE < PE by 65.3%
+FUT_SUPP_RES TOTAL OI: CE= 3032580  PE= 3390960 , CE < PE by 10.6%
+OI_SUPP_RES: spot=73126.9 ATM=73100 (win=±500 mode=OI) (ATM_CE_OI=2899940 ATM_PE_OI=1693640) | SUPPORT=73000PE OI=3390960 (dist=-100) | RESISTANCE=73500CE OI=3698840 (dist=400)
+OI_SUPPORT=== 73000
+OI_SUPPORT CEoich val = 911280.0  PEoich val = 2629080.0 , CE < PE by 65.3%
+OI_SUPPORT TOTAL OI: CE= 3032580  PE= 3390960 , CE < PE by 10.6%
+OI_RESISTANCE=== 73500
+OI_RESISTANCE CEoich val = 1918080.0  PEoich val = 114940.0 , CE > PE by 94.0%
+OI_RESISTANCE TOTAL OI: CE= 3698840  PE= 265080 , CE > PE by 92.8%
+IS_MORNING_WINDOW= True  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-15 09:24:00.615381
+CHART_PATTERN: None
+isPcrInc9 = True
+PCR9_SEQ_INC: 0.75 -> 1.22 -> 1.31 | pcr2 > pcr1 by +62.7% | pcr3 > pcr2 by +7.4%
+isPcrInc = True
+PCR_SEQ_INC: 1.9 -> 2.65 -> 2.97 | pcr2 > pcr1 by +39.5% | pcr3 > pcr2 by +12.1%
+isPE_DominantAtSupp_once = True  isPE_DominantAtSupp_twice = True  isPE_DominantAtSupp_trice = False (PE_supp_streak= 2 )
+ATMStrike =  73100
+AVG_OIPCR= 1.31
+avgoiPCROld=  2.97
+AVG_OIPCR_9STRIKE= 1.31  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73000
+spotLTP = 73126.9
+FUT LTP = 73223.5
+CEchoi  PechOi = 911280.0    2629080.0
+====================================
+atmPCR= 0.07  belowATM  0.11
+CHOI_DOM_GATE: gate_on= True  bull_ok= True  bear_ok= False | isPE_DomSupp_once= True  fresh_PE= 527940 | isCE_DomRes_once= False  fresh_CE= 409000
+In Bull trade, slCount =  0  (mode= LOGIC2_TREND_CONVERGENCE )
+SPREAD_CALC_AT_ENTRY: SyntheticATMStrike= 73100  ATM_PE= 220.2  ATM_CE= 222.1  AvgATM= 221.15
+ATM_GREEKS: CE=BSE:SENSEX26O1573100CE -> {'delta': 0.51, 'gamma': 0.0007, 'theta': -215.85, 'vega': 7.8, 'iv': 28.06}
+ATM_GREEKS: PE=BSE:SENSEX26O1573100PE -> {'delta': -0.49, 'gamma': 0.0007, 'theta': -215.85, 'vega': 7.8, 'iv': 28.06}
+ATM_IV: ce_iv=28.06 pe_iv=28.06 avg_atm_iv=28.06 iv_skew(PE-CE)=0.0
+==================================================
+SPREAD_SELECTION (Sensex weekly): Type= CREDIT | DTE= 0 | PremRatio= 0.32 | IVRank= 0.89
+SPREAD_REASONS: DTE=0(weekly) | PremRatio=0.32 | IVRank=0.89 | DECISION:CREDIT (ALWAYS_CREDIT=True — debit disabled)
+==================================================
+SPREAD_DECISION_AT_ENTRY: {'type': 'CREDIT', 'score': 1, 'dte': 0, 'premium_ratio': 0.32, 'iv_rank': 0.89, 'vix_30d_high': 15.25, 'vix_30d_low': 10.38, 'reasons': ['DTE=0(weekly)', 'PremRatio=0.32', 'IVRank=0.89', 'DECISION:CREDIT (ALWAYS_CREDIT=True — debit disabled)']}
+ENTRY_MAIN_STRIKE: 73100 ( CREDIT -> spotATM )
+ENTRY_ROUTING: spread_type= CREDIT  isBullish= True  isBearish= False
+IV-Dynamic: SL= 128  Target= 128  Spread= 400
+CREDIT_MAIN_1OTM: bull sell PE strike= 73100 (synthATM 73100 - ONE_OTM 0 )
+HEDGE_BY_DELTA: main=73100PE main_delta=-0.49 target_hedge_delta=0.245 nearest_strike=72700 nearest_delta=-0.24 -> snapped500=72500 (far_otm_snap) hedge=BSE:SENSEX26O1572500PE hedge_delta=-0.16
+DELTA_CHECK: main=BSE:SENSEX26O1573100PE delta=-0.49
+DELTA_CHECK: hedge=BSE:SENSEX26O1572500PE delta=-0.16
+DELTA_CHECK: delta_ratio (|hedge|/|main|) = 0.327
+=atmPE= BSE:SENSEX26O1573100PE
+=otmPE== BSE:SENSEX26O1572500PE  entryPrice= 215.85  maxHedgePremium= 107.925
+hedge_entry_price = 50.85
+CREDIT_NET_CREDIT= 165.0
+OPT_RANGE_DEBUG: symbol=BSE:SENSEX26O1573100PE | total_candles_after_skip1st=2 | ranges=[59.1, 76.0] | median_all=67.55
+OPT_OHLC_ENTRY: symbol=BSE:SENSEX26O1573100PE | candles=2 | open=[225.45, 259.3] | high=[260.1, 285.85] | low=[201.0, 209.85] | close=[259.15, 218.5] | median_range=67.55
+OPT_RANGE_DEBUG: symbol=BSE:SENSEX26O1572500PE | total_candles_after_skip1st=2 | ranges=[16.9, 23.15] | median_all=20.02
+OPT_OHLC_ENTRY: symbol=BSE:SENSEX26O1572500PE | candles=2 | open=[54.6, 62.9] | high=[63.5, 72.5] | low=[46.6, 49.35] | close=[62.85, 51.8] | median_range=20.02
+HEDGE_OFFSET: source=DELTA used_ratio=0.327 raw=0.327 | delta_ratio=0.327 range_ratio=0.296 premium_ratio=0.236 | (main_delta=-0.49 hedge_delta=-0.16 main_range=67.55 hedge_range=20.02) effective_sl=162 -> net_sl_points=109.1
+RISK_SIZING: effective_sl_pre=162 main=215.85 hedge=50.85 main_range=67.55 hedge_range=20.02 FIXED_RISK=4000 -> qty=20 (1 lots)
+CREDIT_ENTRY: qty= 20
+MARGIN_CHECK: qty=20 (1 lots) margin_required=72168.63 avail=835459.62 usable(97%)=810395.83
+9 : 24 : 2  =>  BUY   SENSEX26O1572500PE   20   MARKET
+9 : 24 : 2  =>  SENSEX26O1572500PE {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '04d4a20b-1150-4f63-93da-e149e19befcb', 'id': '26101500034420'}
+entryPrice== 215.85 Target = 88  BSE:SENSEX26O1573100PE  SL = 344
+9 : 24 : 3  =>  SELL   SENSEX26O1573100PE   20   MARKET
+9 : 24 : 3  =>  SENSEX26O1573100PE {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '42f79c8e-346c-4faf-94cb-489273564d50', 'id': '26101500034459'}
+Exit OID:  {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '42f79c8e-346c-4faf-94cb-489273564d50', 'id': '26101500034459'}   {'code': 1101, 'message': 'Successfully placed order', 's': 'ok', 'id_fyers': '04d4a20b-1150-4f63-93da-e149e19befcb', 'id': '26101500034420'}
+after entry tradeATMOption = BSE:SENSEX26O1573100PE
+ENTRY_SL_TGT: spread= CREDIT  SL= 377.05  Target= -54.94999999999999  EntryPrem= 215.05  AnchorSrc= CANDLE_CLOSE  TrailTrigger= 135  SL_Source= OPTION_RANGE(median=67.55,SLx2.4,Tgtx4.0)  (iv_pts= 128  effective_sl= 162 )
+09:25:01 In Trade ( CREDIT ). No Exit. ltp= 206.9  SL= 377.05  target= -54.94999999999999
+09:26:00 In Trade ( CREDIT ). No Exit. ltp= 178.75  SL= 377.05  target= -54.94999999999999
+09:27:00 In Trade ( CREDIT ). No Exit. ltp= 171.95  SL= 377.05  target= -54.94999999999999
+09:28:01 In Trade ( CREDIT ). No Exit. ltp= 170.85  SL= 377.05  target= -54.94999999999999
+09:29:00 In Trade ( CREDIT ). No Exit. ltp= 154.5  SL= 377.05  target= -54.94999999999999
+09:30:00 In Trade ( CREDIT ). No Exit. ltp= 145.95  SL= 377.05  target= -54.94999999999999
+09:31:01 In Trade ( CREDIT ). No Exit. ltp= 156.8  SL= 377.05  target= -54.94999999999999
+09:32:00 In Trade ( CREDIT ). No Exit. ltp= 145.1  SL= 377.05  target= -54.94999999999999
+09:33:00 In Trade ( CREDIT ). No Exit. ltp= 150.2  SL= 377.05  target= -54.94999999999999
+09:34:01 In Trade ( CREDIT ). No Exit. ltp= 132.1  SL= 377.05  target= -54.94999999999999
+09:35:00 In Trade ( CREDIT ). No Exit. ltp= 139.5  SL= 377.05  target= -54.94999999999999
+09:36:00 In Trade ( CREDIT ). No Exit. ltp= 140.65  SL= 377.05  target= -54.94999999999999
+09:37:01 In Trade ( CREDIT ). No Exit. ltp= 134.65  SL= 377.05  target= -54.94999999999999
+09:38:00 In Trade ( CREDIT ). No Exit. ltp= 119.1  SL= 377.05  target= -54.94999999999999
+09:39:00 In Trade ( CREDIT ). No Exit. ltp= 126.2  SL= 377.05  target= -54.94999999999999
+09:40:01 In Trade ( CREDIT ). No Exit. ltp= 127.2  SL= 377.05  target= -54.94999999999999
+09:41:00 In Trade ( CREDIT ). No Exit. ltp= 127.65  SL= 377.05  target= -54.94999999999999
+09:42:00 In Trade ( CREDIT ). No Exit. ltp= 139.8  SL= 377.05  target= -54.94999999999999
+09:43:01 In Trade ( CREDIT ). No Exit. ltp= 140.0  SL= 377.05  target= -54.94999999999999
+09:44:00 In Trade ( CREDIT ). No Exit. ltp= 128.5  SL= 377.05  target= -54.94999999999999
+09:45:01 In Trade ( CREDIT ). No Exit. ltp= 143.1  SL= 377.05  target= -54.94999999999999
+09:46:01 In Trade ( CREDIT ). No Exit. ltp= 118.65  SL= 377.05  target= -54.94999999999999
+09:47:00 In Trade ( CREDIT ). No Exit. ltp= 113.95  SL= 377.05  target= -54.94999999999999
+09:48:01 In Trade ( CREDIT ). No Exit. ltp= 94.3  SL= 377.05  target= -54.94999999999999
+09:49:01 In Trade ( CREDIT ). No Exit. ltp= 99.45  SL= 377.05  target= -54.94999999999999
+09:50:00 In Trade ( CREDIT ). No Exit. ltp= 94.15  SL= 377.05  target= -54.94999999999999
+09:51:01 In Trade ( CREDIT ). No Exit. ltp= 92.8  SL= 377.05  target= -54.94999999999999
+09:52:00 In Trade ( CREDIT ). No Exit. ltp= 87.4  SL= 377.05  target= -54.94999999999999
+09:53:00 In Trade ( CREDIT ). No Exit. ltp= 76.9  SL= 377.05  target= -54.94999999999999
+09:54:01 In Trade ( CREDIT ). No Exit. ltp= 68.65  SL= 377.05  target= -54.94999999999999
+09:55:00 In Trade ( CREDIT ). No Exit. ltp= 70.35  SL= 377.05  target= -54.94999999999999
+09:56:00 In Trade ( CREDIT ). No Exit. ltp= 72.6  SL= 377.05  target= -54.94999999999999
+09:57:01 In Trade ( CREDIT ). No Exit. ltp= 71.35  SL= 377.05  target= -54.94999999999999
+09:58:00 In Trade ( CREDIT ). No Exit. ltp= 70.6  SL= 377.05  target= -54.94999999999999
+10:00:01 In Trade ( CREDIT ). No Exit. ltp= 62.7  SL= 377.05  target= -54.94999999999999
+10:01:00 In Trade ( CREDIT ). No Exit. ltp= 61.6  SL= 377.05  target= -54.94999999999999
+10:03:01 In Trade ( CREDIT ). No Exit. ltp= 64.25  SL= 377.05  target= -54.94999999999999
+10:04:00 In Trade ( CREDIT ). No Exit. ltp= 67.1  SL= 377.05  target= -54.94999999999999
+10:05:00 In Trade ( CREDIT ). No Exit. ltp= 65.35  SL= 377.05  target= -54.94999999999999
+10:06:01 In Trade ( CREDIT ). No Exit. ltp= 61.35  SL= 377.05  target= -54.94999999999999
+10:07:00 In Trade ( CREDIT ). No Exit. ltp= 55.1  SL= 377.05  target= -54.94999999999999
+10:08:00 In Trade ( CREDIT ). No Exit. ltp= 51.15  SL= 377.05  target= -54.94999999999999
+10:09:01 In Trade ( CREDIT ). No Exit. ltp= 56.2  SL= 377.05  target= -54.94999999999999
+10:10:00 In Trade ( CREDIT ). No Exit. ltp= 52.5  SL= 377.05  target= -54.94999999999999
+10:11:00 In Trade ( CREDIT ). No Exit. ltp= 55.45  SL= 377.05  target= -54.94999999999999
+10:12:01 In Trade ( CREDIT ). No Exit. ltp= 51.5  SL= 377.05  target= -54.94999999999999
+10:13:00 In Trade ( CREDIT ). No Exit. ltp= 48.6  SL= 377.05  target= -54.94999999999999
+10:14:00 In Trade ( CREDIT ). No Exit. ltp= 50.1  SL= 377.05  target= -54.94999999999999
+10:15:01 In Trade ( CREDIT ). No Exit. ltp= 46.5  SL= 377.05  target= -54.94999999999999
+10:16:00 In Trade ( CREDIT ). No Exit. ltp= 46.6  SL= 377.05  target= -54.94999999999999
+10:18:01 In Trade ( CREDIT ). No Exit. ltp= 48.95  SL= 377.05  target= -54.94999999999999
+10:19:00 In Trade ( CREDIT ). No Exit. ltp= 50.2  SL= 377.05  target= -54.94999999999999
+10:20:01 In Trade ( CREDIT ). No Exit. ltp= 49.65  SL= 377.05  target= -54.94999999999999
+10:21:01 In Trade ( CREDIT ). No Exit. ltp= 48.35  SL= 377.05  target= -54.94999999999999
+10:22:00 In Trade ( CREDIT ). No Exit. ltp= 45.55  SL= 377.05  target= -54.94999999999999
+10:23:01 In Trade ( CREDIT ). No Exit. ltp= 44.6  SL= 377.05  target= -54.94999999999999
+10:24:01 In Trade ( CREDIT ). No Exit. ltp= 44.45  SL= 377.05  target= -54.94999999999999
+10:25:00 In Trade ( CREDIT ). No Exit. ltp= 46.75  SL= 377.05  target= -54.94999999999999
+10:26:01 In Trade ( CREDIT ). No Exit. ltp= 48.0  SL= 377.05  target= -54.94999999999999
+10:27:01 In Trade ( CREDIT ). No Exit. ltp= 47.25  SL= 377.05  target= -54.94999999999999
+10:28:00 In Trade ( CREDIT ). No Exit. ltp= 47.1  SL= 377.05  target= -54.94999999999999
+10:29:01 In Trade ( CREDIT ). No Exit. ltp= 46.9  SL= 377.05  target= -54.94999999999999
+10:30:00 In Trade ( CREDIT ). No Exit. ltp= 46.75  SL= 377.05  target= -54.94999999999999
+10:31:00 In Trade ( CREDIT ). No Exit. ltp= 48.55  SL= 377.05  target= -54.94999999999999
+10:32:01 In Trade ( CREDIT ). No Exit. ltp= 49.35  SL= 377.05  target= -54.94999999999999
+10:33:01 In Trade ( CREDIT ). No Exit. ltp= 45.35  SL= 377.05  target= -54.94999999999999
+10:34:00 In Trade ( CREDIT ). No Exit. ltp= 44.1  SL= 377.05  target= -54.94999999999999
+10:35:01 In Trade ( CREDIT ). No Exit. ltp= 47.4  SL= 377.05  target= -54.94999999999999
+10:36:01 In Trade ( CREDIT ). No Exit. ltp= 45.35  SL= 377.05  target= -54.94999999999999
+10:37:00 In Trade ( CREDIT ). No Exit. ltp= 44.05  SL= 377.05  target= -54.94999999999999
+10:38:01 In Trade ( CREDIT ). No Exit. ltp= 42.85  SL= 377.05  target= -54.94999999999999
+10:39:00 In Trade ( CREDIT ). No Exit. ltp= 40.85  SL= 377.05  target= -54.94999999999999
+10:40:00 In Trade ( CREDIT ). No Exit. ltp= 44.4  SL= 377.05  target= -54.94999999999999
+10:41:01 In Trade ( CREDIT ). No Exit. ltp= 44.35  SL= 377.05  target= -54.94999999999999
+10:42:00 In Trade ( CREDIT ). No Exit. ltp= 41.4  SL= 377.05  target= -54.94999999999999
+10:43:00 In Trade ( CREDIT ). No Exit. ltp= 42.4  SL= 377.05  target= -54.94999999999999
+10:44:01 In Trade ( CREDIT ). No Exit. ltp= 40.85  SL= 377.05  target= -54.94999999999999
+10:45:00 In Trade ( CREDIT ). No Exit. ltp= 41.3  SL= 377.05  target= -54.94999999999999
+10:46:00 In Trade ( CREDIT ). No Exit. ltp= 39.85  SL= 377.05  target= -54.94999999999999
+10:47:01 In Trade ( CREDIT ). No Exit. ltp= 36.95  SL= 377.05  target= -54.94999999999999
+10:48:00 In Trade ( CREDIT ). No Exit. ltp= 36.2  SL= 377.05  target= -54.94999999999999
+10:49:00 In Trade ( CREDIT ). No Exit. ltp= 36.2  SL= 377.05  target= -54.94999999999999
+10:50:01 In Trade ( CREDIT ). No Exit. ltp= 37.0  SL= 377.05  target= -54.94999999999999
+10:51:00 In Trade ( CREDIT ). No Exit. ltp= 38.0  SL= 377.05  target= -54.94999999999999
+10:52:00 In Trade ( CREDIT ). No Exit. ltp= 39.15  SL= 377.05  target= -54.94999999999999
+10:53:01 In Trade ( CREDIT ). No Exit. ltp= 37.45  SL= 377.05  target= -54.94999999999999
