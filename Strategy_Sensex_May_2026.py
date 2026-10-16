@@ -190,6 +190,11 @@ MIN_MEDIAN_CANDLES = 4            # a median below this many candles is treated 
 LOW_SAMPLE_MEDIAN_THRESHOLD = 40  # only halve a thin-window median if it exceeds this
 LOW_SAMPLE_MEDIAN_FACTOR = 0.5    # halve it (67.55 -> 33.78)
 
+# Lot sizing rounds UP when the fractional lot is >= this (else floors). 0.75 means a 3.75+
+# raw lot count becomes 4. Recovers position size lost to flooring (see calc_lots_by_risk);
+# worst-case net SL overshoot above FIXED_RISK_PER_TRADE is ~(1 - 0.75) = 25% of one lot.
+LOT_ROUNDUP_FRACTION = 0.75
+
 qty = 40  # 2 lots x 20 = 40 (Sensex lot = 20) — default/fallback; overridden by risk-based sizing
 sl_point = 50
 target_point = 60
@@ -403,8 +408,18 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None, hedge_premium=None
         return MIN_LOTS * LOT_SIZE, hedge_offset_ratio
 
     loss_per_lot = net_sl_points * LOT_SIZE
-    lots = int(FIXED_RISK_PER_TRADE / loss_per_lot)  # floor — never exceed risk budget
+    # LOT ROUNDING: plain int() floor used to drop e.g. 3.996 lots -> 3, throwing away ~25% of a
+    # position for a few rupees of risk headroom (2026-10-16: 3 lots @ net 79.1 pts = Rs 4,746;
+    # the 4th lot was 0.004 away and would have made Rs 6,328). We now round UP when the
+    # fractional part is >= LOT_ROUNDUP_FRACTION (0.75), else floor. Worst case this risks
+    # ~(1 - 0.75) = 0.25 lot of net SL over the budget — i.e. up to ~25% of one lot's net loss
+    # above FIXED_RISK_PER_TRADE on an SL day. MAX_LOTS and the live margin cap still bound it.
+    raw_lots = FIXED_RISK_PER_TRADE / loss_per_lot
+    frac = raw_lots - int(raw_lots)
+    lots = int(raw_lots) + 1 if frac >= LOT_ROUNDUP_FRACTION else int(raw_lots)
     lots = max(MIN_LOTS, min(lots, MAX_LOTS))
+    print(f"LOT_ROUNDING: raw_lots={round(raw_lots, 3)} frac={round(frac, 3)}"
+          f" (roundup>={LOT_ROUNDUP_FRACTION}) -> lots={lots}")
     return lots * LOT_SIZE, hedge_offset_ratio
 
 
