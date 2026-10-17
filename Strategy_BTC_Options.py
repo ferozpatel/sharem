@@ -1758,6 +1758,137 @@ def evaluate_entry(bias, position, pcr, pcr_trend, index_price, snapshot,
     }
 
 
+# ============================================================
+# PER-CONTRACT STATE RESET (daily rollover at 12:00 UTC / 17:30 IST)
+# ============================================================
+# Open interest is a PER-CONTRACT quantity. When the BTC daily contract rolls at
+# 12:00 UTC (17:30 IST) the new expiry's chain starts from near-zero OI and
+# builds through its own session, so NOTHING derived from the expired contract's
+# OI is comparable to the new one. Every cross-cycle series / flag / streak must
+# therefore start fresh at the boundary.
+#
+# Without this reset the first cycles of a new contract inherit PCR windows, SEQ
+# verdicts, dominance streaks, the invariant-window OI history and the fresh-flow
+# diff from a DEAD instrument — which fabricates trend signals out of nothing but
+# the instrument switch (e.g. the expired chain's OI vanishing reads as a
+# multi-million "unwind" at the S/R strike).
+#
+# ``roll_contract_log`` only rotates the OUTPUT FILE; this resets the STATE.
+#
+# Position / monitoring keys are deliberately NOT cleared — an open position must
+# never be forgotten across a rollover (the pre-expiry square-off at 11:45 UTC
+# handles closing it, Req 9.25). ``current_expiry``/``squared_off_for`` are owned
+# by ``handle_expiry_rollover`` and are likewise left alone.
+
+# Cross-cycle state that is only meaningful WITHIN one contract -> key: default.
+_PER_CONTRACT_STATE_DEFAULTS = {
+    # Snapshot + diff inputs (prev-cycle chain for OI deltas / PCR trend).
+    "snapshot": None,
+    "pcr": None,
+    "pcr_full": None,
+    "pcr_trend": None,
+    "oi_deltas": None,
+    "bias": None,
+    "position": None,
+    "decision": None,
+    "entry": None,
+    # ATM-shift tracking + the rolling 17 / central-9 OI-PCR windows.
+    "prev_atm": None,
+    "atm_not_shifted_count": 0,
+    "avg_oipcr_list": [],
+    "avg_oipcr9_list": [],
+    "is_pcr_seq_inc": False,
+    "is_pcr_seq_dec": False,
+    "is_pcr9_seq_inc": False,
+    "is_pcr9_seq_dec": False,
+    "pcr_inc_streak": 0,
+    "pcr_dec_streak": 0,
+    "pcr9_inc_streak": 0,
+    "pcr9_dec_streak": 0,
+    # Invariant-window track (raw-chain OI snapshots re-measured on current
+    # strikes) + its own flags/streaks.
+    "chain_oi_history": [],
+    "is_pcr9_inc_inv": False,
+    "is_pcr9_dec_inv": False,
+    "is_pcr_inc_inv": False,
+    "is_pcr_dec_inv": False,
+    "pcr9_inc_streak_inv": 0,
+    "pcr9_dec_streak_inv": 0,
+    "pcr_inc_streak_inv": 0,
+    "pcr_dec_streak_inv": 0,
+    # Full-chain (total) PCR track.
+    "total_pcr": None,
+    "total_pcr_list": [],
+    "is_total_pcr_inc": False,
+    "is_total_pcr_dec": False,
+    "total_pcr_inc_streak": 0,
+    "total_pcr_dec_streak": 0,
+    # once/twice/thrice dominance streaks for the 17- and 9-strike PCRs.
+    "pcr17_up_streak": 0,
+    "pcr17_down_streak": 0,
+    "pcr9_up_streak": 0,
+    "pcr9_down_streak": 0,
+    # Raw-chain OI references: prev cycle (fresh flow) + contract-start
+    # (cumulative CHOI). Clearing the baseline label forces a re-capture.
+    "prev_chain_oi": None,
+    "baseline_chain_oi": None,
+    "baseline_contract": None,
+    # Entry gating: the confirmation streak and the per-contract trade count
+    # (one BTC daily contract == one trading "day" for MAX_TRADES_PER_DAY).
+    "entry_confirm_count": 0,
+    "trades_today": 0,
+}
+
+
+def reset_state_on_contract_roll(state, label=None):
+    """
+    Clear all per-contract cross-cycle state when the BTC daily contract rolls
+    (12:00 UTC / 17:30 IST), so no PCR series, SEQ/dominance streak, invariant
+    window or OI diff ever spans two different expiries.
+
+    Mutates ``state`` in place and returns True when a reset was performed. On
+    the very first call of a process no reset happens (there is no prior state to
+    invalidate) — the current contract label is simply recorded.
+
+    Fully defensive: never raises, so a label-resolution hiccup can't kill the
+    signal loop (it just skips the reset for this cycle).
+    """
+    if not isinstance(state, dict):
+        return False
+    try:
+        curr = label or _current_contract_label()
+    except Exception as exc:  # noqa: BLE001 - label is best-effort; never fatal
+        print("CONTRACT_RESET_WARN [{ts}] could not resolve the contract label; "
+              "skipping the per-contract state reset this cycle: {typ}: {msg}"
+              .format(ts=_now_ist(), typ=type(exc).__name__, msg=exc))
+        return False
+
+    prev = state.get("contract_label")
+    if prev == curr:
+        return False
+
+    state["contract_label"] = curr
+    if prev is None:
+        # Process start: nothing carried yet, so there is nothing to invalidate.
+        return False
+
+    cleared = [key for key in _PER_CONTRACT_STATE_DEFAULTS if key in state]
+    for key, default in _PER_CONTRACT_STATE_DEFAULTS.items():
+        state[key] = list(default) if isinstance(default, list) else default
+
+    print("CONTRACT_RESET [{ts}] contract rolled {prev} -> {curr}: cleared {n} "
+          "per-contract state key(s). All PCR windows (17/9/invariant/total), "
+          "SEQ + dominance streaks, OI diffs and the entry confirm/trade count "
+          "restart from zero — OI is per-contract, so nothing from {prev} is "
+          "comparable to {curr}.".format(
+              ts=_now_ist(), prev=prev, curr=curr, n=len(cleared)))
+    if state.get("position_open"):
+        print("CONTRACT_RESET_WARN [{ts}] a position is still flagged OPEN "
+              "across the rollover; position/monitoring state was PRESERVED "
+              "(not reset) so it cannot be forgotten.".format(ts=_now_ist()))
+    return True
+
+
 def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
                      prev_pcr_trend=None, state=None):
     """
@@ -1813,6 +1944,14 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     # which is then suppressed by ``market_hours_permit`` during the window
     # (9.24).
     expiry_result = handle_expiry_rollover(client, carried)
+
+    # ---- Per-contract state reset (12:00 UTC / 17:30 IST rollover) ----
+    # OI is per-contract: the new expiry's chain starts near zero and builds on
+    # its own. Clear every cross-cycle PCR window / SEQ + dominance streak /
+    # invariant-window history / OI diff so none of them ever spans two
+    # expiries. Runs BEFORE the monitor branch so the boundary is honoured on
+    # every code path. Position/monitoring state is preserved.
+    reset_state_on_contract_roll(carried)
 
     # ---- Open position? Monitor for exit instead of evaluating entry ----
     # (Task 14.6, Req 9.18-9.22). Monitoring mutates the carried state's
@@ -1870,6 +2009,9 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "prev_chain_oi": carried.get("prev_chain_oi"),
             "baseline_chain_oi": carried.get("baseline_chain_oi"),
             "baseline_contract": carried.get("baseline_contract"),
+            # Current contract label — MUST be carried so a rollover that happens
+            # while a position is being monitored is still detected next cycle.
+            "contract_label": carried.get("contract_label"),
             "entry": carried.get("entry"),
             "monitor": monitor_result,
             # Entry-gating + monitoring state (possibly updated by the monitor).
@@ -2248,6 +2390,9 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         # change-in-OI measure (re-captured automatically on daily rollover).
         "baseline_chain_oi": baseline_chain_oi,
         "baseline_contract": contract_label,
+        # Current contract label, so the next cycle can detect the 12:00 UTC /
+        # 17:30 IST rollover and reset all per-contract state.
+        "contract_label": carried.get("contract_label", contract_label),
         # Entry-gating state carried into the next cycle (Task 14.3).
         "entry": entry,
         "position_open": entry_state.get("position_open", False),
