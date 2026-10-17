@@ -51,12 +51,12 @@ STRIKE_STEP = 200
 # multiple of this step to the spot (Sensex-style nearest-level model). Matches
 # the Sensex 500-point S/R grid (get_support_resistance step=500). e.g. spot
 # 81800 -> line 82000; spot 81400 -> line 81500. NOTE: BTC option strikes are on
-# a 200-point grid (STRIKE_STEP), and 500 is not a multiple of 200, so a 500-grid
-# S/R line (e.g. 81500) may not be a tradeable strike. The S/R LINE is purely
-# this nearest-500 level and drives role / no-trade / bias; OI plays NO part in
-# choosing it. When OI is READ at the line, the lookup snaps to the nearest
-# listed 200 strike (see ``sr_strike_for_oi``) purely so the OI read-out is not
-# blank at the x500 levels.
+# a 200-point grid (STRIKE_STEP), and 500 is not a multiple of 200, so the x500
+# lines (81500, 82500, ...) are never tradeable strikes. OI plays NO part in
+# choosing WHICH 500 level is the S/R line. But when the chosen line carries no
+# OI — unlisted, or listed with zero OI — ``resolve_sr_strike`` substitutes the
+# listed strike NEAREST THE SPOT that does carry OI, and role / no-trade / bias
+# are then measured against that strike instead.
 SR_LINE_STEP = 500
 
 # Consecutive-trend window for the OI-PCR lists (avgOiPcrList2 / avgOiPcr9List2).
@@ -81,8 +81,17 @@ TOTAL_PCR_WINDOW = 3
 # logs show which magnitude actually precedes a real move.
 PCR_MIN_STEP_PCT = 0.1
 
-# No-trade dead zone: +/- 50 points around the band midpoint (Req 9.14).
-NO_TRADE_ZONE_BUFFER = 50
+# No-trade dead zone around the S/R level (Req 9.14). Set to 0 = DISABLED: there
+# is no dead band near the S/R line any more, so price is always classified as
+# either side of the level (spot below => RESISTANCE / bear side, spot above =>
+# SUPPORT / bull side). Only an exact spot == level tick reports AT_LINE.
+#
+# Why 0: the level can be substituted by the listed strike nearest spot when the
+# 500 line carries no OI (``resolve_sr_strike``), and that strike is always
+# within one strike step (200) of spot — so any non-trivial buffer around it
+# would veto a large share of cycles purely as an artefact of the strike grid.
+# Raise this above 0 to re-enable the dead band.
+NO_TRADE_ZONE_BUFFER = 0
 
 # Consecutive-poll confirmation counts for SL/target (Req 9.19, 9.20).
 SL_CONFIRM_TICKS = 2
@@ -339,10 +348,12 @@ def compute_support_resistance(index_price):
         sr_line = round(spot / 500) * 500
 
     The spot's position relative to that line sets the role and the tradable
-    side (``NO_TRADE_ZONE_BUFFER`` straddles the line as a dead zone):
-      * spot within +/- buffer of the line -> AT_LINE  / no_trade_zone
+    side. ``NO_TRADE_ZONE_BUFFER`` is 0 (dead band DISABLED), so every cycle
+    lands on one side or the other:
       * spot BELOW the line  -> line acts as RESISTANCE -> resistance_side (bear)
       * spot ABOVE the line  -> line acts as SUPPORT    -> support_side   (bull)
+      * spot EXACTLY on it   -> AT_LINE / no_trade_zone (degenerate tick only;
+        widens to a real dead band if the buffer is raised above 0)
 
     e.g. spot 81800 -> sr_line 82000; spot is below -> 82000 is RESISTANCE and
     the bot looks for a BEAR trade. (spot 81400 -> sr_line 81500.)
@@ -374,13 +385,35 @@ def compute_support_resistance(index_price):
     return sr_line, role, position, no_trade_low, no_trade_high
 
 
+def _role_vs_level(spot, level):
+    """
+    Role of a level relative to spot, with NO dead band (Req 9.13).
+
+    Returns ``(role, position)``:
+      * spot BELOW the level -> ("RESISTANCE", "resistance_side")
+      * spot ABOVE the level -> ("SUPPORT",    "support_side")
+      * spot exactly ON it   -> ("AT_LINE",    "no_trade_zone")
+
+    Used when the 500 line has been substituted by a nearest-to-spot strike
+    (``resolve_sr_strike``): that strike sits within one strike step of spot, so
+    the no-trade buffer must NOT be re-measured around it (see the caller). This
+    helper answers only "which side of the level is price on".
+    """
+    if spot < level:
+        return "RESISTANCE", "resistance_side"
+    if spot > level:
+        return "SUPPORT", "support_side"
+    return "AT_LINE", "no_trade_zone"
+
+
 def _classify_spot_vs_line(spot, sr_line):
     """
     Classify the spot's role against an S/R line (Req 9.13, 9.14).
 
     Returns ``(role, position, no_trade_low, no_trade_high)``:
       * spot within +/- ``NO_TRADE_ZONE_BUFFER`` of the line -> AT_LINE /
-        no_trade_zone (dead band);
+        no_trade_zone. The buffer is 0 (dead band DISABLED), so this now only
+        fires on an exact spot == line tick;
       * spot BELOW the line -> the line is overhead RESISTANCE / resistance_side;
       * spot ABOVE the line -> the line is underlying SUPPORT / support_side.
 
@@ -635,28 +668,53 @@ def log_option_chain_table(snapshot, oi_deltas, pcr,
 
 
 def log_support_resistance(index_price, sr_line, role, position,
-                           no_trade_low, no_trade_high):
+                           no_trade_low, no_trade_high,
+                           sr_strike=None, fallback=False, fallback_note=""):
     """
-    Log the single nearest-500 S/R line and the spot's role against it
-    (Req 9.4, 9.13, 9.14), Sensex-style ``SUPP_RES===`` line.
+    Log the S/R level and the spot's role against it (Req 9.4, 9.13, 9.14),
+    Sensex-style ``SUPP_RES===`` line.
 
     ``role`` is ``RESISTANCE``/``SUPPORT``/``AT_LINE``; the trailing note spells
-    out the directional read (spot below the line -> resistance -> bear; spot
-    above -> support -> bull; at the line -> no trade).
-    """
-    if position == "resistance_side":
-        note = "spot below line => RESISTANCE => look for BEAR trade"
-    elif position == "support_side":
-        note = "spot above line => SUPPORT => look for BULL trade"
-    else:
-        note = ("spot within +/-{} of line => NO-TRADE zone".format(
-            NO_TRADE_ZONE_BUFFER))
+    out the directional read (spot below the level -> resistance -> bear; spot
+    above -> support -> bull; at the level -> no trade).
 
-    print("SUPP_RES=== {line} role={role} (nearest {step} to spot {spot}) "
+    When the nearest-500 line carried no OI (unlisted, or listed with zero OI)
+    ``fallback`` is True and ``sr_strike`` is the nearest-to-spot listed strike
+    that replaced it; the role/no-trade values passed in are then already
+    measured against THAT strike. An extra ``SR_FALLBACK`` line explains the
+    substitution so the log is never ambiguous about which level is in force.
+    """
+    level = sr_strike if (fallback and sr_strike is not None) else sr_line
+    if position == "resistance_side":
+        note = "spot below level => RESISTANCE => look for BEAR trade"
+    elif position == "support_side":
+        note = "spot above level => SUPPORT => look for BULL trade"
+    else:
+        # no_trade_zone. With NO_TRADE_ZONE_BUFFER = 0 (dead band disabled) this
+        # only happens on an exact spot == line tick; a non-zero buffer widens it
+        # back into a real band around the 500 line.
+        where = ("spot exactly ON the {} line {}".format(
+            SR_LINE_STEP, _fmt(sr_line)) if not NO_TRADE_ZONE_BUFFER
+            else "spot within +/-{} of the {} line {}".format(
+                NO_TRADE_ZONE_BUFFER, SR_LINE_STEP, _fmt(sr_line)))
+        note = ("{where} => NO-TRADE zone".format(where=where)
+                if role not in ("SUPPORT", "RESISTANCE") else
+                "role={role} vs level {level}, but {where} => NO-TRADE zone"
+                .format(role=role, level=_fmt(level), where=where))
+
+    basis = ("nearest listed strike to spot {spot}; {step} line {line} had "
+             "no OI".format(spot=_fmt(index_price), step=SR_LINE_STEP,
+                            line=_fmt(sr_line))
+             if fallback else
+             "nearest {step} to spot {spot}".format(
+                 step=SR_LINE_STEP, spot=_fmt(index_price)))
+
+    print("SUPP_RES=== {level} role={role} ({basis}) "
           "no_trade=[{ntl}, {nth}] | {note}".format(
-              line=_fmt(sr_line), role=role, step=SR_LINE_STEP,
-              spot=_fmt(index_price), ntl=_fmt(no_trade_low),
-              nth=_fmt(no_trade_high), note=note))
+              level=_fmt(level), role=role, basis=basis,
+              ntl=_fmt(no_trade_low), nth=_fmt(no_trade_high), note=note))
+    if fallback and fallback_note:
+        print("SR_FALLBACK: {}".format(fallback_note))
 
 
 def _compare_ce_pe(ce, pe):
@@ -1115,44 +1173,80 @@ def _chain_oi_map(chain):
     return out
 
 
-def sr_strike_for_oi(sr_line, chain):
+def _strike_total_oi(pair):
+    """Total (CE + PE) contract OI at an indexed strike ``pair``; 0.0 when the
+    strike is absent or both sides are missing/garbled."""
+    if not isinstance(pair, dict):
+        return 0.0
+    total = 0.0
+    for side in ("call", "put"):
+        row = pair.get(side)
+        if isinstance(row, dict):
+            try:
+                total += float(row.get("oi") or 0.0)
+            except (TypeError, ValueError):
+                pass
+    return total
+
+
+def resolve_sr_strike(sr_line, spot, chain):
     """
-    Resolve the strike at which to READ OI for the S/R line — a pure geometric
-    lookup with NO OI involvement.
+    Resolve the S/R level to a strike that actually carries OI (user's rule).
 
-    The S/R level itself is simply the nearest-500 line (Sensex model); OI never
-    influences which level is chosen. This helper exists only because Sensex and
-    BTC have different strike grids:
+    1. The S/R line stays the nearest-500 level to spot (Sensex model) — OI
+       never influences WHICH 500 level is chosen.
+    2. If that line IS a listed strike carrying OI, it is the S/R strike. Done.
+       (BTC strikes are on a 200 grid, so the x000 lines qualify.)
+    3. If the line is NOT available — either unlisted (the x500 levels) or
+       listed with zero OI — fall back to the listed strike NEAREST THE SPOT
+       that carries OI. The role then follows from spot vs that strike::
 
-      * Sensex strikes are on a 100 grid, so EVERY 500 multiple is a real strike
-        and Sensex reads OI at ``SUPP_RES`` directly.
-      * BTC strikes are on a 200 grid, so only the x000 lines are listed — the
-        x500 lines (82500, 83500, ...) never are. Reading OI at an unlisted
-        strike returns nothing, which would blank out CEoich / PEoich /
-        INCR_CHOI / SUPP_RES TOTAL OI at every other level.
+         spot 82553 -> line 82500 unavailable -> nearest to spot is 82600
+                       (47 away vs 153) -> spot BELOW  -> RESISTANCE
+         spot 82480 -> line 82500 unavailable -> nearest to spot is 82400
+                       (80 away vs 120) -> spot ABOVE  -> SUPPORT
 
-    So for the OI read-out only, the line is snapped to the nearest LISTED
-    strike. Ties (a x500 line sits exactly between two 200-grid strikes) break
-    to the LOWER strike so the choice is deterministic and reproducible.
+       On BTC's 200 grid this is simply spot rounded to the nearest 200, but it
+       is computed from the live chain rather than assuming the grid, so it
+       stays correct if Delta ever changes the strike spacing or starts listing
+       the x500 levels.
 
-    Returns ``(strike_or_line, snapped)`` where ``snapped`` is True when the
-    lookup strike differs from the line. On any failure the line is returned
-    unchanged, so the caller degrades to Sensex's exact behaviour.
+    Ties (spot exactly midway between two strikes) break to the LOWER strike so
+    the choice is deterministic and reproducible.
+
+    Returns ``(sr_strike, fallback_used, note)``. On any failure the line is
+    returned unchanged with ``fallback_used=False``, so a chain hiccup degrades
+    to plain Sensex behaviour rather than raising.
     """
     try:
         line = int(round(float(sr_line)))
+        sp = float(spot)
     except (TypeError, ValueError):
-        return sr_line, False
+        return sr_line, False, "non-numeric line/spot; using the 500 line as-is"
 
     idx = _index_chain_by_strike(chain) if chain else {}
     if not idx:
-        return sr_line, False
-    if line in idx:
-        return line, False
+        return line, False, "chain unavailable; using the 500 line as-is"
 
-    # Nearest listed strike; ties -> lower strike (deterministic).
-    nearest = min(idx.keys(), key=lambda s: (abs(s - line), s))
-    return nearest, nearest != line
+    line_oi = _strike_total_oi(idx.get(line))
+    if line_oi > 0:
+        return line, False, ""
+
+    # Line unavailable -> nearest-to-SPOT listed strike that carries OI.
+    with_oi = [s for s in idx if _strike_total_oi(idx.get(s)) > 0]
+    pool = with_oi or list(idx.keys())
+    if not pool:
+        return line, False, "no listed strikes; using the 500 line as-is"
+
+    chosen = min(pool, key=lambda s: (abs(s - sp), s))
+    why = ("not a listed strike" if line not in idx
+           else "listed but zero OI")
+    note = ("500 line {} is {}; nearest listed strike to spot {} is {} "
+            "({:.0f} away)".format(line, why, _fmt(sp), chosen,
+                                   abs(chosen - sp)))
+    if not with_oi:
+        note += " [no strike in the chain carries OI]"
+    return chosen, chosen != line, note
 
 
 def _dominance_hint(dom, role):
@@ -1197,13 +1291,12 @@ def log_supp_res_oi(snapshot, sr_strike, sr_line_orig, snapped=False,
     the ABSOLUTE OI at the strike, and the FRESH per-cycle flow with a
     role-aware dominance verdict (the "flow", which leads the stock).
 
-    The S/R LEVEL is simply the nearest-500 line (``sr_line_orig``) — exactly
-    the Sensex model, with OI playing NO part in choosing it. ``sr_strike`` is
-    only where the OI is READ: because BTC strikes sit on a 200 grid the x500
-    lines are not listed, so ``sr_strike_for_oi`` snaps the line to the nearest
-    listed strike for the read-out (``snapped`` says whether it differed).
-    ``CEoich``/``PEoich`` are that strike's OI change vs the previous cycle's raw
-    chain; the TOTAL OI line is its current CE/PE OI.
+    The S/R LEVEL is the nearest-500 line (``sr_line_orig``) — the Sensex model,
+    with OI playing NO part in choosing which 500 level. ``sr_strike`` is the
+    strike that level resolved to: the line itself when it carries OI, else the
+    nearest-to-spot listed strike with OI (``resolve_sr_strike``; ``snapped``
+    says whether it differed). ``CEoich``/``PEoich`` are that strike's OI change
+    vs the previous cycle's raw chain; the TOTAL OI line is its current CE/PE OI.
     """
     rows = snapshot.get("rows") or {}
     strike_index = _index_chain_by_strike(chain) if chain else {}
@@ -1217,13 +1310,9 @@ def log_supp_res_oi(snapshot, sr_strike, sr_line_orig, snapped=False,
     call_row = call_row if isinstance(call_row, dict) else {}
     put_row = put_row if isinstance(put_row, dict) else {}
 
-    # Note the OI read-out strike whenever it is not the 500 line itself (BTC's
-    # 200 strike grid does not list the x500 levels). Geometry only — no OI.
-    if snapped:
-        print("SR_OI_STRIKE: line={} is not a listed strike (BTC strikes are on "
-              "a {}-point grid) -> reading OI at the nearest listed strike {}"
-              .format(_fmt(sr_line_orig), STRIKE_STEP, sr_key))
-        print()
+    # The substitution itself is already explained by the SUPP_RES / SR_FALLBACK
+    # lines above, so nothing extra is printed here; ``snapped`` only affects
+    # the strike label below.
 
     # Raw contracts for the CE/PE comparison (unit-invariant); USD for display.
     ce_oi = call_row.get("oi") or 0.0
@@ -1993,13 +2082,27 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     sr_line, sr_role, sr_position, ntl, nth = compute_support_resistance(
         index_price)
 
-    # 8b. Resolve the strike used to READ OI at that line. The S/R level itself
-    #     is purely the nearest-500 line above (Sensex model) — OI plays no part
-    #     in choosing it. BTC strikes are on a 200 grid, so only the x000 lines
-    #     are listed; the x500 lines never are. ``sr_strike_for_oi`` therefore
-    #     snaps the line to the nearest LISTED strike for the OI read-out only,
-    #     so CEoich/PEoich/INCR_CHOI stay populated at every level.
-    sr_oi_strike, sr_oi_snapped = sr_strike_for_oi(sr_line, chain)
+    # 8b. Make the S/R level a strike that actually carries OI. The 500 line
+    #     above is the level; OI never chooses WHICH 500 level. But when that
+    #     line is unavailable — unlisted (the x500 levels on BTC's 200 grid) or
+    #     listed with zero OI — fall back to the listed strike NEAREST THE SPOT
+    #     that has OI, and re-derive role / no-trade / side from spot vs THAT
+    #     strike (spot below it => RESISTANCE, spot above it => SUPPORT).
+    #     Computed here, LOGGED below next to the SUPP_RES line (step 11).
+    sr_strike, sr_fallback, sr_note = resolve_sr_strike(
+        sr_line, index_price, chain)
+    if sr_fallback:
+        # ROLE comes from spot vs the SUBSTITUTED strike (the user's rule):
+        #   spot BELOW it -> RESISTANCE;  spot ABOVE it -> SUPPORT.
+        # NO_TRADE_ZONE_BUFFER is 0, so the dead band is disabled and this is
+        # simply which side of the level price sits on. Should the buffer ever be
+        # raised again it stays anchored to the structural 500 LINE (ntl/nth
+        # untouched), never to the substituted strike — that strike is always
+        # within one strike step of spot, so a band around IT would veto a large
+        # share of cycles purely as a strike-grid artefact.
+        sr_role, sr_position = _role_vs_level(index_price, sr_strike)
+        if NO_TRADE_ZONE_BUFFER and ntl <= index_price <= nth:
+            sr_position = "no_trade_zone"
 
     # 9. Consecutive same-strike PCR change across cycles (Req 9.10).
     pcr_trend = update_pcr_trend(prev_pcr, pcr, prev_pcr_trend)
@@ -2155,7 +2258,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     _log_pcr_dominance("PCR9_DOMINANCE", pcr9_up_streak, pcr9_down_streak)
 
     log_support_resistance(index_price, sr_line, sr_role, sr_position,
-                           ntl, nth)
+                           ntl, nth, sr_strike=sr_strike,
+                           fallback=sr_fallback, fallback_note=sr_note)
 
     # CE/PE OI + OI-change detail AT the S/R line (Sensex-equivalent). The line
     # is the plain nearest-500 level; OI never influences it. The raw chain is
@@ -2178,7 +2282,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     else:
         baseline_chain_oi = carried.get("baseline_chain_oi") or curr_chain_oi
 
-    log_supp_res_oi(snapshot, sr_oi_strike, sr_line, snapped=sr_oi_snapped,
+    log_supp_res_oi(snapshot, sr_strike, sr_line, snapped=sr_fallback,
                     chain=chain, prev_chain_oi=carried.get("prev_chain_oi"),
                     baseline_chain_oi=baseline_chain_oi, sr_role=sr_role)
 
