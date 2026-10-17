@@ -157,6 +157,49 @@ DAILY_EXPIRY_UTC_HOUR = 12
 
 # ---- Concrete live-entry numeric thresholds: [NEEDS INPUT] (Req 9.27) --------
 # Finalized after the observation period once logged signals are validated.
+# ---- Sensex-equivalent entry criteria (ported 1:1 from Strategy_Sensex) ------
+# Percentage thresholds are kept EXACTLY as the Sensex strategy uses them. The
+# whole strategy is still OBSERVATION_MODE, so these are tuning knobs for later.
+CHOI_MORNING_PCT = 15       # LOGIC1: cumulative-CHOI gap must be >= this (%)
+CHOI_CONVERGE_PCT = 10      # LOGIC2: cumulative-CHOI gap must be >= this (%)
+OI_CONVERGE_PCT = 2         # LOGIC2: total-OI gap must be >= this (%)
+CHOI_TRAP_PCT = 15          # LOGIC3: cumulative-CHOI gap must be >= this (%)
+
+# LOGIC3 is ALWAYS observation-only and never places an order, exactly as in the
+# Sensex strategy (there it logs LOGIC3_OBSERVE). Only LOGIC1/LOGIC2 are
+# live-tradeable modes once OBSERVATION_MODE is disabled.
+LOGIC3_OBSERVATION_ONLY = True
+
+# Fresh-flow (per-cycle CHOI) dominance confirmation at the S/R strike.
+# BULL needs PE freshly dominant AND not unwinding; BEAR mirrors with CE.
+USE_CHOI_DOMINANCE_GATE = True
+
+# The directional PCR gate uses the 17-strike INVARIANT-WINDOW track (every
+# value re-measured on the CURRENT strike set, so an ATM shift cannot distort
+# the comparison) and requires the rising/falling run to have held for at least
+# this many consecutive cycles.
+PCR_ENTRY_STREAK_MIN = 2
+
+# "Morning window" equivalent (Sensex: 9:15-9:48 IST, the first ~11 candles after
+# the open, when change-in-OI is still noisy/near-zero). For BTC the contract
+# starts at 12:00 UTC / 17:30 IST and the cumulative-CHOI baseline resets exactly
+# then, so the same near-zero problem applies for the first ~33 minutes:
+# 17:30-18:03 IST == 12:00-12:33 UTC.
+MORNING_WINDOW_START_UTC_MIN = 0    # minutes past 12:00 UTC
+MORNING_WINDOW_END_UTC_MIN = 33
+
+# Latest time a NEW entry may be authorised, in IST (Sensex: dt1.hour <= 15,
+# i.e. nothing after the Indian close). BTC expires 17:30 IST, so no new entries
+# after 16:30 IST = 11:00 UTC — one hour of runway before the rollover.
+ENTRY_CUTOFF_IST_HOUR = 16
+ENTRY_CUTOFF_IST_MINUTE = 30
+
+# Daily (per-CONTRACT-session) untrailed-stop-loss halt, Sensex `slCount != 2`.
+# Only an UNTRAILED SL counts; a trailed exit sitting at breakeven is a scratch.
+# Resets at the 12:00 UTC / 17:30 IST contract rollover with the rest of the
+# per-contract state.
+MAX_SL_PER_DAY = 2
+
 PCR_BULL_THRESHOLD = None   # [NEEDS INPUT]
 PCR_BEAR_THRESHOLD = None   # [NEEDS INPUT]
 STOP_LOSS_POINTS = None     # [NEEDS INPUT]
@@ -1388,10 +1431,27 @@ def log_supp_res_oi(snapshot, sr_strike, sr_line_orig, snapped=False,
                   sr_key, sr_role or "n/a", ce_fresh_disp, pe_fresh_disp,
                   dom, gap, _dominance_hint(dom, sr_role),
                   ce_cum_disp, pe_cum_disp))
+        dom_side = dom
     else:
         print("INCR_CHOI: SUPP_RES={} role={} first sighting (no prev cycle to "
               "diff) | cumulative CE={} PE={}".format(
                   sr_key, sr_role or "n/a", ce_cum_disp, pe_cum_disp))
+        dom_side = "FLAT"
+
+    # Return the raw CONTRACT measures so the Sensex-equivalent entry gate can
+    # consume them (percentages are unit-invariant, so contracts vs USD makes no
+    # difference to any comparison). Display stays USD-notional above.
+    return {
+        "sr_strike": sr_key,
+        "ce_oi_total": float(ce_oi or 0.0),     # Sensex suppResCeOi_total
+        "pe_oi_total": float(pe_oi or 0.0),     # Sensex suppResPeOi_total
+        "ce_choi": float(ce_cum),               # Sensex suppResCeChOi (CEoich)
+        "pe_choi": float(pe_cum),               # Sensex suppResPeChOi (PEoich)
+        "fresh_ce": float(ce_fresh),            # Sensex fresh_CE
+        "fresh_pe": float(pe_fresh),            # Sensex fresh_PE
+        "fresh_known": bool(fresh_known),
+        "fresh_dominant": dom_side,             # "CE" / "PE" / "FLAT"
+    }
 
 
 def log_would_have_entered(decision, reason=None, **details):
@@ -1643,6 +1703,355 @@ def _provisional_side_agreement(position, pcr):
     return False
 
 
+# ============================================================
+# SENSEX-EQUIVALENT BULL / BEAR ENTRY CRITERIA (ported 1:1)
+# ============================================================
+# Port of the Sensex entry gate (Strategy_Sensex_May_2026.py lines 3188-3243 and
+# 3390). The Sensex condition is:
+#
+#   BULL: bull_direction_ok and _dominance_ok_bull and slCount != 2
+#         and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0
+#         and anchorLTP > SUPP_RES and isPcrInc
+#   BEAR: (elif, so BULL wins ties) mirrored with anchorLTP < SUPP_RES / isPcrDecr
+#
+# Mapping of the Sensex inputs onto this bot:
+#   anchorLTP        -> index_price (.DEXBTUSD spot; same anchor the S/R uses)
+#   SUPP_RES         -> the resolved S/R level (nearest-500 line, or the
+#                       nearest-to-spot listed strike when that line has no OI)
+#   NOTRADEZONE      -> position == "no_trade_zone"
+#   isPcrInc/Decr    -> the 17-strike INVARIANT-WINDOW flag + its streak
+#                       (>= PCR_ENTRY_STREAK_MIN), per the user's choice
+#   suppResCeChOi    -> ce_choi  (cumulative since contract start)
+#   suppResPeChOi    -> pe_choi
+#   suppResCeOi_total-> ce_oi_total (absolute OI at the S/R strike)
+#   fresh_CE/PE      -> fresh_ce / fresh_pe (per-cycle flow)
+#   IS_MORNING_WINDOW-> 17:30-18:03 IST (12:00-12:33 UTC), the first ~33 min of
+#                       the contract while cumulative CHOI is still near zero
+#   dt1.hour <= 15   -> no new entry after 16:30 IST (ENTRY_CUTOFF_IST_*)
+#   slCount != 2     -> sl_count < MAX_SL_PER_DAY, per contract session
+#   st == 0          -> not state["position_open"]
+
+
+def is_morning_window(now_utc=None):
+    """
+    True inside the BTC equivalent of the Sensex 9:15-9:48 morning window: the
+    first ``MORNING_WINDOW_END_UTC_MIN`` minutes of the contract session, which
+    begins at 12:00 UTC / 17:30 IST (17:30-18:03 IST).
+
+    Rationale (same as Sensex): the cumulative change-in-OI baseline is captured
+    at the session start, so for the first few cycles CHOI is near zero and its
+    percentage gaps are meaningless. LOGIC1 therefore leans on TOTAL OI
+    direction (carried from the previous session's positioning) instead.
+    """
+    now = now_utc or datetime.now(REFERENCE_TIMEZONE)
+    if now.hour != DAILY_EXPIRY_UTC_HOUR:
+        return False
+    return (MORNING_WINDOW_START_UTC_MIN <= now.minute
+            < MORNING_WINDOW_END_UTC_MIN)
+
+
+def entry_cutoff_passed(now_utc=None):
+    """
+    True once NEW entries are no longer authorised for this session — after
+    ``ENTRY_CUTOFF_IST_HOUR:ENTRY_CUTOFF_IST_MINUTE`` IST (default 16:30 IST =
+    11:00 UTC), leaving one hour of runway before the 17:30 IST expiry.
+
+    Mirrors the Sensex ``dt1.hour <= 15`` cut-off. Computed in IST (UTC+5:30)
+    for readability; the underlying clock stays UTC.
+    """
+    now = now_utc or datetime.now(REFERENCE_TIMEZONE)
+    ist = now + timedelta(hours=5, minutes=30)
+    cutoff_minutes = ENTRY_CUTOFF_IST_HOUR * 60 + ENTRY_CUTOFF_IST_MINUTE
+    return (ist.hour * 60 + ist.minute) >= cutoff_minutes
+
+
+def _pct_gap(a, b):
+    """Sensex-style percentage gap: |a-b| / max(|a|,|b|) * 100, rounded to 1dp.
+    Returns 0.0 when both sides are zero (no information)."""
+    den = max(abs(a), abs(b))
+    if den <= 0:
+        return 0.0
+    return round(abs(a - b) / den * 100.0, 1)
+
+
+def update_sr_dominance_streaks(sr_oi, sr_role, state):
+    """
+    Maintain the Sensex fresh-flow dominance streaks at the S/R strike and the
+    ``isPE_DominantAtSupp_*`` / ``isCE_DominantAtRes_*`` flags they drive.
+
+    PE-dominant-at-SUPPORT is the BULL confirmation (put writers defending the
+    floor); CE-dominant-at-RESISTANCE is the BEAR confirmation (call writers
+    capping the ceiling). A streak increments only while its own side stays
+    dominant AT THE MATCHING ROLE, and resets to 0 otherwise — including when
+    the role flips, so a streak never carries across a support/resistance change.
+
+    When this cycle has no comparable previous cycle (``fresh_known`` False,
+    e.g. the first cycle of a contract) BOTH streaks reset and the persisted
+    fresh values go to 0, so the dominance gate stays conservative and blocks.
+
+    Mutates ``state`` and returns a dict of the flags for logging/gating.
+    """
+    state = state if isinstance(state, dict) else {}
+    sr_oi = sr_oi if isinstance(sr_oi, dict) else {}
+
+    pe_streak = state.get("pe_supp_streak", 0) or 0
+    ce_streak = state.get("ce_res_streak", 0) or 0
+
+    if not sr_oi.get("fresh_known"):
+        pe_streak = ce_streak = 0
+        fresh_ce = fresh_pe = 0.0
+    else:
+        fresh_ce = sr_oi.get("fresh_ce") or 0.0
+        fresh_pe = sr_oi.get("fresh_pe") or 0.0
+        dom = sr_oi.get("fresh_dominant")
+        if sr_role == "SUPPORT" and dom == "PE":
+            pe_streak += 1
+            ce_streak = 0
+        elif sr_role == "RESISTANCE" and dom == "CE":
+            ce_streak += 1
+            pe_streak = 0
+        else:
+            pe_streak = ce_streak = 0
+
+    state["pe_supp_streak"] = pe_streak
+    state["ce_res_streak"] = ce_streak
+    state["last_fresh_ce"] = fresh_ce
+    state["last_fresh_pe"] = fresh_pe
+
+    return {
+        "pe_supp_streak": pe_streak,
+        "ce_res_streak": ce_streak,
+        "isPE_DominantAtSupp_once": pe_streak >= 1,
+        "isPE_DominantAtSupp_twice": pe_streak >= 2,
+        "isPE_DominantAtSupp_trice": pe_streak >= 3,
+        "isCE_DominantAtRes_once": ce_streak >= 1,
+        "isCE_DominantAtRes_twice": ce_streak >= 2,
+        "isCE_DominantAtRes_trice": ce_streak >= 3,
+        "last_fresh_ce": fresh_ce,
+        "last_fresh_pe": fresh_pe,
+    }
+
+
+def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
+                                   sr_oi, dominance, pcr_flags, state,
+                                   now_utc=None):
+    """
+    Evaluate the Sensex BULL/BEAR entry criteria for one cycle. Pure decision
+    logic: places no orders, performs no network calls, prints nothing.
+
+    ``pcr_flags`` must carry the 17-strike INVARIANT-WINDOW verdicts and streaks:
+    ``is_inc``, ``is_dec``, ``inc_streak``, ``dec_streak``.
+
+    Returns a dict with the mandatory legs, each LOGIC mode's verdict, the
+    winning mode, the final bull/bear decision and a blocker list.
+    """
+    state = state if isinstance(state, dict) else {}
+    sr_oi = sr_oi if isinstance(sr_oi, dict) else {}
+    dominance = dominance if isinstance(dominance, dict) else {}
+    pcr_flags = pcr_flags if isinstance(pcr_flags, dict) else {}
+
+    ce_choi = sr_oi.get("ce_choi") or 0.0
+    pe_choi = sr_oi.get("pe_choi") or 0.0
+    ce_total = sr_oi.get("ce_oi_total") or 0.0
+    pe_total = sr_oi.get("pe_oi_total") or 0.0
+
+    # Sensex `_choi_valid`: a NEGATIVE side means writers are UNWINDING, which
+    # inflates the gap without carrying trapped-writer conviction. When either
+    # side is not building, the gap is forced to 0 — which fails every LOGIC
+    # threshold (10/15%), so no trade can fire. This is a hard filter.
+    choi_valid = (ce_choi > 0 and pe_choi > 0)
+    choi_pct = _pct_gap(ce_choi, pe_choi) if choi_valid else 0.0
+    oi_pct = _pct_gap(ce_total, pe_total)
+
+    # ----- Mandatory direction legs (price vs S/R + PCR trend) -----
+    # The no-trade guard MUST come first so a dead-band cycle blocks both sides.
+    in_trade_zone = (position != "no_trade_zone") and (sr_level is not None)
+    pcr_inc_ok = bool(pcr_flags.get("is_inc")) and \
+        (pcr_flags.get("inc_streak") or 0) >= PCR_ENTRY_STREAK_MIN
+    pcr_dec_ok = bool(pcr_flags.get("is_dec")) and \
+        (pcr_flags.get("dec_streak") or 0) >= PCR_ENTRY_STREAK_MIN
+
+    above_level = in_trade_zone and index_price is not None and \
+        float(index_price) > float(sr_level)
+    below_level = in_trade_zone and index_price is not None and \
+        float(index_price) < float(sr_level)
+
+    bull_mandatory = in_trade_zone and above_level and pcr_inc_ok
+    bear_mandatory = in_trade_zone and below_level and pcr_dec_ok
+
+    morning = is_morning_window(now_utc)
+
+    # ----- LOGIC1: morning trap (total-OI direction + CHOI trap >= 15%) -----
+    logic1_bull = (morning and bull_mandatory and (ce_total > pe_total)
+                   and (pe_choi > ce_choi and choi_pct >= CHOI_MORNING_PCT))
+    logic1_bear = (morning and bear_mandatory and (pe_total > ce_total)
+                   and (ce_choi > pe_choi and choi_pct >= CHOI_MORNING_PCT))
+
+    # ----- LOGIC2: trend convergence (CHOI >= 10% AND total OI >= 2%) -----
+    logic2_bull = (bull_mandatory
+                   and (pe_choi > ce_choi and choi_pct >= CHOI_CONVERGE_PCT)
+                   and (pe_total > ce_total and oi_pct >= OI_CONVERGE_PCT))
+    logic2_bear = (bear_mandatory
+                   and (ce_choi > pe_choi and choi_pct >= CHOI_CONVERGE_PCT)
+                   and (ce_total > pe_total and oi_pct >= OI_CONVERGE_PCT))
+
+    # ----- LOGIC3: CHOI trap >= 15% (ALWAYS observation-only) -----
+    # Note the deliberate inversion vs LOGIC2: bull wants the CALL side dominant
+    # cumulatively (trapped call writers being squeezed as price holds above
+    # support), while the dominance gate separately demands PUTs dominant in the
+    # FRESH flow. Contrarian by design, which is why it never trades.
+    logic3_bull = (bull_mandatory and (ce_choi > pe_choi)
+                   and choi_pct >= CHOI_TRAP_PCT)
+    logic3_bear = (bear_mandatory and (ce_choi < pe_choi)
+                   and choi_pct >= CHOI_TRAP_PCT)
+
+    # ----- Priority: first logic with a tradeable signal wins -----
+    if logic1_bull or logic1_bear:
+        bull_dir_ok, bear_dir_ok = logic1_bull, logic1_bear
+        mode = "LOGIC1_MORNING_TRAP"
+    elif logic2_bull or logic2_bear:
+        bull_dir_ok, bear_dir_ok = logic2_bull, logic2_bear
+        mode = "LOGIC2_TREND_CONVERGENCE"
+    else:
+        bull_dir_ok, bear_dir_ok = logic3_bull, logic3_bear
+        mode = "LOGIC3_CHOI_15PCT"
+
+    # ----- Fresh-flow dominance confirmation -----
+    if USE_CHOI_DOMINANCE_GATE:
+        dom_ok_bull = bool(dominance.get("isPE_DominantAtSupp_once")) and \
+            (dominance.get("last_fresh_pe") or 0.0) >= 0
+        dom_ok_bear = bool(dominance.get("isCE_DominantAtRes_once")) and \
+            (dominance.get("last_fresh_ce") or 0.0) >= 0
+    else:
+        dom_ok_bull = dom_ok_bear = True
+
+    # ----- Shared risk/state gates -----
+    sl_count = state.get("untrailed_sl_count", 0) or 0
+    sl_halt = sl_count >= MAX_SL_PER_DAY
+    after_cutoff = entry_cutoff_passed(now_utc)
+    position_open = bool(state.get("position_open"))
+
+    common_ok = (not sl_halt) and (not after_cutoff) and in_trade_zone \
+        and (not position_open)
+
+    bull_enter = bool(common_ok and bull_dir_ok and dom_ok_bull
+                      and above_level and pcr_inc_ok)
+    # BEAR is an `elif` in Sensex, so BULL wins when both somehow qualify.
+    bear_enter = bool(common_ok and (not bull_enter) and bear_dir_ok
+                      and dom_ok_bear and below_level and pcr_dec_ok)
+
+    # LOGIC3 can signal but must never route to a live order.
+    tradeable_mode = not (mode == "LOGIC3_CHOI_15PCT"
+                          and LOGIC3_OBSERVATION_ONLY)
+
+    blockers = []
+    if sl_halt:
+        blockers.append("sl_halt({}/{})".format(sl_count, MAX_SL_PER_DAY))
+    if after_cutoff:
+        blockers.append("after_entry_cutoff({:02d}:{:02d}_IST)".format(
+            ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE))
+    if not in_trade_zone:
+        blockers.append("no_trade_zone(9.14)")
+    if position_open:
+        blockers.append("position_already_open(9.16)")
+    if not (bull_enter or bear_enter):
+        if not (pcr_inc_ok or pcr_dec_ok):
+            blockers.append("pcr17_invariant_streak<{}".format(
+                PCR_ENTRY_STREAK_MIN))
+        elif not choi_valid:
+            blockers.append("choi_not_building(CE>0 and PE>0 required)")
+        elif not (bull_dir_ok or bear_dir_ok):
+            blockers.append("no_logic_mode_qualified")
+        elif pcr_inc_ok and not dom_ok_bull:
+            blockers.append("choi_dominance_bull(need PE dominant, fresh_PE>=0)")
+        elif pcr_dec_ok and not dom_ok_bear:
+            blockers.append("choi_dominance_bear(need CE dominant, fresh_CE>=0)")
+    if (bull_enter or bear_enter) and not tradeable_mode:
+        blockers.append("logic3_observation_only")
+
+    return {
+        "bull_enter": bull_enter,
+        "bear_enter": bear_enter,
+        "mode": mode,
+        "tradeable_mode": tradeable_mode,
+        "live_eligible": bool((bull_enter or bear_enter) and tradeable_mode),
+        "in_trade_zone": in_trade_zone,
+        "above_level": above_level,
+        "below_level": below_level,
+        "pcr_inc_ok": pcr_inc_ok,
+        "pcr_dec_ok": pcr_dec_ok,
+        "bull_mandatory": bull_mandatory,
+        "bear_mandatory": bear_mandatory,
+        "logic1": (logic1_bull, logic1_bear),
+        "logic2": (logic2_bull, logic2_bear),
+        "logic3": (logic3_bull, logic3_bear),
+        "dom_ok_bull": dom_ok_bull,
+        "dom_ok_bear": dom_ok_bear,
+        "choi_valid": choi_valid,
+        "choi_pct": choi_pct,
+        "oi_pct": oi_pct,
+        "morning_window": morning,
+        "sl_count": sl_count,
+        "sl_halt": sl_halt,
+        "after_cutoff": after_cutoff,
+        "blockers": blockers,
+    }
+
+
+def log_sensex_entry_criteria(result, sr_level, sr_role, sr_oi, dominance,
+                              pcr_flags):
+    """Log the Sensex-equivalent entry evaluation (observation only)."""
+    r = result
+    print()
+    print("==== ENTRY CRITERIA (Sensex-equivalent) {} ====".format(_now_ist()))
+    print("PCR17_INVARIANT gate: inc={} (streak={}) dec={} (streak={}) "
+          "min_streak={} -> bull_pcr_ok={} bear_pcr_ok={}".format(
+              bool(pcr_flags.get("is_inc")), pcr_flags.get("inc_streak") or 0,
+              bool(pcr_flags.get("is_dec")), pcr_flags.get("dec_streak") or 0,
+              PCR_ENTRY_STREAK_MIN, r["pcr_inc_ok"], r["pcr_dec_ok"]))
+    print("MANDATORY: in_trade_zone={} spot_vs_SR: above={} below={} "
+          "(SUPP_RES={} role={}) -> bull_mandatory={} bear_mandatory={}".format(
+              r["in_trade_zone"], r["above_level"], r["below_level"],
+              _fmt(sr_level), sr_role or "n/a",
+              r["bull_mandatory"], r["bear_mandatory"]))
+    print("CHOI/OI at S/R: CEoich={} PEoich={} choi_valid={} choi_pct={}% | "
+          "CE_total={} PE_total={} oi_pct={}%".format(
+              _fmt(sr_oi.get("ce_choi"), 1), _fmt(sr_oi.get("pe_choi"), 1),
+              r["choi_valid"], r["choi_pct"],
+              _fmt(sr_oi.get("ce_oi_total"), 1),
+              _fmt(sr_oi.get("pe_oi_total"), 1), r["oi_pct"]))
+    print("LOGIC1_MORNING_TRAP (window={}): bull={} bear={}  [CHOI>={}%]".format(
+        r["morning_window"], r["logic1"][0], r["logic1"][1],
+        CHOI_MORNING_PCT))
+    print("LOGIC2_TREND_CONVERGENCE: bull={} bear={}  [CHOI>={}%, OI>={}%]"
+          .format(r["logic2"][0], r["logic2"][1], CHOI_CONVERGE_PCT,
+                  OI_CONVERGE_PCT))
+    print("LOGIC3_CHOI_15PCT (observation-only): bull={} bear={}  [CHOI>={}%]"
+          .format(r["logic3"][0], r["logic3"][1], CHOI_TRAP_PCT))
+    print("ENTRY_MODE = {} (tradeable={})".format(r["mode"],
+                                                  r["tradeable_mode"]))
+    print("CHOI_DOM_GATE: gate_on={} bull_ok={} bear_ok={} | "
+          "isPE_DomSupp_once={} (streak={}) fresh_PE={} | "
+          "isCE_DomRes_once={} (streak={}) fresh_CE={}".format(
+              USE_CHOI_DOMINANCE_GATE, r["dom_ok_bull"], r["dom_ok_bear"],
+              dominance.get("isPE_DominantAtSupp_once"),
+              dominance.get("pe_supp_streak"),
+              _fmt(dominance.get("last_fresh_pe"), 1),
+              dominance.get("isCE_DominantAtRes_once"),
+              dominance.get("ce_res_streak"),
+              _fmt(dominance.get("last_fresh_ce"), 1)))
+    print("RISK_GATES: sl_count={}/{} halt={} after_cutoff({:02d}:{:02d} "
+          "IST)={}".format(r["sl_count"], MAX_SL_PER_DAY, r["sl_halt"],
+                           ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE,
+                           r["after_cutoff"]))
+    verdict = ("BULL" if r["bull_enter"] else
+               "BEAR" if r["bear_enter"] else "NONE")
+    print("ENTRY_DECISION = {} (live_eligible={}){}".format(
+        verdict, r["live_eligible"],
+        "  blockers=" + ";".join(r["blockers"]) if r["blockers"] else ""))
+    print()
+
+
 def evaluate_entry(bias, position, pcr, pcr_trend, index_price, snapshot,
                    state):
     """
@@ -1851,6 +2260,17 @@ _PER_CONTRACT_STATE_DEFAULTS = {
     # (one BTC daily contract == one trading "day" for MAX_TRADES_PER_DAY).
     "entry_confirm_count": 0,
     "trades_today": 0,
+    # Sensex-equivalent entry criteria state: fresh-flow dominance streaks at
+    # the S/R strike, the persisted per-cycle flow, and the untrailed-SL counter
+    # driving the 2-SL halt. All are per-session, so they reset at the rollover.
+    "pe_supp_streak": 0,
+    "ce_res_streak": 0,
+    "last_fresh_ce": 0.0,
+    "last_fresh_pe": 0.0,
+    # Sensex `slCount`. Named explicitly to avoid confusion with
+    # ``sl_confirm_count`` (the per-poll SL confirmation TICK counter).
+    "untrailed_sl_count": 0,
+    "sensex_entry": None,
 }
 
 
@@ -2023,6 +2443,14 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "prev_chain_oi": carried.get("prev_chain_oi"),
             "baseline_chain_oi": carried.get("baseline_chain_oi"),
             "baseline_contract": carried.get("baseline_contract"),
+            # Sensex-equivalent entry-criteria state (unchanged while monitoring
+            # — no new snapshot is read on this branch).
+            "pe_supp_streak": carried.get("pe_supp_streak", 0),
+            "ce_res_streak": carried.get("ce_res_streak", 0),
+            "last_fresh_ce": carried.get("last_fresh_ce", 0.0),
+            "last_fresh_pe": carried.get("last_fresh_pe", 0.0),
+            "untrailed_sl_count": carried.get("untrailed_sl_count", 0),
+            "sensex_entry": carried.get("sensex_entry"),
             # Current contract label — MUST be carried so a rollover that happens
             # while a position is being monitored is still detected next cycle.
             "contract_label": carried.get("contract_label"),
@@ -2282,9 +2710,27 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     else:
         baseline_chain_oi = carried.get("baseline_chain_oi") or curr_chain_oi
 
-    log_supp_res_oi(snapshot, sr_strike, sr_line, snapped=sr_fallback,
-                    chain=chain, prev_chain_oi=carried.get("prev_chain_oi"),
-                    baseline_chain_oi=baseline_chain_oi, sr_role=sr_role)
+    sr_oi = log_supp_res_oi(
+        snapshot, sr_strike, sr_line, snapped=sr_fallback,
+        chain=chain, prev_chain_oi=carried.get("prev_chain_oi"),
+        baseline_chain_oi=baseline_chain_oi, sr_role=sr_role)
+
+    # ---- Sensex-equivalent BULL/BEAR entry criteria (observation only) ----
+    # Fresh-flow dominance streaks at the S/R strike (isPE_DominantAtSupp_* /
+    # isCE_DominantAtRes_*), then the full LOGIC1/2/3 entry evaluation. The
+    # directional PCR leg uses the 17-strike INVARIANT-WINDOW flag + streak.
+    sr_dominance = update_sr_dominance_streaks(sr_oi, sr_role, carried)
+    pcr_entry_flags = {
+        "is_inc": is_pcr_inc_inv,
+        "is_dec": is_pcr_dec_inv,
+        "inc_streak": pcr_inc_streak_inv,
+        "dec_streak": pcr_dec_streak_inv,
+    }
+    sensex_entry = evaluate_sensex_entry_criteria(
+        index_price, sr_strike, sr_position, sr_role, sr_oi, sr_dominance,
+        pcr_entry_flags, carried)
+    log_sensex_entry_criteria(sensex_entry, sr_strike, sr_role, sr_oi,
+                              sr_dominance, pcr_entry_flags)
 
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
@@ -2418,6 +2864,16 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         # change-in-OI measure (re-captured automatically on daily rollover).
         "baseline_chain_oi": baseline_chain_oi,
         "baseline_contract": contract_label,
+        # Sensex-equivalent entry-criteria state. The dominance streaks and the
+        # persisted fresh flow were updated in place on ``carried`` by
+        # ``update_sr_dominance_streaks``; ``untrailed_sl_count`` is bumped by
+        # the monitor on an UNTRAILED stop-loss only.
+        "pe_supp_streak": carried.get("pe_supp_streak", 0),
+        "ce_res_streak": carried.get("ce_res_streak", 0),
+        "last_fresh_ce": carried.get("last_fresh_ce", 0.0),
+        "last_fresh_pe": carried.get("last_fresh_pe", 0.0),
+        "untrailed_sl_count": carried.get("untrailed_sl_count", 0),
+        "sensex_entry": sensex_entry,
         # Current contract label, so the next cycle can detect the 12:00 UTC /
         # 17:30 IST rollover and reset all per-contract state.
         "contract_label": carried.get("contract_label", contract_label),
@@ -2970,6 +3426,25 @@ def monitor_open_position(client, state):
                 "tgt_confirm_count": tgt_count, "sl_confirm_count": sl_count,
                 "trail_action": trail_action}
 
+    # Sensex `slCount` rule: only an UNTRAILED stop-loss is a real loss and
+    # counts toward the MAX_SL_PER_DAY halt. A trailed exit sitting at breakeven
+    # is a scratch, not a loss, so it is NOT counted. Counted in observation mode
+    # too, so the halt behaves exactly as it would live and can be studied.
+    if exit_reason == "stop_loss" and not already_breakeven:
+        state["untrailed_sl_count"] = (
+            state.get("untrailed_sl_count", 0) or 0) + 1
+        print("SL_COUNT [{}] untrailed stop-loss -> untrailed_sl_count={}/{}"
+              "{}".format(_now_ist(), state["untrailed_sl_count"],
+                          MAX_SL_PER_DAY,
+                          " — NO further entries this contract session"
+                          if state["untrailed_sl_count"] >= MAX_SL_PER_DAY
+                          else ""))
+    elif exit_reason == "stop_loss" and already_breakeven:
+        print("SL_COUNT [{}] stop at breakeven (trailed) — scratch, not counted."
+              " untrailed_sl_count={}/{}".format(
+                  _now_ist(), state.get("untrailed_sl_count", 0) or 0,
+                  MAX_SL_PER_DAY))
+
     # ----- OBSERVATION mode: log the would-have-exit; place NO orders -----
     if OBSERVATION_MODE:
         print("MONITOR_EXIT [{}] WOULD_HAVE_EXITED reason={} unrealized={} pts "
@@ -3281,6 +3756,20 @@ def startup():
     print("  pre_expiry_lead_min  = {}".format(PRE_EXPIRY_LEAD_MINUTES))
     print("  reference_timezone   = {}".format(REFERENCE_TIMEZONE_NAME))
     print("  OBSERVATION_MODE     = {}".format(OBSERVATION_MODE))
+    print("STARTUP entry criteria (Sensex-equivalent, observation only):")
+    print("  pcr_gate             = 17-strike INVARIANT window, "
+          "streak >= {}".format(PCR_ENTRY_STREAK_MIN))
+    print("  logic1_morning       = CHOI >= {}%  (window 17:30-18:03 IST)"
+          .format(CHOI_MORNING_PCT))
+    print("  logic2_convergence   = CHOI >= {}% AND total OI >= {}%".format(
+        CHOI_CONVERGE_PCT, OI_CONVERGE_PCT))
+    print("  logic3_choi_trap     = CHOI >= {}%  (observation-only={})".format(
+        CHOI_TRAP_PCT, LOGIC3_OBSERVATION_ONLY))
+    print("  choi_dominance_gate  = {}".format(USE_CHOI_DOMINANCE_GATE))
+    print("  entry_cutoff         = {:02d}:{:02d} IST".format(
+        ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE))
+    print("  max_sl_per_session   = {} (untrailed only; trailed = scratch)"
+          .format(MAX_SL_PER_DAY))
 
     # Risk params are [NEEDS INPUT] module constants finalized after the
     # observation period; explicitly log which remain unset (Req 9.27).
