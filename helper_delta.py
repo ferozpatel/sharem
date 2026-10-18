@@ -321,6 +321,16 @@ _ORDER_SIDES = ("buy", "sell")
 # Accepted stop-trigger reference prices for a bracket / trailing stop (Req 5.7).
 _STOP_TRIGGER_METHODS = ("last_traded_price", "mark_price", "spot_price")
 
+# Accepted stop_order_type values for a STANDALONE stop/trigger order (Req 5.7).
+# A protective stop that caps a loss uses ``stop_loss_order``; one that locks a
+# gain uses ``take_profit_order``. Combined with the base order_type this gives:
+#   order_type=market_order + stop_order_type -> "stop_market" behaviour
+#   order_type=limit_order  + stop_order_type -> "stop_limit"  behaviour
+_STOP_ORDER_TYPES = ("stop_loss_order", "take_profit_order")
+
+# time_in_force values accepted on POST /v2/orders (docs enumerated values).
+_TIME_IN_FORCE = ("gtc", "ioc")
+
 
 def _simulated_order_id(symbol, side, size):
     """
@@ -336,7 +346,8 @@ def _simulated_order_id(symbol, side, size):
 
 
 def placeOrder(symbol, side, size, order_type="market_order",
-               limit_price=None, client=None, papertrading=0):
+               limit_price=None, client=None, papertrading=0,
+               reduce_only=False, time_in_force=None):
     """
     Place a market or limit order via POST /v2/orders after product resolution,
     with input validation and paper-trading gating.
@@ -482,6 +493,22 @@ def placeOrder(symbol, side, size, order_type="market_order",
     if order_type_norm == "limit_order":
         # Delta accepts/returns big decimals as strings (Req 5.3).
         body["limit_price"] = str(limit_price_val)
+    # reduce_only (optional): guarantees the order can only CLOSE/REDUCE an
+    # existing position, never open or flip one — the safe default for exits.
+    if reduce_only:
+        body["reduce_only"] = True
+    # time_in_force (optional): gtc (rest) / ioc (immediate-or-cancel). Only
+    # sent when explicitly provided so the Delta default is otherwise used.
+    if time_in_force is not None:
+        tif_norm = str(time_in_force).strip().lower()
+        if tif_norm not in _TIME_IN_FORCE:
+            return {
+                "ok": False,
+                "error": "invalid time_in_force {!r}; expected one of "
+                         "{}".format(time_in_force, _TIME_IN_FORCE),
+                "invalid": "time_in_force",
+            }
+        body["time_in_force"] = tif_norm
 
     # ---- 5 & 6. Submit, handling timeout (5.10) and rejection (5.11) ----
     try:
@@ -744,6 +771,150 @@ def placeBracketOrder(symbol, side, size, stop_loss_price=None,
             "error": "bracket order response carried no result.id",
             "payload": response,
         }
+
+    return {"ok": True, "id": order_id, "simulated": False}
+
+
+def placeStopOrder(symbol, side, size, stop_price,
+                   stop_order_type="stop_loss_order",
+                   order_type="market_order", limit_price=None,
+                   stop_trigger_method="last_traded_price",
+                   reduce_only=True, client=None, papertrading=0):
+    """
+    Place a STANDALONE stop / trigger order via ``POST /v2/orders`` (Req 5.7).
+
+    Unlike ``placeBracketOrder`` (which attaches an SL/TP to a fresh market
+    entry), this is a pending order that rests until its ``stop_price`` trigger
+    is hit, then fires:
+
+      * ``order_type="market_order"`` -> a STOP-MARKET (fills at market on
+        trigger; guaranteed exit, slippage possible);
+      * ``order_type="limit_order"`` + ``limit_price`` -> a STOP-LIMIT (rests a
+        limit on trigger; price-protected but may not fill).
+
+    ``stop_order_type`` is ``stop_loss_order`` (cap a loss) or
+    ``take_profit_order`` (lock a gain). ``stop_trigger_method`` selects the
+    reference price that arms the trigger (last_traded / mark / spot).
+
+    ``reduce_only`` defaults to True because a standalone stop is almost always
+    a protective exit on an existing position — this prevents it from ever
+    opening or flipping a position if the underlying position is already gone.
+
+    Mirrors ``placeOrder``'s contract exactly: validates every input and
+    transmits NOTHING on a bad request; honours ``papertrading`` (logs intent,
+    returns a simulated id, no ``client`` needed); and on a live submit reuses
+    the same timeout (5.10) / rejection (5.11) handling. Returns
+    ``{"ok": bool, ...}`` with ``id`` + ``simulated`` on success or ``error`` +
+    ``invalid``/``payload`` on failure. Never raises.
+    """
+    # ---- 1. Validation (mirror placeOrder; nothing transmitted on reject) --
+    side_norm = str(side).strip().lower() if side is not None else ""
+    if side_norm not in _ORDER_SIDES:
+        return {"ok": False, "invalid": "side",
+                "error": "invalid side {!r}; expected 'buy'/'sell'".format(side)}
+
+    if isinstance(size, bool):
+        return {"ok": False, "invalid": "size",
+                "error": "invalid size {!r}; expected an integer > 0".format(size)}
+    try:
+        size_int = int(size)
+    except (TypeError, ValueError):
+        return {"ok": False, "invalid": "size",
+                "error": "invalid size {!r}; expected an integer > 0".format(size)}
+    if (isinstance(size, float) and not float(size).is_integer()) or size_int <= 0:
+        return {"ok": False, "invalid": "size",
+                "error": "invalid size {!r}; expected a whole number > 0".format(size)}
+
+    order_type_norm = str(order_type).strip().lower() if order_type else ""
+    if order_type_norm not in _ORDER_TYPES:
+        return {"ok": False, "invalid": "order_type",
+                "error": "invalid order_type {!r}; expected 'market_order' or "
+                         "'limit_order'".format(order_type)}
+
+    sot_norm = str(stop_order_type).strip().lower() if stop_order_type else ""
+    if sot_norm not in _STOP_ORDER_TYPES:
+        return {"ok": False, "invalid": "stop_order_type",
+                "error": "invalid stop_order_type {!r}; expected one of "
+                         "{}".format(stop_order_type, _STOP_ORDER_TYPES)}
+
+    method_norm = str(stop_trigger_method).strip().lower() \
+        if stop_trigger_method else ""
+    if method_norm not in _STOP_TRIGGER_METHODS:
+        return {"ok": False, "invalid": "stop_trigger_method",
+                "error": "invalid stop_trigger_method {!r}; expected one of "
+                         "{}".format(stop_trigger_method, _STOP_TRIGGER_METHODS)}
+
+    stop_val = _coerce_price(stop_price)
+    if stop_val is None or stop_val <= 0:
+        return {"ok": False, "invalid": "stop_price",
+                "error": "invalid stop_price {!r}; must be a number > 0".format(
+                    stop_price)}
+
+    limit_val = None
+    if order_type_norm == "limit_order":
+        limit_val = _coerce_price(limit_price)
+        if limit_val is None or limit_val <= 0:
+            return {"ok": False, "invalid": "limit_price",
+                    "error": "invalid limit_price {!r}; required and > 0 for a "
+                             "stop-limit order".format(limit_price)}
+
+    # ---- 2. Paper-trading (mirror Req 5.5) — log intent, transmit nothing --
+    if papertrading:
+        print("PAPER_STOP: symbol={} side={} size={} stop_order_type={} "
+              "stop_price={} order_type={} limit_price={} trigger={} "
+              "reduce_only={}".format(symbol, side_norm, size_int, sot_norm,
+                                      stop_val, order_type_norm, limit_val,
+                                      method_norm, bool(reduce_only)))
+        sim_id = _simulated_order_id(symbol, side_norm, size_int)
+        print("PAPER_STOP: simulated order id -> {}".format(sim_id))
+        return {"ok": True, "id": sim_id, "simulated": True}
+
+    # ---- 3. Product resolution (unknown symbol -> reject, Req 5.4) ---------
+    try:
+        product_id = resolveProductId(symbol, client)
+    except DeltaAPIError as exc:
+        return {"ok": False, "invalid": "symbol",
+                "error": "unrecognized symbol {!r}: {}".format(symbol, exc)}
+
+    # ---- 4. Build the stop body (Req 5.7) ---------------------------------
+    body = {
+        "product_id": product_id,
+        "size": size_int,
+        "side": side_norm,
+        "order_type": order_type_norm,
+        "stop_order_type": sot_norm,
+        "stop_price": str(stop_val),               # decimals as strings (5.3)
+        "stop_trigger_method": method_norm,
+    }
+    if order_type_norm == "limit_order":
+        body["limit_price"] = str(limit_val)
+    if reduce_only:
+        body["reduce_only"] = True
+
+    # ---- 5 & 6. Submit: timeout (5.10) / rejection (5.11) handling ---------
+    try:
+        response = client.request("POST", "/v2/orders", body_obj=body)
+    except requests.exceptions.RequestException as exc:
+        print("STOP_TIMEOUT: symbol={} side={} size={} stop_price={} did not "
+              "receive an accept/reject within the order timeout budget "
+              "(~{}s): {!r}".format(symbol, side_norm, size_int, stop_val,
+                                    ORDER_TIMEOUT_SEC, exc))
+        return {"ok": False, "payload": repr(exc),
+                "error": "stop order submission timed out (~{}s): {}".format(
+                    ORDER_TIMEOUT_SEC, exc)}
+    except DeltaAPIError as exc:
+        reason = exc.payload if exc.payload is not None else str(exc)
+        print("STOP_REJECTED: symbol={} side={} size={} stop_price={} "
+              "reason={!r}".format(symbol, side_norm, size_int, stop_val, reason))
+        return {"ok": False, "error": str(exc), "payload": reason}
+
+    result = response.get("result") if isinstance(response, dict) else None
+    order_id = result.get("id") if isinstance(result, dict) else None
+    if order_id is None:
+        print("STOP_REJECTED: symbol={} side={} size={} response carried no "
+              "result.id: {!r}".format(symbol, side_norm, size_int, response))
+        return {"ok": False, "payload": response,
+                "error": "stop order response carried no result.id"}
 
     return {"ok": True, "id": order_id, "simulated": False}
 
