@@ -3093,22 +3093,23 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
     contract every surviving candle is opening volatility.
     """
     try:
-        df = helper.getHistorical(symbol, "3m", 1, client)
+        # getHistorical returns a list of {time,open,high,low,close,volume}
+        # dicts, ascending by time (oldest first). Never raises.
+        candles = helper.getHistorical(symbol, "3m", 1, client)
     except Exception as exc:  # noqa: BLE001 - history is best-effort
         print("OPT_RANGE_WARN [{}] getHistorical failed for {}: {}: {}".format(
             _now_ist(), symbol, type(exc).__name__, exc))
         return None, 0
-    if df is None or getattr(df, "empty", True):
-        return None, 0
-    try:
-        highs = df["high"].to_numpy()
-        lows = df["low"].to_numpy()
-    except Exception:  # noqa: BLE001 - unexpected frame shape
+    if not candles:
         return None, 0
     # Skip the first candle (opening-volatility outlier), take the last N.
-    ranges = (highs - lows)[1:]
-    ranges = ranges[-n_candles:]
-    ranges = [float(r) for r in ranges if r is not None and float(r) > 0]
+    body = candles[1:] if len(candles) > 1 else candles
+    body = body[-n_candles:]
+    ranges = []
+    for c in body:
+        hi, lo = c.get("high"), c.get("low")
+        if hi is not None and lo is not None and (hi - lo) > 0:
+            ranges.append(float(hi - lo))
     if not ranges:
         return None, 0
     ranges_sorted = sorted(ranges)

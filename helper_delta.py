@@ -175,8 +175,47 @@ def _is_transient_delta_error(exc):
 
 
 def getLTP(instrument):
-    """Poll the local data feed for the current LTP (mirrors helper_fyers.getLTP)."""
-    raise NotImplementedError("Implemented in Task 6/7")
+    """
+    Poll the local data feed for the current LTP (mirrors helper_fyers.getLTP):
+    ``GET {LTP_FEED_URL}?instrument=<symbol>`` on localhost, returning the price
+    as a float.
+
+    The strategy uses ``manualLTP`` (direct Delta ticker) as its primary price
+    path; ``getLTP`` is the optional local-feed fast path, kept API-compatible
+    with the Fyers helper. Raises ``PriceUnavailableError`` when the feed is
+    unreachable or returns no usable price, so a caller can fall back to
+    ``manualLTP``. Never returns a bogus value silently.
+    """
+    url = "{}?instrument={}".format(LTP_FEED_URL, quote(str(instrument)))
+    try:
+        resp = requests.get(url, timeout=(3, 5))
+        resp.raise_for_status()
+        body = resp.json()
+    except requests.exceptions.RequestException as exc:
+        raise PriceUnavailableError(
+            "getLTP: local data feed unreachable for {!r}: {!r}".format(
+                instrument, exc), symbol=instrument)
+    except ValueError as exc:
+        raise PriceUnavailableError(
+            "getLTP: local data feed returned non-JSON for {!r}: {!r}".format(
+                instrument, exc), symbol=instrument)
+
+    # Accept a bare number, {"ltp": x}, or {"price"/"last"/"close": x}.
+    price = None
+    if isinstance(body, (int, float)):
+        price = _coerce_price(body)
+    elif isinstance(body, dict):
+        for key in ("ltp", "price", "last", "last_price", "close"):
+            if key in body:
+                price = _coerce_price(body.get(key))
+                if price is not None:
+                    break
+    if price is None or price <= 0:
+        raise PriceUnavailableError(
+            "getLTP: no usable price for {!r} in feed response {!r}".format(
+                instrument, body), symbol=instrument)
+    time.sleep(QUOTE_THROTTLE_SEC)
+    return price
 
 
 def manualLTP(symbol, client):
@@ -1000,11 +1039,96 @@ def cancelOrder(order_id, product_id, client):
 # ============================================================
 def getHistorical(symbol, interval, duration, client):
     """
-    Retrieve and resample OHLC candles from GET /v2/history/candles, paging
-    across duration and converting timestamps to the Reference_Timezone (UTC).
+    Retrieve OHLC candles from ``GET /v2/history/candles`` for ``symbol`` at
+    ``interval`` resolution over approximately the last ``duration`` days.
     (Task 10.1, Requirements 6.1-6.8)
+
+    ``interval`` is a Delta resolution string (``1m``/``3m``/``5m``/...); Delta
+    serves 3m natively so no resampling is needed. ``start``/``end`` are unix
+    SECONDS; a single response is capped at 2000 candles, which comfortably
+    covers one 24h contract session at 3m (480 candles), so no paging is
+    required for the option-range use case.
+
+    Returns a LIST of ``{"time", "open", "high", "low", "close", "volume"}``
+    dicts (numbers coerced to floats) sorted ASCENDING by candle open time, or
+    ``[]`` when there is no data / the symbol is unknown / the request fails.
+    Best-effort and fully guarded: it never raises, so a thin or missing option
+    candle history degrades the caller gracefully (e.g. the SL/target falls back
+    to a premium fraction) rather than crashing the signal loop.
+
+    The candles endpoint is public (no auth required); passing the signed
+    ``client`` is harmless and keeps one transport path.
     """
-    raise NotImplementedError("Implemented in Task 10.1")
+    res = str(interval).strip().lower() if interval is not None else ""
+    if res not in CANDLE_RESOLUTIONS:
+        print("HISTORICAL_WARN: unsupported resolution {!r} for {!r}; expected "
+              "one of {}. Returning [].".format(interval, symbol,
+                                                CANDLE_RESOLUTIONS))
+        return []
+    if client is None:
+        print("HISTORICAL_WARN: no client supplied to getHistorical for {!r}; "
+              "returning [].".format(symbol))
+        return []
+    try:
+        days = max(1, int(duration))
+    except (TypeError, ValueError):
+        days = 1
+
+    now_s = int(time.time())
+    start_s = now_s - days * 24 * 3600
+    params = {
+        "resolution": res,
+        "symbol": str(symbol),
+        "start": start_s,
+        "end": now_s,
+    }
+
+    response = None
+    attempts = MANUAL_LTP_MAX_RETRIES + 1
+    for attempt in range(attempts):
+        try:
+            response = client.request("GET", "/v2/history/candles",
+                                      params=params)
+            break
+        except requests.exceptions.RequestException as exc:
+            if attempt < attempts - 1:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            print("HISTORICAL_WARN: transport error reading candles for {!r} "
+                  "({}): {!r}; returning [].".format(symbol, res, exc))
+            return []
+        except DeltaAPIError as exc:
+            if _is_transient_delta_error(exc) and attempt < attempts - 1:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            reason = exc.payload if exc.payload is not None else str(exc)
+            print("HISTORICAL_WARN: Delta error reading candles for {!r} ({}): "
+                  "{!r}; returning [].".format(symbol, res, reason))
+            return []
+
+    result = response.get("result") if isinstance(response, dict) else None
+    if not isinstance(result, list):
+        return []
+
+    candles = []
+    for row in result:
+        if not isinstance(row, dict):
+            continue
+        t = row.get("time")
+        try:
+            t = int(t)
+        except (TypeError, ValueError):
+            continue
+        candles.append({
+            "time": t,
+            "open": _coerce_price(row.get("open")),
+            "high": _coerce_price(row.get("high")),
+            "low": _coerce_price(row.get("low")),
+            "close": _coerce_price(row.get("close")),
+            "volume": _coerce_price(row.get("volume")),
+        })
+    candles.sort(key=lambda c: c["time"])   # ascending (oldest first)
+    return candles
 
 
 # ============================================================
