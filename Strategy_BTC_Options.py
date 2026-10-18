@@ -3112,19 +3112,10 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
             ranges.append(float(hi - lo))
     if not ranges:
         return None, 0
+    # Median of ALL available valid ranges — no minimum-candle requirement.
+    # Whatever candles exist for this freshly-listed option (even 1) are used;
+    # the premium-fraction fallback only applies when there is NO candle at all.
     n_used = len(ranges)
-    # THIN-WINDOW GUARD (early in a fresh contract). A BTC daily option is newly
-    # listed at 17:30, so a trade in the first few candles has only 1-3 of its
-    # OWN candles — a median of that is noise (and halving it, as the old Sensex
-    # guard did, is equally meaningless on a 1-candle sample). Below the minimum
-    # we return None so the caller falls back to the premium-fraction SL/target,
-    # which is a far more stable basis until enough candles exist.
-    if n_used < OPT_RANGE_MIN_MEDIAN_CANDLES:
-        print("OPT_RANGE [{}] {} only {} valid candle(s) (< {} needed) -> no "
-              "reliable median; caller uses the premium-fraction fallback."
-              .format(_now_ist(), symbol, n_used,
-                      OPT_RANGE_MIN_MEDIAN_CANDLES))
-        return None, n_used
     ranges_sorted = sorted(ranges)
     mid = n_used // 2
     if n_used % 2:
@@ -3556,10 +3547,22 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
         else:
             unwind_detail = unwind.get("error") if isinstance(unwind, dict) \
                 else unwind
+            # Targeted sell-back failed — fall back to exitAll (flatten
+            # everything) as the last resort so no stray leg lingers, mirroring
+            # the Sensex square-off safety. A long-only orphan is defined-risk,
+            # so even if this also fails there is no naked-short exposure.
             print("LIVE_ENTRY_WARN [{}] could not sell back hedge leg {} after "
-                  "main failure ({}) — a stray LONG {} remains (defined risk); "
-                  "position left not-open (9.17).".format(
-                      _now_ist(), hedge_symbol, unwind_detail, hedge_symbol))
+                  "main failure ({}) — attempting exitAll flatten as last "
+                  "resort.".format(_now_ist(), hedge_symbol, unwind_detail))
+            try:
+                flat = helper.exitAll(client=client)
+                print("LIVE_ENTRY_RECOVER [{}] exitAll after hedge-unwind "
+                      "failure -> {}.".format(_now_ist(), flat))
+            except Exception as exc:  # noqa: BLE001 - last resort, never crash
+                print("LIVE_ENTRY_WARN [{}] exitAll last-resort also failed "
+                      "({}: {}) — a stray LONG {} may remain (defined risk); "
+                      "position left not-open (9.17).".format(
+                          _now_ist(), type(exc).__name__, exc, hedge_symbol))
         return {"ok": False, "opened": False, "error": "main_leg_failed",
                 "detail": main_res, "hedge_leg": hedge_res, "unwind": unwind}
 
