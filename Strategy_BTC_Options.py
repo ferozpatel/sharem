@@ -3112,20 +3112,25 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
             ranges.append(float(hi - lo))
     if not ranges:
         return None, 0
+    n_used = len(ranges)
+    # THIN-WINDOW GUARD (early in a fresh contract). A BTC daily option is newly
+    # listed at 17:30, so a trade in the first few candles has only 1-3 of its
+    # OWN candles — a median of that is noise (and halving it, as the old Sensex
+    # guard did, is equally meaningless on a 1-candle sample). Below the minimum
+    # we return None so the caller falls back to the premium-fraction SL/target,
+    # which is a far more stable basis until enough candles exist.
+    if n_used < OPT_RANGE_MIN_MEDIAN_CANDLES:
+        print("OPT_RANGE [{}] {} only {} valid candle(s) (< {} needed) -> no "
+              "reliable median; caller uses the premium-fraction fallback."
+              .format(_now_ist(), symbol, n_used,
+                      OPT_RANGE_MIN_MEDIAN_CANDLES))
+        return None, n_used
     ranges_sorted = sorted(ranges)
-    mid = len(ranges_sorted) // 2
-    if len(ranges_sorted) % 2:
+    mid = n_used // 2
+    if n_used % 2:
         median = ranges_sorted[mid]
     else:
         median = (ranges_sorted[mid - 1] + ranges_sorted[mid]) / 2.0
-    n_used = len(ranges_sorted)
-    # Low-sample opening-volatility guard (only shaves a thin, implausible window).
-    if n_used < OPT_RANGE_MIN_MEDIAN_CANDLES and median > 0:
-        halved = median * OPT_RANGE_LOW_SAMPLE_FACTOR
-        print("OPT_RANGE [{}] {} thin window ({} candles) median={} -> halved "
-              "to {} (low-sample guard)".format(
-                  _now_ist(), symbol, n_used, _fmt(median, 2), _fmt(halved, 2)))
-        median = halved
     return median, n_used
 
 
@@ -3504,53 +3509,59 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
         return {"ok": False, "opened": False, "error": "symbol_build_failed"}
 
     size = POSITION_SIZE
-    print("LIVE_ENTRY [{}] {} size={} SELL main={} / BUY hedge={} "
+    print("LIVE_ENTRY [{}] {} size={} BUY hedge={} FIRST then SELL main={} "
           "(atm={}, hedge_offset={} strikes={} pts, expiry={}).".format(
-              _now_ist(), spread_kind, size, main_symbol, hedge_symbol,
+              _now_ist(), spread_kind, size, hedge_symbol, main_symbol,
               main_strike, HEDGE_OFFSET_STRIKES, hedge_shift, expiry_ddmmyy))
 
-    # --- Leg 1: SELL the main (credit) leg (Req 9.16). -------------------
-    main_res = helper.placeOrder(
-        main_symbol, "sell", size, order_type="market_order",
-        client=client, papertrading=0)
-    if not (isinstance(main_res, dict) and main_res.get("ok")):
-        detail = main_res.get("error") if isinstance(main_res, dict) \
-            else main_res
-        print("LIVE_ENTRY_FAIL [{}] main SELL leg {} failed: {} — leaving "
-              "position not-open (9.17).".format(
-                  _now_ist(), main_symbol, detail))
-        return {"ok": False, "opened": False, "error": "main_leg_failed",
-                "detail": main_res}
-
-    # --- Leg 2: BUY the OTM protective hedge leg (Req 9.16). -------------
+    # --- Leg 1: BUY the OTM protective hedge leg FIRST (Req 9.16). -------
+    # The long leg is placed before the short deliberately: if the second leg
+    # fails we are left holding a LONG option (defined, tiny risk) rather than a
+    # NAKED SHORT. It also seats the long leg so the exchange can grant the
+    # spread's reduced (defined-risk) margin when the short is then placed, and
+    # avoids a `naked_short_restricted` reject on the short.
     hedge_res = helper.placeOrder(
         hedge_symbol, "buy", size, order_type="market_order",
         client=client, papertrading=0)
     if not (isinstance(hedge_res, dict) and hedge_res.get("ok")):
         detail = hedge_res.get("error") if isinstance(hedge_res, dict) \
             else hedge_res
-        # CRITICAL: main short is on but the protective hedge failed -> naked
-        # short risk. Best-effort unwind of the main leg, then report not-open.
-        print("LIVE_ENTRY_CRITICAL [{}] main SELL {} FILLED but protective "
-              "hedge BUY {} FAILED ({}) — NAKED SHORT RISK; attempting to "
-              "close the main leg.".format(
-                  _now_ist(), main_symbol, hedge_symbol, detail))
+        print("LIVE_ENTRY_FAIL [{}] protective hedge BUY leg {} failed: {} — "
+              "nothing opened, no short placed; position not-open (9.17)."
+              .format(_now_ist(), hedge_symbol, detail))
+        return {"ok": False, "opened": False, "error": "hedge_leg_failed",
+                "detail": hedge_res}
+
+    # --- Leg 2: SELL the main (credit) leg (Req 9.16). ------------------
+    main_res = helper.placeOrder(
+        main_symbol, "sell", size, order_type="market_order",
+        client=client, papertrading=0)
+    if not (isinstance(main_res, dict) and main_res.get("ok")):
+        detail = main_res.get("error") if isinstance(main_res, dict) \
+            else main_res
+        # The protective hedge (long) filled but the main short failed. There is
+        # NO naked-short risk — we only hold a long option. Best-effort sell it
+        # back to flatten so no stray long leg lingers, then report not-open.
+        print("LIVE_ENTRY_WARN [{}] hedge BUY {} FILLED but main SELL {} FAILED "
+              "({}) — no naked-short risk (long only); selling the hedge back "
+              "to flatten.".format(
+                  _now_ist(), hedge_symbol, main_symbol, detail))
         unwind = helper.placeOrder(
-            main_symbol, "buy", size, order_type="market_order",
+            hedge_symbol, "sell", size, order_type="market_order",
             client=client, papertrading=0)
         if isinstance(unwind, dict) and unwind.get("ok"):
-            print("LIVE_ENTRY_RECOVER [{}] main leg {} closed after hedge "
+            print("LIVE_ENTRY_RECOVER [{}] hedge leg {} sold back after main "
                   "failure; position left not-open (9.17).".format(
-                      _now_ist(), main_symbol))
+                      _now_ist(), hedge_symbol))
         else:
             unwind_detail = unwind.get("error") if isinstance(unwind, dict) \
                 else unwind
-            print("LIVE_ENTRY_CRITICAL [{}] FAILED to close main leg {} after "
-                  "hedge failure ({}) — MANUAL INTERVENTION REQUIRED; position "
-                  "left not-open (9.17).".format(
-                      _now_ist(), main_symbol, unwind_detail))
-        return {"ok": False, "opened": False, "error": "hedge_leg_failed",
-                "detail": hedge_res, "main_leg": main_res, "unwind": unwind}
+            print("LIVE_ENTRY_WARN [{}] could not sell back hedge leg {} after "
+                  "main failure ({}) — a stray LONG {} remains (defined risk); "
+                  "position left not-open (9.17).".format(
+                      _now_ist(), hedge_symbol, unwind_detail, hedge_symbol))
+        return {"ok": False, "opened": False, "error": "main_leg_failed",
+                "detail": main_res, "hedge_leg": hedge_res, "unwind": unwind}
 
     # --- Capture the entry credit for monitoring P&L (Req 9.18-9.22). ----
     # The spread's NET CREDIT (premium received per unit) is the P&L baseline
