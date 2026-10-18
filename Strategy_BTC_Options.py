@@ -188,11 +188,25 @@ PCR_ENTRY_STREAK_MIN = 2
 MORNING_WINDOW_START_UTC_MIN = 0    # minutes past 12:00 UTC
 MORNING_WINDOW_END_UTC_MIN = 33
 
-# Latest time a NEW entry may be authorised, in IST (Sensex: dt1.hour <= 15,
-# i.e. nothing after the Indian close). BTC expires 17:30 IST, so no new entries
-# after 16:30 IST = 11:00 UTC — one hour of runway before the rollover.
-ENTRY_CUTOFF_IST_HOUR = 16
-ENTRY_CUTOFF_IST_MINUTE = 30
+# No NEW entry inside the last ``ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY`` minutes
+# before the contract expires (Sensex equivalent: dt1.hour <= 15, i.e. nothing
+# near the close). BTC expires at 12:00 UTC / 17:30 IST, so 60 minutes means
+# entries stop at 16:30 IST and the session keeps a one-hour runway.
+#
+# MUST be measured as MINUTES REMAINING UNTIL EXPIRY, never as a wall-clock
+# comparison: the BTC contract session runs 17:30 IST -> 17:30 IST and therefore
+# SPANS MIDNIGHT. A naive ``ist >= 16:30`` test wrongly flags the whole evening
+# (17:30-23:59, the START of the session, ~23h from expiry) as "past the
+# cutoff" — that bug blocked 130 of 476 cycles on 2026-10-18, including every
+# LOGIC2 signal of the session.
+ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY = 60
+
+# Derived, for log labels only: 16:30 IST when the lead time is 60 min.
+# (expiry 12:00 UTC = 720 min) - 60 lead + 330 (IST offset) = 990 min = 16:30.
+_CUTOFF_IST_MIN = (DAILY_EXPIRY_UTC_HOUR * 60
+                   - ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY + 330) % (24 * 60)
+ENTRY_CUTOFF_IST_HOUR = _CUTOFF_IST_MIN // 60
+ENTRY_CUTOFF_IST_MINUTE = _CUTOFF_IST_MIN % 60
 
 # Daily (per-CONTRACT-session) untrailed-stop-loss halt, Sensex `slCount != 2`.
 # Only an UNTRAILED SL counts; a trailed exit sitting at breakeven is a scratch.
@@ -1750,19 +1764,36 @@ def is_morning_window(now_utc=None):
             < MORNING_WINDOW_END_UTC_MIN)
 
 
-def entry_cutoff_passed(now_utc=None):
+def minutes_to_expiry(now_utc=None):
     """
-    True once NEW entries are no longer authorised for this session — after
-    ``ENTRY_CUTOFF_IST_HOUR:ENTRY_CUTOFF_IST_MINUTE`` IST (default 16:30 IST =
-    11:00 UTC), leaving one hour of runway before the 17:30 IST expiry.
+    Minutes remaining until this contract's 12:00 UTC expiry (1..1440).
 
-    Mirrors the Sensex ``dt1.hour <= 15`` cut-off. Computed in IST (UTC+5:30)
-    for readability; the underlying clock stays UTC.
+    The BTC session runs 12:00 UTC -> 12:00 UTC, so the countdown WRAPS: at
+    11:00 UTC 60 minutes remain, at 12:57 UTC (the evening of a fresh session)
+    1383 minutes remain. Exactly ON the boundary a new session has just begun,
+    so a full 1440 minutes remain rather than 0.
     """
     now = now_utc or datetime.now(REFERENCE_TIMEZONE)
-    ist = now + timedelta(hours=5, minutes=30)
-    cutoff_minutes = ENTRY_CUTOFF_IST_HOUR * 60 + ENTRY_CUTOFF_IST_MINUTE
-    return (ist.hour * 60 + ist.minute) >= cutoff_minutes
+    expiry_min = DAILY_EXPIRY_UTC_HOUR * 60
+    now_min = now.hour * 60 + now.minute
+    remaining = (expiry_min - now_min) % (24 * 60)
+    return remaining or (24 * 60)
+
+
+def entry_cutoff_passed(now_utc=None):
+    """
+    True once NEW entries are no longer authorised — inside the final
+    ``ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY`` minutes before expiry (default 60,
+    i.e. from 16:30 IST up to the 17:30 IST expiry).
+
+    Measured as MINUTES REMAINING, not as a wall-clock comparison, because the
+    session spans midnight. Entries stay authorised while STRICTLY more than the
+    lead time remains, so the 16:30 IST cycle itself is still allowed and 16:33
+    onward is blocked.
+
+    Mirrors the Sensex ``dt1.hour <= 15`` cut-off.
+    """
+    return minutes_to_expiry(now_utc) < ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY
 
 
 def _pct_gap(a, b):
@@ -1928,6 +1959,7 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
     # ----- Shared risk/state gates -----
     sl_count = state.get("untrailed_sl_count", 0) or 0
     sl_halt = sl_count >= MAX_SL_PER_DAY
+    mins_left = minutes_to_expiry(now_utc)
     after_cutoff = entry_cutoff_passed(now_utc)
     position_open = bool(state.get("position_open"))
 
@@ -1948,8 +1980,9 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
     if sl_halt:
         blockers.append("sl_halt({}/{})".format(sl_count, MAX_SL_PER_DAY))
     if after_cutoff:
-        blockers.append("after_entry_cutoff({:02d}:{:02d}_IST)".format(
-            ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE))
+        blockers.append(
+            "after_entry_cutoff({:02d}:{:02d}_IST,{}min_to_expiry)".format(
+                ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE, mins_left))
     if not in_trade_zone:
         blockers.append("no_trade_zone(9.14)")
     if position_open:
@@ -1993,6 +2026,7 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
         "morning_window": morning,
         "sl_count": sl_count,
         "sl_halt": sl_halt,
+        "mins_to_expiry": mins_left,
         "after_cutoff": after_cutoff,
         "blockers": blockers,
     }
@@ -2040,10 +2074,12 @@ def log_sensex_entry_criteria(result, sr_level, sr_role, sr_oi, dominance,
               dominance.get("isCE_DominantAtRes_once"),
               dominance.get("ce_res_streak"),
               _fmt(dominance.get("last_fresh_ce"), 1)))
-    print("RISK_GATES: sl_count={}/{} halt={} after_cutoff({:02d}:{:02d} "
-          "IST)={}".format(r["sl_count"], MAX_SL_PER_DAY, r["sl_halt"],
-                           ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE,
-                           r["after_cutoff"]))
+    print("RISK_GATES: sl_count={}/{} halt={} | mins_to_expiry={} "
+          "cutoff_lead={}min ({:02d}:{:02d} IST) after_cutoff={}".format(
+              r["sl_count"], MAX_SL_PER_DAY, r["sl_halt"],
+              r["mins_to_expiry"], ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY,
+              ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE,
+              r["after_cutoff"]))
     verdict = ("BULL" if r["bull_enter"] else
                "BEAR" if r["bear_enter"] else "NONE")
     print("ENTRY_DECISION = {} (live_eligible={}){}".format(
@@ -3766,8 +3802,10 @@ def startup():
     print("  logic3_choi_trap     = CHOI >= {}%  (observation-only={})".format(
         CHOI_TRAP_PCT, LOGIC3_OBSERVATION_ONLY))
     print("  choi_dominance_gate  = {}".format(USE_CHOI_DOMINANCE_GATE))
-    print("  entry_cutoff         = {:02d}:{:02d} IST".format(
-        ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE))
+    print("  entry_cutoff         = no NEW entry inside the last {} min before "
+          "expiry (entries allowed up to {:02d}:{:02d} IST)".format(
+              ENTRY_CUTOFF_MINUTES_BEFORE_EXPIRY,
+              ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE))
     print("  max_sl_per_session   = {} (untrailed only; trailed = scratch)"
           .format(MAX_SL_PER_DAY))
 
