@@ -214,12 +214,62 @@ ENTRY_CUTOFF_IST_MINUTE = _CUTOFF_IST_MIN % 60
 # per-contract state.
 MAX_SL_PER_DAY = 2
 
-PCR_BULL_THRESHOLD = None   # [NEEDS INPUT]
-PCR_BEAR_THRESHOLD = None   # [NEEDS INPUT]
-STOP_LOSS_POINTS = None     # [NEEDS INPUT]
-TARGET_POINTS = None        # [NEEDS INPUT]
-POSITION_SIZE = None        # [NEEDS INPUT]
-MAX_TRADES_PER_DAY = None   # [NEEDS INPUT]
+# PCR_BULL/BEAR_THRESHOLD are vestigial — the Sensex port gates direction on the
+# 17-strike invariant streak, not a PCR cutoff. Kept as None so the startup
+# banner still reports them; nothing reads them for a decision.
+PCR_BULL_THRESHOLD = None
+PCR_BEAR_THRESHOLD = None
+
+# STOP_LOSS_POINTS / TARGET_POINTS / POSITION_SIZE are now computed PER TRADE
+# (Sensex-style: SL/target from the short-leg candle-range median × multiplier,
+# size from risk-based lots). They stay None as module-level defaults — the live
+# monitor reads the per-trade values off the open_position dict, and the sizing
+# comes from calc_lots_by_risk. MAX_TRADES_PER_DAY is likewise superseded by the
+# session rule (win => stop; loss => re-enter up to MAX_SL_PER_DAY).
+STOP_LOSS_POINTS = None
+TARGET_POINTS = None
+POSITION_SIZE = None
+MAX_TRADES_PER_DAY = None
+
+# ---- Sensex-style risk sizing + SL/target (ported; concrete live values) -----
+# Per the user: risk ~2000 INR (~$20) per trade, SL multiplier 2.5, target 4.0.
+FIXED_RISK_PER_TRADE = 20.0       # USD risked if the SL is hit (net of hedge)
+SL_MULTIPLIER = 2.5               # effective_sl  = median_range * this
+TARGET_MULTIPLIER = 4.0           # effective_tgt = median_range * this
+
+# Delta BTC-option contract spec (from the product catalog): each contract is
+# contract_value BTC, vanilla (quoted/settled in USD). The USD P&L for a move of
+# N premium-points on L contracts is  N * CONTRACT_VALUE * L  — this is the
+# Sensex LOT_SIZE (Rs 20/pt) equivalent. ASSUMPTION pending a live-fill check.
+CONTRACT_VALUE = 0.001            # BTC per contract (Delta spec)
+
+# Lot bounds + rounding (Sensex-equivalent). MIN keeps a trade placeable; MAX is
+# a safety ceiling; the fractional-lot round-up recovers size lost to flooring.
+MIN_LOTS = 1
+MAX_LOTS = 10000
+LOT_ROUNDUP_FRACTION = 0.75
+
+# Hedge-offset ratio bounds: the discount applied to the short-leg SL for the
+# hedge's share of the loss. Clamped so a noisy ratio can't collapse net SL to
+# ~0 and over-size the position (mirrors Sensex HEDGE_OFFSET_RATIO_MIN/MAX).
+HEDGE_OFFSET_RATIO_MIN = 0.10
+HEDGE_OFFSET_RATIO_MAX = 0.75
+
+# Delta-based hedge selection: target hedge |delta| ~= main|delta| * this, on
+# the OTM side, snapped to the 200 strike grid (Sensex uses /2 on a 500 grid).
+HEDGE_TARGET_DELTA_FRACTION = 0.5
+
+# Option candle-range median (drives SL/target). Last N 3-min HIGH-LOW ranges;
+# low-sample guard halves a thin-window median that is implausibly large (early
+# in a fresh contract only). Mirrors Sensex get_option_candle_range.
+OPT_RANGE_CANDLES = 10
+OPT_RANGE_MIN_MEDIAN_CANDLES = 4
+OPT_RANGE_LOW_SAMPLE_FACTOR = 0.5
+
+# Fallback when a freshly-listed option has no usable candle history yet: size
+# SL/target as a fraction of the entry premium instead of the candle median.
+SL_PREMIUM_FALLBACK_FRACTION = 0.40   # effective_sl  = entry_premium * this
+TGT_PREMIUM_FALLBACK_FRACTION = 0.64  # effective_tgt = entry_premium * this (keeps 2.5:4.0)
 
 
 # ============================================================
@@ -2320,6 +2370,10 @@ _PER_CONTRACT_STATE_DEFAULTS = {
     # Sensex `slCount`. Named explicitly to avoid confusion with
     # ``sl_confirm_count`` (the per-poll SL confirmation TICK counter).
     "untrailed_sl_count": 0,
+    # Session trade-count rule: set True when a trade hits TARGET (a win), which
+    # ends the session for new entries (Sensex st=-1). A loss leaves it False so
+    # re-entry is allowed up to MAX_SL_PER_DAY. Resets at the contract rollover.
+    "session_won": False,
     "sensex_entry": None,
 }
 
@@ -2500,6 +2554,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             "last_fresh_ce": carried.get("last_fresh_ce", 0.0),
             "last_fresh_pe": carried.get("last_fresh_pe", 0.0),
             "untrailed_sl_count": carried.get("untrailed_sl_count", 0),
+            "session_won": carried.get("session_won", False),
             "sensex_entry": carried.get("sensex_entry"),
             # Current contract label — MUST be carried so a rollover that happens
             # while a position is being monitored is still detected next cycle.
@@ -2782,6 +2837,43 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     log_sensex_entry_criteria(sensex_entry, sr_strike, sr_role, sr_oi,
                               sr_dominance, pcr_entry_flags)
 
+    # ---- Session trade-count rule + trade plan (Sensex-equivalent) --------
+    # Rule (user): a WINNING trade ends the session; a LOSING trade allows a
+    # re-entry, up to MAX_SL_PER_DAY untrailed stops. So a new entry is allowed
+    # only while no target has been hit this session AND the untrailed-SL count
+    # is below the cap AND no position is already open. Both counters reset at
+    # the contract rollover with the rest of the per-contract state.
+    session_won = bool(carried.get("session_won"))
+    sl_count_now = carried.get("untrailed_sl_count", 0) or 0
+    position_open_now = bool(carried.get("position_open"))
+    session_allows_entry = (not session_won
+                            and sl_count_now < MAX_SL_PER_DAY
+                            and not position_open_now)
+
+    trade_plan = None
+    if sensex_entry.get("bull_enter") or sensex_entry.get("bear_enter"):
+        decision_dir = "BULL" if sensex_entry.get("bull_enter") else "BEAR"
+        if not session_allows_entry:
+            reason = ("session_won(target already hit)" if session_won
+                      else "sl_halt({}/{})".format(sl_count_now, MAX_SL_PER_DAY)
+                      if sl_count_now >= MAX_SL_PER_DAY
+                      else "position_already_open")
+            print("TRADE_PLAN_SKIPPED [{ts}] {dir} signal but session rule "
+                  "blocks a new entry: {why}".format(
+                      ts=_now_ist(), dir=decision_dir, why=reason))
+        elif not sensex_entry.get("live_eligible"):
+            print("TRADE_PLAN_SKIPPED [{ts}] {dir} signal is observation-only "
+                  "(LOGIC3); no plan built.".format(
+                      ts=_now_ist(), dir=decision_dir))
+        else:
+            # Pass the CONFIRMED Sensex direction (not the provisional bias)
+            # so the plan's spread side matches the entry decision exactly.
+            trade_plan = build_trade_plan(
+                decision_dir, sr_position, index_price, snapshot, chain,
+                client, sr_role=sr_role)
+            if trade_plan is not None:
+                log_trade_plan(trade_plan, decision_dir)
+
     # Consecutive same-strike PCR-trend line (Req 9.10).
     print("PCR_TREND [{ts}] direction={dir} consecutive_cycles={streak} "
           "prev_pcr={prev} curr_pcr={curr}".format(
@@ -2923,6 +3015,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "last_fresh_ce": carried.get("last_fresh_ce", 0.0),
         "last_fresh_pe": carried.get("last_fresh_pe", 0.0),
         "untrailed_sl_count": carried.get("untrailed_sl_count", 0),
+        "session_won": carried.get("session_won", False),
         "sensex_entry": sensex_entry,
         # Current contract label, so the next cycle can detect the 12:00 UTC /
         # 17:30 IST rollover and reset all per-contract state.
@@ -2974,6 +3067,330 @@ def checkCriteriaAndTakeTrade(client, state=None):
         prev_pcr=state.get("pcr"),
         prev_pcr_trend=state.get("pcr_trend"),
         state=state)
+
+
+# ============================================================
+# TRADE PLAN: hedge selection + risk sizing + SL/target (Sensex-equivalent)
+# ============================================================
+# These pure functions mirror Strategy_Sensex's select_hedge_by_delta,
+# get_option_candle_range and calc_lots_by_risk, adapted to Delta BTC options
+# (200-point strike grid, per-strike Greeks from the chain, USD risk, 0.001
+# contract value). None of them place orders — build_trade_plan() assembles a
+# complete planned credit spread (both legs, lots, credit, SL/target, net risk)
+# that the observation surface logs and the live hook can later execute verbatim.
+
+
+def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
+    """
+    Median of the option's recent 3-min HIGH-LOW candle ranges (Sensex
+    get_option_candle_range). Drives both sizing and SL/target so the two always
+    agree. Returns ``(median_range, n_used)`` or ``(None, 0)`` when no usable
+    candle history exists yet (freshly-listed strike) — the caller then falls
+    back to a premium-fraction SL/target. Never raises.
+
+    Low-sample guard: a thin window (< OPT_RANGE_MIN_MEDIAN_CANDLES valid
+    candles) that is implausibly large is halved, since early in a fresh
+    contract every surviving candle is opening volatility.
+    """
+    try:
+        df = helper.getHistorical(symbol, "3m", 1, client)
+    except Exception as exc:  # noqa: BLE001 - history is best-effort
+        print("OPT_RANGE_WARN [{}] getHistorical failed for {}: {}: {}".format(
+            _now_ist(), symbol, type(exc).__name__, exc))
+        return None, 0
+    if df is None or getattr(df, "empty", True):
+        return None, 0
+    try:
+        highs = df["high"].to_numpy()
+        lows = df["low"].to_numpy()
+    except Exception:  # noqa: BLE001 - unexpected frame shape
+        return None, 0
+    # Skip the first candle (opening-volatility outlier), take the last N.
+    ranges = (highs - lows)[1:]
+    ranges = ranges[-n_candles:]
+    ranges = [float(r) for r in ranges if r is not None and float(r) > 0]
+    if not ranges:
+        return None, 0
+    ranges_sorted = sorted(ranges)
+    mid = len(ranges_sorted) // 2
+    if len(ranges_sorted) % 2:
+        median = ranges_sorted[mid]
+    else:
+        median = (ranges_sorted[mid - 1] + ranges_sorted[mid]) / 2.0
+    n_used = len(ranges_sorted)
+    # Low-sample opening-volatility guard (only shaves a thin, implausible window).
+    if n_used < OPT_RANGE_MIN_MEDIAN_CANDLES and median > 0:
+        halved = median * OPT_RANGE_LOW_SAMPLE_FACTOR
+        print("OPT_RANGE [{}] {} thin window ({} candles) median={} -> halved "
+              "to {} (low-sample guard)".format(
+                  _now_ist(), symbol, n_used, _fmt(median, 2), _fmt(halved, 2)))
+        median = halved
+    return median, n_used
+
+
+def select_hedge_by_delta(main_strike, option_type, chain,
+                          target_fraction=HEDGE_TARGET_DELTA_FRACTION):
+    """
+    Pick the protective hedge strike whose |delta| is nearest
+    ``|main_delta| * target_fraction`` on the OTM side, then snap to the 200
+    grid (Sensex select_hedge_by_delta, adapted to BTC's grid + chain Greeks).
+
+    ``option_type`` is "C"/"P" (the SAME type as the sold main leg). PE hedge is
+    BELOW the main strike, CE hedge ABOVE (further OTM). Uses the per-strike
+    ``delta`` now captured on every chain row.
+
+    Returns ``(hedge_strike, main_delta, hedge_delta)`` or ``(None, main_delta,
+    None)`` when no OTM strike carries usable greeks (caller then falls back to a
+    fixed strike offset). Never raises.
+    """
+    idx = _index_chain_by_strike(chain) if chain else {}
+    side = "call" if option_type == "C" else "put"
+
+    def _row_delta(strike):
+        pair = idx.get(strike)
+        if not isinstance(pair, dict):
+            return None
+        row = pair.get(side)
+        if isinstance(row, dict):
+            d = row.get("delta")
+            return float(d) if d is not None else None
+        return None
+
+    main_delta = _row_delta(int(main_strike))
+    if main_delta is None or abs(main_delta) <= 0:
+        return None, main_delta, None
+
+    target = abs(main_delta) * float(target_fraction)
+
+    # OTM candidates on the correct side, each with a usable delta.
+    candidates = []
+    for strike, pair in idx.items():
+        if option_type == "P" and strike >= int(main_strike):
+            continue
+        if option_type == "C" and strike <= int(main_strike):
+            continue
+        d = _row_delta(strike)
+        if d is not None and abs(d) > 0:
+            candidates.append((strike, abs(d)))
+    if not candidates:
+        return None, main_delta, None
+
+    # Strike whose |delta| is nearest the target hedge delta; already on grid.
+    hedge_strike, hedge_abs_delta = min(
+        candidates, key=lambda sd: abs(sd[1] - target))
+    return int(hedge_strike), main_delta, hedge_abs_delta
+
+
+def calc_lots_by_risk(effective_sl_points, main_premium=None,
+                      hedge_premium=None, main_delta=None, hedge_delta=None):
+    """
+    Size contracts so an SL-hit loses ~= FIXED_RISK_PER_TRADE USD, NET of the
+    hedge (Sensex calc_lots_by_risk). The hedge offsets part of the short-leg
+    loss; the offset ratio is picked DELTA-first, then premium, then none:
+
+        delta_ratio   = |hedge_delta| / |main_delta|     (preferred)
+        premium_ratio = hedge_premium / main_premium     (fallback)
+        net_sl_points = effective_sl * (1 - clamped_ratio)
+        lots          = FIXED_RISK / (net_sl_points * CONTRACT_VALUE)
+
+    Returns ``(lots, offset_ratio, net_sl_points, ratio_source)``. ``lots`` is a
+    whole contract count clamped to [MIN_LOTS, MAX_LOTS] with the fractional
+    round-up. On an unusable SL it returns ``(MIN_LOTS, None, effective_sl,
+    "none")``. Never raises.
+    """
+    if not effective_sl_points or effective_sl_points <= 0:
+        return MIN_LOTS, None, effective_sl_points, "none"
+
+    delta_ratio = None
+    if (main_delta is not None and hedge_delta is not None
+            and abs(main_delta) > 0 and abs(hedge_delta) > 0):
+        delta_ratio = abs(hedge_delta) / abs(main_delta)
+    premium_ratio = None
+    if (main_premium and hedge_premium and main_premium > 0
+            and 0 < hedge_premium < main_premium):
+        premium_ratio = hedge_premium / main_premium
+
+    if delta_ratio is not None:
+        raw_ratio, source = delta_ratio, "DELTA"
+    elif premium_ratio is not None:
+        raw_ratio, source = premium_ratio, "PREMIUM"
+    else:
+        raw_ratio, source = None, "NONE"
+
+    offset_ratio = None
+    net_sl_points = float(effective_sl_points)
+    if raw_ratio is not None:
+        offset_ratio = max(HEDGE_OFFSET_RATIO_MIN,
+                           min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
+        net_sl_points = effective_sl_points * (1 - offset_ratio)
+
+    if net_sl_points <= 0:
+        return MIN_LOTS, offset_ratio, net_sl_points, source
+
+    loss_per_lot = net_sl_points * CONTRACT_VALUE   # USD per contract at SL
+    if loss_per_lot <= 0:
+        return MIN_LOTS, offset_ratio, net_sl_points, source
+
+    raw_lots = FIXED_RISK_PER_TRADE / loss_per_lot
+    frac = raw_lots - int(raw_lots)
+    lots = int(raw_lots) + 1 if frac >= LOT_ROUNDUP_FRACTION else int(raw_lots)
+    lots = max(MIN_LOTS, min(lots, MAX_LOTS))
+    return lots, offset_ratio, net_sl_points, source
+
+
+def build_trade_plan(bias, position, index_price, snapshot, chain, client,
+                     sr_role=None):
+    """
+    Assemble the complete planned credit spread for a qualifying BULL/BEAR
+    signal — Sensex-equivalent, but places NO order. Returns a plan dict (or
+    ``None`` when a direction can't be resolved) with: direction, both leg
+    symbols/strikes, per-leg entry premium + delta + candle-range median, the
+    effective SL/target premium-points (median × multiplier, or the premium-%
+    fallback), the risk-based lot count + hedge-offset ratio, the estimated net
+    credit, and the modelled max risk/reward in USD.
+
+    Pure/best-effort: any missing datum degrades gracefully and is noted in the
+    plan rather than raising.
+    """
+    # Direction -> sold ATM leg type + which side is OTM for the hedge.
+    if position == "support_side" or bias == "BULL":
+        option_type, spread_kind = "P", "credit_put_spread(bull)"
+    elif position == "resistance_side" or bias == "BEAR":
+        option_type, spread_kind = "C", "credit_call_spread(bear)"
+    else:
+        return None
+
+    atm = snapshot.get("atm_strike") if isinstance(snapshot, dict) else None
+    if atm is None:
+        atm = helper._nearest_atm_strike(index_price, STRIKE_STEP)
+    try:
+        main_strike = int(atm)
+    except (TypeError, ValueError):
+        return None
+
+    expiry = helper.getDailyExpiry()
+
+    def _sym(strike):
+        return helper.buildSymbol(product_type="option",
+                                  underlying=UNDERLYING_ASSET,
+                                  option_type=option_type, strike=int(strike),
+                                  expiry_ddmmyy=expiry)
+
+    notes = []
+
+    # ---- Hedge selection (delta-based, 200-grid) ----
+    hedge_strike, main_delta, hedge_delta = select_hedge_by_delta(
+        main_strike, option_type, chain)
+    if hedge_strike is None:
+        # Fallback: fixed strike offset (HEDGE_OFFSET_STRIKES * grid), OTM side.
+        shift = HEDGE_OFFSET_STRIKES * STRIKE_STEP
+        hedge_strike = (main_strike - shift if option_type == "P"
+                        else main_strike + shift)
+        notes.append("hedge_fallback_fixed_offset({}grid)".format(
+            HEDGE_OFFSET_STRIKES))
+
+    try:
+        main_symbol = _sym(main_strike)
+        hedge_symbol = _sym(hedge_strike)
+    except Exception as exc:  # noqa: BLE001
+        print("TRADE_PLAN_WARN [{}] symbol build failed: {}: {}".format(
+            _now_ist(), type(exc).__name__, exc))
+        return None
+
+    # ---- Per-leg entry premium (LTP) ----
+    def _ltp(sym):
+        try:
+            return helper.manualLTP(sym, client)
+        except Exception:  # noqa: BLE001 - best-effort premium
+            return None
+
+    main_premium = _ltp(main_symbol)
+    hedge_premium = _ltp(hedge_symbol)
+
+    # ---- SL/target basis: short-leg candle-range median × multiplier ----
+    median_range, n_used = option_candle_median_range(main_symbol, client)
+    if median_range and median_range > 0:
+        effective_sl = median_range * SL_MULTIPLIER
+        effective_tgt = median_range * TARGET_MULTIPLIER
+        sl_basis = "candle_median({}c)={}".format(n_used, _fmt(median_range, 2))
+    elif main_premium and main_premium > 0:
+        effective_sl = main_premium * SL_PREMIUM_FALLBACK_FRACTION
+        effective_tgt = main_premium * TGT_PREMIUM_FALLBACK_FRACTION
+        sl_basis = "premium_fallback(prem={})".format(_fmt(main_premium, 2))
+        notes.append("sl_from_premium_fallback(no_candle_history)")
+    else:
+        effective_sl = effective_tgt = None
+        sl_basis = "unavailable(no_candle_history,no_premium)"
+        notes.append("sl_target_unavailable")
+
+    # ---- Risk-based sizing ----
+    if effective_sl:
+        lots, offset_ratio, net_sl_points, ratio_source = calc_lots_by_risk(
+            effective_sl, main_premium=main_premium,
+            hedge_premium=hedge_premium, main_delta=main_delta,
+            hedge_delta=hedge_delta)
+    else:
+        lots, offset_ratio, net_sl_points, ratio_source = (
+            MIN_LOTS, None, None, "none")
+        notes.append("size_defaulted_min_lots(no_sl)")
+
+    # ---- Estimated credit + modelled risk/reward (USD) ----
+    est_credit = None
+    if main_premium is not None and hedge_premium is not None:
+        est_credit = float(main_premium) - float(hedge_premium)
+    # At SL the short-leg loss is net_sl_points; at target it's effective_tgt.
+    max_risk_usd = (net_sl_points * CONTRACT_VALUE * lots
+                    if net_sl_points else None)
+    max_reward_usd = (effective_tgt * CONTRACT_VALUE * lots
+                      if effective_tgt else None)
+
+    return {
+        "spread_kind": spread_kind,
+        "option_type": option_type,
+        "expiry": expiry,
+        "main_symbol": main_symbol, "main_strike": main_strike,
+        "main_premium": main_premium, "main_delta": main_delta,
+        "hedge_symbol": hedge_symbol, "hedge_strike": hedge_strike,
+        "hedge_premium": hedge_premium, "hedge_delta": hedge_delta,
+        "median_range": median_range, "median_candles": n_used,
+        "effective_sl": effective_sl, "effective_tgt": effective_tgt,
+        "sl_basis": sl_basis,
+        "lots": lots, "offset_ratio": offset_ratio,
+        "net_sl_points": net_sl_points, "ratio_source": ratio_source,
+        "est_credit": est_credit,
+        "max_risk_usd": max_risk_usd, "max_reward_usd": max_reward_usd,
+        "notes": notes,
+    }
+
+
+def log_trade_plan(plan, decision_dir):
+    """Log the planned credit spread (observation surface). No order placed."""
+    if not isinstance(plan, dict):
+        return
+    print("TRADE_PLAN [{ts}] {dir} {kind} expiry={exp}".format(
+        ts=_now_ist(), dir=decision_dir, kind=plan["spread_kind"],
+        exp=plan["expiry"]))
+    print("  MAIN  SELL {sym} strike={k} premium={p} delta={d}".format(
+        sym=plan["main_symbol"], k=plan["main_strike"],
+        p=_fmt(plan["main_premium"], 2), d=_fmt(plan["main_delta"], 4)))
+    print("  HEDGE BUY  {sym} strike={k} premium={p} delta={d}".format(
+        sym=plan["hedge_symbol"], k=plan["hedge_strike"],
+        p=_fmt(plan["hedge_premium"], 2), d=_fmt(plan["hedge_delta"], 4)))
+    print("  SL/TGT basis={basis} -> effective_sl={sl} effective_tgt={tg} "
+          "(mult {slm}/{tgm})".format(
+              basis=plan["sl_basis"], sl=_fmt(plan["effective_sl"], 2),
+              tg=_fmt(plan["effective_tgt"], 2),
+              slm=SL_MULTIPLIER, tgm=TARGET_MULTIPLIER))
+    print("  SIZE lots={lots} offset_ratio={r}({src}) net_sl_pts={n} "
+          "(risk budget ${risk})".format(
+              lots=plan["lots"], r=_fmt(plan["offset_ratio"], 3),
+              src=plan["ratio_source"], n=_fmt(plan["net_sl_points"], 2),
+              risk=_fmt(FIXED_RISK_PER_TRADE, 2)))
+    print("  EST credit={c}  modelled max_risk=${mr}  max_reward=${mw}".format(
+        c=_fmt(plan["est_credit"], 2), mr=_fmt(plan["max_risk_usd"], 2),
+        mw=_fmt(plan["max_reward_usd"], 2)))
+    if plan.get("notes"):
+        print("  NOTES: {}".format("; ".join(plan["notes"])))
 
 
 # ============================================================
@@ -3495,6 +3912,15 @@ def monitor_open_position(client, state):
                   _now_ist(), state.get("untrailed_sl_count", 0) or 0,
                   MAX_SL_PER_DAY))
 
+    # Session trade-count rule: a TARGET hit (a win) ends the session for new
+    # entries (Sensex st=-1). A loss leaves session_won False so a re-entry is
+    # allowed up to MAX_SL_PER_DAY. Resets at the contract rollover.
+    if exit_reason == "target":
+        state["session_won"] = True
+        print("SESSION_WIN [{}] target hit — no further entries this contract "
+              "session (a loss would have allowed re-entry up to {} SLs)."
+              .format(_now_ist(), MAX_SL_PER_DAY))
+
     # ----- OBSERVATION mode: log the would-have-exit; place NO orders -----
     if OBSERVATION_MODE:
         print("MONITOR_EXIT [{}] WOULD_HAVE_EXITED reason={} unrealized={} pts "
@@ -3822,6 +4248,19 @@ def startup():
               ENTRY_CUTOFF_IST_HOUR, ENTRY_CUTOFF_IST_MINUTE))
     print("  max_sl_per_session   = {} (untrailed only; trailed = scratch)"
           .format(MAX_SL_PER_DAY))
+    print("  session_rule         = win ends session; loss re-enters up to the "
+          "SL cap")
+    print("STARTUP sizing + SL/target (Sensex-equivalent, per-trade):")
+    print("  fixed_risk_per_trade = ${} (~2000 INR)".format(
+        _fmt(FIXED_RISK_PER_TRADE, 2)))
+    print("  sl_multiplier        = {}  target_multiplier = {}".format(
+        SL_MULTIPLIER, TARGET_MULTIPLIER))
+    print("  contract_value       = {} BTC/contract (P&L multiplier)".format(
+        CONTRACT_VALUE))
+    print("  hedge                = delta-based (target |delta|*{}), snap {} "
+          "grid".format(HEDGE_TARGET_DELTA_FRACTION, STRIKE_STEP))
+    print("  lots                 = risk-based [{}..{}], offset ratio "
+          "DELTA->PREMIUM->none".format(MIN_LOTS, MAX_LOTS))
 
     # Risk params are [NEEDS INPUT] module constants finalized after the
     # observation period; explicitly log which remain unset (Req 9.27).
