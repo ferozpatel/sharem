@@ -1434,6 +1434,20 @@ def log_supp_res_oi(snapshot, sr_strike, sr_line_orig, snapped=False,
         strike_label,
         _fmt_oi_abs(ce_oi, ce_oi_usd), _fmt_oi_abs(pe_oi, pe_oi_usd),
         _compare_ce_pe(ce_oi, pe_oi)))
+    # 2b) Per-strike GREEKS + IV at the S/R strike (observation-only). These
+    #     feed the future delta-based hedge-offset / lot sizing (Sensex
+    #     calc_lots_by_risk DELTA path); logged now to validate Delta's Greeks
+    #     look sane before anything depends on them. |CE_delta|/|PE_delta| hints
+    #     the hedge-offset ratio for a same-side spread.
+    print("SR_GREEKS (strike {}): CE[delta={} gamma={} theta={} vega={} "
+          "iv={}] | PE[delta={} gamma={} theta={} vega={} iv={}]".format(
+              sr_key,
+              _fmt(call_row.get("delta"), 4), _fmt(call_row.get("gamma"), 6),
+              _fmt(call_row.get("theta"), 2), _fmt(call_row.get("vega"), 2),
+              _fmt(call_row.get("mark_iv"), 2),
+              _fmt(put_row.get("delta"), 4), _fmt(put_row.get("gamma"), 6),
+              _fmt(put_row.get("theta"), 2), _fmt(put_row.get("vega"), 2),
+              _fmt(put_row.get("mark_iv"), 2)))
     # 3) FRESH per-cycle flow + dominance verdict (Sensex line 3 INCR_CHOI).
     if fresh_known:
         dom = ("CE" if ce_fresh > pe_fresh

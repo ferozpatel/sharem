@@ -1673,17 +1673,62 @@ def _extract_oi_value_usd(row):
     return None
 
 
+# Per-strike option Greeks + IV. Delta's option-chain ticker rows carry a nested
+# ``greeks`` object (delta/gamma/theta/vega/rho) and IV in ``quotes``
+# (bid_iv/ask_iv) plus a row-level ``mark_vol``/``mark_iv`` — all as STRINGS.
+# These are captured so risk sizing (delta-based hedge-offset ratio, mirroring
+# the Sensex calc_lots_by_risk DELTA path) and diagnostics have them; they do
+# NOT affect any PCR/OI signal math. Every field is best-effort: a missing or
+# unparseable Greek yields ``None`` and never raises.
+_GREEK_KEYS = ("delta", "gamma", "theta", "vega", "rho")
+
+
+def _extract_greeks(row):
+    """
+    Pull the per-strike option Greeks + IV from a raw Delta ticker row.
+
+    Returns ``{"delta", "gamma", "theta", "vega", "rho", "bid_iv", "ask_iv",
+    "mark_iv"}`` with each value coerced to a float (or ``None`` when absent /
+    unparseable). The Greeks come from the nested ``greeks`` object; bid/ask IV
+    from ``quotes``; mark IV from ``mark_iv`` or ``mark_vol`` at row level.
+    Options-only — futures/spot rows have no ``greeks`` and yield all ``None``.
+    """
+    out = {k: None for k in _GREEK_KEYS}
+    out.update({"bid_iv": None, "ask_iv": None, "mark_iv": None})
+    if not isinstance(row, dict):
+        return out
+
+    greeks = row.get("greeks")
+    if isinstance(greeks, dict):
+        for key in _GREEK_KEYS:
+            out[key] = _coerce_price(greeks.get(key))
+
+    quotes = row.get("quotes")
+    if isinstance(quotes, dict):
+        out["bid_iv"] = _coerce_price(quotes.get("bid_iv"))
+        out["ask_iv"] = _coerce_price(quotes.get("ask_iv"))
+
+    # mark IV: prefer an explicit `mark_iv`, else Delta's `mark_vol` row field.
+    out["mark_iv"] = _coerce_price(row.get("mark_iv"))
+    if out["mark_iv"] is None:
+        out["mark_iv"] = _coerce_price(row.get("mark_vol"))
+    return out
+
+
 def _normalize_chain_row(row):
     """
     Normalize one raw Delta ticker row into a clean option-chain dict.
 
-    Returns ``{"symbol", "contract_type", "strike", "oi", "best_bid",
-    "best_ask", "price", "oi_change_6h"}`` where `strike` and `oi` are coerced
+    Returns ``{"symbol", "contract_type", "strike", "oi", "oi_usd", "best_bid",
+    "best_ask", "price", "oi_change_6h", "delta", "gamma", "theta", "vega",
+    "rho", "bid_iv", "ask_iv", "mark_iv"}`` where `strike` and `oi` are coerced
     to numbers (absolute open interest; `oi` defaults to ``0.0`` when absent so
     downstream PCR/OI-delta sums never crash), `best_bid`/`best_ask` come from
     `quotes`, `price` prefers the last traded price (`close`/`last`) and falls
-    back to `mark_price`, and `oi_change_6h` is the log-only exchange 6-hour
-    OI-change field (Req 9.9). Returns ``None`` for a row with no usable strike.
+    back to `mark_price`, `oi_change_6h` is the log-only exchange 6-hour
+    OI-change field (Req 9.9), and the Greeks + IV come from ``_extract_greeks``
+    (options-only; ``None`` on futures/spot or when absent). Returns ``None``
+    for a row with no usable strike.
     """
     if not isinstance(row, dict):
         return None
@@ -1708,7 +1753,7 @@ def _normalize_chain_row(row):
 
     oi = _coerce_price(row.get("oi"))
 
-    return {
+    normalized = {
         "symbol": row.get("symbol"),
         "contract_type": row.get("contract_type"),
         "strike": strike,
@@ -1719,6 +1764,9 @@ def _normalize_chain_row(row):
         "price": price,
         "oi_change_6h": _extract_oi_change_6h(row),
     }
+    # Per-strike Greeks + IV (options-only; None on futures/spot or when absent).
+    normalized.update(_extract_greeks(row))
+    return normalized
 
 
 def _nearest_atm_strike(price, step=STRIKE_STEP):
@@ -1768,10 +1816,12 @@ def fetchOptionChain(underlying, expiry_ddmmyyyy, client):
     from ``params``.
 
     Returns the list of ticker rows normalized to
-    ``{"symbol", "contract_type", "strike", "oi", "best_bid", "best_ask",
-    "price", "oi_change_6h"}`` (see ``_normalize_chain_row``); the log-only
-    exchange 6-hour OI-change field is retained under ``oi_change_6h`` (Req 9.9)
-    and must never feed signal logic.
+    ``{"symbol", "contract_type", "strike", "oi", "oi_usd", "best_bid",
+    "best_ask", "price", "oi_change_6h", "delta", "gamma", "theta", "vega",
+    "rho", "bid_iv", "ask_iv", "mark_iv"}`` (see ``_normalize_chain_row``); the
+    log-only exchange 6-hour OI-change field is retained under ``oi_change_6h``
+    (Req 9.9) and must never feed signal logic, and the Greeks + IV are captured
+    for risk sizing / diagnostics only.
 
     Mirrors ``manualLTP``'s transient-retry behavior: a ``requests`` transport
     error or a retryable ``DeltaAPIError`` (429/5xx/network) is retried up to
