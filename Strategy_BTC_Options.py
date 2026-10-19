@@ -3761,15 +3761,30 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
             MIN_LOTS, None, None, "none")
         notes.append("size_defaulted_min_lots(no_sl)")
 
+    # ---- Monitor (NET spread) SL/target points --------------------------
+    # CRITICAL: the monitor measures the NET spread P&L (entry_credit - spread
+    # cost), which ALREADY includes the hedge offset. Lots were sized on the NET
+    # stop (net_sl_points = effective_sl * (1 - offset_ratio)), so the monitor
+    # MUST enforce the NET points too — otherwise it stops at the GROSS
+    # effective_sl and realized risk is ~1/(1-offset) too big. (First live trade
+    # sized for $10 lost ~$29 because the monitor used the gross SL.) The target
+    # scales by the same (1 - offset_ratio) so R:R is preserved.
+    monitor_sl_points = net_sl_points if net_sl_points else effective_sl
+    if effective_tgt is not None and offset_ratio is not None:
+        monitor_tgt_points = effective_tgt * (1 - offset_ratio)
+    else:
+        monitor_tgt_points = effective_tgt
+
     # ---- Estimated credit + modelled risk/reward (USD) ----
     est_credit = None
     if main_premium is not None and hedge_premium is not None:
         est_credit = float(main_premium) - float(hedge_premium)
-    # At SL the short-leg loss is net_sl_points; at target it's effective_tgt.
-    max_risk_usd = (net_sl_points * CONTRACT_VALUE * lots
-                    if net_sl_points else None)
-    max_reward_usd = (effective_tgt * CONTRACT_VALUE * lots
-                      if effective_tgt else None)
+    # Risk/reward are on the NET monitor points the position is actually managed
+    # on, so they match the realized P&L.
+    max_risk_usd = (monitor_sl_points * CONTRACT_VALUE * lots
+                    if monitor_sl_points else None)
+    max_reward_usd = (monitor_tgt_points * CONTRACT_VALUE * lots
+                      if monitor_tgt_points else None)
 
     # ---- Estimated portfolio (defined-risk) margin vs available balance ----
     # Observation-only: shows whether the planned spread fits available margin.
@@ -3823,6 +3838,8 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         "hedge_oi": hedge_oi,
         "median_range": median_range, "median_candles": n_used,
         "effective_sl": effective_sl, "effective_tgt": effective_tgt,
+        "monitor_sl_points": monitor_sl_points,
+        "monitor_tgt_points": monitor_tgt_points,
         "sl_basis": sl_basis,
         "lots": lots, "offset_ratio": offset_ratio,
         "net_sl_points": net_sl_points, "ratio_source": ratio_source,
@@ -3851,11 +3868,14 @@ def log_trade_plan(plan, decision_dir):
         sym=plan["hedge_symbol"], k=plan["hedge_strike"],
         p=_fmt(plan["hedge_premium"], 2), d=_fmt(plan["hedge_delta"], 4),
         oi=_fmt(plan.get("hedge_oi"), 0)))
-    print("  SL/TGT basis={basis} -> effective_sl={sl} effective_tgt={tg} "
-          "(mult {slm}/{tgm})".format(
+    print("  SL/TGT basis={basis} -> gross_sl={sl} gross_tgt={tg} "
+          "(mult {slm}/{tgm}); MONITOR net_sl={nsl} net_tgt={ntg} "
+          "(hedge-adjusted, what the position is managed on)".format(
               basis=plan["sl_basis"], sl=_fmt(plan["effective_sl"], 2),
               tg=_fmt(plan["effective_tgt"], 2),
-              slm=SL_MULTIPLIER, tgm=TARGET_MULTIPLIER))
+              slm=SL_MULTIPLIER, tgm=TARGET_MULTIPLIER,
+              nsl=_fmt(plan.get("monitor_sl_points"), 2),
+              ntg=_fmt(plan.get("monitor_tgt_points"), 2)))
     print("  SIZE lots={lots} offset_ratio={r}({src}) net_sl_pts={n} "
           "(risk budget ${risk})".format(
               lots=plan["lots"], r=_fmt(plan["offset_ratio"], 3),
@@ -3963,8 +3983,14 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
         main_strike = plan.get("main_strike")
         hedge_strike = plan.get("hedge_strike")
         size = plan.get("lots")
-        effective_sl = plan.get("effective_sl")
-        effective_tgt = plan.get("effective_tgt")
+        # Use the NET monitor SL/target (hedge-adjusted) the lots were sized on,
+        # NOT the gross effective_* — the monitor measures net spread P&L.
+        effective_sl = plan.get("monitor_sl_points")
+        if effective_sl is None:
+            effective_sl = plan.get("effective_sl")
+        effective_tgt = plan.get("monitor_tgt_points")
+        if effective_tgt is None:
+            effective_tgt = plan.get("effective_tgt")
         expiry_ddmmyy = plan.get("expiry") or helper.getDailyExpiry()
         if not (main_symbol and hedge_symbol and option_type):
             print("LIVE_ENTRY_FAIL [{}] trade plan missing leg symbols/type; "
