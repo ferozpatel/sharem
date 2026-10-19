@@ -188,8 +188,14 @@ USE_CHOI_DOMINANCE_GATE = True
 # The directional PCR gate uses the 17-strike INVARIANT-WINDOW track (every
 # value re-measured on the CURRENT strike set, so an ATM shift cannot distort
 # the comparison) and requires the rising/falling run to have held for at least
-# this many consecutive cycles.
-PCR_ENTRY_STREAK_MIN = 2
+# this many consecutive cycles. Set to 1: the 17-strike window is already a
+# 3-value monotonic run, so one confirmed streak is enough — but it must ALSO
+# clear the _MinMove magnitude filter (PCR_ENTRY_REQUIRE_MINMOVE) so a flat
+# 4th-decimal drift across the window does not qualify as a directional signal.
+PCR_ENTRY_STREAK_MIN = 1
+# Require the 17-strike invariant run to be a MEANINGFUL move (every step over
+# PCR_MIN_STEP_PCT), not 4th-decimal drift, for the directional PCR gate to pass.
+PCR_ENTRY_REQUIRE_MINMOVE = True
 
 # "Morning window" equivalent (Sensex: 9:15-9:48 IST, the first ~11 candles after
 # the open, when change-in-OI is still noisy/near-zero). For BTC the contract
@@ -1190,33 +1196,38 @@ def log_invariant_pcr_trend(label, series, prev_inc_streak, prev_dec_streak,
     streak count. Needs ``window`` comparable values; no ATM-shift reset applies
     because every value is already on the current strike set.
 
-    Returns ``(inc, dec, inc_streak, dec_streak)``.
+    Returns ``(inc, dec, inc_streak, dec_streak, inc_minmove, dec_minmove)``
+    where the ``*_minmove`` booleans report whether EVERY step of the detected
+    run clears ``PCR_MIN_STEP_PCT`` (a meaningful move, not 4th-decimal drift).
     """
     if len(series) < window:
-        return False, False, 0, 0
+        return False, False, 0, 0, False, False
     s = series[-window:]
     seq = " -> ".join(_fmt(x, 4) for x in s)
     inc = all(s[i] < s[i + 1] for i in range(len(s) - 1))
     dec = all(s[i] > s[i + 1] for i in range(len(s) - 1))
     inc_streak = _update_flag_streak(inc, prev_inc_streak)
     dec_streak = _update_flag_streak(dec, prev_dec_streak)
+    inc_minmove = dec_minmove = False
 
     if inc:
         print("{}_SEQ_INC_InvariantWindow: {} | {}".format(
             label, seq, _fmt_steps(s)))
         print("is{}PcrInc_InvariantWindow = True  (streak={} consecutive "
               "cycle(s) rising)".format(label, inc_streak))
-        _log_min_move("is{}PcrInc_InvariantWindow".format(label), s)
+        inc_minmove = _log_min_move(
+            "is{}PcrInc_InvariantWindow".format(label), s)
     elif dec:
         print("{}_SEQ_DEC_InvariantWindow: {} | {}".format(
             label, seq, _fmt_steps(s)))
         print("is{}PcrDecr_InvariantWindow = True  (streak={} consecutive "
               "cycle(s) falling)".format(label, dec_streak))
-        _log_min_move("is{}PcrDecr_InvariantWindow".format(label), s)
+        dec_minmove = _log_min_move(
+            "is{}PcrDecr_InvariantWindow".format(label), s)
     else:
         print("{}_SEQ_FLAT_InvariantWindow: {} (not monotonic)".format(
             label, seq))
-    return inc, dec, inc_streak, dec_streak
+    return inc, dec, inc_streak, dec_streak, inc_minmove, dec_minmove
 
 
 def _update_flag_streak(flag_true, prev_streak):
@@ -2007,10 +2018,15 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
     # ----- Mandatory direction legs (price vs S/R + PCR trend) -----
     # The no-trade guard MUST come first so a dead-band cycle blocks both sides.
     in_trade_zone = (position != "no_trade_zone") and (sr_level is not None)
+    # Directional 17-PCR gate: a monotonic run of >= PCR_ENTRY_STREAK_MIN cycles
+    # that is ALSO a meaningful move (every step over PCR_MIN_STEP_PCT) when
+    # PCR_ENTRY_REQUIRE_MINMOVE is on — filters 4th-decimal drift.
     pcr_inc_ok = bool(pcr_flags.get("is_inc")) and \
-        (pcr_flags.get("inc_streak") or 0) >= PCR_ENTRY_STREAK_MIN
+        (pcr_flags.get("inc_streak") or 0) >= PCR_ENTRY_STREAK_MIN and \
+        (bool(pcr_flags.get("inc_minmove")) or not PCR_ENTRY_REQUIRE_MINMOVE)
     pcr_dec_ok = bool(pcr_flags.get("is_dec")) and \
-        (pcr_flags.get("dec_streak") or 0) >= PCR_ENTRY_STREAK_MIN
+        (pcr_flags.get("dec_streak") or 0) >= PCR_ENTRY_STREAK_MIN and \
+        (bool(pcr_flags.get("dec_minmove")) or not PCR_ENTRY_REQUIRE_MINMOVE)
 
     above_level = in_trade_zone and index_price is not None and \
         float(index_price) > float(sr_level)
@@ -2099,7 +2115,7 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
         blockers.append("position_already_open(9.16)")
     if not (bull_enter or bear_enter):
         if not (pcr_inc_ok or pcr_dec_ok):
-            blockers.append("pcr17_invariant_streak<{}".format(
+            blockers.append("pcr17_invariant_run(streak>={}+minmove)".format(
                 PCR_ENTRY_STREAK_MIN))
         elif not choi_valid:
             blockers.append("choi_not_building(CE>0 and PE>0 required)")
@@ -2148,11 +2164,15 @@ def log_sensex_entry_criteria(result, sr_level, sr_role, sr_oi, dominance,
     r = result
     print()
     print("==== ENTRY CRITERIA (Sensex-equivalent) {} ====".format(_now_ist()))
-    print("PCR17_INVARIANT gate: inc={} (streak={}) dec={} (streak={}) "
-          "min_streak={} -> bull_pcr_ok={} bear_pcr_ok={}".format(
+    print("PCR17_INVARIANT gate: inc={} (streak={} minmove={}) dec={} "
+          "(streak={} minmove={}) min_streak={} require_minmove={} -> "
+          "bull_pcr_ok={} bear_pcr_ok={}".format(
               bool(pcr_flags.get("is_inc")), pcr_flags.get("inc_streak") or 0,
+              bool(pcr_flags.get("inc_minmove")),
               bool(pcr_flags.get("is_dec")), pcr_flags.get("dec_streak") or 0,
-              PCR_ENTRY_STREAK_MIN, r["pcr_inc_ok"], r["pcr_dec_ok"]))
+              bool(pcr_flags.get("dec_minmove")),
+              PCR_ENTRY_STREAK_MIN, PCR_ENTRY_REQUIRE_MINMOVE,
+              r["pcr_inc_ok"], r["pcr_dec_ok"]))
     print("MANDATORY: in_trade_zone={} spot_vs_SR: above={} below={} "
           "(SUPP_RES={} role={}) -> bull_mandatory={} bear_mandatory={}".format(
               r["in_trade_zone"], r["above_level"], r["below_level"],
@@ -2786,11 +2806,13 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
               "current strikes)".format([round(x, 4) for x in series_17]))
 
     (is_pcr9_inc_inv, is_pcr9_dec_inv,
-     pcr9_inc_streak_inv, pcr9_dec_streak_inv) = log_invariant_pcr_trend(
+     pcr9_inc_streak_inv, pcr9_dec_streak_inv,
+     _pcr9_inc_minmove_inv, _pcr9_dec_minmove_inv) = log_invariant_pcr_trend(
          "9", series_9,
          carried.get("pcr9_inc_streak_inv"), carried.get("pcr9_dec_streak_inv"))
     (is_pcr_inc_inv, is_pcr_dec_inv,
-     pcr_inc_streak_inv, pcr_dec_streak_inv) = log_invariant_pcr_trend(
+     pcr_inc_streak_inv, pcr_dec_streak_inv,
+     pcr_inc_minmove_inv, pcr_dec_minmove_inv) = log_invariant_pcr_trend(
          "17", series_17,
          carried.get("pcr_inc_streak_inv"), carried.get("pcr_dec_streak_inv"))
 
@@ -2876,6 +2898,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         "is_dec": is_pcr_dec_inv,
         "inc_streak": pcr_inc_streak_inv,
         "dec_streak": pcr_dec_streak_inv,
+        "inc_minmove": pcr_inc_minmove_inv,
+        "dec_minmove": pcr_dec_minmove_inv,
     }
     sensex_entry = evaluate_sensex_entry_criteria(
         index_price, sr_strike, sr_position, sr_role, sr_oi, sr_dominance,
@@ -4855,8 +4879,9 @@ def startup():
     print("  reference_timezone   = {}".format(REFERENCE_TIMEZONE_NAME))
     print("  OBSERVATION_MODE     = {}".format(OBSERVATION_MODE))
     print("STARTUP entry criteria (Sensex-equivalent, observation only):")
-    print("  pcr_gate             = 17-strike INVARIANT window, "
-          "streak >= {}".format(PCR_ENTRY_STREAK_MIN))
+    print("  pcr_gate             = 17-strike INVARIANT window, streak >= {} "
+          "+ minmove(every step > {}%)={}".format(
+              PCR_ENTRY_STREAK_MIN, PCR_MIN_STEP_PCT, PCR_ENTRY_REQUIRE_MINMOVE))
     print("  logic1_morning       = CHOI >= {}%  (window 17:30-18:03 IST)"
           .format(CHOI_MORNING_PCT))
     print("  logic2_convergence   = CHOI >= {}% AND total OI >= {}%".format(
