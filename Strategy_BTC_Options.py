@@ -237,11 +237,12 @@ FIXED_RISK_PER_TRADE = 20.0       # USD risked if the SL is hit (net of hedge)
 SL_MULTIPLIER = 2.5               # effective_sl  = median_range * this
 TARGET_MULTIPLIER = 4.0           # effective_tgt = median_range * this
 
-# Delta BTC-option contract spec (from the product catalog): each contract is
-# contract_value BTC, vanilla (quoted/settled in USD). The USD P&L for a move of
-# N premium-points on L contracts is  N * CONTRACT_VALUE * L  — this is the
-# Sensex LOT_SIZE (Rs 20/pt) equivalent. ASSUMPTION pending a live-fill check.
-CONTRACT_VALUE = 0.001            # BTC per contract (Delta spec)
+# Delta BTC-option contract spec (from the product catalog AND confirmed against
+# the Delta UI: 1 lot = 0.001 BTC): each contract is contract_value BTC, vanilla
+# (quoted/settled in USD). The USD P&L for a move of N premium-points on L
+# contracts is  N * CONTRACT_VALUE * L  (Delta notional = price * contract_value
+# * size) — this is the Sensex LOT_SIZE (Rs 20/pt) equivalent.
+CONTRACT_VALUE = 0.001            # BTC per contract (Delta spec, UI-confirmed)
 
 # Lot bounds + rounding (Sensex-equivalent). MIN keeps a trade placeable; MAX is
 # a safety ceiling; the fractional-lot round-up recovers size lost to flooring.
@@ -3802,8 +3803,10 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
 #     current_spread_cost = main_ltp - hedge_ltp
 # Unrealized profit, expressed in option-PREMIUM POINTS per unit, is therefore:
 #     unrealized_points = entry_credit - current_spread_cost
-# and the currency P&L is that scaled by the contract size:
-#     unrealized_pnl    = unrealized_points * size
+# and the USD P&L scales the points by the lot count AND the contract value
+# (Delta: notional = price * contract_value * size, so a 1-point premium move on
+# 1 lot = CONTRACT_VALUE USD):
+#     unrealized_pnl    = unrealized_points * size * CONTRACT_VALUE
 # TARGET_POINTS and STOP_LOSS_POINTS are read as PREMIUM POINTS per unit (the
 # same units as unrealized_points), so:
 #     target hit  <=>  unrealized_points >= TARGET_POINTS      (profit target)
@@ -3981,7 +3984,10 @@ def monitor_open_position(client, state):
                   _now_ist(), _fmt(entry_credit)))
 
     unrealized_points = float(entry_credit) - current_spread_cost
-    unrealized_pnl = (unrealized_points * size) if size is not None else None
+    # USD P&L = points * lots * contract_value (Delta notional multiplier), so
+    # it matches the risk-based sizing in calc_lots_by_risk / build_trade_plan.
+    unrealized_pnl = (unrealized_points * size * CONTRACT_VALUE
+                      if size is not None else None)
 
     # 3. Trailing to breakeven (9.22) — needs a configured target.
     trail_action = "none"
