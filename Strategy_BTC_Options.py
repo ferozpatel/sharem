@@ -24,9 +24,10 @@ from delta_client import CredentialLoadError, require_delta
 # ============================================================
 # MODULE-LEVEL CONFIGURATION CONSTANTS (parallel to the Sensex constants)
 # ============================================================
-# Default to observation mode: log signals and WOULD_HAVE_ENTERED decisions,
-# place no live orders, until the operator validates the logs (Req 9.3).
-OBSERVATION_MODE = True
+# LIVE MODE: when False the strategy PLACES REAL ORDERS once a confirmed Sensex
+# signal builds a trade plan (Req 9.3/9.4). Set True to return to observation
+# (log-only, no orders). Operator flipped this False to go live.
+OBSERVATION_MODE = False
 
 # Index-price anchor for the S/R band, no-trade zone, and bias (Req 9.11);
 # the perpetual price is logged only (Req 9.12).
@@ -249,8 +250,9 @@ POSITION_SIZE = None
 MAX_TRADES_PER_DAY = None
 
 # ---- Sensex-style risk sizing + SL/target (ported; concrete live values) -----
-# Per the user: risk ~2000 INR (~$20) per trade, SL multiplier 2.5, target 4.0.
-FIXED_RISK_PER_TRADE = 20.0       # USD risked if the SL is hit (net of hedge)
+# Per the user: start live small at $10 net risk/trade for a few days, then
+# scale up. SL multiplier 2.5, target 4.0.
+FIXED_RISK_PER_TRADE = 10.0       # USD risked if the SL is hit (net of hedge)
 SL_MULTIPLIER = 2.5               # effective_sl  = median_range * this
 TARGET_MULTIPLIER = 4.0           # effective_tgt = median_range * this
 
@@ -4878,7 +4880,8 @@ def startup():
     print("  pre_expiry_lead_min  = {}".format(PRE_EXPIRY_LEAD_MINUTES))
     print("  reference_timezone   = {}".format(REFERENCE_TIMEZONE_NAME))
     print("  OBSERVATION_MODE     = {}".format(OBSERVATION_MODE))
-    print("STARTUP entry criteria (Sensex-equivalent, observation only):")
+    print("STARTUP entry criteria (Sensex-equivalent) [LIVE={}]:".format(
+        not OBSERVATION_MODE))
     print("  pcr_gate             = 17-strike INVARIANT window, streak >= {} "
           "+ minmove(every step > {}%)={}".format(
               PCR_ENTRY_STREAK_MIN, PCR_MIN_STEP_PCT, PCR_ENTRY_REQUIRE_MINMOVE))
@@ -4898,7 +4901,7 @@ def startup():
     print("  session_rule         = win ends session; loss re-enters up to the "
           "SL cap")
     print("STARTUP sizing + SL/target (Sensex-equivalent, per-trade):")
-    print("  fixed_risk_per_trade = ${} (~2000 INR)".format(
+    print("  fixed_risk_per_trade = ${} USD net".format(
         _fmt(FIXED_RISK_PER_TRADE, 2)))
     print("  sl_multiplier        = {}  target_multiplier = {}".format(
         SL_MULTIPLIER, TARGET_MULTIPLIER))
