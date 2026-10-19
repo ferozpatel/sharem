@@ -270,6 +270,15 @@ HEDGE_OFFSET_RATIO_MAX = 0.75
 # Delta-based hedge selection: target hedge |delta| ~= main|delta| * this, on
 # the OTM side, snapped to the 200 strike grid (Sensex uses /2 on a 500 grid).
 HEDGE_TARGET_DELTA_FRACTION = 0.5
+# Half-width of the delta BAND around the target: any OTM strike whose |delta|
+# is within this of the target is a risk-appropriate hedge candidate. Among the
+# band the HIGHEST-OI (most liquid) strike is chosen — the BTC equivalent of
+# Sensex's 'hedge at the high-OI strike' (which there is the 500 grid level).
+HEDGE_DELTA_TOLERANCE = 0.08
+# Premium cap: a hedge whose premium exceeds this fraction of the MAIN premium
+# is rejected so the long leg never eats the collected credit (Sensex
+# HEDGE_MAX_PREMIUM_FRACTION).
+HEDGE_MAX_PREMIUM_FRACTION = 0.6
 
 # Option candle-range median (drives SL/target). Last N 3-min HIGH-LOW ranges;
 # low-sample guard halves a thin-window median that is implausibly large (early
@@ -3164,13 +3173,23 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
 def select_hedge_by_delta(main_strike, option_type, chain,
                           target_fraction=HEDGE_TARGET_DELTA_FRACTION):
     """
-    Pick the protective hedge strike whose |delta| is nearest
-    ``|main_delta| * target_fraction`` on the OTM side, then snap to the 200
-    grid (Sensex select_hedge_by_delta, adapted to BTC's grid + chain Greeks).
+    Pick the protective hedge strike on the OTM side using a delta BAND + an OI
+    (liquidity) tiebreak + a premium cap — the BTC-equivalent of Sensex's
+    'hedge at the high-OI strike' intent, adapted to the 200 grid + chain Greeks.
 
     ``option_type`` is "C"/"P" (the SAME type as the sold main leg). PE hedge is
-    BELOW the main strike, CE hedge ABOVE (further OTM). Uses the per-strike
-    ``delta`` now captured on every chain row.
+    BELOW the main strike, CE hedge ABOVE (further OTM).
+
+    Steps:
+      1. target hedge |delta| = |main_delta| * target_fraction.
+      2. Build OTM same-side candidates that have a usable delta.
+      3. BAND = candidates whose |delta| is within HEDGE_DELTA_TOLERANCE of the
+         target AND whose premium <= HEDGE_MAX_PREMIUM_FRACTION * main premium
+         (so the hedge never eats the credit).
+      4. Among the band pick the HIGHEST-OI (most liquid) strike; tie-break by
+         closeness to the target delta. If the band is empty, fall back to the
+         single strike whose |delta| is nearest the target (honouring the
+         premium cap when possible) — the previous behaviour.
 
     Returns ``(hedge_strike, main_delta, hedge_delta)`` or ``(None, main_delta,
     None)`` when no OTM strike carries usable greeks (caller then falls back to a
@@ -3179,14 +3198,41 @@ def select_hedge_by_delta(main_strike, option_type, chain,
     idx = _index_chain_by_strike(chain) if chain else {}
     side = "call" if option_type == "C" else "put"
 
-    def _row_delta(strike):
+    def _row(strike):
         pair = idx.get(strike)
-        if not isinstance(pair, dict):
+        if isinstance(pair, dict):
+            row = pair.get(side)
+            if isinstance(row, dict):
+                return row
+        return None
+
+    def _row_delta(strike):
+        row = _row(strike)
+        if row is not None and row.get("delta") is not None:
+            try:
+                return float(row.get("delta"))
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    def _row_oi(strike):
+        row = _row(strike)
+        try:
+            return float(row.get("oi")) if row else 0.0
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _row_price(strike):
+        row = _row(strike)
+        if row is None:
             return None
-        row = pair.get(side)
-        if isinstance(row, dict):
-            d = row.get("delta")
-            return float(d) if d is not None else None
+        for k in ("price", "best_ask", "best_bid"):
+            v = row.get(k)
+            try:
+                if v is not None and float(v) > 0:
+                    return float(v)
+            except (TypeError, ValueError):
+                continue
         return None
 
     main_delta = _row_delta(int(main_strike))
@@ -3194,8 +3240,13 @@ def select_hedge_by_delta(main_strike, option_type, chain,
         return None, main_delta, None
 
     target = abs(main_delta) * float(target_fraction)
+    main_price = _row_price(int(main_strike))
+    prem_cap = (main_price * HEDGE_MAX_PREMIUM_FRACTION) if main_price else None
 
-    # OTM candidates on the correct side, each with a usable delta.
+    def _within_cap(price):
+        return prem_cap is None or price is None or price <= prem_cap
+
+    # OTM candidates on the correct side with a usable delta.
     candidates = []
     for strike, pair in idx.items():
         if option_type == "P" and strike >= int(main_strike):
@@ -3203,15 +3254,32 @@ def select_hedge_by_delta(main_strike, option_type, chain,
         if option_type == "C" and strike <= int(main_strike):
             continue
         d = _row_delta(strike)
-        if d is not None and abs(d) > 0:
-            candidates.append((strike, abs(d)))
+        if d is None or abs(d) <= 0:
+            continue
+        candidates.append({
+            "strike": int(strike), "abs_delta": abs(d),
+            "oi": _row_oi(strike), "price": _row_price(strike),
+        })
     if not candidates:
         return None, main_delta, None
 
-    # Strike whose |delta| is nearest the target hedge delta; already on grid.
-    hedge_strike, hedge_abs_delta = min(
-        candidates, key=lambda sd: abs(sd[1] - target))
-    return int(hedge_strike), main_delta, hedge_abs_delta
+    # BAND: within delta tolerance of the target AND under the premium cap.
+    band = [c for c in candidates
+            if abs(c["abs_delta"] - target) <= HEDGE_DELTA_TOLERANCE
+            and _within_cap(c["price"])]
+
+    if band:
+        # Most liquid (highest OI) in the band; tie-break by delta closeness.
+        best = max(band,
+                   key=lambda c: (c["oi"], -abs(c["abs_delta"] - target)))
+    else:
+        # No band member: nearest-delta candidate (previous behaviour), still
+        # honouring the premium cap when any capped candidate exists.
+        capped = [c for c in candidates if _within_cap(c["price"])]
+        pool = capped if capped else candidates
+        best = min(pool, key=lambda c: abs(c["abs_delta"] - target))
+
+    return int(best["strike"]), main_delta, best["abs_delta"]
 
 
 def _enrich_chain_greeks(chain, main_strike, option_type, expiry, client):
@@ -3521,9 +3589,20 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     elif greeks_patched == 0:
         notes.append("greeks_unavailable(delta_hedge->fallback)")
 
-    # ---- Hedge selection (delta-based, 200-grid) ----
+    # ---- Hedge selection (delta band + OI/liquidity tiebreak + premium cap) --
     hedge_strike, main_delta, hedge_delta = select_hedge_by_delta(
         main_strike, option_type, chain)
+    # Capture the chosen hedge's OI (liquidity marker) for the log.
+    hedge_oi = None
+    if hedge_strike is not None:
+        _hidx = _index_chain_by_strike(chain) if chain else {}
+        _hpair = _hidx.get(int(hedge_strike)) if isinstance(_hidx, dict) else None
+        _hrow = (_hpair or {}).get("call" if option_type == "C" else "put")
+        if isinstance(_hrow, dict):
+            try:
+                hedge_oi = float(_hrow.get("oi")) if _hrow.get("oi") is not None else None
+            except (TypeError, ValueError):
+                hedge_oi = None
     if hedge_strike is None:
         # Fallback: fixed strike offset (HEDGE_OFFSET_STRIKES * grid), OTM side.
         shift = HEDGE_OFFSET_STRIKES * STRIKE_STEP
@@ -3633,6 +3712,7 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         "main_premium": main_premium, "main_delta": main_delta,
         "hedge_symbol": hedge_symbol, "hedge_strike": hedge_strike,
         "hedge_premium": hedge_premium, "hedge_delta": hedge_delta,
+        "hedge_oi": hedge_oi,
         "median_range": median_range, "median_candles": n_used,
         "effective_sl": effective_sl, "effective_tgt": effective_tgt,
         "sl_basis": sl_basis,
@@ -3659,9 +3739,10 @@ def log_trade_plan(plan, decision_dir):
     print("  MAIN  SELL {sym} strike={k} premium={p} delta={d}".format(
         sym=plan["main_symbol"], k=plan["main_strike"],
         p=_fmt(plan["main_premium"], 2), d=_fmt(plan["main_delta"], 4)))
-    print("  HEDGE BUY  {sym} strike={k} premium={p} delta={d}".format(
+    print("  HEDGE BUY  {sym} strike={k} premium={p} delta={d} oi={oi}".format(
         sym=plan["hedge_symbol"], k=plan["hedge_strike"],
-        p=_fmt(plan["hedge_premium"], 2), d=_fmt(plan["hedge_delta"], 4)))
+        p=_fmt(plan["hedge_premium"], 2), d=_fmt(plan["hedge_delta"], 4),
+        oi=_fmt(plan.get("hedge_oi"), 0)))
     print("  SL/TGT basis={basis} -> effective_sl={sl} effective_tgt={tg} "
           "(mult {slm}/{tgm})".format(
               basis=plan["sl_basis"], sl=_fmt(plan["effective_sl"], 2),
@@ -4731,8 +4812,10 @@ def startup():
         SL_MULTIPLIER, TARGET_MULTIPLIER))
     print("  contract_value       = {} BTC/contract (P&L multiplier)".format(
         CONTRACT_VALUE))
-    print("  hedge                = delta-based (target |delta|*{}), snap {} "
-          "grid".format(HEDGE_TARGET_DELTA_FRACTION, STRIKE_STEP))
+    print("  hedge                = delta band (target |delta|*{} +/-{}) -> "
+          "highest-OI strike; premium cap {}x main; fixed-offset fallback {} "
+          "grid".format(HEDGE_TARGET_DELTA_FRACTION, HEDGE_DELTA_TOLERANCE,
+                        HEDGE_MAX_PREMIUM_FRACTION, HEDGE_OFFSET_STRIKES))
     print("  lots                 = risk-based [{}..{}], offset ratio "
           "DELTA->PREMIUM->none".format(MIN_LOTS, MAX_LOTS))
 
