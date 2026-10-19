@@ -4555,38 +4555,33 @@ def monitor_open_position(client, state):
     state["tgt_confirm_count"] = tgt_count
     state["sl_confirm_count"] = sl_count
 
-    # Logging (Sensex-equivalent). While SL/target is CONFIRMING, log a WATCH
-    # line EVERY poll so a breach is never missed. Otherwise emit the routine
-    # "In Trade ... No Exit" heartbeat THROTTLED to ~once/min (near the top of a
-    # minute) so the 2s poll does not flood the log — mirroring Sensex's
-    # LTP_SL_WATCH / LTP_TGT_WATCH + "In Trade" heartbeat.
+    # Logging (Sensex-simple). The spread is managed on its COST TO CLOSE
+    # (current_spread_cost = main_ltp - hedge_ltp), which is the "ltp" we watch,
+    # exactly like Sensex watches the short-leg premium. For a CREDIT spread the
+    # cost RISING is a loss and FALLING is profit, so:
+    #     SL level     = entry_credit + net_sl   (cost >= this => stop)  [breakeven => entry_credit]
+    #     target level = entry_credit - net_tgt  (cost <= this => target)
+    sl_level = (entry_credit if already_breakeven
+                else entry_credit + float(eff_sl))
+    tgt_level = entry_credit - float(eff_tgt)
+
+    # While SL/target is CONFIRMING, log a WATCH line EVERY poll so a breach is
+    # never missed; otherwise the routine "In Trade" heartbeat throttled to
+    # ~once/min so the 2s poll does not flood the log.
     if sl_hit:
-        print("LTP_SL_WATCH [{ts}] In Trade ({kind}). unrealized={up} pts <= "
-              "SL {sl} confirm={sc}/{st} (pnl=${pnl})".format(
-                  ts=_now_ist(), kind=open_position.get("spread_kind"),
-                  up=_fmt(unrealized_points), sl=sl_level_desc,
-                  sc=sl_count, st=SL_CONFIRM_TICKS, pnl=_fmt(unrealized_pnl)))
+        print("{ts} LTP_SL_WATCH: ltp={cost} SL={sl} confirm={sc}/{st}".format(
+            ts=_now_ist(), cost=_fmt(current_spread_cost, 2),
+            sl=_fmt(sl_level, 2), sc=sl_count, st=SL_CONFIRM_TICKS))
     elif target_hit:
-        print("LTP_TGT_WATCH [{ts}] In Trade ({kind}). unrealized={up} pts >= "
-              "target {tp} confirm={tc}/{tt} (pnl=${pnl})".format(
-                  ts=_now_ist(), kind=open_position.get("spread_kind"),
-                  up=_fmt(unrealized_points), tp=_fmt(eff_tgt),
-                  tc=tgt_count, tt=TGT_CONFIRM_TICKS, pnl=_fmt(unrealized_pnl)))
+        print("{ts} LTP_TGT_WATCH: ltp={cost} target={tg} confirm={tc}/{tt}"
+              .format(ts=_now_ist(), cost=_fmt(current_spread_cost, 2),
+                      tg=_fmt(tgt_level, 2), tc=tgt_count, tt=TGT_CONFIRM_TICKS))
     elif datetime.now(REFERENCE_TIMEZONE).second < LTP_POLL_INTERVAL:
-        print("IN_TRADE [{ts}] ({kind}) No Exit. main={ms}@{mp} "
-              "hedge={hs}@{hp} spread_cost={cost} entry_credit={ec}{rb} "
-              "unrealized={up} pts (pnl=${pnl}) target={tp} sl={sl} "
-              "tgt_confirm={tc}/{tt} sl_confirm={sc}/{st} trail={trail}".format(
-                  ts=_now_ist(), kind=open_position.get("spread_kind"),
-                  ms=main_symbol, mp=_fmt(main_ltp),
-                  hs=hedge_symbol, hp=_fmt(hedge_ltp),
-                  cost=_fmt(current_spread_cost), ec=_fmt(entry_credit),
-                  rb=" (rebaselined)" if rebaselined else "",
-                  up=_fmt(unrealized_points), pnl=_fmt(unrealized_pnl),
-                  tp=_fmt(eff_tgt), sl=sl_level_desc,
-                  tc=tgt_count, tt=TGT_CONFIRM_TICKS,
-                  sc=sl_count, st=SL_CONFIRM_TICKS,
-                  trail="breakeven" if already_breakeven else trail_action))
+        print("{ts} In Trade ( CREDIT ). No Exit. ltp= {cost}  SL= {sl}  "
+              "target= {tg}{be}".format(
+                  ts=_now_ist(), cost=_fmt(current_spread_cost, 2),
+                  sl=_fmt(sl_level, 2), tg=_fmt(tgt_level, 2),
+                  be="  (SL@breakeven)" if already_breakeven else ""))
 
     # 5. Exit on a confirmed target / SL (9.19, 9.20). Target takes precedence
     #    when both somehow confirm on the same poll (a realized profit exit is
@@ -4594,8 +4589,10 @@ def monitor_open_position(client, state):
     exit_reason = None
     if tgt_count >= TGT_CONFIRM_TICKS:
         exit_reason = "target"
+        print("{} Target hit (LTP)".format(_now_ist()))
     elif sl_count >= SL_CONFIRM_TICKS:
         exit_reason = "stop_loss"
+        print("{} SL Hit (LTP)".format(_now_ist()))
 
     if exit_reason is None:
         return {"monitored": True, "priced": True, "actionable": True,
