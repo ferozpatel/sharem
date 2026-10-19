@@ -3021,9 +3021,24 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
                       result.get("error") if isinstance(result, dict)
                       else result))
     else:
-        # Live mode but gates not fully satisfied — do not place any order.
-        print("ENTRY_SKIPPED [{}] live entry gates not satisfied: {}".format(
-            _now_ist(), entry["reason"]))
+        # Live mode but no plan to place. The ACTUAL gate is the Sensex entry
+        # criteria + session rule (NOT the legacy evaluate_entry, which is
+        # observation-only). Report the real reason so the live log is truthful.
+        if decision_dir is None:
+            skip_reason = "no_sensex_signal({})".format(
+                ";".join(sensex_entry.get("blockers", [])) or "criteria_unmet")
+        elif not session_allows_entry:
+            skip_reason = ("session_won" if session_won
+                           else "sl_halt({}/{})".format(sl_count_now,
+                                                        MAX_SL_PER_DAY)
+                           if sl_count_now >= MAX_SL_PER_DAY
+                           else "position_already_open")
+        elif trade_plan is None:
+            skip_reason = "observation_only_signal(LOGIC3)_or_plan_unbuildable"
+        else:
+            skip_reason = "plan_present_but_not_placed(unexpected)"
+        print("ENTRY_SKIPPED [{}] no live entry: {} (dir={})".format(
+            _now_ist(), skip_reason, decision_dir))
 
     return {
         "snapshot": snapshot,
