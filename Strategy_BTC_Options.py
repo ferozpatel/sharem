@@ -3868,14 +3868,14 @@ def log_trade_plan(plan, decision_dir):
         sym=plan["hedge_symbol"], k=plan["hedge_strike"],
         p=_fmt(plan["hedge_premium"], 2), d=_fmt(plan["hedge_delta"], 4),
         oi=_fmt(plan.get("hedge_oi"), 0)))
-    print("  SL/TGT basis={basis} -> gross_sl={sl} gross_tgt={tg} "
-          "(mult {slm}/{tgm}); MONITOR net_sl={nsl} net_tgt={ntg} "
-          "(hedge-adjusted, what the position is managed on)".format(
+    print("  SL/TGT basis={basis} -> MONITOR sl={sl} tgt={tg} "
+          "(mult {slm}/{tgm}; MAIN-LEG premium levels, what the position is "
+          "managed on — exactly like Sensex); net_sl_pts={nsl} is the "
+          "hedge-adjusted RISK-BUDGET basis sizing uses".format(
               basis=plan["sl_basis"], sl=_fmt(plan["effective_sl"], 2),
               tg=_fmt(plan["effective_tgt"], 2),
               slm=SL_MULTIPLIER, tgm=TARGET_MULTIPLIER,
-              nsl=_fmt(plan.get("monitor_sl_points"), 2),
-              ntg=_fmt(plan.get("monitor_tgt_points"), 2)))
+              nsl=_fmt(plan.get("net_sl_points"), 2)))
     print("  SIZE lots={lots} offset_ratio={r}({src}) net_sl_pts={n} "
           "(risk budget ${risk})".format(
               lots=plan["lots"], r=_fmt(plan["offset_ratio"], 3),
@@ -3983,14 +3983,14 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
         main_strike = plan.get("main_strike")
         hedge_strike = plan.get("hedge_strike")
         size = plan.get("lots")
-        # Use the NET monitor SL/target (hedge-adjusted) the lots were sized on,
-        # NOT the gross effective_* — the monitor measures net spread P&L.
-        effective_sl = plan.get("monitor_sl_points")
-        if effective_sl is None:
-            effective_sl = plan.get("effective_sl")
-        effective_tgt = plan.get("monitor_tgt_points")
-        if effective_tgt is None:
-            effective_tgt = plan.get("effective_tgt")
+        # The monitor watches the MAIN SELL LEG premium ONLY (like Sensex), so
+        # SL/target are the GROSS candle-median levels on that leg — NOT the
+        # hedge-adjusted net points. Lots were already sized on the NET stop in
+        # calc_lots_by_risk, so when the main leg moves `effective_sl` the
+        # realized (hedge-adjusted) loss equals the risk budget.
+        effective_sl = plan.get("effective_sl")
+        effective_tgt = plan.get("effective_tgt")
+        plan_offset_ratio = plan.get("offset_ratio")
         expiry_ddmmyy = plan.get("expiry") or helper.getDailyExpiry()
         if not (main_symbol and hedge_symbol and option_type):
             print("LIVE_ENTRY_FAIL [{}] trade plan missing leg symbols/type; "
@@ -4037,6 +4037,7 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
     else:
         # ---- Legacy path (no plan): [NEEDS INPUT] POSITION_SIZE guard, ATM
         #      main strike and a fixed-offset hedge. Retained as a fallback. ----
+        plan_offset_ratio = None
         if POSITION_SIZE is None:
             print("LIVE_ENTRY_BLOCKED [{}] POSITION_SIZE is [NEEDS INPUT] "
                   "(None); cannot size a live order — leaving position not-open "
@@ -4207,13 +4208,15 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
     if main_entry_px is not None and hedge_entry_px is not None:
         entry_credit = float(main_entry_px) - float(hedge_entry_px)
 
-    # --- Post-fill safety (Sensex square-off): a spread we cannot VALUE cannot
-    #     be monitored for SL/target. If no anchor premium is readable on either
-    #     leg (entry_credit unknown), flatten everything immediately rather than
-    #     hold an unmonitorable position. ----
-    if entry_credit is None:
-        print("LIVE_ENTRY_WARN [{}] both legs filled but NO anchor premium is "
-              "readable (main_px={!r} hedge_px={!r}) — spread cannot be "
+    # --- Post-fill safety (Sensex square-off): the trade is managed on the MAIN
+    #     SELL LEG premium, so the one anchor we MUST have is main_entry_px. If
+    #     the main leg premium is unreadable the position cannot be monitored
+    #     for SL/target — flatten everything immediately rather than hold an
+    #     unmonitorable short. (A missing hedge price only costs the net-credit
+    #     reporting baseline, not the exit logic, so it does NOT force a flatten.)
+    if main_entry_px is None:
+        print("LIVE_ENTRY_WARN [{}] both legs filled but MAIN-LEG entry premium "
+              "is unreadable (main_px={!r} hedge_px={!r}) — spread cannot be "
               "monitored; squaring off (exitAll) as post-fill safety.".format(
                   _now_ist(), main_entry_px, hedge_entry_px))
         try:
@@ -4248,6 +4251,10 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
         # candle-median-derived levels.
         "effective_sl": effective_sl,
         "effective_tgt": effective_tgt,
+        # Hedge offset ratio (sizing basis). The EXIT DECISION is on the main
+        # leg premium alone; this is kept only so the monitor can report a
+        # hedge-adjusted (net) USD P&L estimate in its heartbeat.
+        "offset_ratio": plan_offset_ratio,
         "size": size,
         "bias": bias,
         "position": position,
@@ -4265,8 +4272,9 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
 # ============================================================
 # POSITION MONITORING + TRAILING (Req 9.18-9.22) — Task 14.6
 # ============================================================
-# While a credit spread is open, each poll fetches the two leg LTPs (9.18) and
-# evaluates the target / stop-loss conditions on the spread's unrealized P&L,
+# While a credit spread is open, each poll fetches the MAIN SELL LEG premium
+# only (9.18) — like Sensex, the trade is managed on the short leg's premium and
+# evaluates the target / stop-loss conditions on that leg's move,
 # using a consecutive-poll confirmation counter for each (9.19, 9.20). On a
 # confirmed target/SL the spread is closed (live) or a WOULD_HAVE_EXITED line is
 # logged (observation); a failed live exit is logged and the position is RETAINED
@@ -4277,23 +4285,30 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
 # P&L / points interpretation (documented mapping)
 # ------------------------------------------------
 # The position is a CREDIT spread: the main leg is SOLD (short) and the hedge leg
-# is BOUGHT (long, further OTM). Entry collects a net credit per unit:
-#     entry_credit      = main_entry_price - hedge_entry_price      (premium in)
-# To CLOSE the spread you buy back the main leg (pay its LTP) and sell the hedge
-# leg (receive its LTP), so the current cost to close per unit is:
-#     current_spread_cost = main_ltp - hedge_ltp
-# Unrealized profit, expressed in option-PREMIUM POINTS per unit, is therefore:
-#     unrealized_points = entry_credit - current_spread_cost
-# and the USD P&L scales the points by the lot count AND the contract value
-# (Delta: notional = price * contract_value * size, so a 1-point premium move on
-# 1 lot = CONTRACT_VALUE USD):
-#     unrealized_pnl    = unrealized_points * size * CONTRACT_VALUE
-# TARGET_POINTS and STOP_LOSS_POINTS are read as PREMIUM POINTS per unit (the
-# same units as unrealized_points), so:
-#     target hit  <=>  unrealized_points >= TARGET_POINTS      (profit target)
-#     SL hit      <=>  unrealized_points <= -STOP_LOSS_POINTS  (loss stop)
-# When the stop has been trailed to breakeven the effective SL level becomes the
-# entry credit (0 points), i.e. SL hit <=> unrealized_points <= 0.
+# is BOUGHT (long, further OTM). The trade is MANAGED ON THE MAIN (short) LEG
+# PREMIUM ONLY — exactly like the Sensex strategy. The hedge is a protective /
+# margin leg and is NOT part of the exit decision; the monitor does not even
+# poll it (one fewer API call per 2s poll).
+#
+# The anchor is the main-leg entry premium (what we sold it for):
+#     anchor = main_entry_price
+# Each poll reads the current main-leg premium (main_ltp). Because the main leg
+# is SHORT, premium RISING is a loss and FALLING is a profit, so unrealized
+# profit in PREMIUM POINTS per unit is:
+#     unrealized_points = anchor - main_ltp
+# TARGET_POINTS / STOP_LOSS_POINTS are PREMIUM POINTS on the main leg, giving the
+# plain price levels the position is watched on (identical shape to Sensex):
+#     target hit  <=>  main_ltp <= anchor - TARGET_POINTS       (profit target)
+#     SL hit      <=>  main_ltp >= anchor + STOP_LOSS_POINTS     (loss stop)
+# When the stop has been trailed to breakeven the SL level becomes the entry
+# premium anchor, i.e. SL hit <=> main_ltp >= anchor.
+#
+# USD P&L (REPORTING ONLY — not used for the exit decision) applies the hedge
+# offset so the heartbeat shows the true net position value:
+#     unrealized_pnl = unrealized_points * (1 - offset_ratio) * size * CONTRACT_VALUE
+# Lots were sized in calc_lots_by_risk on the NET stop net_sl = STOP_LOSS_POINTS
+# * (1 - offset_ratio), so when the main leg moves STOP_LOSS_POINTS the realized
+# hedge-adjusted loss equals the FIXED_RISK_PER_TRADE budget.
 
 
 def _reset_monitor_state(state):
@@ -4401,12 +4416,14 @@ def monitor_open_position(client, state):
     refinement so the main loop is never blocked for long.
 
     Steps:
-      1. Poll both leg LTPs via ``helper.manualLTP`` (9.18).
-      2. Compute the spread's unrealized profit in premium points and currency
-         (see the module P&L/points mapping above). The entry credit is read
-         from ``open_position["entry_credit"]``; if it is missing (e.g. the
-         entry-time LTP read failed) it is RE-BASELINED to the current spread
-         cost on this first poll and the limitation is logged.
+      1. Poll the MAIN SELL LEG premium via ``helper.manualLTP`` (9.18). Like
+         Sensex, the trade is managed on the short leg's premium ONLY; the hedge
+         is a protective/margin leg and is not part of the exit math.
+      2. Compute the main-leg unrealized profit in premium points (anchor -
+         current) and a hedge-adjusted USD estimate (reporting only). The anchor
+         is ``open_position["main_entry_price"]``; if it is missing (e.g. the
+         entry-time LTP read failed) it is RE-BASELINED to the current premium
+         on this first poll and the limitation is logged.
       3. Trailing (9.22): when ``TRAILING_ENABLED`` and ``TARGET_POINTS`` is set,
          if unrealized profit >= ``TRAIL_TRIGGER_TARGET_FRACTION * TARGET_POINTS``
          move the stop to breakeven (``state["sl_at_breakeven"] = True``); the
@@ -4453,46 +4470,55 @@ def monitor_open_position(client, state):
     if eff_sl is None:
         eff_sl = STOP_LOSS_POINTS
 
-    # 1. Poll both leg LTPs (9.18).
+    # 1. Poll the MAIN SELL LEG premium ONLY (9.18). Exactly like the Sensex
+    #    strategy, the trade is managed on the SHORT leg's premium — the hedge
+    #    is a protective/margin leg and is NOT part of the exit math. Polling a
+    #    single leg (not two) is also one fewer API call per 2s poll.
     main_ltp = _safe_leg_ltp(main_symbol, client)
-    hedge_ltp = _safe_leg_ltp(hedge_symbol, client)
 
-    if main_ltp is None or hedge_ltp is None:
-        # Cannot value the spread this poll; log and re-check next poll. Do NOT
+    if main_ltp is None:
+        # Cannot value the leg this poll; log and re-check next poll. Do NOT
         # disturb the confirmation streaks on a pure data gap.
-        print("MONITOR [{ts}] {kind} main={ms}@{mp} hedge={hs}@{hp} "
-              "unrealized=N/A (leg price unavailable; skipping SL/target this "
-              "poll) tgt_confirm={tc}/{tt} sl_confirm={sc}/{st}".format(
+        print("MONITOR [{ts}] {kind} main={ms}@N/A unrealized=N/A (leg price "
+              "unavailable; skipping SL/target this poll) tgt_confirm={tc}/{tt} "
+              "sl_confirm={sc}/{st}".format(
                   ts=_now_ist(), kind=open_position.get("spread_kind"),
-                  ms=main_symbol, mp=_fmt(main_ltp),
-                  hs=hedge_symbol, hp=_fmt(hedge_ltp),
+                  ms=main_symbol,
                   tc=state.get("tgt_confirm_count", 0), tt=TGT_CONFIRM_TICKS,
                   sc=state.get("sl_confirm_count", 0), st=SL_CONFIRM_TICKS))
-        return {"monitored": True, "priced": False,
-                "main_ltp": main_ltp, "hedge_ltp": hedge_ltp}
+        return {"monitored": True, "priced": False, "main_ltp": None}
 
-    # 2. Unrealized P&L in premium points (per unit) and currency.
-    current_spread_cost = float(main_ltp) - float(hedge_ltp)
-    entry_credit = open_position.get("entry_credit")
+    main_ltp = float(main_ltp)
+
+    # 2. Anchor = the main leg ENTRY premium (what we SOLD it for). This is a
+    #    CREDIT spread, so on the short leg: premium RISING = loss, premium
+    #    FALLING = profit. Main-leg unrealized points = anchor - current.
+    anchor = open_position.get("main_entry_price")
     rebaselined = False
-    if entry_credit is None:
-        # Entry-time credit was unavailable: re-baseline to the current spread
-        # cost on this first poll (approximation) and note the limitation.
-        entry_credit = current_spread_cost
-        open_position["entry_credit"] = entry_credit
+    if anchor is None:
+        anchor = main_ltp
+        open_position["main_entry_price"] = anchor
         rebaselined = True
-        print("MONITOR_NOTE [{}] entry_credit was unavailable; re-baselining to "
-              "current spread cost {} (approximation — P&L is measured relative "
-              "to this poll, not the true fill).".format(
-                  _now_ist(), _fmt(entry_credit)))
+        print("MONITOR_NOTE [{}] main-leg entry premium was unavailable; "
+              "re-baselining to current premium {} (approximation — P&L is "
+              "measured relative to this poll, not the true fill).".format(
+                  _now_ist(), _fmt(anchor)))
+    anchor = float(anchor)
 
-    unrealized_points = float(entry_credit) - current_spread_cost
-    # USD P&L = points * lots * contract_value (Delta notional multiplier), so
-    # it matches the risk-based sizing in calc_lots_by_risk / build_trade_plan.
-    unrealized_pnl = (unrealized_points * size * CONTRACT_VALUE
+    unrealized_points = anchor - main_ltp            # >0 profit, <0 loss
+    # Net USD P&L still accounts for the hedge offset (REPORTING ONLY); the EXIT
+    # DECISION below is purely on the main-leg premium. When the main leg moves
+    # by `eff_sl`, the realized (hedge-adjusted) loss is eff_sl*(1-offset)*... ,
+    # which is exactly the risk budget the lots were sized on.
+    offset_ratio = open_position.get("offset_ratio")
+    net_factor = (1.0 - float(offset_ratio)
+                  if offset_ratio is not None else 1.0)
+    unrealized_pnl = (unrealized_points * net_factor * size * CONTRACT_VALUE
                       if size is not None else None)
 
-    # 3. Trailing to breakeven (9.22) — needs a configured target.
+    # 3. Trailing to breakeven (9.22) — needs a configured target. When the main
+    #    leg has fallen (profit) by TRAIL_TRIGGER_TARGET_FRACTION * target, move
+    #    the stop to the entry premium (breakeven on the short leg).
     trail_action = "none"
     already_breakeven = bool(state.get("sl_at_breakeven"))
     if (TRAILING_ENABLED and eff_tgt is not None and not already_breakeven
@@ -4500,38 +4526,32 @@ def monitor_open_position(client, state):
             * float(eff_tgt)):
         if OBSERVATION_MODE:
             trail_action = "would_trail_to_breakeven"
-            print("MONITOR_TRAIL [{}] WOULD_TRAIL_TO_BREAKEVEN: unrealized "
-                  "{} pts >= {} * target {} = {} pts (OBSERVATION_MODE; SL not "
-                  "actually moved).".format(
+            print("MONITOR_TRAIL [{}] WOULD_TRAIL_TO_BREAKEVEN: main-leg "
+                  "unrealized {} pts >= {} * target {} (OBSERVATION_MODE; SL "
+                  "not actually moved).".format(
                       _now_ist(), _fmt(unrealized_points),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION),
-                      _fmt(eff_tgt),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION * float(eff_tgt))))
+                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION), _fmt(eff_tgt)))
         else:
             state["sl_at_breakeven"] = True
             already_breakeven = True
             trail_action = "trailed_to_breakeven"
-            print("MONITOR_TRAIL [{}] SL moved to BREAKEVEN: unrealized {} pts "
-                  ">= {} * target {} = {} pts (effective SL now breakeven, "
-                  "0 pts).".format(
+            print("MONITOR_TRAIL [{}] SL moved to BREAKEVEN: main-leg "
+                  "unrealized {} pts >= {} * target {} (effective SL now the "
+                  "entry premium {}).".format(
                       _now_ist(), _fmt(unrealized_points),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION),
-                      _fmt(eff_tgt),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION * float(eff_tgt))))
+                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION), _fmt(eff_tgt),
+                      _fmt(anchor)))
 
     # ----- [NEEDS INPUT] guard: no concrete target/SL to evaluate --------
     if eff_tgt is None or eff_sl is None:
         unset = [n for n, v in (("TARGET_POINTS", eff_tgt),
                                 ("STOP_LOSS_POINTS", eff_sl))
                  if v is None]
-        print("MONITOR [{ts}] {kind} main={ms}@{mp} hedge={hs}@{hp} "
-              "spread_cost={cost} entry_credit={ec}{rb} unrealized={up} pts "
-              "(pnl={pnl}) — target/SL NOT evaluated: {unset} [NEEDS INPUT] "
-              "(Req 9.27); no action.".format(
+        print("MONITOR [{ts}] {kind} main={ms}@{mp} anchor={an}{rb} "
+              "unrealized={up} pts (pnl={pnl}) — target/SL NOT evaluated: "
+              "{unset} [NEEDS INPUT] (Req 9.27); no action.".format(
                   ts=_now_ist(), kind=open_position.get("spread_kind"),
-                  ms=main_symbol, mp=_fmt(main_ltp),
-                  hs=hedge_symbol, hp=_fmt(hedge_ltp),
-                  cost=_fmt(current_spread_cost), ec=_fmt(entry_credit),
+                  ms=main_symbol, mp=_fmt(main_ltp), an=_fmt(anchor),
                   rb=" (rebaselined)" if rebaselined else "",
                   up=_fmt(unrealized_points), pnl=_fmt(unrealized_pnl),
                   unset=",".join(unset)))
@@ -4540,46 +4560,38 @@ def monitor_open_position(client, state):
                 "unrealized_pnl": unrealized_pnl,
                 "trail_action": trail_action, "unset_params": unset}
 
-    # 4. Target / SL conditions + consecutive-poll confirmation (9.19, 9.20).
-    target_hit = unrealized_points >= float(eff_tgt)
-    if already_breakeven:
-        # Trailed stop: breakeven is the effective SL (0 points).
-        sl_hit = unrealized_points <= 0.0
-        sl_level_desc = "breakeven(0)"
-    else:
-        sl_hit = unrealized_points <= -float(eff_sl)
-        sl_level_desc = "-{}".format(_fmt(eff_sl))
+    # 4. Target / SL on the MAIN-LEG premium + consecutive-poll confirmation
+    #    (9.19, 9.20). Credit short leg:
+    #        premium <= anchor - target  => target hit (profit)
+    #        premium >= anchor + sl       => stop hit  (loss)
+    #    (breakeven trail => the stop level becomes the entry premium anchor).
+    tgt_level = anchor - float(eff_tgt)
+    sl_level = anchor if already_breakeven else anchor + float(eff_sl)
+    target_hit = main_ltp <= tgt_level
+    sl_hit = main_ltp >= sl_level
 
     tgt_count = (state.get("tgt_confirm_count", 0) or 0) + 1 if target_hit else 0
     sl_count = (state.get("sl_confirm_count", 0) or 0) + 1 if sl_hit else 0
     state["tgt_confirm_count"] = tgt_count
     state["sl_confirm_count"] = sl_count
 
-    # Logging (Sensex-simple). The spread is managed on its COST TO CLOSE
-    # (current_spread_cost = main_ltp - hedge_ltp), which is the "ltp" we watch,
-    # exactly like Sensex watches the short-leg premium. For a CREDIT spread the
-    # cost RISING is a loss and FALLING is profit, so:
-    #     SL level     = entry_credit + net_sl   (cost >= this => stop)  [breakeven => entry_credit]
-    #     target level = entry_credit - net_tgt  (cost <= this => target)
-    sl_level = (entry_credit if already_breakeven
-                else entry_credit + float(eff_sl))
-    tgt_level = entry_credit - float(eff_tgt)
-
+    # Logging (Sensex-simple). "ltp" is the ACTUAL main-leg premium (visible on
+    # the option chart), exactly like Sensex watches the short-leg premium.
     # While SL/target is CONFIRMING, log a WATCH line EVERY poll so a breach is
-    # never missed; otherwise the routine "In Trade" heartbeat throttled to
+    # never missed; otherwise the routine "In Trade" heartbeat is throttled to
     # ~once/min so the 2s poll does not flood the log.
     if sl_hit:
-        print("{ts} LTP_SL_WATCH: ltp={cost} SL={sl} confirm={sc}/{st}".format(
-            ts=_now_ist(), cost=_fmt(current_spread_cost, 2),
+        print("{ts} LTP_SL_WATCH: ltp={lp} SL={sl} confirm={sc}/{st}".format(
+            ts=_now_ist(), lp=_fmt(main_ltp, 2),
             sl=_fmt(sl_level, 2), sc=sl_count, st=SL_CONFIRM_TICKS))
     elif target_hit:
-        print("{ts} LTP_TGT_WATCH: ltp={cost} target={tg} confirm={tc}/{tt}"
-              .format(ts=_now_ist(), cost=_fmt(current_spread_cost, 2),
+        print("{ts} LTP_TGT_WATCH: ltp={lp} target={tg} confirm={tc}/{tt}"
+              .format(ts=_now_ist(), lp=_fmt(main_ltp, 2),
                       tg=_fmt(tgt_level, 2), tc=tgt_count, tt=TGT_CONFIRM_TICKS))
     elif datetime.now(REFERENCE_TIMEZONE).second < LTP_POLL_INTERVAL:
-        print("{ts} In Trade ( CREDIT ). No Exit. ltp= {cost}  SL= {sl}  "
+        print("{ts} In Trade ( CREDIT ). No Exit. ltp= {lp}  SL= {sl}  "
               "target= {tg}{be}".format(
-                  ts=_now_ist(), cost=_fmt(current_spread_cost, 2),
+                  ts=_now_ist(), lp=_fmt(main_ltp, 2),
                   sl=_fmt(sl_level, 2), tg=_fmt(tgt_level, 2),
                   be="  (SL@breakeven)" if already_breakeven else ""))
 
