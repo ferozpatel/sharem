@@ -272,6 +272,24 @@ OPT_RANGE_LOW_SAMPLE_FACTOR = 0.5
 SL_PREMIUM_FALLBACK_FRACTION = 0.40   # effective_sl  = entry_premium * this
 TGT_PREMIUM_FALLBACK_FRACTION = 0.64  # effective_tgt = entry_premium * this (keeps 2.5:4.0)
 
+# ---- Order-book liquidity + marketable-limit entry (slippage control) ----
+# Entry orders use a MARKETABLE LIMIT (cross to the touch, capped) instead of a
+# plain market order, so a wide/thin book can't slip the fill arbitrarily. All
+# order-book reads happen at ENTRY TIME ONLY (never per cycle). Flip
+# USE_LIMIT_ENTRY to False to fall back to plain market orders.
+USE_LIMIT_ENTRY = True
+# L2 depth levels to request per leg (enough to measure fillable size).
+L2_DEPTH_LEVELS = 10
+# How many ticks PAST the touch the limit may reach — the max slippage we accept
+# to still get filled (limit = touch +/- this*tick). 0 = strict touch only.
+MAX_SLIPPAGE_TICKS = 4
+# Liquidity gate: a strike is "tradeable" only when its top-of-book spread is no
+# wider than this fraction of the mid, AND the fillable size within the slippage
+# window covers at least this ratio of our lot count. Observation logs the
+# verdict; live placement refuses a trade that fails the gate.
+LIQUIDITY_MAX_SPREAD_PCT = 25.0       # (ask-bid)/mid * 100, per leg
+LIQUIDITY_MIN_DEPTH_RATIO = 1.0       # fillable size >= lots * this
+
 
 # ============================================================
 # LOG TIMESTAMP HELPER (Reference_Timezone = UTC)
@@ -3309,6 +3327,84 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None,
     return lots, offset_ratio, net_sl_points, source
 
 
+def _round_to_tick(price, mode="nearest"):
+    """Round a positive price to the Delta TICK_SIZE grid. ``mode`` is "up"
+    (ceil), "down" (floor) or "nearest". Returns the input unchanged when it is
+    non-positive or the tick is unusable."""
+    tick = helper.TICK_SIZE
+    if not price or price <= 0 or tick <= 0:
+        return price
+    q = price / tick
+    whole = int(q)
+    frac = q - whole
+    if mode == "up":
+        r = whole + (1 if frac > 1e-9 else 0)
+    elif mode == "down":
+        r = whole
+    else:
+        r = int(q + 0.5)
+    return round(r * tick, 8)
+
+
+def assess_leg_liquidity(book, side, lots):
+    """
+    From an L2 book (``helper.fetchL2Orderbook``) compute the marketable-limit
+    price and liquidity metrics for taking ``lots`` contracts on ``side``
+    ("buy"/"sell").
+
+    A BUY takes from the ASK side: limit = best_ask + MAX_SLIPPAGE_TICKS ticks
+    (we are willing to pay up to that to get filled), and the fillable size is
+    the cumulative ask size at prices <= limit. A SELL hits the BID side: limit
+    = best_bid - MAX_SLIPPAGE_TICKS ticks, fillable = cumulative bid size at
+    prices >= limit. The top-of-book spread % gates wide/illiquid strikes.
+
+    Returns ``{"ok", "limit_price", "best_bid", "best_ask", "mid",
+    "spread_pct", "fillable_size", "depth_ratio", "reason"}``. Best-effort: an
+    empty/one-sided book yields ok=False with a reason and limit_price=None.
+    """
+    out = {"ok": False, "limit_price": None, "best_bid": None,
+           "best_ask": None, "mid": None, "spread_pct": None,
+           "fillable_size": 0.0, "depth_ratio": None, "reason": ""}
+    if not isinstance(book, dict) or not book:
+        out["reason"] = "no_book"
+        return out
+    best_bid = book.get("best_bid")
+    best_ask = book.get("best_ask")
+    if not best_bid or not best_ask or best_bid <= 0 or best_ask <= 0:
+        out["reason"] = "one_sided_or_empty_book"
+        out["best_bid"], out["best_ask"] = best_bid, best_ask
+        return out
+
+    mid = (best_bid + best_ask) / 2.0
+    spread_pct = (best_ask - best_bid) / mid * 100.0 if mid > 0 else None
+    tick = helper.TICK_SIZE
+    slip = MAX_SLIPPAGE_TICKS * tick
+    lots = abs(lots or 0)
+
+    if side == "buy":
+        limit_price = _round_to_tick(best_ask + slip, "up")
+        fillable = sum(sz for px, sz in (book.get("asks") or [])
+                       if px <= limit_price + 1e-9)
+    else:  # sell
+        limit_price = _round_to_tick(best_bid - slip, "down")
+        fillable = sum(sz for px, sz in (book.get("bids") or [])
+                       if px >= limit_price - 1e-9)
+
+    depth_ratio = (fillable / lots) if lots > 0 else None
+    spread_ok = spread_pct is not None and spread_pct <= LIQUIDITY_MAX_SPREAD_PCT
+    depth_ok = depth_ratio is not None and depth_ratio >= LIQUIDITY_MIN_DEPTH_RATIO
+    ok = bool(limit_price and limit_price > 0 and spread_ok and depth_ok)
+    reason = "ok" if ok else ";".join(
+        ([] if spread_ok else ["spread_wide({:.1f}%)".format(spread_pct or 0)])
+        + ([] if depth_ok else ["thin_depth(ratio={:.2f})".format(
+            depth_ratio or 0)]))
+    out.update({"ok": ok, "limit_price": limit_price, "best_bid": best_bid,
+                "best_ask": best_ask, "mid": mid, "spread_pct": spread_pct,
+                "fillable_size": float(fillable), "depth_ratio": depth_ratio,
+                "reason": reason})
+    return out
+
+
 def build_trade_plan(bias, position, index_price, snapshot, chain, client,
                      sr_role=None):
     """
@@ -3441,6 +3537,29 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     except Exception as exc:  # noqa: BLE001 - margin is best-effort/observational
         notes.append("margin_estimate_failed({})".format(type(exc).__name__))
 
+    # ---- Order-book liquidity + marketable-limit prices (ENTRY-TIME only) ----
+    # One L2 read per leg (main SELL hits the bid, hedge BUY lifts the ask) to
+    # price a slippage-capped limit and gate wide/thin strikes. Best-effort: a
+    # failed book read leaves limits None and liquidity_ok None (live placement
+    # then falls back to a market order).
+    main_liq = hedge_liq = None
+    main_limit_price = hedge_limit_price = None
+    liquidity_ok = None
+    if USE_LIMIT_ENTRY:
+        try:
+            main_book = helper.fetchL2Orderbook(main_symbol, client,
+                                                depth=L2_DEPTH_LEVELS)
+            hedge_book = helper.fetchL2Orderbook(hedge_symbol, client,
+                                                 depth=L2_DEPTH_LEVELS)
+            main_liq = assess_leg_liquidity(main_book, "sell", lots)
+            hedge_liq = assess_leg_liquidity(hedge_book, "buy", lots)
+            main_limit_price = main_liq.get("limit_price")
+            hedge_limit_price = hedge_liq.get("limit_price")
+            liquidity_ok = bool(main_liq.get("ok") and hedge_liq.get("ok"))
+        except Exception as exc:  # noqa: BLE001 - liquidity is best-effort
+            notes.append("liquidity_probe_failed({})".format(
+                type(exc).__name__))
+
     return {
         "spread_kind": spread_kind,
         "option_type": option_type,
@@ -3457,6 +3576,10 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         "est_credit": est_credit,
         "max_risk_usd": max_risk_usd, "max_reward_usd": max_reward_usd,
         "est_margin": est_margin, "margin_avail": margin_avail,
+        "main_limit_price": main_limit_price,
+        "hedge_limit_price": hedge_limit_price,
+        "main_liq": main_liq, "hedge_liq": hedge_liq,
+        "liquidity_ok": liquidity_ok,
         "notes": notes,
     }
 
@@ -3494,6 +3617,28 @@ def log_trade_plan(plan, decision_dir):
         print("  MARGIN est_defined_risk=${m}  available=${a}  fits={f} "
               "(portfolio-margin estimate; sizing not capped)".format(
                   m=_fmt(em, 2), a=_fmt(ma, 2), f=fits))
+    # Order-book liquidity + marketable-limit prices (WOULD_PLACE_LIMIT).
+    ml, hl = plan.get("main_liq"), plan.get("hedge_liq")
+    if ml is not None or hl is not None:
+        def _liq_str(tag, side, liq, limit):
+            if not isinstance(liq, dict):
+                return "  {} {}: no_book".format(tag, side)
+            return ("  {} {}: limit={} touch_bid/ask={}/{} spread={}% "
+                    "fillable={} depth_ratio={} ok={}{}".format(
+                        tag, side, _fmt(limit, 1),
+                        _fmt(liq.get("best_bid"), 1), _fmt(liq.get("best_ask"), 1),
+                        _fmt(liq.get("spread_pct"), 1),
+                        _fmt(liq.get("fillable_size"), 0),
+                        _fmt(liq.get("depth_ratio"), 2), liq.get("ok"),
+                        "" if liq.get("ok") else " [{}]".format(liq.get("reason"))))
+        print("  WOULD_PLACE_LIMIT (marketable, slip<={}t):".format(
+            MAX_SLIPPAGE_TICKS))
+        print(_liq_str("MAIN ", "SELL", ml, plan.get("main_limit_price")))
+        print(_liq_str("HEDGE", "BUY ", hl, plan.get("hedge_limit_price")))
+        print("  LIQUIDITY_GATE ok={} (both legs must pass to place live; "
+              "max_spread={}% min_depth_ratio={})".format(
+                  plan.get("liquidity_ok"), LIQUIDITY_MAX_SPREAD_PCT,
+                  LIQUIDITY_MIN_DEPTH_RATIO))
     if plan.get("notes"):
         print("  NOTES: {}".format("; ".join(plan["notes"])))
 
@@ -3551,6 +3696,8 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
     # monitor evaluates THIS trade's levels, not the module defaults. Populated
     # from the trade plan; stays None in the legacy (no-plan) path.
     effective_sl = effective_tgt = None
+    # Marketable-limit entry prices (from the plan's L2 probe); None => market.
+    main_limit = hedge_limit = None
 
     if plan is not None:
         # ---- Plan-driven placement: strikes, risk-based lots and per-trade
@@ -3580,12 +3727,33 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
                   "position not-open (9.17).".format(
                       _now_ist(), effective_sl, effective_tgt))
             return {"ok": False, "opened": False, "error": "plan_no_sl_target"}
+        # Liquidity gate: refuse a live entry when the plan's L2 probe says a
+        # leg is too wide / too thin to fill our size within the slippage cap.
+        # Only enforced when limit entry is on AND the probe produced a verdict
+        # (None => probe unavailable => fall back to market, no gate).
+        if USE_LIMIT_ENTRY and plan.get("liquidity_ok") is False:
+            ml, hl = plan.get("main_liq"), plan.get("hedge_liq")
+            print("LIVE_ENTRY_BLOCKED [{}] liquidity gate failed (main:{} "
+                  "hedge:{}); refusing live entry to avoid slippage/thin fill "
+                  "— position not-open (9.17).".format(
+                      _now_ist(),
+                      (ml or {}).get("reason") if isinstance(ml, dict) else "?",
+                      (hl or {}).get("reason") if isinstance(hl, dict) else "?"))
+            return {"ok": False, "opened": False,
+                    "error": "liquidity_gate_failed"}
+        main_limit = plan.get("main_limit_price")
+        hedge_limit = plan.get("hedge_limit_price")
+        order_mode = ("limit(slip<={}t)".format(MAX_SLIPPAGE_TICKS)
+                      if (USE_LIMIT_ENTRY and main_limit and hedge_limit)
+                      else "market")
         print("LIVE_ENTRY [{}] {} size={} BUY hedge={} FIRST then SELL main={} "
               "(plan: main_strike={} hedge_strike={} effective_sl={} "
-              "effective_tgt={} expiry={}).".format(
+              "effective_tgt={} order={} main_limit={} hedge_limit={} "
+              "expiry={}).".format(
                   _now_ist(), spread_kind, size, hedge_symbol, main_symbol,
                   main_strike, hedge_strike, _fmt(effective_sl, 2),
-                  _fmt(effective_tgt, 2), expiry_ddmmyy))
+                  _fmt(effective_tgt, 2), order_mode, _fmt(main_limit, 1),
+                  _fmt(hedge_limit, 1), expiry_ddmmyy))
     else:
         # ---- Legacy path (no plan): [NEEDS INPUT] POSITION_SIZE guard, ATM
         #      main strike and a fixed-offset hedge. Retained as a fallback. ----
@@ -3661,6 +3829,16 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
                   main_strike, HEDGE_OFFSET_STRIKES, hedge_shift,
                   expiry_ddmmyy))
 
+    # Per-leg order kwargs: a MARKETABLE LIMIT (crosses to the touch + capped
+    # slippage) when a limit price is available, else a plain market order. The
+    # liquidity gate above has already ensured enough fillable size within the
+    # slippage window, so a marketable limit fills immediately but never worse
+    # than the cap.
+    def _entry_order_args(limit_price):
+        if USE_LIMIT_ENTRY and limit_price and limit_price > 0:
+            return {"order_type": "limit_order", "limit_price": limit_price}
+        return {"order_type": "market_order"}
+
     # --- Leg 1: BUY the OTM protective hedge leg FIRST (Req 9.16). -------
     # The long leg is placed before the short deliberately: if the second leg
     # fails we are left holding a LONG option (defined, tiny risk) rather than a
@@ -3668,8 +3846,8 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
     # spread's reduced (defined-risk) margin when the short is then placed, and
     # avoids a `naked_short_restricted` reject on the short.
     hedge_res = helper.placeOrder(
-        hedge_symbol, "buy", size, order_type="market_order",
-        client=client, papertrading=0)
+        hedge_symbol, "buy", size, client=client, papertrading=0,
+        **_entry_order_args(hedge_limit))
     if not (isinstance(hedge_res, dict) and hedge_res.get("ok")):
         detail = hedge_res.get("error") if isinstance(hedge_res, dict) \
             else hedge_res
@@ -3681,8 +3859,8 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
 
     # --- Leg 2: SELL the main (credit) leg (Req 9.16). ------------------
     main_res = helper.placeOrder(
-        main_symbol, "sell", size, order_type="market_order",
-        client=client, papertrading=0)
+        main_symbol, "sell", size, client=client, papertrading=0,
+        **_entry_order_args(main_limit))
     if not (isinstance(main_res, dict) and main_res.get("ok")):
         detail = main_res.get("error") if isinstance(main_res, dict) \
             else main_res

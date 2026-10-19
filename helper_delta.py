@@ -36,6 +36,10 @@ QUOTE_THROTTLE_SEC = 0.05
 # Strike step for BTC daily options (200-point grid).
 STRIKE_STEP = 200
 
+# Minimum price increment for BTC option premiums (Delta spec tick_size=0.5).
+# Limit prices are rounded to this grid so the exchange accepts them.
+TICK_SIZE = 0.5
+
 # Delta candle resolutions accepted by GET /v2/history/candles.
 CANDLE_RESOLUTIONS = ("1m", "3m", "5m", "15m", "30m",
                       "1h", "2h", "4h", "6h", "1d", "1w")
@@ -2105,6 +2109,81 @@ def fetchTickersBySymbols(symbols, client):
             if sym:
                 out[str(sym)] = _extract_greeks(row)
         return out
+    return {}
+
+
+def _normalize_book_side(levels):
+    """Normalize one side of an L2 book into a list of ``(price, size)`` floats,
+    dropping unparseable/zero rows. Delta sends price/size as strings."""
+    out = []
+    if not isinstance(levels, list):
+        return out
+    for lvl in levels:
+        if not isinstance(lvl, dict):
+            continue
+        price = _coerce_price(lvl.get("price"))
+        size = _coerce_price(lvl.get("size"))
+        if price is not None and price > 0 and size is not None and size > 0:
+            out.append((price, size))
+    return out
+
+
+def fetchL2Orderbook(symbol, client, depth=5):
+    """
+    Fetch the L2 order book for one option symbol via
+    ``GET /v2/l2orderbook/{symbol}`` (Delta market data, no auth, rate-weight 3).
+
+    Used for ENTRY-TIME-ONLY liquidity checks + marketable-limit pricing (never
+    on the per-cycle signal path), so it adds no hot-loop latency. Best-effort:
+    any transport/API failure or empty book yields ``{}`` and NEVER raises.
+
+    Returns a normalized dict::
+
+        {"symbol", "best_bid", "best_bid_size", "best_ask", "best_ask_size",
+         "bids": [(price,size)...], "asks": [(price,size)...]}
+
+    with ``bids`` sorted high->low and ``asks`` low->high (best first on each
+    side). Missing sides yield empty lists and ``None`` best prices.
+    """
+    if not symbol:
+        return {}
+    params = {}
+    if depth:
+        params["depth"] = int(depth)
+    path = "/v2/l2orderbook/{}".format(quote(str(symbol), safe=""))
+    total_attempts = MANUAL_LTP_MAX_RETRIES + 1
+    for attempt in range(total_attempts):
+        retry_remaining = attempt < MANUAL_LTP_MAX_RETRIES
+        try:
+            response = client.request("GET", path, params=params or None)
+        except requests.exceptions.RequestException:
+            if retry_remaining:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            return {}
+        except DeltaAPIError as exc:
+            if _is_transient_delta_error(exc) and retry_remaining:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            return {}
+
+        result = response.get("result") if isinstance(response, dict) else None
+        if not isinstance(result, dict):
+            return {}
+        # Delta labels the bid side "buy" and the ask side "sell".
+        bids = _normalize_book_side(result.get("buy"))
+        asks = _normalize_book_side(result.get("sell"))
+        bids.sort(key=lambda ps: ps[0], reverse=True)   # best (highest) first
+        asks.sort(key=lambda ps: ps[0])                 # best (lowest) first
+        return {
+            "symbol": result.get("symbol") or str(symbol),
+            "best_bid": bids[0][0] if bids else None,
+            "best_bid_size": bids[0][1] if bids else None,
+            "best_ask": asks[0][0] if asks else None,
+            "best_ask_size": asks[0][1] if asks else None,
+            "bids": bids,
+            "asks": asks,
+        }
     return {}
 
 
