@@ -4746,6 +4746,34 @@ def run():
                 print("SIGNAL_ERROR [{ts}] signal cycle failed, continuing: "
                       "{typ}: {msg}".format(
                           ts=_now_ist(), typ=type(exc).__name__, msg=exc))
+
+            # ---- Tight SL/target monitoring while a position is open --------
+            # If the cycle above opened a position, stop waiting for the slow
+            # 3-min candle and poll the open spread every LTP_POLL_INTERVAL so
+            # SL/target are checked near-real-time (Sensex-equivalent). Each poll
+            # re-enters checkCriteriaAndTakeTrade, which takes the monitor branch
+            # (no new entry) and flips position_open back to False on a confirmed
+            # exit. The moment the trade closes we drop straight back to the
+            # normal 3-min candle cadence above.
+            if state.get("position_open"):
+                print("MONITOR_LOOP [{ts}] position OPEN — switching to {p}s "
+                      "SL/target polling until it closes.".format(
+                          ts=_now_ist(), p=LTP_POLL_INTERVAL))
+                while state.get("position_open"):
+                    time.sleep(LTP_POLL_INTERVAL)
+                    roll_contract_log()
+                    try:
+                        state = checkCriteriaAndTakeTrade(client, state)
+                    except KeyboardInterrupt:
+                        raise
+                    except Exception as exc:  # noqa: BLE001 - keep polling
+                        print("MONITOR_ERROR [{ts}] monitor poll failed, "
+                              "continuing: {typ}: {msg}".format(
+                                  ts=_now_ist(), typ=type(exc).__name__,
+                                  msg=exc))
+                print("MONITOR_LOOP [{ts}] position CLOSED — resuming normal "
+                      "{n}-min candle cadence.".format(
+                          ts=_now_ist(), n=TIMEFRAME_MINUTES))
     except KeyboardInterrupt:
         print("SIGNAL_LOOP [{ts}] stopped by operator (KeyboardInterrupt); "
               "no orders were placed.".format(ts=_now_ist()))
