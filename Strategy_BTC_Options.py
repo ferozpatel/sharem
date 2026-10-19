@@ -4253,20 +4253,38 @@ def monitor_open_position(client, state):
     state["tgt_confirm_count"] = tgt_count
     state["sl_confirm_count"] = sl_count
 
-    print("MONITOR [{ts}] {kind} main={ms}@{mp} hedge={hs}@{hp} "
-          "spread_cost={cost} entry_credit={ec}{rb} unrealized={up} pts "
-          "(pnl={pnl}) target={tp} sl={sl} tgt_confirm={tc}/{tt} "
-          "sl_confirm={sc}/{st} trail={trail}".format(
-              ts=_now_ist(), kind=open_position.get("spread_kind"),
-              ms=main_symbol, mp=_fmt(main_ltp),
-              hs=hedge_symbol, hp=_fmt(hedge_ltp),
-              cost=_fmt(current_spread_cost), ec=_fmt(entry_credit),
-              rb=" (rebaselined)" if rebaselined else "",
-              up=_fmt(unrealized_points), pnl=_fmt(unrealized_pnl),
-              tp=_fmt(eff_tgt), sl=sl_level_desc,
-              tc=tgt_count, tt=TGT_CONFIRM_TICKS,
-              sc=sl_count, st=SL_CONFIRM_TICKS,
-              trail="breakeven" if already_breakeven else trail_action))
+    # Logging (Sensex-equivalent). While SL/target is CONFIRMING, log a WATCH
+    # line EVERY poll so a breach is never missed. Otherwise emit the routine
+    # "In Trade ... No Exit" heartbeat THROTTLED to ~once/min (near the top of a
+    # minute) so the 2s poll does not flood the log — mirroring Sensex's
+    # LTP_SL_WATCH / LTP_TGT_WATCH + "In Trade" heartbeat.
+    if sl_hit:
+        print("LTP_SL_WATCH [{ts}] In Trade ({kind}). unrealized={up} pts <= "
+              "SL {sl} confirm={sc}/{st} (pnl=${pnl})".format(
+                  ts=_now_ist(), kind=open_position.get("spread_kind"),
+                  up=_fmt(unrealized_points), sl=sl_level_desc,
+                  sc=sl_count, st=SL_CONFIRM_TICKS, pnl=_fmt(unrealized_pnl)))
+    elif target_hit:
+        print("LTP_TGT_WATCH [{ts}] In Trade ({kind}). unrealized={up} pts >= "
+              "target {tp} confirm={tc}/{tt} (pnl=${pnl})".format(
+                  ts=_now_ist(), kind=open_position.get("spread_kind"),
+                  up=_fmt(unrealized_points), tp=_fmt(eff_tgt),
+                  tc=tgt_count, tt=TGT_CONFIRM_TICKS, pnl=_fmt(unrealized_pnl)))
+    elif datetime.now(REFERENCE_TIMEZONE).second < LTP_POLL_INTERVAL:
+        print("IN_TRADE [{ts}] ({kind}) No Exit. main={ms}@{mp} "
+              "hedge={hs}@{hp} spread_cost={cost} entry_credit={ec}{rb} "
+              "unrealized={up} pts (pnl=${pnl}) target={tp} sl={sl} "
+              "tgt_confirm={tc}/{tt} sl_confirm={sc}/{st} trail={trail}".format(
+                  ts=_now_ist(), kind=open_position.get("spread_kind"),
+                  ms=main_symbol, mp=_fmt(main_ltp),
+                  hs=hedge_symbol, hp=_fmt(hedge_ltp),
+                  cost=_fmt(current_spread_cost), ec=_fmt(entry_credit),
+                  rb=" (rebaselined)" if rebaselined else "",
+                  up=_fmt(unrealized_points), pnl=_fmt(unrealized_pnl),
+                  tp=_fmt(eff_tgt), sl=sl_level_desc,
+                  tc=tgt_count, tt=TGT_CONFIRM_TICKS,
+                  sc=sl_count, st=SL_CONFIRM_TICKS,
+                  trail="breakeven" if already_breakeven else trail_action))
 
     # 5. Exit on a confirmed target / SL (9.19, 9.20). Target takes precedence
     #    when both somehow confirm on the same poll (a realized profit exit is
