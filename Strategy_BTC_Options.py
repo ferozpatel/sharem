@@ -309,6 +309,13 @@ MAX_SLIPPAGE_TICKS = 4
 # verdict; live placement refuses a trade that fails the gate.
 LIQUIDITY_MAX_SPREAD_PCT = 25.0       # (ask-bid)/mid * 100, per leg
 LIQUIDITY_MIN_DEPTH_RATIO = 1.0       # fillable size >= lots * this
+# Edge-preserving main-leg fallback: sell the ATM by default, but if the ATM
+# book is missing or its spread exceeds LIQUIDITY_MAX_SPREAD_PCT, fall to the
+# 1-OTM strike ONLY when that strike's book is genuinely tighter/tradeable. We
+# never shift OTM merely because it is cheaper (that would erode the ATM premium
+# edge). Spread drives the choice (lots-independent); the final gate still
+# checks depth vs lots on whichever strike is chosen.
+MAIN_LIQUIDITY_OTM_FALLBACK = True
 
 
 # ============================================================
@@ -3471,6 +3478,17 @@ def _round_to_tick(price, mode="nearest"):
     return round(r * tick, 8)
 
 
+def _book_spread_pct(book):
+    """Top-of-book spread as a % of mid, or None for a missing/one-sided book."""
+    if not isinstance(book, dict):
+        return None
+    bb, ba = book.get("best_bid"), book.get("best_ask")
+    if not bb or not ba or bb <= 0 or ba <= 0:
+        return None
+    mid = (bb + ba) / 2.0
+    return ((ba - bb) / mid * 100.0) if mid > 0 else None
+
+
 def assess_leg_liquidity(book, side, lots):
     """
     From an L2 book (``helper.fetchL2Orderbook``) compute the marketable-limit
@@ -3577,6 +3595,52 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     notes = []
     if main_strike_note and main_strike_note != "atm":
         notes.append("main_strike={}".format(main_strike_note))
+
+    # ---- Liquidity-aware main strike: ATM primary, 1-OTM fallback ONLY when
+    #      the ATM book is missing/too wide (edge-preserving). Spread drives the
+    #      choice here (lots-independent); the final gate still checks depth vs
+    #      lots on the chosen strike. main_book is reused by that final gate so
+    #      the ATM book is fetched at most once. ----
+    main_symbol = _sym(main_strike)
+    main_book = None
+    if USE_LIMIT_ENTRY and MAIN_LIQUIDITY_OTM_FALLBACK:
+        try:
+            atm_book = helper.fetchL2Orderbook(main_symbol, client,
+                                               depth=L2_DEPTH_LEVELS)
+        except Exception:  # noqa: BLE001 - book probe is best-effort
+            atm_book = {}
+        main_book = atm_book
+        atm_spread = _book_spread_pct(atm_book)
+        atm_ok = (atm_spread is not None
+                  and atm_spread <= LIQUIDITY_MAX_SPREAD_PCT)
+        if not atm_ok:
+            otm_sign = -1 if option_type == "P" else 1
+            otm_strike = int(main_strike) + otm_sign * STRIKE_STEP
+            if otm_strike > 0 and _strike_is_listed(chain, otm_strike,
+                                                     option_type):
+                try:
+                    otm_sym = _sym(otm_strike)
+                    otm_book = helper.fetchL2Orderbook(otm_sym, client,
+                                                       depth=L2_DEPTH_LEVELS)
+                except Exception:  # noqa: BLE001
+                    otm_sym, otm_book = None, {}
+                otm_spread = _book_spread_pct(otm_book)
+                otm_ok = (otm_spread is not None
+                          and otm_spread <= LIQUIDITY_MAX_SPREAD_PCT)
+                # Shift to 1-OTM ONLY when the ATM is untradeable AND the 1-OTM
+                # is tradeable — never merely because it is cheaper.
+                if otm_ok and otm_sym:
+                    main_strike = otm_strike
+                    main_symbol = otm_sym
+                    main_book = otm_book
+                    notes.append("main_liq_shift(atm_spread={}%>cap->1OTM {})"
+                                 .format(_fmt(atm_spread, 1), otm_strike))
+                else:
+                    notes.append("atm_wide(spread={}%);1OTM_not_better_kept_atm"
+                                 .format(_fmt(atm_spread, 1)))
+            else:
+                notes.append("atm_wide(spread={}%);1OTM_unlisted_kept_atm"
+                             .format(_fmt(atm_spread, 1)))
 
     # ---- Entry-time Greeks enrichment (bulk list omits Greeks on live feed) ----
     # One batched /v2/tickers call for the main + OTM hedge candidates so the
@@ -3691,8 +3755,11 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     liquidity_ok = None
     if USE_LIMIT_ENTRY:
         try:
-            main_book = helper.fetchL2Orderbook(main_symbol, client,
-                                                depth=L2_DEPTH_LEVELS)
+            # Reuse the main book already fetched for the ATM/1-OTM choice above
+            # (fetched at most once); only fetch it here if that probe was off.
+            if not main_book:
+                main_book = helper.fetchL2Orderbook(main_symbol, client,
+                                                    depth=L2_DEPTH_LEVELS)
             hedge_book = helper.fetchL2Orderbook(hedge_symbol, client,
                                                  depth=L2_DEPTH_LEVELS)
             main_liq = assess_leg_liquidity(main_book, "sell", lots)
@@ -4828,6 +4895,8 @@ def startup():
     print("  l2_depth_levels      = {}".format(L2_DEPTH_LEVELS))
     print("  liquidity_gate       = spread <= {}% AND fillable >= lots*{}"
           .format(LIQUIDITY_MAX_SPREAD_PCT, LIQUIDITY_MIN_DEPTH_RATIO))
+    print("  main_leg_fallback    = ATM primary; 1-OTM only if ATM book "
+          "missing/wider than cap ({})".format(MAIN_LIQUIDITY_OTM_FALLBACK))
     print("  monitor_cadence      = {}s while in a trade; {}-min candle when "
           "flat".format(LTP_POLL_INTERVAL, TIMEFRAME_MINUTES))
     print("  trailing_to_breakeven= {} (trigger {} of target)".format(
