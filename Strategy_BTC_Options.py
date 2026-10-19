@@ -286,7 +286,16 @@ HEDGE_DELTA_TOLERANCE = 0.08
 # Premium cap: a hedge whose premium exceeds this fraction of the MAIN premium
 # is rejected so the long leg never eats the collected credit (Sensex
 # HEDGE_MAX_PREMIUM_FRACTION).
-HEDGE_MAX_PREMIUM_FRACTION = 0.6
+#
+# 0.60 -> 0.50 for Sensex parity. Sensex lowered this for exactly the case our
+# FIRST live trade hit: hedge 278 vs main 519 = 53.6% premium (just under the
+# old 0.60 cap) => a CLOSE hedge that tracks the main leg, offset_ratio 0.645,
+# so net_sl shrank to 35% of gross and sizing ballooned to 433 lots. Because
+# lots scale as 1/(1-ratio), any error in the estimated ratio is amplified
+# ~1/(1-ratio)^2 (~8x at 0.645) — it blows through FIXED_RISK fast. Rejecting an
+# expensive near hedge pushes the pick further out, which lowers the offset
+# STRUCTURALLY instead of us discounting a hedge we know is tight.
+HEDGE_MAX_PREMIUM_FRACTION = 0.5
 
 # Option candle-range median (drives SL/target). Last N 3-min HIGH-LOW ranges;
 # low-sample guard halves a thin-window median that is implausibly large (early
@@ -294,6 +303,19 @@ HEDGE_MAX_PREMIUM_FRACTION = 0.6
 OPT_RANGE_CANDLES = 10
 OPT_RANGE_MIN_MEDIAN_CANDLES = 4
 OPT_RANGE_LOW_SAMPLE_FACTOR = 0.5
+# Sensex uses an ABSOLUTE low-sample threshold (40 premium pts). BTC premiums
+# swing far more with vol/time-to-expiry, so the equivalent test is RELATIVE: a
+# thin window whose median exceeds this fraction of the sold premium is a
+# sampling artifact (opening volatility of a freshly-rolled contract) and is
+# halved. Sensex LOW_SAMPLE_MEDIAN_THRESHOLD equivalent.
+OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION = 0.35
+# Target-reachability rail (Sensex 2026-10-15 lesson). effective_tgt is
+# median * TARGET_MULTIPLIER (4.0); if the median is inflated the target level
+# (premium - effective_tgt) can go NEGATIVE/unreachable, leaving the trade with
+# no exit but the SL. Cap the median so the target never asks the premium to
+# fall more than this fraction. Capping the MEDIAN (not just the target) keeps
+# SL and target on one basis, so R:R stays exactly 1.6.
+MAX_TGT_PREMIUM_FRACTION = 0.70
 
 # Fallback when a freshly-listed option has no usable candle history yet: size
 # SL/target as a fraction of the entry premium instead of the candle median.
@@ -3181,9 +3203,14 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
     candle history exists yet (freshly-listed strike) — the caller then falls
     back to a premium-fraction SL/target. Never raises.
 
-    Low-sample guard: a thin window (< OPT_RANGE_MIN_MEDIAN_CANDLES valid
-    candles) that is implausibly large is halved, since early in a fresh
-    contract every surviving candle is opening volatility.
+    Window: the first candle is skipped (opening-volatility outlier) and the
+    LAST ``n_candles`` (default OPT_RANGE_CANDLES = 10) are used. When fewer
+    than 10 exist, the median is still taken over whatever valid candles are
+    available (no minimum) — matching Sensex.
+
+    The low-sample halving and target-reachability caps are applied by the
+    CALLER (build_trade_plan), which knows the sold premium those guards are
+    measured against. See LOW_SAMPLE_MEDIAN_HALVED / MEDIAN_CAPPED.
     """
     try:
         # getHistorical returns a list of {time,open,high,low,close,volume}
@@ -3737,6 +3764,46 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     # ---- SL/target basis: short-leg candle-range median × multiplier ----
     median_range, n_used = option_candle_median_range(main_symbol, client)
     if median_range and median_range > 0:
+        # --- Guard 1: LOW-SAMPLE median (Sensex LOW_SAMPLE_MEDIAN_HALVED) ---
+        # A thin window right after the daily contract roll is all opening
+        # volatility, so its median runs rich. Halve it only when the window is
+        # thin AND the median is implausibly large relative to the premium.
+        if (n_used < OPT_RANGE_MIN_MEDIAN_CANDLES and main_premium
+                and main_premium > 0
+                and median_range > main_premium
+                * OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION):
+            _raw = median_range
+            median_range = median_range * OPT_RANGE_LOW_SAMPLE_FACTOR
+            notes.append("low_sample_median_halved")
+            print("LOW_SAMPLE_MEDIAN_HALVED [{}] {} candles={} (< {}) "
+                  "raw_median={} (> {} x premium {}) -> used_median={}".format(
+                      _now_ist(), main_symbol, n_used,
+                      OPT_RANGE_MIN_MEDIAN_CANDLES, _fmt(_raw, 2),
+                      OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION,
+                      _fmt(main_premium, 2), _fmt(median_range, 2)))
+
+        # --- Guard 2: TARGET REACHABILITY (Sensex 2026-10-15 lesson) -------
+        # target level = premium - median*TARGET_MULTIPLIER. If the median is
+        # large relative to the premium that level goes negative/unreachable and
+        # the trade can only end at SL or square-off. Cap the MEDIAN so the
+        # target never demands more than MAX_TGT_PREMIUM_FRACTION of decay;
+        # capping the shared basis keeps R:R at exactly 1.6.
+        if main_premium and main_premium > 0:
+            median_cap = (float(main_premium) * MAX_TGT_PREMIUM_FRACTION
+                          / TARGET_MULTIPLIER)
+            if median_range > median_cap:
+                _raw = median_range
+                median_range = median_cap
+                notes.append("median_capped_for_target_reachability")
+                print("MEDIAN_CAPPED [{}] {} raw_median={} would need the "
+                      "premium to fall {} (> {} of {}) -> capped median={} "
+                      "(target stays reachable; R:R unchanged at {}).".format(
+                          _now_ist(), main_symbol, _fmt(_raw, 2),
+                          _fmt(_raw * TARGET_MULTIPLIER, 2),
+                          MAX_TGT_PREMIUM_FRACTION, _fmt(main_premium, 2),
+                          _fmt(median_range, 2),
+                          _fmt(TARGET_MULTIPLIER / SL_MULTIPLIER, 2)))
+
         effective_sl = median_range * SL_MULTIPLIER
         effective_tgt = median_range * TARGET_MULTIPLIER
         sl_basis = "candle_median({}c)={}".format(n_used, _fmt(median_range, 2))
@@ -3761,30 +3828,29 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
             MIN_LOTS, None, None, "none")
         notes.append("size_defaulted_min_lots(no_sl)")
 
-    # ---- Monitor (NET spread) SL/target points --------------------------
-    # CRITICAL: the monitor measures the NET spread P&L (entry_credit - spread
-    # cost), which ALREADY includes the hedge offset. Lots were sized on the NET
-    # stop (net_sl_points = effective_sl * (1 - offset_ratio)), so the monitor
-    # MUST enforce the NET points too — otherwise it stops at the GROSS
-    # effective_sl and realized risk is ~1/(1-offset) too big. (First live trade
-    # sized for $10 lost ~$29 because the monitor used the gross SL.) The target
-    # scales by the same (1 - offset_ratio) so R:R is preserved.
-    monitor_sl_points = net_sl_points if net_sl_points else effective_sl
+    # ---- NET (hedge-adjusted) target points -----------------------------
+    # The position is MONITORED on the GROSS main-leg premium (effective_sl /
+    # effective_tgt) exactly like Sensex. But the REALIZED USD P&L is net of the
+    # hedge, so the dollar risk/reward below must use the NET points:
+    #     net_sl_points  = effective_sl  * (1 - offset_ratio)   [from sizing]
+    #     net_tgt_points = effective_tgt * (1 - offset_ratio)
+    # Because both scale by the same factor, R:R is preserved exactly at
+    # TARGET_MULTIPLIER / SL_MULTIPLIER = 4.0 / 2.5 = 1.6.
     if effective_tgt is not None and offset_ratio is not None:
-        monitor_tgt_points = effective_tgt * (1 - offset_ratio)
+        net_tgt_points = effective_tgt * (1 - offset_ratio)
     else:
-        monitor_tgt_points = effective_tgt
+        net_tgt_points = effective_tgt
 
     # ---- Estimated credit + modelled risk/reward (USD) ----
     est_credit = None
     if main_premium is not None and hedge_premium is not None:
         est_credit = float(main_premium) - float(hedge_premium)
-    # Risk/reward are on the NET monitor points the position is actually managed
-    # on, so they match the realized P&L.
-    max_risk_usd = (monitor_sl_points * CONTRACT_VALUE * lots
-                    if monitor_sl_points else None)
-    max_reward_usd = (monitor_tgt_points * CONTRACT_VALUE * lots
-                      if monitor_tgt_points else None)
+    # Risk/reward in USD on the NET points, so they match the realized P&L when
+    # the main leg travels effective_sl (loss) or effective_tgt (profit).
+    max_risk_usd = (net_sl_points * CONTRACT_VALUE * lots
+                    if net_sl_points else None)
+    max_reward_usd = (net_tgt_points * CONTRACT_VALUE * lots
+                      if net_tgt_points else None)
 
     # ---- Estimated portfolio (defined-risk) margin vs available balance ----
     # Observation-only: shows whether the planned spread fits available margin.
@@ -3838,8 +3904,7 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         "hedge_oi": hedge_oi,
         "median_range": median_range, "median_candles": n_used,
         "effective_sl": effective_sl, "effective_tgt": effective_tgt,
-        "monitor_sl_points": monitor_sl_points,
-        "monitor_tgt_points": monitor_tgt_points,
+        "net_tgt_points": net_tgt_points,
         "sl_basis": sl_basis,
         "lots": lots, "offset_ratio": offset_ratio,
         "net_sl_points": net_sl_points, "ratio_source": ratio_source,
@@ -4975,8 +5040,17 @@ def startup():
     print("STARTUP sizing + SL/target (Sensex-equivalent, per-trade):")
     print("  fixed_risk_per_trade = ${} USD net".format(
         _fmt(FIXED_RISK_PER_TRADE, 2)))
-    print("  sl_multiplier        = {}  target_multiplier = {}".format(
-        SL_MULTIPLIER, TARGET_MULTIPLIER))
+    print("  sl_multiplier        = {}  target_multiplier = {}  (R:R 1:{})"
+          .format(SL_MULTIPLIER, TARGET_MULTIPLIER,
+                  _fmt(TARGET_MULTIPLIER / SL_MULTIPLIER, 2)))
+    print("  median_basis         = last {} x 3m HIGH-LOW (1st skipped); "
+          "fewer than {} is still used".format(
+              OPT_RANGE_CANDLES, OPT_RANGE_CANDLES))
+    print("  median_guards        = halve if <{}c AND >{}x premium; cap so "
+          "target needs <={}x premium decay".format(
+              OPT_RANGE_MIN_MEDIAN_CANDLES,
+              OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION,
+              MAX_TGT_PREMIUM_FRACTION))
     print("  contract_value       = {} BTC/contract (P&L multiplier)".format(
         CONTRACT_VALUE))
     print("  hedge                = delta band (target |delta|*{} +/-{}) -> "
