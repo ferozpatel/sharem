@@ -3178,6 +3178,73 @@ def select_hedge_by_delta(main_strike, option_type, chain,
     return int(hedge_strike), main_delta, hedge_abs_delta
 
 
+def _enrich_chain_greeks(chain, main_strike, option_type, expiry, client):
+    """
+    ENTRY-TIME-ONLY: patch per-strike Greeks onto the chain rows the delta-based
+    hedge selection needs, via ONE batched ``/v2/tickers`` call.
+
+    The per-cycle bulk option-chain list does not carry Greeks on the live Delta
+    feed, so ``select_hedge_by_delta`` would otherwise always fall back to the
+    fixed strike offset. This fetches Greeks for the sold main strike plus the
+    nearest OTM hedge candidates (same side) in a single request and merges them
+    into the matching chain rows IN PLACE. It is never called on the per-cycle
+    signal path, so it adds no hot-loop latency.
+
+    Returns ``-1`` when the main strike already carries a usable delta (nothing
+    fetched), the number of rows patched (``>= 0``) otherwise. Best-effort: any
+    failure leaves the chain untouched and yields ``0`` so the caller's
+    fixed-offset hedge fallback applies. Never raises.
+    """
+    if not chain:
+        return 0
+    side = "call" if option_type == "C" else "put"
+
+    # If the sold main strike already has a usable delta, Greeks are present
+    # (future-proof: the live feed may start including them) — skip the fetch.
+    for row in chain:
+        if (isinstance(row, dict)
+                and int(round(row.get("strike") or 0)) == int(main_strike)
+                and side in str(row.get("contract_type") or "").lower()
+                and row.get("delta") is not None):
+            return -1
+
+    # Candidate strikes: main + nearest OTM steps on the correct side, bounded
+    # to the batched-ticker symbol limit (one request).
+    step = STRIKE_STEP
+    n_otm = helper.TICKERS_BY_SYMBOL_MAX - 1
+    if option_type == "P":
+        strikes = [int(main_strike) - i * step for i in range(0, n_otm + 1)]
+    else:
+        strikes = [int(main_strike) + i * step for i in range(0, n_otm + 1)]
+
+    symbols = []
+    for s in strikes:
+        if s <= 0:
+            continue
+        try:
+            symbols.append(helper.buildSymbol(
+                product_type="option", underlying=UNDERLYING_ASSET,
+                option_type=option_type, strike=s, expiry_ddmmyy=expiry))
+        except Exception:  # noqa: BLE001 - skip an unbuildable candidate
+            continue
+    if not symbols:
+        return 0
+
+    fetched = helper.fetchTickersBySymbols(symbols, client)
+    if not fetched:
+        return 0
+
+    patched = 0
+    for row in chain:
+        if not isinstance(row, dict):
+            continue
+        g = fetched.get(str(row.get("symbol")))
+        if g:
+            row.update(g)
+            patched += 1
+    return patched
+
+
 def calc_lots_by_risk(effective_sl_points, main_premium=None,
                       hedge_premium=None, main_delta=None, hedge_delta=None):
     """
@@ -3274,6 +3341,17 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
                                   expiry_ddmmyy=expiry)
 
     notes = []
+
+    # ---- Entry-time Greeks enrichment (bulk list omits Greeks on live feed) ----
+    # One batched /v2/tickers call for the main + OTM hedge candidates so the
+    # delta-based hedge selection can run; silently degrades to the fixed-offset
+    # fallback when Greeks are unavailable. Not on the per-cycle path.
+    greeks_patched = _enrich_chain_greeks(
+        chain, main_strike, option_type, expiry, client)
+    if greeks_patched > 0:
+        notes.append("greeks_enriched({}rows)".format(greeks_patched))
+    elif greeks_patched == 0:
+        notes.append("greeks_unavailable(delta_hedge->fallback)")
 
     # ---- Hedge selection (delta-based, 200-grid) ----
     hedge_strike, main_delta, hedge_delta = select_hedge_by_delta(

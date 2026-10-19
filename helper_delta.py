@@ -1997,6 +1997,75 @@ def fetchOptionChain(underlying, expiry_ddmmyyyy, client):
         "{!r} expiry {!r}.".format(underlying, expiry_ddmmyyyy))
 
 
+# Max symbols the per-product ticker endpoint accepts in one comma-separated
+# call (Delta docs, 13.01.26 change note). Bounds the entry-time greeks fetch to
+# a single request.
+TICKERS_BY_SYMBOL_MAX = 10
+
+
+def fetchTickersBySymbols(symbols, client):
+    """
+    Fetch per-strike Greeks + IV for up to ``TICKERS_BY_SYMBOL_MAX`` option
+    symbols in ONE ``GET /v2/tickers/{symbols}`` call (comma-separated).
+
+    The bulk option-chain list (``fetchOptionChain``) does NOT populate the
+    nested ``greeks`` object on the live India feed, but the per-product ticker
+    endpoint does. This is a best-effort, ENTRY-TIME-ONLY enrichment used by the
+    strategy's delta-based hedge selection — it is never called on the per-cycle
+    signal path, so it adds no hot-loop latency.
+
+    Returns ``{symbol: {"delta","gamma","theta","vega","rho","bid_iv","ask_iv",
+    "mark_iv"}}`` (via ``_extract_greeks``) for the symbols the exchange
+    returned. Best-effort: any transport/API failure or empty result yields
+    ``{}`` and NEVER raises, so a missing Greek only degrades the hedge to its
+    premium/fixed-offset fallback rather than breaking the trade.
+    """
+    if not symbols:
+        return {}
+    # De-dupe preserving order, cap at the endpoint limit.
+    seen = []
+    for sym in symbols:
+        s = str(sym).strip()
+        if s and s not in seen:
+            seen.append(s)
+        if len(seen) >= TICKERS_BY_SYMBOL_MAX:
+            break
+    if not seen:
+        return {}
+
+    path = "/v2/tickers/{}".format(quote(",".join(seen), safe=""))
+    total_attempts = MANUAL_LTP_MAX_RETRIES + 1
+    for attempt in range(total_attempts):
+        retry_remaining = attempt < MANUAL_LTP_MAX_RETRIES
+        try:
+            response = client.request("GET", path)
+        except requests.exceptions.RequestException:
+            if retry_remaining:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            return {}
+        except DeltaAPIError as exc:
+            if _is_transient_delta_error(exc) and retry_remaining:
+                time.sleep(MANUAL_LTP_BACKOFF_BASE_SEC * (2 ** attempt))
+                continue
+            return {}
+
+        result = response.get("result") if isinstance(response, dict) else None
+        if isinstance(result, dict):
+            result = [result]
+        if not isinstance(result, list):
+            return {}
+        out = {}
+        for row in result:
+            if not isinstance(row, dict):
+                continue
+            sym = row.get("symbol")
+            if sym:
+                out[str(sym)] = _extract_greeks(row)
+        return out
+    return {}
+
+
 def buildChainSnapshot(chain, atm_strike, step=STRIKE_STEP, n=8):
     """
     Build the 17-strike option-chain snapshot anchored at the ATM strike.
