@@ -4153,7 +4153,7 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
                   _now_ist(), hedge_symbol, main_symbol, detail))
         unwind = helper.placeOrder(
             hedge_symbol, "sell", size, order_type="market_order",
-            client=client, papertrading=0)
+            client=client, papertrading=0, reduce_only=True)
         if isinstance(unwind, dict) and unwind.get("ok"):
             print("LIVE_ENTRY_RECOVER [{}] hedge leg {} sold back after main "
                   "failure; position left not-open (9.17).".format(
@@ -4344,28 +4344,50 @@ def _exit_open_position(client, open_position, reason):
     if size is None:
         return {"ok": False, "error": "position_size_unset"}
 
-    # Reverse the main (short) leg: BUY to close.
+    # Reverse both legs with REDUCE-ONLY market orders. reduce_only guarantees a
+    # close order can NEVER open or flip a position — so even if a leg is already
+    # flat (e.g. closed manually) the order is a no-op instead of opening a new
+    # unwanted position.
     main_close = helper.placeOrder(
         main_symbol, "buy", size, order_type="market_order",
-        client=client, papertrading=0)
+        client=client, papertrading=0, reduce_only=True)
     main_ok = isinstance(main_close, dict) and main_close.get("ok")
 
-    # Reverse the hedge (long) leg: SELL to close.
     hedge_close = helper.placeOrder(
         hedge_symbol, "sell", size, order_type="market_order",
-        client=client, papertrading=0)
+        client=client, papertrading=0, reduce_only=True)
     hedge_ok = isinstance(hedge_close, dict) and hedge_close.get("ok")
 
-    if main_ok and hedge_ok:
-        return {"ok": True, "main_close": main_close, "hedge_close": hedge_close}
+    # SOURCE OF TRUTH: verify the account is actually FLAT on both legs rather
+    # than trusting order acceptance (acceptance != fill; a reduce_only order on
+    # an already-flat leg may also be rejected). getPositions returns (0, None)
+    # when flat, (size, px) when still open, (None, None) when unreadable.
+    main_sz, _ = helper.getPositions(main_symbol, client)
+    hedge_sz, _ = helper.getPositions(hedge_symbol, client)
+    main_flat = (main_sz == 0)
+    hedge_flat = (hedge_sz == 0)
 
+    if main_flat and hedge_flat:
+        # Confirmed flat on the exchange — the true success condition.
+        return {"ok": True, "verified_flat": True,
+                "main_close": main_close, "hedge_close": hedge_close}
+
+    if (main_sz is None or hedge_sz is None) and main_ok and hedge_ok:
+        # Positions could not be read, but both close orders were accepted —
+        # best-effort success, flagged so the operator knows it is unverified.
+        print("MONITOR_EXIT_WARN [{}] both close orders accepted but position "
+              "state could not be VERIFIED flat (positions read unavailable); "
+              "treating as closed (unverified).".format(_now_ist()))
+        return {"ok": True, "verified_flat": False,
+                "main_close": main_close, "hedge_close": hedge_close}
+
+    # A leg is still open (or verification says not-flat) — do NOT mark closed.
     return {
         "ok": False,
-        "error": "exit_leg_failed",
-        "main_ok": bool(main_ok),
-        "hedge_ok": bool(hedge_ok),
-        "main_close": main_close,
-        "hedge_close": hedge_close,
+        "error": "still_open_after_exit",
+        "main_ok": bool(main_ok), "hedge_ok": bool(hedge_ok),
+        "main_size": main_sz, "hedge_size": hedge_sz,
+        "main_close": main_close, "hedge_close": hedge_close,
     }
 
 
@@ -5043,6 +5065,36 @@ def run():
     # loop cleanly. Observation-only: no orders. The next-boundary wait is
     # recomputed from the wall clock every iteration, so a slow cycle never
     # accumulates drift (it simply targets the following candle).
+    # ---- Startup residual-position check (state resync safety) -----------
+    # The bot starts with EMPTY state (no open position), so it assumes the
+    # account is flat. If the exchange actually has open positions at startup
+    # (from a prior crash, a manual trade, or a desync), the bot would ignore
+    # them and could open MORE on top. Surface them loudly so the operator can
+    # reconcile. We do NOT auto-square — the bot can't know whether a residual
+    # is its own or a deliberate manual position.
+    try:
+        residual = helper._open_positions_after_close(client)
+        if residual:
+            print("=" * 60)
+            print("STARTUP_RESIDUAL_POSITIONS [{}] WARNING: {} open position(s) "
+                  "already exist on the account at startup — the bot starts FLAT "
+                  "and will NOT manage these. Reconcile/flatten manually before "
+                  "trusting live entries:".format(_now_ist(), len(residual)))
+            for row in residual:
+                print("  RESIDUAL: {}".format(
+                    helper._position_identifier(row)
+                    if hasattr(helper, "_position_identifier") else row))
+            print("=" * 60)
+        elif residual is None:
+            print("STARTUP_RESIDUAL_CHECK [{}] could not read /v2/positions to "
+                  "verify a flat start (continuing).".format(_now_ist()))
+        else:
+            print("STARTUP_RESIDUAL_CHECK [{}] account is flat at startup "
+                  "(no open positions).".format(_now_ist()))
+    except Exception as exc:  # noqa: BLE001 - never block startup on this check
+        print("STARTUP_RESIDUAL_CHECK [{}] residual check failed ({}: {}); "
+              "continuing.".format(_now_ist(), type(exc).__name__, exc))
+
     print("SIGNAL_LOOP [{ts}] starting observation cycles aligned to {n}-min "
           "candle closes (no orders will be placed).".format(
               ts=_now_ist(), n=TIMEFRAME_MINUTES))
