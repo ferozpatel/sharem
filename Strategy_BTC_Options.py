@@ -144,6 +144,17 @@ ALWAYS_CREDIT = True
 # call spread). Default 2 strikes = 400 points of defined-risk width.
 HEDGE_OFFSET_STRIKES = 2
 
+# Main (sold) leg OTM shift from the ATM, in premium points (Sensex ONE_OTM).
+# 0 = sell the exact ATM (default, Sensex-equivalent). When > 0 the sold leg is
+# shifted this many points OTM (bull sells the PE ONE_OTM BELOW the ATM, bear
+# sells the CE ONE_OTM ABOVE it). Snapped to the 200 grid.
+ONE_OTM = 0
+# If the resolved main-sell strike is NOT a listed contract (the ATM as per the
+# running spot is unavailable in the chain), walk up to this many 200-pt steps
+# FURTHER OTM to the nearest LISTED strike before giving up. Keeps the sold leg
+# on a real, tradeable strike instead of a phantom one.
+MAIN_STRIKE_FALLBACK_MAX_STEPS = 3
+
 # Pre-expiry lead time (minutes) during which no new entries open, ending at the
 # 12:00 UTC daily expiry (Req 9.24).
 PRE_EXPIRY_LEAD_MINUTES = 15
@@ -3327,6 +3338,52 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None,
     return lots, offset_ratio, net_sl_points, source
 
 
+def _strike_is_listed(chain, strike, option_type):
+    """True if `strike` has a listed row of the given option side ("C"/"P") in
+    the raw chain. Used to confirm the sold leg sits on a real contract."""
+    side = "call" if option_type == "C" else "put"
+    want = int(round(strike))
+    for row in (chain or []):
+        if (isinstance(row, dict)
+                and int(round(row.get("strike") or 0)) == want
+                and side in str(row.get("contract_type") or "").lower()):
+            return True
+    return False
+
+
+def resolve_main_sell_strike(atm, option_type, chain):
+    """
+    Resolve the sold main-leg strike (Sensex ONE_OTM, adapted to BTC's 200 grid).
+
+    Start from the ATM shifted ONE_OTM points OTM (bull/PE below the ATM, bear/CE
+    above), snapped to the 200 grid. If that strike is not a LISTED contract —
+    i.e. the ATM as per the running spot is unavailable in the chain — walk up to
+    ``MAIN_STRIKE_FALLBACK_MAX_STEPS`` further OTM to the nearest listed strike
+    so the sold leg is always a real, tradeable contract.
+
+    Returns ``(strike, note)``. ``note`` records how it was resolved for the log.
+    """
+    step = STRIKE_STEP
+    otm_sign = -1 if option_type == "P" else 1   # OTM side for the SOLD leg
+    base = int(atm) + otm_sign * int(ONE_OTM)
+    base = int(round(base / step) * step)        # keep on the grid
+
+    if _strike_is_listed(chain, base, option_type):
+        return base, ("atm" if ONE_OTM == 0 else "one_otm_cfg({})".format(ONE_OTM))
+
+    # ATM/base not listed: step further OTM to the nearest listed strike.
+    cand = base
+    for _ in range(MAIN_STRIKE_FALLBACK_MAX_STEPS):
+        cand += otm_sign * step
+        if cand <= 0:
+            break
+        if _strike_is_listed(chain, cand, option_type):
+            return cand, "otm_fallback(atm_unlisted->{})".format(cand)
+    # No listed strike found nearby; return base and let downstream refuse if it
+    # cannot be priced (no silent trade on a phantom strike).
+    return base, "atm_unlisted_no_listed_fallback"
+
+
 def _round_to_tick(price, mode="nearest"):
     """Round a positive price to the Delta TICK_SIZE grid. ``mode`` is "up"
     (ceil), "down" (floor) or "nearest". Returns the input unchanged when it is
@@ -3431,9 +3488,15 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     if atm is None:
         atm = helper._nearest_atm_strike(index_price, STRIKE_STEP)
     try:
-        main_strike = int(atm)
+        atm = int(atm)
     except (TypeError, ValueError):
         return None
+
+    # Sold-leg strike: ATM shifted ONE_OTM (default 0 = ATM), with a
+    # nearest-listed-OTM fallback when the ATM as per the running spot is not a
+    # listed contract (so we never sell a phantom strike).
+    main_strike, main_strike_note = resolve_main_sell_strike(
+        atm, option_type, chain)
 
     expiry = helper.getDailyExpiry()
 
@@ -3444,6 +3507,8 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
                                   expiry_ddmmyy=expiry)
 
     notes = []
+    if main_strike_note and main_strike_note != "atm":
+        notes.append("main_strike={}".format(main_strike_note))
 
     # ---- Entry-time Greeks enrichment (bulk list omits Greeks on live feed) ----
     # One batched /v2/tickers call for the main + OTM hedge candidates so the
