@@ -3426,6 +3426,21 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     max_reward_usd = (effective_tgt * CONTRACT_VALUE * lots
                       if effective_tgt else None)
 
+    # ---- Estimated portfolio (defined-risk) margin vs available balance ----
+    # Observation-only: shows whether the planned spread fits available margin.
+    # Does NOT cap sizing (sizing stays pure risk-based). Best-effort — a failed
+    # balance/margin read just leaves the figures None.
+    est_margin = margin_avail = None
+    try:
+        est_margin, margin_avail = helper.getSpreadMargin([
+            {"side": "sell", "strike": main_strike, "price": main_premium,
+             "size": lots},
+            {"side": "buy", "strike": hedge_strike, "price": hedge_premium,
+             "size": lots},
+        ], client)
+    except Exception as exc:  # noqa: BLE001 - margin is best-effort/observational
+        notes.append("margin_estimate_failed({})".format(type(exc).__name__))
+
     return {
         "spread_kind": spread_kind,
         "option_type": option_type,
@@ -3441,6 +3456,7 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         "net_sl_points": net_sl_points, "ratio_source": ratio_source,
         "est_credit": est_credit,
         "max_risk_usd": max_risk_usd, "max_reward_usd": max_reward_usd,
+        "est_margin": est_margin, "margin_avail": margin_avail,
         "notes": notes,
     }
 
@@ -3471,6 +3487,13 @@ def log_trade_plan(plan, decision_dir):
     print("  EST credit={c}  modelled max_risk=${mr}  max_reward=${mw}".format(
         c=_fmt(plan["est_credit"], 2), mr=_fmt(plan["max_risk_usd"], 2),
         mw=_fmt(plan["max_reward_usd"], 2)))
+    em, ma = plan.get("est_margin"), plan.get("margin_avail")
+    if em is not None or ma is not None:
+        fits = ("yes" if (em is not None and ma is not None and em <= ma)
+                else "NO" if (em is not None and ma is not None) else "?")
+        print("  MARGIN est_defined_risk=${m}  available=${a}  fits={f} "
+              "(portfolio-margin estimate; sizing not capped)".format(
+                  m=_fmt(em, 2), a=_fmt(ma, 2), f=fits))
     if plan.get("notes"):
         print("  NOTES: {}".format("; ".join(plan["notes"])))
 

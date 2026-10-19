@@ -1140,6 +1140,11 @@ def getHistorical(symbol, interval, duration, client):
 # A leverage of 1 means "full notional as margin" (most conservative estimate).
 DEFAULT_LEVERAGE = 1.0
 
+# BTC per contract (Delta spec, UI-confirmed: 1 lot = 0.001 BTC). All option USD
+# values scale by this: notional / P&L / margin = price_points * CONTRACT_VALUE
+# * lots. Kept here so getSpreadMargin computes USD margin in the right units.
+CONTRACT_VALUE = 0.001
+
 # NOT-AVAILABLE sentinels (documented, distinguishable from valid values):
 #   * getBalance          -> None                 when balance cannot be read
 #   * getPositions        -> (0, None)            when there is NO open position
@@ -1345,34 +1350,51 @@ def _leg_leverage(leg):
     return DEFAULT_LEVERAGE
 
 
+def _leg_side_is_sell(leg):
+    """True if a leg is the SHORT/sell side. Accepts ``side`` as "sell"/"buy"
+    (Delta order convention) or numeric +1 (buy) / -1 (sell) (Fyers-style)."""
+    side = leg.get("side")
+    if isinstance(side, str):
+        return side.strip().lower() in ("sell", "s", "short", "-1")
+    val = _coerce_price(side)
+    return val is not None and val < 0
+
+
 def getSpreadMargin(legs, client):
-    """Compute (required_margin, available_balance) from contract size, price,
-    and leverage. (Task 11.1, Requirements 7.3, 7.7)
+    """Estimate (required_margin, available_balance) for a defined-risk credit
+    spread under PORTFOLIO margin. (Task 11.1, Requirements 7.3, 7.7)
 
-    Delta exposes NO pre-trade basket-margin endpoint, so the required margin is
-    computed locally as an approximation (per design 5d):
+    Delta exposes NO pre-trade basket-margin endpoint, so the requirement is
+    estimated locally. With the account in PORTFOLIO (cross) margin mode a
+    vertical credit spread is margined on its DEFINED RISK (max loss), not the
+    sum of the two legs, so the estimate is::
 
-        required_margin = sum over legs of ( |size| * price / leverage )
+        net_credit (pts/unit) = sell_leg.price - buy_leg.price
+        strike_width (pts)    = |sell_leg.strike - buy_leg.strike|
+        max_loss (pts/unit)   = max(0, strike_width - net_credit)
+        required_margin (USD) = max_loss * CONTRACT_VALUE * lots
 
-    where each leg is a dict with the shape
-    ``{"size": int, "price": float, "leverage": float, "side": "buy"/"sell"}``.
-    ``size`` is the contract count (its sign — long/short — does not change the
-    margin requirement, so its absolute value is used); ``price`` is the
-    per-contract price; ``leverage`` is optional and defaults to
-    ``DEFAULT_LEVERAGE`` (configurable) when omitted. ``side`` is accepted but
-    not required for this notional/leverage estimate.
+    This is the spread's worst-case loss — a conservative UPPER BOUND on the
+    portfolio-margin block (Delta's real portfolio margin nets greeks across the
+    book and is typically a little lower). Each leg is a dict shaped
+    ``{"size": int, "price": float, "strike": float, "side": "sell"/"buy"}``
+    (``side`` also accepts numeric +1 buy / -1 sell).
+
+    Fallback: when the legs are not a clean two-leg vertical with usable strikes
+    (e.g. a single leg or missing strikes) the estimate degrades to the rough
+    per-leg notional estimate ``sum(|size| * price * CONTRACT_VALUE / leverage)``
+    (``leverage`` per-leg or ``DEFAULT_LEVERAGE``), which does NOT model the
+    spread credit and therefore OVERSTATES — it is a safe-but-pessimistic bound.
 
     The current available balance is read via ``getBalance(client=client)``.
 
     Return contract:
       * success (7.3): ``(required_margin, available_balance)`` as floats.
-        ``available_balance`` may itself be ``None`` if the wallet read failed
-        (7.6) while the margin computation still succeeded — the required
-        margin is still returned so risk sizing has the computed value.
-      * not-available (7.7): ``(None, None)`` — distinguishable from valid
-        values — when the margin computation cannot be performed (empty/means
-        no legs, a non-dict leg, a missing/non-positive size or price, or an
-        invalid supplied leverage). A warning is logged.
+        ``available_balance`` may be ``None`` if the wallet read failed (7.6)
+        while the margin estimate still succeeded.
+      * not-available (7.7): ``(None, None)`` when the estimate cannot be
+        computed (no legs, a non-dict leg, a missing/non-positive size/price, or
+        an invalid supplied leverage). A warning is logged.
     """
     # No legs => nothing to size; treat as a computation failure (7.7).
     if not legs or not isinstance(legs, (list, tuple)):
@@ -1380,33 +1402,53 @@ def getSpreadMargin(legs, client):
               "returning (None, None).")
         return (None, None)
 
-    required_margin = 0.0
+    # Validate every leg up front (size + price are required in both paths).
     for index, leg in enumerate(legs):
         if not isinstance(leg, dict):
             print("MARGIN_UNAVAILABLE: leg #{} is not a dict ({!r}); returning "
                   "(None, None).".format(index, leg))
             return (None, None)
-
-        size = _coerce_price(leg.get("size"))
-        if size is None or size == 0:
+        if _coerce_price(leg.get("size")) in (None, 0):
             print("MARGIN_UNAVAILABLE: leg #{} has missing/zero size {!r}; "
                   "returning (None, None).".format(index, leg.get("size")))
             return (None, None)
-
         price = _coerce_price(leg.get("price"))
         if price is None or price <= 0:
             print("MARGIN_UNAVAILABLE: leg #{} has missing/non-positive price "
                   "{!r}; returning (None, None).".format(index, leg.get("price")))
             return (None, None)
 
+    # ---- Preferred: defined-risk estimate for a 2-leg vertical credit spread.
+    strikes_ok = (len(legs) == 2
+                  and all(_coerce_price(l.get("strike")) not in (None, 0)
+                          for l in legs))
+    sell_legs = [l for l in legs if _leg_side_is_sell(l)]
+    buy_legs = [l for l in legs if not _leg_side_is_sell(l)]
+    if strikes_ok and len(sell_legs) == 1 and len(buy_legs) == 1:
+        sell, buy = sell_legs[0], buy_legs[0]
+        sell_price = _coerce_price(sell.get("price"))
+        buy_price = _coerce_price(buy.get("price"))
+        sell_strike = _coerce_price(sell.get("strike"))
+        buy_strike = _coerce_price(buy.get("strike"))
+        lots = abs(_coerce_price(sell.get("size")))
+        net_credit = sell_price - buy_price
+        strike_width = abs(sell_strike - buy_strike)
+        max_loss_points = max(0.0, strike_width - net_credit)
+        required_margin = max_loss_points * CONTRACT_VALUE * lots
+        available_balance = getBalance(client=client)
+        return (float(required_margin), available_balance)
+
+    # ---- Fallback: rough per-leg notional estimate (overstates; no credit). --
+    required_margin = 0.0
+    for index, leg in enumerate(legs):
+        size = _coerce_price(leg.get("size"))
+        price = _coerce_price(leg.get("price"))
         leverage = _leg_leverage(leg)
         if leverage is None or leverage <= 0:
             print("MARGIN_UNAVAILABLE: leg #{} has invalid leverage {!r}; "
                   "returning (None, None).".format(index, leg.get("leverage")))
             return (None, None)
-
-        # Notional / leverage; sign of size is irrelevant to margin.
-        required_margin += (abs(size) * price) / leverage
+        required_margin += (abs(size) * price * CONTRACT_VALUE) / leverage
 
     available_balance = getBalance(client=client)
     return (float(required_margin), available_balance)
