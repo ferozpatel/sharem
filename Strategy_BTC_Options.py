@@ -2851,6 +2851,7 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
                             and not position_open_now)
 
     trade_plan = None
+    decision_dir = None
     if sensex_entry.get("bull_enter") or sensex_entry.get("bear_enter"):
         decision_dir = "BULL" if sensex_entry.get("bull_enter") else "BEAR"
         if not session_allows_entry:
@@ -2913,13 +2914,18 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             blockers=blockers_str, signal_decision=decision,
             pcr_trend="{}x{}".format(pcr_trend.get("direction"),
                                      pcr_trend.get("streak")))
-    elif entry["live_ready"]:
-        # Live credit-spread placement (Req 9.16). Any placement failure is
-        # logged inside _place_live_entry, which leaves the position not-open
-        # (Req 9.17); the loop continues regardless.
+    elif trade_plan is not None and session_allows_entry:
+        # LIVE credit-spread placement driven by the Sensex-equivalent trade
+        # plan (plan strikes / risk-based lots / per-trade SL+target). The old
+        # evaluate_entry gate (``entry``) is retained only for the observation
+        # WOULD_HAVE_ENTERED log above; the actual live trigger is the confirmed
+        # Sensex signal + its trade plan. Any placement failure is logged inside
+        # _place_live_entry, which leaves the position not-open (Req 9.17); the
+        # loop continues regardless.
         try:
             result = _place_live_entry(
-                client, bias, position, snapshot, index_price, entry_state)
+                client, decision_dir, sr_position, snapshot, index_price,
+                entry_state, plan=trade_plan)
         except Exception as exc:  # noqa: BLE001 - never crash the loop (9.17)
             result = {"ok": False, "opened": False,
                       "error": "{}: {}".format(type(exc).__name__, exc)}
@@ -3472,7 +3478,7 @@ def log_trade_plan(plan, decision_dir):
 # LIVE-ORDER HOOK (Req 9.5, 9.16, 9.17) — Task 14.3
 # ============================================================
 def _place_live_entry(client, bias, position, snapshot, index_price,
-                      state=None):
+                      state=None, plan=None):
     """
     Place a live credit-spread entry: SELL the main leg + BUY an OTM protective
     hedge leg, and report the result (Req 9.5, 9.16, 9.17).
@@ -3515,73 +3521,121 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
               "place any live order.".format(_now_ist()))
         return {"ok": False, "opened": False, "error": "observation_mode"}
 
-    # [NEEDS INPUT] guard: no configured size => cannot place (Req 9.27, 9.17).
-    if POSITION_SIZE is None:
-        print("LIVE_ENTRY_BLOCKED [{}] POSITION_SIZE is [NEEDS INPUT] (None); "
-              "cannot size a live order — leaving position not-open "
-              "(9.17).".format(_now_ist()))
-        return {"ok": False, "opened": False, "error": "position_size_unset"}
+    plan = plan if isinstance(plan, dict) else None
 
-    # Resolve the ATM/main strike (prefer the snapshot ATM; fall back to the
-    # nearest grid strike to the index anchor).
-    atm_strike = snapshot.get("atm_strike") if isinstance(snapshot, dict) \
-        else None
-    if atm_strike is None:
-        atm_strike = helper._nearest_atm_strike(index_price, STRIKE_STEP)
-    try:
-        main_strike = int(atm_strike)
-    except (TypeError, ValueError):
-        print("LIVE_ENTRY_FAIL [{}] could not resolve ATM/main strike "
-              "(atm={!r}); leaving position not-open (9.17).".format(
-                  _now_ist(), atm_strike))
-        return {"ok": False, "opened": False, "error": "atm_strike_unresolved"}
+    # Per-trade SL/target (premium points) stamped on the open position so the
+    # monitor evaluates THIS trade's levels, not the module defaults. Populated
+    # from the trade plan; stays None in the legacy (no-plan) path.
+    effective_sl = effective_tgt = None
 
-    hedge_shift = HEDGE_OFFSET_STRIKES * STRIKE_STEP
-
-    # Direction -> credit spread + OTM protective hedge (Req 9.16).
-    if position == "support_side" or bias == "BULL":
-        option_type = "P"                       # credit PUT spread (bullish)
-        hedge_strike = main_strike - hedge_shift  # further-OTM = LOWER put
-        spread_kind = "credit_put_spread(bull)"
-    elif position == "resistance_side" or bias == "BEAR":
-        option_type = "C"                       # credit CALL spread (bearish)
-        hedge_strike = main_strike + hedge_shift  # further-OTM = HIGHER call
-        spread_kind = "credit_call_spread(bear)"
+    if plan is not None:
+        # ---- Plan-driven placement: strikes, risk-based lots and per-trade
+        #      SL/target all come from the Sensex-equivalent build_trade_plan. --
+        option_type = plan.get("option_type")
+        spread_kind = plan.get("spread_kind")
+        main_symbol = plan.get("main_symbol")
+        hedge_symbol = plan.get("hedge_symbol")
+        main_strike = plan.get("main_strike")
+        hedge_strike = plan.get("hedge_strike")
+        size = plan.get("lots")
+        effective_sl = plan.get("effective_sl")
+        effective_tgt = plan.get("effective_tgt")
+        expiry_ddmmyy = plan.get("expiry") or helper.getDailyExpiry()
+        if not (main_symbol and hedge_symbol and option_type):
+            print("LIVE_ENTRY_FAIL [{}] trade plan missing leg symbols/type; "
+                  "leaving position not-open (9.17).".format(_now_ist()))
+            return {"ok": False, "opened": False, "error": "plan_incomplete"}
+        if not size or size <= 0:
+            print("LIVE_ENTRY_FAIL [{}] trade plan lot count is {!r}; cannot "
+                  "size a live order — position not-open (9.17).".format(
+                      _now_ist(), size))
+            return {"ok": False, "opened": False, "error": "plan_size_invalid"}
+        if effective_sl is None or effective_tgt is None:
+            print("LIVE_ENTRY_FAIL [{}] trade plan has no SL/target "
+                  "(sl={!r} tgt={!r}); an unmonitorable spread is refused — "
+                  "position not-open (9.17).".format(
+                      _now_ist(), effective_sl, effective_tgt))
+            return {"ok": False, "opened": False, "error": "plan_no_sl_target"}
+        print("LIVE_ENTRY [{}] {} size={} BUY hedge={} FIRST then SELL main={} "
+              "(plan: main_strike={} hedge_strike={} effective_sl={} "
+              "effective_tgt={} expiry={}).".format(
+                  _now_ist(), spread_kind, size, hedge_symbol, main_symbol,
+                  main_strike, hedge_strike, _fmt(effective_sl, 2),
+                  _fmt(effective_tgt, 2), expiry_ddmmyy))
     else:
-        print("LIVE_ENTRY_FAIL [{}] indeterminate direction (bias={!r}, "
-              "position={!r}); leaving position not-open (9.17).".format(
-                  _now_ist(), bias, position))
-        return {"ok": False, "opened": False,
-                "error": "indeterminate_direction"}
+        # ---- Legacy path (no plan): [NEEDS INPUT] POSITION_SIZE guard, ATM
+        #      main strike and a fixed-offset hedge. Retained as a fallback. ----
+        if POSITION_SIZE is None:
+            print("LIVE_ENTRY_BLOCKED [{}] POSITION_SIZE is [NEEDS INPUT] "
+                  "(None); cannot size a live order — leaving position not-open "
+                  "(9.17).".format(_now_ist()))
+            return {"ok": False, "opened": False,
+                    "error": "position_size_unset"}
 
-    if hedge_strike <= 0:
-        print("LIVE_ENTRY_FAIL [{}] computed hedge strike {} is non-positive; "
-              "leaving position not-open (9.17).".format(
-                  _now_ist(), hedge_strike))
-        return {"ok": False, "opened": False, "error": "invalid_hedge_strike"}
+        # Resolve the ATM/main strike (prefer the snapshot ATM; fall back to the
+        # nearest grid strike to the index anchor).
+        atm_strike = snapshot.get("atm_strike") if isinstance(snapshot, dict) \
+            else None
+        if atm_strike is None:
+            atm_strike = helper._nearest_atm_strike(index_price, STRIKE_STEP)
+        try:
+            main_strike = int(atm_strike)
+        except (TypeError, ValueError):
+            print("LIVE_ENTRY_FAIL [{}] could not resolve ATM/main strike "
+                  "(atm={!r}); leaving position not-open (9.17).".format(
+                      _now_ist(), atm_strike))
+            return {"ok": False, "opened": False,
+                    "error": "atm_strike_unresolved"}
 
-    # Build both option symbols for the current daily expiry.
-    expiry_ddmmyy = helper.getDailyExpiry()
-    try:
-        main_symbol = helper.buildSymbol(
-            product_type="option", underlying=UNDERLYING_ASSET,
-            option_type=option_type, strike=main_strike,
-            expiry_ddmmyy=expiry_ddmmyy)
-        hedge_symbol = helper.buildSymbol(
-            product_type="option", underlying=UNDERLYING_ASSET,
-            option_type=option_type, strike=hedge_strike,
-            expiry_ddmmyy=expiry_ddmmyy)
-    except Exception as exc:  # noqa: BLE001 - bad symbol => not-open (9.17)
-        print("LIVE_ENTRY_FAIL [{}] could not build option symbols ({}): "
-              "{}: {} — leaving position not-open (9.17).".format(
-                  _now_ist(), spread_kind, type(exc).__name__, exc))
-        return {"ok": False, "opened": False, "error": "symbol_build_failed"}
+        hedge_shift = HEDGE_OFFSET_STRIKES * STRIKE_STEP
 
-    size = POSITION_SIZE
-    print("LIVE_ENTRY [{}] {} size={} BUY hedge={} FIRST then SELL main={} "
-          "(atm={}, hedge_offset={} strikes={} pts, expiry={}).".format(
-              _now_ist(), spread_kind, size, hedge_symbol, main_symbol,
-              main_strike, HEDGE_OFFSET_STRIKES, hedge_shift, expiry_ddmmyy))
+        # Direction -> credit spread + OTM protective hedge (Req 9.16).
+        if position == "support_side" or bias == "BULL":
+            option_type = "P"                       # credit PUT spread (bull)
+            hedge_strike = main_strike - hedge_shift  # further-OTM = LOWER put
+            spread_kind = "credit_put_spread(bull)"
+        elif position == "resistance_side" or bias == "BEAR":
+            option_type = "C"                       # credit CALL spread (bear)
+            hedge_strike = main_strike + hedge_shift  # further-OTM = HIGHER call
+            spread_kind = "credit_call_spread(bear)"
+        else:
+            print("LIVE_ENTRY_FAIL [{}] indeterminate direction (bias={!r}, "
+                  "position={!r}); leaving position not-open (9.17).".format(
+                      _now_ist(), bias, position))
+            return {"ok": False, "opened": False,
+                    "error": "indeterminate_direction"}
+
+        if hedge_strike <= 0:
+            print("LIVE_ENTRY_FAIL [{}] computed hedge strike {} is "
+                  "non-positive; leaving position not-open (9.17).".format(
+                      _now_ist(), hedge_strike))
+            return {"ok": False, "opened": False,
+                    "error": "invalid_hedge_strike"}
+
+        # Build both option symbols for the current daily expiry.
+        expiry_ddmmyy = helper.getDailyExpiry()
+        try:
+            main_symbol = helper.buildSymbol(
+                product_type="option", underlying=UNDERLYING_ASSET,
+                option_type=option_type, strike=main_strike,
+                expiry_ddmmyy=expiry_ddmmyy)
+            hedge_symbol = helper.buildSymbol(
+                product_type="option", underlying=UNDERLYING_ASSET,
+                option_type=option_type, strike=hedge_strike,
+                expiry_ddmmyy=expiry_ddmmyy)
+        except Exception as exc:  # noqa: BLE001 - bad symbol => not-open (9.17)
+            print("LIVE_ENTRY_FAIL [{}] could not build option symbols ({}): "
+                  "{}: {} — leaving position not-open (9.17).".format(
+                      _now_ist(), spread_kind, type(exc).__name__, exc))
+            return {"ok": False, "opened": False,
+                    "error": "symbol_build_failed"}
+
+        size = POSITION_SIZE
+        print("LIVE_ENTRY [{}] {} size={} BUY hedge={} FIRST then SELL main={} "
+              "(atm={}, hedge_offset={} strikes={} pts, expiry={}).".format(
+                  _now_ist(), spread_kind, size, hedge_symbol, main_symbol,
+                  main_strike, HEDGE_OFFSET_STRIKES, hedge_shift,
+                  expiry_ddmmyy))
 
     # --- Leg 1: BUY the OTM protective hedge leg FIRST (Req 9.16). -------
     # The long leg is placed before the short deliberately: if the second leg
@@ -3671,6 +3725,26 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
     if main_entry_px is not None and hedge_entry_px is not None:
         entry_credit = float(main_entry_px) - float(hedge_entry_px)
 
+    # --- Post-fill safety (Sensex square-off): a spread we cannot VALUE cannot
+    #     be monitored for SL/target. If no anchor premium is readable on either
+    #     leg (entry_credit unknown), flatten everything immediately rather than
+    #     hold an unmonitorable position. ----
+    if entry_credit is None:
+        print("LIVE_ENTRY_WARN [{}] both legs filled but NO anchor premium is "
+              "readable (main_px={!r} hedge_px={!r}) — spread cannot be "
+              "monitored; squaring off (exitAll) as post-fill safety.".format(
+                  _now_ist(), main_entry_px, hedge_entry_px))
+        try:
+            flat = helper.exitAll(client=client)
+            print("LIVE_ENTRY_RECOVER [{}] exitAll after unmonitorable fill -> "
+                  "{}.".format(_now_ist(), flat))
+        except Exception as exc:  # noqa: BLE001 - last resort, never crash
+            print("LIVE_ENTRY_WARN [{}] exitAll post-fill square-off failed "
+                  "({}: {}) — manual intervention may be required.".format(
+                      _now_ist(), type(exc).__name__, exc))
+        return {"ok": False, "opened": False,
+                "error": "unmonitorable_no_anchor_premium"}
+
     # --- Both legs placed: record the open position (Req 9.16). ----------
     open_position = {
         "spread_kind": spread_kind,
@@ -3686,6 +3760,12 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
         "hedge_order_id": hedge_res.get("id"),
         "hedge_entry_price": hedge_entry_px,
         "entry_credit": entry_credit,
+        # Per-trade SL/target (premium points) from the trade plan. The monitor
+        # reads these in preference to the module-level STOP_LOSS_POINTS /
+        # TARGET_POINTS (which stay None), so each trade is managed on its own
+        # candle-median-derived levels.
+        "effective_sl": effective_sl,
+        "effective_tgt": effective_tgt,
         "size": size,
         "bias": bias,
         "position": position,
@@ -3856,6 +3936,17 @@ def monitor_open_position(client, state):
     hedge_symbol = open_position.get("hedge_symbol")
     size = open_position.get("size") or POSITION_SIZE
 
+    # Per-trade SL/target (premium points) stamped at entry from the trade plan.
+    # These take precedence over the module-level TARGET_POINTS/STOP_LOSS_POINTS
+    # (which stay None) so each trade is managed on its own levels; fall back to
+    # the module constants only when the position carries none.
+    eff_tgt = open_position.get("effective_tgt")
+    if eff_tgt is None:
+        eff_tgt = TARGET_POINTS
+    eff_sl = open_position.get("effective_sl")
+    if eff_sl is None:
+        eff_sl = STOP_LOSS_POINTS
+
     # 1. Poll both leg LTPs (9.18).
     main_ltp = _safe_leg_ltp(main_symbol, client)
     hedge_ltp = _safe_leg_ltp(hedge_symbol, client)
@@ -3895,9 +3986,9 @@ def monitor_open_position(client, state):
     # 3. Trailing to breakeven (9.22) — needs a configured target.
     trail_action = "none"
     already_breakeven = bool(state.get("sl_at_breakeven"))
-    if (TRAILING_ENABLED and TARGET_POINTS is not None and not already_breakeven
+    if (TRAILING_ENABLED and eff_tgt is not None and not already_breakeven
             and unrealized_points >= TRAIL_TRIGGER_TARGET_FRACTION
-            * float(TARGET_POINTS)):
+            * float(eff_tgt)):
         if OBSERVATION_MODE:
             trail_action = "would_trail_to_breakeven"
             print("MONITOR_TRAIL [{}] WOULD_TRAIL_TO_BREAKEVEN: unrealized "
@@ -3905,8 +3996,8 @@ def monitor_open_position(client, state):
                   "actually moved).".format(
                       _now_ist(), _fmt(unrealized_points),
                       _fmt(TRAIL_TRIGGER_TARGET_FRACTION),
-                      _fmt(TARGET_POINTS),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION * float(TARGET_POINTS))))
+                      _fmt(eff_tgt),
+                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION * float(eff_tgt))))
         else:
             state["sl_at_breakeven"] = True
             already_breakeven = True
@@ -3916,13 +4007,13 @@ def monitor_open_position(client, state):
                   "0 pts).".format(
                       _now_ist(), _fmt(unrealized_points),
                       _fmt(TRAIL_TRIGGER_TARGET_FRACTION),
-                      _fmt(TARGET_POINTS),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION * float(TARGET_POINTS))))
+                      _fmt(eff_tgt),
+                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION * float(eff_tgt))))
 
     # ----- [NEEDS INPUT] guard: no concrete target/SL to evaluate --------
-    if TARGET_POINTS is None or STOP_LOSS_POINTS is None:
-        unset = [n for n, v in (("TARGET_POINTS", TARGET_POINTS),
-                                ("STOP_LOSS_POINTS", STOP_LOSS_POINTS))
+    if eff_tgt is None or eff_sl is None:
+        unset = [n for n, v in (("TARGET_POINTS", eff_tgt),
+                                ("STOP_LOSS_POINTS", eff_sl))
                  if v is None]
         print("MONITOR [{ts}] {kind} main={ms}@{mp} hedge={hs}@{hp} "
               "spread_cost={cost} entry_credit={ec}{rb} unrealized={up} pts "
@@ -3941,14 +4032,14 @@ def monitor_open_position(client, state):
                 "trail_action": trail_action, "unset_params": unset}
 
     # 4. Target / SL conditions + consecutive-poll confirmation (9.19, 9.20).
-    target_hit = unrealized_points >= float(TARGET_POINTS)
+    target_hit = unrealized_points >= float(eff_tgt)
     if already_breakeven:
         # Trailed stop: breakeven is the effective SL (0 points).
         sl_hit = unrealized_points <= 0.0
         sl_level_desc = "breakeven(0)"
     else:
-        sl_hit = unrealized_points <= -float(STOP_LOSS_POINTS)
-        sl_level_desc = "-{}".format(_fmt(STOP_LOSS_POINTS))
+        sl_hit = unrealized_points <= -float(eff_sl)
+        sl_level_desc = "-{}".format(_fmt(eff_sl))
 
     tgt_count = (state.get("tgt_confirm_count", 0) or 0) + 1 if target_hit else 0
     sl_count = (state.get("sl_confirm_count", 0) or 0) + 1 if sl_hit else 0
@@ -3965,7 +4056,7 @@ def monitor_open_position(client, state):
               cost=_fmt(current_spread_cost), ec=_fmt(entry_credit),
               rb=" (rebaselined)" if rebaselined else "",
               up=_fmt(unrealized_points), pnl=_fmt(unrealized_pnl),
-              tp=_fmt(TARGET_POINTS), sl=sl_level_desc,
+              tp=_fmt(eff_tgt), sl=sl_level_desc,
               tc=tgt_count, tt=TGT_CONFIRM_TICKS,
               sc=sl_count, st=SL_CONFIRM_TICKS,
               trail="breakeven" if already_breakeven else trail_action))
@@ -4355,21 +4446,27 @@ def startup():
     print("  lots                 = risk-based [{}..{}], offset ratio "
           "DELTA->PREMIUM->none".format(MIN_LOTS, MAX_LOTS))
 
-    # Risk params are [NEEDS INPUT] module constants finalized after the
-    # observation period; explicitly log which remain unset (Req 9.27).
-    risk_params = {
+    # Sizing, SL and target are now computed PER TRADE by build_trade_plan
+    # (risk-based lots + candle-median SL/target), so the old module-level
+    # STOP_LOSS_POINTS / TARGET_POINTS / POSITION_SIZE constants are intentionally
+    # left None and NO LONGER gate a live entry. They are shown here only to make
+    # the superseded state explicit; the live trigger is the confirmed Sensex
+    # signal + its trade plan.
+    print("STARTUP sizing/SL/target source = PER-TRADE (build_trade_plan); "
+          "module STOP_LOSS_POINTS/TARGET_POINTS/POSITION_SIZE are superseded "
+          "(left None, not required).")
+    # The PCR threshold constants + MAX_TRADES_PER_DAY only feed the LEGACY
+    # evaluate_entry gate, which is now observation-only (its WOULD_HAVE_ENTERED
+    # line); they do NOT block the plan-driven live entry. Logged for reference.
+    legacy_params = {
         "PCR_BULL_THRESHOLD": PCR_BULL_THRESHOLD,
         "PCR_BEAR_THRESHOLD": PCR_BEAR_THRESHOLD,
-        "STOP_LOSS_POINTS": STOP_LOSS_POINTS,
-        "TARGET_POINTS": TARGET_POINTS,
-        "POSITION_SIZE": POSITION_SIZE,
         "MAX_TRADES_PER_DAY": MAX_TRADES_PER_DAY,
     }
-    print("STARTUP risk params (concrete live values are [NEEDS INPUT], "
-          "Req 9.27):")
-    for name, value in risk_params.items():
-        state = "[NEEDS INPUT]" if value is None else ""
-        print("  {:<20} = {} {}".format(name, value, state).rstrip())
+    print("STARTUP legacy observation-gate params (do NOT affect live entry):")
+    for name, value in legacy_params.items():
+        note = "(unset; legacy gate observation-only)" if value is None else ""
+        print("  {:<20} = {} {}".format(name, value, note).rstrip())
 
     return client
 
