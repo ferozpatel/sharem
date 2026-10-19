@@ -4671,6 +4671,20 @@ def startup():
     print("  lots                 = risk-based [{}..{}], offset ratio "
           "DELTA->PREMIUM->none".format(MIN_LOTS, MAX_LOTS))
 
+    print("STARTUP execution (order book + slippage control):")
+    print("  entry_order_type     = {} (fallback market when off/no book)"
+          .format("marketable_limit" if USE_LIMIT_ENTRY else "market"))
+    print("  max_slippage         = {} ticks x {} = {} premium pts".format(
+        MAX_SLIPPAGE_TICKS, helper.TICK_SIZE,
+        _fmt(MAX_SLIPPAGE_TICKS * helper.TICK_SIZE, 1)))
+    print("  l2_depth_levels      = {}".format(L2_DEPTH_LEVELS))
+    print("  liquidity_gate       = spread <= {}% AND fillable >= lots*{}"
+          .format(LIQUIDITY_MAX_SPREAD_PCT, LIQUIDITY_MIN_DEPTH_RATIO))
+    print("  monitor_cadence      = {}s while in a trade; {}-min candle when "
+          "flat".format(LTP_POLL_INTERVAL, TIMEFRAME_MINUTES))
+    print("  trailing_to_breakeven= {} (trigger {} of target)".format(
+        TRAILING_ENABLED, TRAIL_TRIGGER_TARGET_FRACTION))
+
     # Sizing, SL and target are now computed PER TRADE by build_trade_plan
     # (risk-based lots + candle-median SL/target), so the old module-level
     # STOP_LOSS_POINTS / TARGET_POINTS / POSITION_SIZE constants are intentionally
