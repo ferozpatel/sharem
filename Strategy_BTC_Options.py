@@ -2640,7 +2640,21 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
     # invariant-window history / OI diff so none of them ever spans two
     # expiries. Runs BEFORE the monitor branch so the boundary is honoured on
     # every code path. Position/monitoring state is preserved.
-    reset_state_on_contract_roll(carried)
+    rolled_to_new_contract = reset_state_on_contract_roll(carried)
+    if rolled_to_new_contract:
+        # The CALLER bound prev_snapshot / prev_pcr / prev_pcr_trend from the
+        # PRE-reset state and passed them as arguments, so clearing them on
+        # `carried` above does NOT clear these locals. Without this the FIRST
+        # cycle of a new contract diffs OI (9.8), the same-strike PCR trend
+        # (9.10) and the PCR dominance streaks against the OLD contract's final
+        # values — the exact cross-contract comparison the reset exists to
+        # prevent. Observed 2026-10-20 17:30: PCR_TREND reported
+        # "direction=down prev_pcr=1.0655 curr_pcr=0.6483", diffing the new
+        # 10-21 chain against 10-20's last PCR, which also seeded
+        # PCR9_DOMINANCE down_streak=1 off a meaningless comparison.
+        prev_snapshot = None
+        prev_pcr = None
+        prev_pcr_trend = None
 
     # ---- Open position? Monitor for exit instead of evaluating entry ----
     # (Task 14.6, Req 9.18-9.22). Monitoring mutates the carried state's
