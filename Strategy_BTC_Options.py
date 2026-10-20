@@ -1380,6 +1380,36 @@ def _strike_total_oi(pair):
     return total
 
 
+def sr_bracket_neighbour(sr_line, chosen_strike, strike_index):
+    """
+    The OTHER listed strike bracketing the 500-level S/R line (monitor-only).
+
+    BTC strikes sit on a 200 grid, so an x500 S/R line is never listed and
+    ``resolve_sr_strike`` falls back to whichever bracketing strike is nearest
+    SPOT — e.g. line 82500 -> 82400 (spot 82480) or 82600 (spot 82553). The
+    strike on the other side of the line is equally interesting for tracking
+    where OI is really building, so it is logged alongside.
+
+    Returns the neighbour strike, or ``None`` when there is nothing meaningful
+    to show (line itself listed, chain unusable, or no strike on that side).
+    """
+    if not isinstance(strike_index, dict) or not strike_index:
+        return None
+    try:
+        line = int(round(float(sr_line)))
+        chosen = int(chosen_strike)
+    except (TypeError, ValueError):
+        return None
+    if chosen == line:
+        # The S/R line IS a listed strike: no bracket ambiguity to monitor.
+        return None
+    if chosen < line:
+        above = [s for s in strike_index if s > line]
+        return min(above) if above else None
+    below = [s for s in strike_index if s < line]
+    return max(below) if below else None
+
+
 def resolve_sr_strike(sr_line, spot, chain):
     """
     Resolve the S/R level to a strike that actually carries OI (user's rule).
@@ -1472,6 +1502,10 @@ def log_supp_res_oi(snapshot, sr_strike, sr_line_orig, snapped=False,
         CEoich val =  +$691.76K  PEoich val =  +$973.64K , CE < PE by 29.0%
             (cumulative since contract start)
         SUPP_RES TOTAL OI (strike 83000): CE= $1.43M  PE= $2.09M , CE < PE by 31.4%
+        SR_NEIGHBOUR TOTAL OI (strike 82600, other side of S/R line 82500):
+            CE= $0.91M  PE= $1.12M , CE < PE by 18.8%  [monitor-only]
+            (printed only when the 500 line is unlisted and we fell back to a
+             bracket strike; tracking aid, feeds no gate)
         INCR_CHOI: SUPP_RES=83000 role=SUPPORT fresh_CE=+$376.62K
             fresh_PE=+$575.34K -> PE_dominant by 34.5%
             (support HOLDING (bullish)) | cumulative CE=... PE=...
@@ -1568,6 +1602,25 @@ def log_supp_res_oi(snapshot, sr_strike, sr_line_orig, snapped=False,
         strike_label,
         _fmt_oi_abs(ce_oi, ce_oi_usd), _fmt_oi_abs(pe_oi, pe_oi_usd),
         _compare_ce_pe(ce_oi, pe_oi)))
+    # 2a) MONITOR-ONLY: the other listed strike bracketing the 500 S/R line.
+    #     When the line (e.g. 82500) is unlisted we trade the bracket nearest
+    #     SPOT (82400); this prints the other side (82600) so OI buildup there
+    #     stays visible. Logged ONLY — it feeds no gate and no sizing.
+    _nb = sr_bracket_neighbour(sr_line_orig, sr_key, strike_index)
+    if _nb is not None:
+        _nb_pair = strike_index.get(_nb) or {}
+        _nb_call = _nb_pair.get("call") if isinstance(_nb_pair, dict) else None
+        _nb_put = _nb_pair.get("put") if isinstance(_nb_pair, dict) else None
+        _nb_call = _nb_call if isinstance(_nb_call, dict) else {}
+        _nb_put = _nb_put if isinstance(_nb_put, dict) else {}
+        _nb_ce = _nb_call.get("oi") or 0.0
+        _nb_pe = _nb_put.get("oi") or 0.0
+        print("SR_NEIGHBOUR TOTAL OI (strike {}, other side of S/R line {}): "
+              "CE= {}  PE= {} , {}  [monitor-only]".format(
+                  _nb, line_i,
+                  _fmt_oi_abs(_nb_ce, _nb_call.get("oi_usd")),
+                  _fmt_oi_abs(_nb_pe, _nb_put.get("oi_usd")),
+                  _compare_ce_pe(_nb_ce, _nb_pe)))
     # 2b) Per-strike GREEKS + IV at the S/R strike (observation-only). These
     #     feed the future delta-based hedge-offset / lot sizing (Sensex
     #     calc_lots_by_risk DELTA path); logged now to validate Delta's Greeks
