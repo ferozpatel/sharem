@@ -176,3 +176,1814 @@ MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600
 CHOI/OI at S/R: CEoich=2.1 PEoich=1.7 choi_valid=True choi_pct=20.3% | CE_total=43.5 PE_total=37.5 oi_pct=13.7%
 LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
 LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=1.1 | isCE_DomRes_once=False (streak=0) fresh_CE=0.4
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1434 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 17:36:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.6251 curr_pcr=0.6472
+
+ENTRY_SKIPPED [2026-10-20 17:36:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:36:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 17:39:00 IST] index(.DEXBTUSD)=81409.20 perp(BTCUSD)=81376.00 atm_strike=81400 pcr=0.7232 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx2 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:39:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.02   -0.00 CALL unwind -$290.06K   PUT added +$570.00  CE_OI=$4.85M PE_OI=$84.03K
+pcr2 =  BTC-82800   0.07   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.02M PE_OI=$134.27K
+pcr3 =  BTC-82600   0.03   0.02 CALL unwind -$79.56K   PUT unwind -$1.63K  CE_OI=$3.19M PE_OI=$103.58K
+pcr4 =  BTC-82400   0.07   0.00 CALL added +$93.00K   PUT unwind +$0.00  CE_OI=$757.04K PE_OI=$49.56K
+pcr5 =  BTC-82200   0.10   0.02 CALL unwind -$66.78K   PUT unwind -$1.55K  CE_OI=$1.75M PE_OI=$175.72K
+pcr6 =  BTC-82000   0.15   -1.46 CALL unwind -$28.99K   PUT added +$42.26K  CE_OI=$5.07M PE_OI=$752.79K
+pcr7 =  BTC-81800   0.21   25.00 CALL added +$651.51   PUT added +$16.29K  CE_OI=$2.41M PE_OI=$509.49K
+pcr8 =  BTC-81600   0.86   -0.09 CALL unwind -$2.85K   PUT added +$244.29  CE_OI=$3.54M PE_OI=$3.06M
+pcr9 =  BTC-81400   1.17   0.13 CALL added +$32.74K   PUT added +$4.32K  CE_OI=$2.16M PE_OI=$2.51M <== ATM
+pcr10 =  BTC-81200   7.68   nan CALL unwind +$0.00   PUT added +$27.93K  CE_OI=$140.03K PE_OI=$1.08M
+pcr11 =  BTC-81000   1.37   7.98 CALL added +$8.14K   PUT added +$64.98K  CE_OI=$2.09M PE_OI=$2.87M
+pcr12 =  BTC-80800   3.37   0.00 CALL added +$4.23K   PUT unwind +$0.00  CE_OI=$264.00K PE_OI=$891.64K
+pcr13 =  BTC-80600   9.92   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$82.10K PE_OI=$814.83K
+pcr14 =  BTC-80400   29.67   nan CALL unwind +$0.00   PUT added +$2.52K  CE_OI=$32.86K PE_OI=$973.64K
+pcr15 =  BTC-80200   71.47   nan CALL unwind +$0.00   PUT added +$1.63K  CE_OI=$13.61K PE_OI=$971.86K
+pcr16 =  BTC-80000   58.88   68.75 CALL added +$977.17   PUT added +$67.18K  CE_OI=$116.77K PE_OI=$6.87M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.72  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81409.20
+BTC PERP/FUT (BTCUSD)  = 81376.00
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81600: 81400}
+avgOiPcrList2  = [0.7672] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.7672)
+avgOiPcr9List2 = [0.7232] atmStrikeNotShiftedCount= 1  (central 9, curr=0.7232)
+==== PCR trend check 2026-10-20 17:39:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.6887, 0.7122, 0.7232]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.7374, 0.7506, 0.7672]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.6887 -> 0.7122 -> 0.7232 | step1 +3.41% | step2 +1.54%
+is9PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 1.54% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.7374 -> 0.7506 -> 0.7672 | step1 +1.79% | step2 +2.21%
+is17PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 1.79% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6965  [total CE_OI= $85.01M  total PE_OI= $59.19M]
+totalPcrList = [0.6736, 0.6769, 0.6965]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6736 -> 0.6769 -> 0.6965 | step1 +0.49% | step2 +2.89%
+isTotalPcrInc = True  (streak=1 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = True  (smallest step 0.49% vs 0.10% threshold -> meaningful)
+SUPP_RES=== 81400.00 role=SUPPORT (nearest listed strike to spot 81409.20; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81409.20 is 81400 (9 away)
+CEoich val =  +$586.96K  PEoich val =  +$124.08K , CE > PE by 78.9%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.16M  PE= $2.51M , CE < PE by 14.3%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.54M  PE= $3.06M , CE > PE by 13.6%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.5107 gamma=0.000292 theta=-273.86 vega=16.94 iv=0.32] | PE[delta=-0.4892 gamma=0.000299 theta=-267.23 vega=16.94 iv=0.31]
+INCR_CHOI: SUPP_RES=81400 role=SUPPORT fresh_CE=+$32.74K fresh_PE=+$4.32K -> CE_dominant by 86.8% (support UNDERMINED (bearish warning)) | cumulative CE=+$586.96K PE=+$124.08K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:39:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=1 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81400.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=7.2 PEoich=1.5 choi_valid=True choi_pct=78.9% | CE_total=26.5 PE_total=30.9 oi_pct=14.3%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=True bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.1 | isCE_DomRes_once=False (streak=0) fresh_CE=0.4
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1431 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_dominance_bull(need PE dominant, fresh_PE>=0)
+
+PCR_TREND [2026-10-20 17:39:00 IST] direction=up consecutive_cycles=2 prev_pcr=0.6472 curr_pcr=0.7232
+
+ENTRY_SKIPPED [2026-10-20 17:39:00 IST] no live entry: no_sensex_signal(choi_dominance_bull(need PE dominant, fresh_PE>=0)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:39:00 IST] waiting 179.3s for next 3-min candle close.
+SIGNAL [2026-10-20 17:42:00 IST] index(.DEXBTUSD)=81345.90 perp(BTCUSD)=81316.50 atm_strike=81400 pcr=0.7117 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:42:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.03   91.00 CALL added +$895.23   PUT added +$81.46K  CE_OI=$4.85M PE_OI=$165.44K
+pcr2 =  BTC-82800   0.07   0.00 CALL added +$3.09K   PUT unwind +$0.00  CE_OI=$2.02M PE_OI=$134.10K
+pcr3 =  BTC-82600   0.03   -0.00 CALL unwind -$7.81K   PUT unwind +$0.00  CE_OI=$3.18M PE_OI=$103.47K
+pcr4 =  BTC-82400   0.05   -1.05 CALL added +$7.73K   PUT unwind -$8.14K  CE_OI=$763.46K PE_OI=$41.33K
+pcr5 =  BTC-82200   0.10   0.00 CALL added +$46.29K   PUT unwind +$0.00  CE_OI=$1.79M PE_OI=$175.60K
+pcr6 =  BTC-82000   0.15   -0.04 CALL added +$35.95K   PUT unwind -$1.38K  CE_OI=$5.10M PE_OI=$750.78K
+pcr7 =  BTC-81800   0.21   -0.03 CALL unwind -$4.72K   PUT added +$162.68  CE_OI=$2.41M PE_OI=$509.03K
+pcr8 =  BTC-81600   0.80   -0.81 CALL added +$128.95K   PUT unwind -$104.05K  CE_OI=$3.66M PE_OI=$2.95M
+pcr9 =  BTC-81400   1.04   -1.86 CALL added +$94.54K   PUT unwind -$175.69K  CE_OI=$2.25M PE_OI=$2.34M <== ATM
+pcr10 =  BTC-81200   7.98   28.64 CALL added +$2.03K   PUT added +$58.25K  CE_OI=$141.88K PE_OI=$1.13M
+pcr11 =  BTC-81000   1.44   nan CALL unwind +$0.00   PUT added +$132.02K  CE_OI=$2.09M PE_OI=$3.00M
+pcr12 =  BTC-80800   6.14   -0.35 CALL unwind -$112.44K   PUT added +$39.54K  CE_OI=$151.33K PE_OI=$929.53K
+pcr13 =  BTC-80600   9.74   nan CALL unwind +$0.00   PUT unwind -$14.81K  CE_OI=$81.94K PE_OI=$798.29K
+pcr14 =  BTC-80400   29.03   -22.40 CALL added +$406.84   PUT unwind -$9.11K  CE_OI=$33.20K PE_OI=$963.47K
+pcr15 =  BTC-80200   71.83   nan CALL unwind +$0.00   PUT added +$4.88K  CE_OI=$13.61K PE_OI=$975.97K
+pcr16 =  BTC-80000   60.32   nan CALL unwind +$0.00   PUT added +$168.75K  CE_OI=$116.68K PE_OI=$7.04M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.71  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81345.90
+BTC PERP/FUT (BTCUSD)  = 81316.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81400: 81400}
+avgOiPcrList2  = [0.7672, 0.768] atmStrikeNotShiftedCount= 2  (full 17 strikes, curr=0.7680)
+avgOiPcr9List2 = [0.7232, 0.7117] atmStrikeNotShiftedCount= 2  (central 9, curr=0.7117)
+==== PCR trend check 2026-10-20 17:42:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.7122, 0.7232, 0.7117]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.7506, 0.7672, 0.768]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.7122 -> 0.7232 -> 0.7117 (not monotonic)
+17_SEQ_INC_InvariantWindow: 0.7506 -> 0.7672 -> 0.7680 | step1 +2.21% | step2 +0.1%
+is17PcrInc_InvariantWindow = True  (streak=2 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.10% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6971  [total CE_OI= $86.04M  total PE_OI= $59.94M]
+totalPcrList = [0.6769, 0.6965, 0.6971]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6769 -> 0.6965 -> 0.6971 | step1 +2.89% | step2 +0.09%
+isTotalPcrInc = True  (streak=2 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = False  (smallest step 0.09% vs 0.10% threshold -> drift/noise)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: CE_dominant (PCR falling) once=True twice=False thrice=False (down_streak=1)
+SUPP_RES=== 81400.00 role=RESISTANCE (nearest listed strike to spot 81345.90; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81345.90 is 81400 (54 away)
+CEoich val =  +$680.98K  PEoich val =  -$51.73K , CE > PE by 107.6%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.25M  PE= $2.34M , CE < PE by 3.8%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.66M  PE= $2.95M , CE > PE by 19.5%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.4859 gamma=0.000292 theta=-274.17 vega=16.90 iv=0.32] | PE[delta=-0.5146 gamma=0.000299 theta=-267.70 vega=16.90 iv=0.31]
+INCR_CHOI: SUPP_RES=81400 role=RESISTANCE fresh_CE=+$94.54K fresh_PE=-$175.69K -> CE_dominant by 153.8% (resistance HOLDING (bearish)) | cumulative CE=+$680.98K PE=-$51.73K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:42:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=2 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81400.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=8.4 PEoich=-0.6 choi_valid=False choi_pct=0.0% | CE_total=27.6 PE_total=28.7 oi_pct=3.8%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=-2.2 | isCE_DomRes_once=True (streak=1) fresh_CE=1.2
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1428 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_not_building(CE>0 and PE>0 required)
+
+PCR_TREND [2026-10-20 17:42:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.7232 curr_pcr=0.7117
+
+ENTRY_SKIPPED [2026-10-20 17:42:00 IST] no live entry: no_sensex_signal(choi_not_building(CE>0 and PE>0 required)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:42:00 IST] waiting 179.3s for next 3-min candle close.
+SIGNAL [2026-10-20 17:45:00 IST] index(.DEXBTUSD)=81376.80 perp(BTCUSD)=81339.50 atm_strike=81400 pcr=0.7270 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:45:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.03   0.00 CALL added +$91.07K   PUT added +$325.71  CE_OI=$4.94M PE_OI=$165.87K
+pcr2 =  BTC-82800   0.07   -0.00 CALL unwind -$406.89   PUT unwind +$0.00  CE_OI=$2.02M PE_OI=$134.10K
+pcr3 =  BTC-82600   0.03   0.03 CALL added +$73.28K   PUT added +$2.03K  CE_OI=$3.25M PE_OI=$105.53K
+pcr4 =  BTC-82400   0.06   -0.09 CALL unwind -$25.96K   PUT added +$2.44K  CE_OI=$737.66K PE_OI=$43.78K
+pcr5 =  BTC-82200   0.09   0.00 CALL added +$63.98K   PUT added +$81.38  CE_OI=$1.85M PE_OI=$175.70K
+pcr6 =  BTC-82000   0.15   -0.00 CALL unwind -$9.52K   PUT unwind +$0.00  CE_OI=$5.10M PE_OI=$751.32K
+pcr7 =  BTC-81800   0.21   0.00 CALL added +$10.90K   PUT unwind +$0.00  CE_OI=$2.42M PE_OI=$509.03K
+pcr8 =  BTC-81600   0.82   1.62 CALL added +$64.95K   PUT added +$105.23K  CE_OI=$3.73M PE_OI=$3.06M
+pcr9 =  BTC-81400   1.07   3.66 CALL added +$27.83K   PUT added +$101.87K  CE_OI=$2.28M PE_OI=$2.44M <== ATM
+pcr10 =  BTC-81200   6.53   3.00 CALL added +$58.58K   PUT added +$175.59K  CE_OI=$200.48K PE_OI=$1.31M
+pcr11 =  BTC-81000   1.48   307.00 CALL added +$325.72   PUT added +$99.97K  CE_OI=$2.09M PE_OI=$3.10M
+pcr12 =  BTC-80800   5.58   -55.82 CALL added +$1.38K   PUT unwind -$77.26K  CE_OI=$152.73K PE_OI=$852.84K
+pcr13 =  BTC-80600   10.04   nan CALL unwind +$0.00   PUT added +$24.51K  CE_OI=$81.95K PE_OI=$823.42K
+pcr14 =  BTC-80400   29.15   -20.00 CALL unwind -$81.43   PUT added +$1.63K  CE_OI=$33.14K PE_OI=$965.42K
+pcr15 =  BTC-80200   71.83   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$13.61K PE_OI=$975.97K
+pcr16 =  BTC-80000   64.59   404.83 CALL added +$1.47K   PUT added +$593.15K  CE_OI=$118.23K PE_OI=$7.63M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.73  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81376.80
+BTC PERP/FUT (BTCUSD)  = 81339.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81400: 81400}
+avgOiPcrList2  = [0.7672, 0.768, 0.794] atmStrikeNotShiftedCount= 3  (full 17 strikes, curr=0.7940)
+avgOiPcr9List2 = [0.7232, 0.7117, 0.727] atmStrikeNotShiftedCount= 3  (central 9, curr=0.7270)
+==== PCR trend check 2026-10-20 17:45:00 IST ====
+PCR9_SEQ_FLAT: 0.7232 -> 0.7117 -> 0.7270 (not monotonic)
+PCR_SEQ_INC: 0.7672 -> 0.7680 -> 0.7940 | step1 +0.1% | step2 +3.39%
+isPcrInc = True
+isPcrInc_MinMove = True  (smallest step 0.10% vs 0.10% threshold -> meaningful)
+PCR_SEQ_INC_STREAK = 1 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.7232, 0.7117, 0.727]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.7672, 0.768, 0.794]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.7232 -> 0.7117 -> 0.7270 (not monotonic)
+17_SEQ_INC_InvariantWindow: 0.7672 -> 0.7680 -> 0.7940 | step1 +0.1% | step2 +3.39%
+is17PcrInc_InvariantWindow = True  (streak=3 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.10% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7125  [total CE_OI= $86.94M  total PE_OI= $61.92M]
+totalPcrList = [0.6965, 0.6971, 0.7125]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6965 -> 0.6971 -> 0.7125 | step1 +0.09% | step2 +2.2%
+isTotalPcrInc = True  (streak=3 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = False  (smallest step 0.09% vs 0.10% threshold -> drift/noise)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=False (up_streak=2)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+SUPP_RES=== 81400.00 role=RESISTANCE (nearest listed strike to spot 81376.80; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81376.80 is 81400 (23 away)
+CEoich val =  +$708.84K  PEoich val =  +$50.12K , CE > PE by 92.9%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.28M  PE= $2.44M , CE < PE by 6.7%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.73M  PE= $3.06M , CE > PE by 18.1%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.4929 gamma=0.000291 theta=-276.22 vega=16.90 iv=0.32] | PE[delta=-0.5075 gamma=0.000298 theta=-269.48 vega=16.90 iv=0.32]
+INCR_CHOI: SUPP_RES=81400 role=RESISTANCE fresh_CE=+$27.83K fresh_PE=+$101.87K -> PE_dominant by 72.7% (resistance CHALLENGED (bullish warning)) | cumulative CE=+$708.84K PE=+$50.12K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:45:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=3 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81400.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=8.7 PEoich=0.6 choi_valid=True choi_pct=92.9% | CE_total=28.0 PE_total=30.0 oi_pct=6.7%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=1.3 | isCE_DomRes_once=False (streak=0) fresh_CE=0.3
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1425 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=no_logic_mode_qualified
+
+PCR_TREND [2026-10-20 17:45:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.7117 curr_pcr=0.7270
+
+ENTRY_SKIPPED [2026-10-20 17:45:00 IST] no live entry: no_sensex_signal(no_logic_mode_qualified) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:45:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-20 17:48:00 IST] index(.DEXBTUSD)=81481.10 perp(BTCUSD)=81443.50 atm_strike=81400 pcr=0.7216 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:48:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.03   0.00 CALL added +$73.57K   PUT added +$162.88  CE_OI=$5.02M PE_OI=$166.06K
+pcr2 =  BTC-82800   0.06   0.00 CALL added +$69.17K   PUT unwind +$0.00  CE_OI=$2.09M PE_OI=$134.21K
+pcr3 =  BTC-82600   0.03   0.15 CALL added +$1.06K   PUT added +$162.88  CE_OI=$3.26M PE_OI=$105.79K
+pcr4 =  BTC-82400   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$738.17K PE_OI=$43.81K
+pcr5 =  BTC-82200   0.09   0.02 CALL added +$8.55K   PUT added +$162.88  CE_OI=$1.86M PE_OI=$175.99K
+pcr6 =  BTC-82000   0.15   0.69 CALL added +$8.14K   PUT added +$5.62K  CE_OI=$5.11M PE_OI=$757.22K
+pcr7 =  BTC-81800   0.20   0.01 CALL added +$73.78K   PUT added +$407.20  CE_OI=$2.49M PE_OI=$510.06K
+pcr8 =  BTC-81600   0.83   -0.00 CALL unwind -$35.43K   PUT unwind +$0.00  CE_OI=$3.70M PE_OI=$3.06M
+pcr9 =  BTC-81400   1.07   0.53 CALL added +$9.21K   PUT added +$4.89K  CE_OI=$2.29M PE_OI=$2.45M <== ATM
+pcr10 =  BTC-81200   6.34   -31.83 CALL added +$977.28   PUT unwind -$31.12K  CE_OI=$201.65K PE_OI=$1.28M
+pcr11 =  BTC-81000   1.45   0.10 CALL added +$44.00K   PUT added +$4.48K  CE_OI=$2.13M PE_OI=$3.11M
+pcr12 =  BTC-80800   5.55   -6.40 CALL added +$407.20   PUT unwind -$2.61K  CE_OI=$153.27K PE_OI=$850.90K
+pcr13 =  BTC-80600   10.03   0.00 CALL added +$81.44   PUT unwind +$0.00  CE_OI=$82.09K PE_OI=$823.52K
+pcr14 =  BTC-80400   27.92   -222.50 CALL added +$162.88   PUT unwind -$36.24K  CE_OI=$33.31K PE_OI=$930.05K
+pcr15 =  BTC-80200   71.60   nan CALL unwind +$0.00   PUT unwind -$3.09K  CE_OI=$13.60K PE_OI=$973.78K
+pcr16 =  BTC-80000   64.31   -139.50 CALL added +$162.88   PUT unwind -$22.73K  CE_OI=$118.41K PE_OI=$7.62M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.72  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81481.10
+BTC PERP/FUT (BTCUSD)  = 81443.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81400: 81400}
+avgOiPcrList2  = [0.7672, 0.768, 0.794, 0.7844] atmStrikeNotShiftedCount= 4  (full 17 strikes, curr=0.7844)
+avgOiPcr9List2 = [0.7232, 0.7117, 0.727, 0.7216] atmStrikeNotShiftedCount= 4  (central 9, curr=0.7216)
+==== PCR trend check 2026-10-20 17:48:00 IST ====
+PCR9_SEQ_FLAT: 0.7117 -> 0.7270 -> 0.7216 (not monotonic)
+PCR_SEQ_FLAT: 0.7680 -> 0.7940 -> 0.7844 (not monotonic)
+avgOiPcr9List2_InvariantWindow  = [0.7117, 0.727, 0.7216]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.768, 0.794, 0.7844]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.7117 -> 0.7270 -> 0.7216 (not monotonic)
+17_SEQ_FLAT_InvariantWindow: 0.7680 -> 0.7940 -> 0.7844 (not monotonic)
+TOTAL_PCR (full chain) = 0.7050  [total CE_OI= $88.31M  total PE_OI= $62.24M]
+totalPcrList = [0.6971, 0.7125, 0.705]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6971 -> 0.7125 -> 0.7050 (not monotonic)
+
+PCR17_DOMINANCE: CE_dominant (PCR falling) once=True twice=False thrice=False (down_streak=1)
+PCR9_DOMINANCE: CE_dominant (PCR falling) once=True twice=False thrice=False (down_streak=1)
+SUPP_RES=== 81400.00 role=SUPPORT (nearest listed strike to spot 81481.10; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81481.10 is 81400 (81 away)
+CEoich val =  +$719.00K  PEoich val =  +$55.08K , CE > PE by 92.3%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.29M  PE= $2.45M , CE < PE by 6.5%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.70M  PE= $3.06M , CE > PE by 17.3%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.5247 gamma=0.000290 theta=-277.11 vega=16.87 iv=0.32] | PE[delta=-0.4749 gamma=0.000296 theta=-270.75 vega=16.87 iv=0.32]
+INCR_CHOI: SUPP_RES=81400 role=SUPPORT fresh_CE=+$9.21K fresh_PE=+$4.89K -> CE_dominant by 46.9% (support UNDERMINED (bearish warning)) | cumulative CE=+$719.00K PE=+$55.08K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:48:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81400.00 role=SUPPORT) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=8.8 PEoich=0.7 choi_valid=True choi_pct=92.3% | CE_total=28.1 PE_total=30.0 oi_pct=6.5%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.1 | isCE_DomRes_once=False (streak=0) fresh_CE=0.1
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1422 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 17:48:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.7270 curr_pcr=0.7216
+
+ENTRY_SKIPPED [2026-10-20 17:48:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:48:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-20 17:51:00 IST] index(.DEXBTUSD)=81553.50 perp(BTCUSD)=81518.50 atm_strike=81600 pcr=0.6509 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx2 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:51:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   0.01 CALL added +$1.83M   PUT added +$22.56K  CE_OI=$1.83M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   -0.22 CALL added +$374.34K   PUT unwind -$81.86K  CE_OI=$5.39M PE_OI=$84.39K
+pcr3 =  BTC-82800   0.06   0.00 CALL added +$815.28   PUT unwind +$0.00  CE_OI=$2.09M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.03   -0.00 CALL unwind -$18.19K   PUT unwind +$0.00  CE_OI=$3.24M PE_OI=$105.93K
+pcr5 =  BTC-82400   0.06   -0.00 CALL unwind -$5.14K   PUT unwind +$0.00  CE_OI=$734.00K PE_OI=$43.81K
+pcr6 =  BTC-82200   0.09   0.00 CALL added +$40.53K   PUT unwind +$0.00  CE_OI=$1.91M PE_OI=$176.16K
+pcr7 =  BTC-82000   0.15   0.12 CALL added +$32.78K   PUT added +$4.08K  CE_OI=$5.15M PE_OI=$762.06K
+pcr8 =  BTC-81800   0.20   -0.00 CALL unwind -$326.19   PUT unwind +$0.00  CE_OI=$2.50M PE_OI=$510.06K
+pcr9 =  BTC-81600   0.85   -0.04 CALL unwind -$111.47K   PUT added +$4.32K  CE_OI=$3.59M PE_OI=$3.07M <== ATM
+pcr10 =  BTC-81400   1.04   -30.04 CALL added +$2.04K   PUT unwind -$61.23K  CE_OI=$2.29M PE_OI=$2.39M
+pcr11 =  BTC-81200   6.21   -326.00 CALL added +$81.55   PUT unwind -$26.59K  CE_OI=$202.01K PE_OI=$1.25M
+pcr12 =  BTC-81000   1.44   -1.36 CALL added +$8.64K   PUT unwind -$11.74K  CE_OI=$2.14M PE_OI=$3.10M
+pcr13 =  BTC-80800   5.70   0.08 CALL unwind -$4.08K   PUT unwind -$326.18  CE_OI=$149.38K PE_OI=$851.33K
+pcr14 =  BTC-80600   10.17   nan CALL unwind +$0.00   PUT added +$11.66K  CE_OI=$82.17K PE_OI=$836.20K
+pcr15 =  BTC-80400   35.37   nan CALL unwind +$0.00   PUT added +$248.40K  CE_OI=$33.31K PE_OI=$1.18M
+pcr16 =  BTC-80200   71.60   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$13.60K PE_OI=$973.78K
+pcr17 =  BTC-80000   64.71   nan CALL unwind +$0.00   PUT added +$47.22K  CE_OI=$118.41K PE_OI=$7.67M
+PCRSUM== 197.71
+
+AVG_OIPCR_9STRIKE= 0.65  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81553.50
+BTC PERP/FUT (BTCUSD)  = 81518.50
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81400: 81600}
+avgOiPcrList2  = [0.7358] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.7358)
+avgOiPcr9List2 = [0.6509] atmStrikeNotShiftedCount= 1  (central 9, curr=0.6509)
+==== PCR trend check 2026-10-20 17:51:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.6593, 0.6545, 0.6509]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.7486, 0.7399, 0.7358]  (full 17, re-measured on current strikes)
+9_SEQ_DEC_InvariantWindow: 0.6593 -> 0.6545 -> 0.6509 | step1 -0.73% | step2 -0.55%
+is9PcrDecr_InvariantWindow = True  (streak=1 consecutive cycle(s) falling)
+is9PcrDecr_InvariantWindow_MinMove = True  (smallest step 0.55% vs 0.10% threshold -> meaningful)
+17_SEQ_DEC_InvariantWindow: 0.7486 -> 0.7399 -> 0.7358 | step1 -1.17% | step2 -0.55%
+is17PcrDecr_InvariantWindow = True  (streak=1 consecutive cycle(s) falling)
+is17PcrDecr_InvariantWindow_MinMove = True  (smallest step 0.55% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7043  [total CE_OI= $89.19M  total PE_OI= $62.82M]
+totalPcrList = [0.7125, 0.705, 0.7043]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_DEC: 0.7125 -> 0.7050 -> 0.7043 | step1 -1.04% | step2 -0.11%
+isTotalPcrDecr = True  (streak=1 consecutive cycle(s) falling)
+isTotalPcrDecr_MinMove = True  (smallest step 0.11% vs 0.10% threshold -> meaningful)
+SUPP_RES=== 81600.00 role=RESISTANCE (nearest listed strike to spot 81553.50; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81553.50 is 81600 (46 away)
+CEoich val =  +$218.63K  PEoich val =  +$144.40K , CE > PE by 33.9%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.59M  PE= $3.07M , CE > PE by 14.6%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.29M  PE= $2.39M , CE < PE by 4.0%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.4879 gamma=0.000291 theta=-276.74 vega=16.90 iv=0.32] | PE[delta=-0.5125 gamma=0.000299 theta=-270.22 vega=16.90 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=RESISTANCE fresh_CE=-$111.47K fresh_PE=+$4.32K -> PE_dominant by 103.9% (resistance CHALLENGED (bullish warning)) | cumulative CE=+$218.63K PE=+$144.40K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:51:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=True (streak=1 minmove=True) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=True
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=True
+CHOI/OI at S/R: CEoich=2.7 PEoich=1.8 choi_valid=True choi_pct=33.9% | CE_total=44.0 PE_total=37.6 oi_pct=14.6%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=True  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC2_TREND_CONVERGENCE (tradeable=True)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.1 | isCE_DomRes_once=False (streak=0) fresh_CE=-1.4
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1419 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_dominance_bear(need CE dominant, fresh_CE>=0)
+
+PCR_TREND [2026-10-20 17:51:00 IST] direction=down consecutive_cycles=2 prev_pcr=0.7216 curr_pcr=0.6509
+
+ENTRY_SKIPPED [2026-10-20 17:51:00 IST] no live entry: no_sensex_signal(choi_dominance_bear(need CE dominant, fresh_CE>=0)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:51:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 17:54:00 IST] index(.DEXBTUSD)=81642.80 perp(BTCUSD)=81616.50 atm_strike=81600 pcr=0.6840 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:54:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   0.00 CALL added +$342.89K   PUT unwind +$0.00  CE_OI=$2.17M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   0.00 CALL added +$55.41K   PUT unwind +$0.00  CE_OI=$5.46M PE_OI=$84.39K
+pcr3 =  BTC-82800   0.06   -0.00 CALL unwind -$3.27K   PUT unwind +$0.00  CE_OI=$2.09M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.03   -0.00 CALL unwind -$26.29K   PUT unwind +$0.00  CE_OI=$3.22M PE_OI=$105.87K
+pcr5 =  BTC-82400   0.06   0.00 CALL added +$244.52   PUT unwind +$0.00  CE_OI=$733.89K PE_OI=$43.81K
+pcr6 =  BTC-82200   0.09   -0.00 CALL unwind -$40.41K   PUT unwind +$0.00  CE_OI=$1.87M PE_OI=$176.34K
+pcr7 =  BTC-82000   0.15   0.23 CALL unwind -$17.96K   PUT unwind -$4.16K  CE_OI=$5.14M PE_OI=$758.69K
+pcr8 =  BTC-81800   0.20   0.00 CALL added +$814.83   PUT unwind +$0.00  CE_OI=$2.49M PE_OI=$511.09K
+pcr9 =  BTC-81600   0.87   -0.00 CALL unwind -$71.03K   PUT unwind +$0.00  CE_OI=$3.52M PE_OI=$3.07M <== ATM
+pcr10 =  BTC-81400   1.08   -9.09 CALL unwind -$7.76K   PUT added +$70.55K  CE_OI=$2.29M PE_OI=$2.46M
+pcr11 =  BTC-81200   7.40   31.39 CALL added +$10.04K   PUT added +$315.16K  CE_OI=$212.28K PE_OI=$1.57M
+pcr12 =  BTC-81000   1.51   369.60 CALL added +$408.03   PUT added +$150.79K  CE_OI=$2.15M PE_OI=$3.25M
+pcr13 =  BTC-80800   5.70   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$149.38K PE_OI=$850.83K
+pcr14 =  BTC-80600   10.18   nan CALL unwind +$0.00   PUT added +$407.76  CE_OI=$82.17K PE_OI=$836.72K
+pcr15 =  BTC-80400   35.46   nan CALL unwind +$0.00   PUT added +$2.94K  CE_OI=$33.31K PE_OI=$1.18M
+pcr16 =  BTC-80200   73.75   nan CALL unwind +$0.00   PUT added +$29.36K  CE_OI=$13.60K PE_OI=$1.00M
+pcr17 =  BTC-80000   64.71   nan CALL unwind +$0.00   PUT added +$489.59  CE_OI=$118.41K PE_OI=$7.68M
+PCRSUM== 201.28
+
+AVG_OIPCR_9STRIKE= 0.68  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81642.80
+BTC PERP/FUT (BTCUSD)  = 81616.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.7358, 0.748] atmStrikeNotShiftedCount= 2  (full 17 strikes, curr=0.7480)
+avgOiPcr9List2 = [0.6509, 0.684] atmStrikeNotShiftedCount= 2  (central 9, curr=0.6840)
+==== PCR trend check 2026-10-20 17:54:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.6545, 0.6509, 0.684]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.7399, 0.7358, 0.748]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.6545 -> 0.6509 -> 0.6840 (not monotonic)
+17_SEQ_FLAT_InvariantWindow: 0.7399 -> 0.7358 -> 0.7480 (not monotonic)
+TOTAL_PCR (full chain) = 0.7172  [total CE_OI= $90.43M  total PE_OI= $64.80M]
+totalPcrList = [0.705, 0.7043, 0.7172]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.7050 -> 0.7043 -> 0.7172 (not monotonic)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+SUPP_RES=== 81600.00 role=SUPPORT (nearest listed strike to spot 81642.80; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81642.80 is 81600 (43 away)
+CEoich val =  +$147.87K  PEoich val =  +$144.61K , CE > PE by 2.2%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.52M  PE= $3.07M , CE > PE by 12.9%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.29M  PE= $2.46M , CE < PE by 7.1%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.5171 gamma=0.000293 theta=-275.47 vega=16.89 iv=0.32] | PE[delta=-0.4827 gamma=0.000300 theta=-269.45 vega=16.89 iv=0.31]
+INCR_CHOI: SUPP_RES=81600 role=SUPPORT fresh_CE=-$71.03K fresh_PE=+$0.00 -> PE_dominant by 100.0% (support HOLDING (bullish)) | cumulative CE=+$147.87K PE=+$144.61K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:54:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81600.00 role=SUPPORT) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=1.8 PEoich=1.8 choi_valid=True choi_pct=2.2% | CE_total=43.2 PE_total=37.6 oi_pct=12.9%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=True bear_ok=False | isPE_DomSupp_once=True (streak=1) fresh_PE=0.0 | isCE_DomRes_once=False (streak=0) fresh_CE=-0.9
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1416 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 17:54:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.6509 curr_pcr=0.6840
+
+ENTRY_SKIPPED [2026-10-20 17:54:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:54:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 17:57:00 IST] index(.DEXBTUSD)=81659.40 perp(BTCUSD)=81628.50 atm_strike=81600 pcr=0.5120 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 17:57:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   0.00 CALL added +$12.17K   PUT unwind +$0.00  CE_OI=$2.19M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   -0.00 CALL unwind -$607.74K   PUT unwind +$0.00  CE_OI=$4.85M PE_OI=$84.39K
+pcr3 =  BTC-82800   0.06   -0.00 CALL unwind -$1.96K   PUT unwind +$0.00  CE_OI=$2.09M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.03   -0.00 CALL unwind -$15.76K   PUT unwind +$0.00  CE_OI=$3.20M PE_OI=$106.05K
+pcr5 =  BTC-82400   0.01   0.00 CALL added +$4.06M   PUT unwind +$0.00  CE_OI=$4.80M PE_OI=$43.94K
+pcr6 =  BTC-82200   0.03   0.00 CALL added +$4.14M   PUT unwind +$0.00  CE_OI=$6.01M PE_OI=$176.49K
+pcr7 =  BTC-82000   0.15   0.06 CALL unwind -$63.21K   PUT unwind -$3.67K  CE_OI=$5.07M PE_OI=$755.44K
+pcr8 =  BTC-81800   0.20   -1.22 CALL added +$16.33K   PUT unwind -$20.01K  CE_OI=$2.52M PE_OI=$491.49K
+pcr9 =  BTC-81600   1.06   -0.36 CALL unwind -$476.01K   PUT added +$172.39K  CE_OI=$3.05M PE_OI=$3.24M <== ATM
+pcr10 =  BTC-81400   1.15   -0.39 CALL unwind -$116.70K   PUT added +$45.41K  CE_OI=$2.17M PE_OI=$2.51M
+pcr11 =  BTC-81200   7.83   nan CALL unwind +$0.00   PUT added +$91.14K  CE_OI=$212.41K PE_OI=$1.66M
+pcr12 =  BTC-81000   2.29   -0.03 CALL unwind -$716.52K   PUT added +$24.50K  CE_OI=$1.43M PE_OI=$3.28M
+pcr13 =  BTC-80800   5.72   -5.75 CALL unwind -$326.58   PUT added +$1.88K  CE_OI=$149.25K PE_OI=$854.64K
+pcr14 =  BTC-80600   10.21   nan CALL unwind +$0.00   PUT added +$2.37K  CE_OI=$82.17K PE_OI=$840.31K
+pcr15 =  BTC-80400   29.65   6.16 CALL added +$8.25K   PUT added +$50.80K  CE_OI=$41.64K PE_OI=$1.24M
+pcr16 =  BTC-80200   73.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$13.60K PE_OI=$1.01M
+pcr17 =  BTC-80000   61.44   299.15 CALL unwind -$1.63K   PUT unwind -$488.62K  CE_OI=$117.10K PE_OI=$7.20M
+PCRSUM== 193.61
+
+AVG_OIPCR_9STRIKE= 0.51  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81659.40
+BTC PERP/FUT (BTCUSD)  = 81628.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.7358, 0.748, 0.6219] atmStrikeNotShiftedCount= 3  (full 17 strikes, curr=0.6219)
+avgOiPcr9List2 = [0.6509, 0.684, 0.512] atmStrikeNotShiftedCount= 3  (central 9, curr=0.5120)
+==== PCR trend check 2026-10-20 17:57:00 IST ====
+PCR9_SEQ_FLAT: 0.6509 -> 0.6840 -> 0.5120 (not monotonic)
+PCR_SEQ_FLAT: 0.7358 -> 0.7480 -> 0.6219 (not monotonic)
+avgOiPcr9List2_InvariantWindow  = [0.6509, 0.684, 0.512]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.7358, 0.748, 0.6219]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.6509 -> 0.6840 -> 0.5120 (not monotonic)
+17_SEQ_FLAT_InvariantWindow: 0.7358 -> 0.7480 -> 0.6219 (not monotonic)
+TOTAL_PCR (full chain) = 0.6710  [total CE_OI= $96.80M  total PE_OI= $64.95M]
+totalPcrList = [0.7043, 0.7172, 0.671]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.7043 -> 0.7172 -> 0.6710 (not monotonic)
+
+PCR17_DOMINANCE: CE_dominant (PCR falling) once=True twice=False thrice=False (down_streak=1)
+PCR9_DOMINANCE: CE_dominant (PCR falling) once=True twice=False thrice=False (down_streak=1)
+SUPP_RES=== 81600.00 role=SUPPORT (nearest listed strike to spot 81659.40; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81659.40 is 81600 (59 away)
+CEoich val =  -$328.09K  PEoich val =  +$317.02K , CE < PE by 196.6%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.05M  PE= $3.24M , CE < PE by 6.0%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.17M  PE= $2.51M , CE < PE by 13.4%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.5224 gamma=0.000289 theta=-279.77 vega=16.87 iv=0.33] | PE[delta=-0.4772 gamma=0.000296 theta=-273.19 vega=16.87 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=SUPPORT fresh_CE=-$476.01K fresh_PE=+$172.39K -> PE_dominant by 136.2% (support HOLDING (bullish)) | cumulative CE=-$328.09K PE=+$317.02K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 17:57:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81600.00 role=SUPPORT) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=-4.0 PEoich=3.9 choi_valid=False choi_pct=0.0% | CE_total=37.3 PE_total=39.7 oi_pct=6.0%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=True bear_ok=False | isPE_DomSupp_once=True (streak=2) fresh_PE=2.1 | isCE_DomRes_once=False (streak=0) fresh_CE=-5.8
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1413 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 17:57:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.6840 curr_pcr=0.5120
+
+ENTRY_SKIPPED [2026-10-20 17:57:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 17:57:00 IST] waiting 179.3s for next 3-min candle close.
+SIGNAL [2026-10-20 18:00:00 IST] index(.DEXBTUSD)=81558.80 perp(BTCUSD)=81527.50 atm_strike=81600 pcr=0.4326 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx2 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:00:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   0.00 CALL added +$17.14K   PUT unwind +$0.00  CE_OI=$2.20M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   0.00 CALL added +$103.74K   PUT unwind +$0.00  CE_OI=$4.95M PE_OI=$84.39K
+pcr3 =  BTC-82800   0.08   -0.00 CALL unwind -$455.66K   PUT unwind +$0.00  CE_OI=$1.63M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.04   -0.00 CALL unwind -$304.75K   PUT unwind +$0.00  CE_OI=$2.90M PE_OI=$105.99K
+pcr5 =  BTC-82400   0.01   -0.01 CALL added +$984.07K   PUT unwind -$6.53K  CE_OI=$5.78M PE_OI=$37.39K
+pcr6 =  BTC-82200   0.03   13.86 CALL added +$1.14K   PUT added +$15.82K  CE_OI=$6.00M PE_OI=$192.09K
+pcr7 =  BTC-82000   0.08   0.00 CALL added +$4.03M   PUT added +$81.62  CE_OI=$9.09M PE_OI=$755.22K
+pcr8 =  BTC-81800   0.25   1.81 CALL added +$94.87K   PUT added +$171.35K  CE_OI=$2.61M PE_OI=$662.16K
+pcr9 =  BTC-81600   1.06   0.19 CALL added +$21.37K   PUT added +$4.08K  CE_OI=$3.07M PE_OI=$3.24M <== ATM
+pcr10 =  BTC-81400   1.23   -4.79 CALL unwind -$27.24K   PUT added +$130.41K  CE_OI=$2.14M PE_OI=$2.63M
+pcr11 =  BTC-81200   7.99   nan CALL unwind +$0.00   PUT added +$35.55K  CE_OI=$212.25K PE_OI=$1.70M
+pcr12 =  BTC-81000   2.16   -12.53 CALL added +$12.07K   PUT unwind -$151.21K  CE_OI=$1.44M PE_OI=$3.12M
+pcr13 =  BTC-80800   5.43   0.00 CALL added +$8.17K   PUT unwind +$0.00  CE_OI=$157.44K PE_OI=$853.21K
+pcr14 =  BTC-80600   10.21   nan CALL unwind +$0.00   PUT added +$163.19  CE_OI=$82.17K PE_OI=$839.68K
+pcr15 =  BTC-80400   28.67   nan CALL unwind +$0.00   PUT unwind -$40.80K  CE_OI=$41.64K PE_OI=$1.19M
+pcr16 =  BTC-80200   73.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$13.60K PE_OI=$1.01M
+pcr17 =  BTC-80000   59.56   nan CALL unwind +$0.00   PUT unwind -$220.13K  CE_OI=$117.10K PE_OI=$6.97M
+PCRSUM== 190.58
+
+AVG_OIPCR_9STRIKE= 0.43  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81558.80
+BTC PERP/FUT (BTCUSD)  = 81527.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.748, 0.6219, 0.5548] atmStrikeNotShiftedCount= 4  (full 17 strikes, curr=0.5548)
+avgOiPcr9List2 = [0.684, 0.512, 0.4326] atmStrikeNotShiftedCount= 4  (central 9, curr=0.4326)
+==== PCR trend check 2026-10-20 18:00:00 IST ====
+PCR9_SEQ_DEC: 0.6840 -> 0.5120 -> 0.4326 | step1 -25.14% | step2 -15.51% (central 9 falling)
+is9PcrDecr = True
+is9PcrDecr_MinMove = True  (smallest step 15.51% vs 0.10% threshold -> meaningful)
+PCR_SEQ_DEC: 0.7480 -> 0.6219 -> 0.5548 | step1 -16.85% | step2 -10.79%
+isPcrDecr = True
+isPcrDecr_MinMove = True  (smallest step 10.79% vs 0.10% threshold -> meaningful)
+PCR9_SEQ_DEC_STREAK = 1 consecutive cycle(s) falling (bearish trend building)
+PCR_SEQ_DEC_STREAK = 1 consecutive cycle(s) falling (bearish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.684, 0.512, 0.4326]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.748, 0.6219, 0.5548]  (full 17, re-measured on current strikes)
+9_SEQ_DEC_InvariantWindow: 0.6840 -> 0.5120 -> 0.4326 | step1 -25.14% | step2 -15.51%
+is9PcrDecr_InvariantWindow = True  (streak=1 consecutive cycle(s) falling)
+is9PcrDecr_InvariantWindow_MinMove = True  (smallest step 15.51% vs 0.10% threshold -> meaningful)
+17_SEQ_DEC_InvariantWindow: 0.7480 -> 0.6219 -> 0.5548 | step1 -16.85% | step2 -10.79%
+is17PcrDecr_InvariantWindow = True  (streak=1 consecutive cycle(s) falling)
+is17PcrDecr_InvariantWindow_MinMove = True  (smallest step 10.79% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6532  [total CE_OI= $101.88M  total PE_OI= $66.52M]
+totalPcrList = [0.7172, 0.671, 0.6532]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_DEC: 0.7172 -> 0.6710 -> 0.6532 | step1 -6.43% | step2 -2.66%
+isTotalPcrDecr = True  (streak=1 consecutive cycle(s) falling)
+isTotalPcrDecr_MinMove = True  (smallest step 2.66% vs 0.10% threshold -> meaningful)
+
+PCR17_DOMINANCE: CE_dominant (PCR falling) once=True twice=True thrice=False (down_streak=2)
+PCR9_DOMINANCE: CE_dominant (PCR falling) once=True twice=True thrice=False (down_streak=2)
+SUPP_RES=== 81600.00 role=RESISTANCE (nearest listed strike to spot 81558.80; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81558.80 is 81600 (41 away)
+CEoich val =  -$306.25K  PEoich val =  +$320.67K , CE < PE by 195.5%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.07M  PE= $3.24M , CE < PE by 5.4%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.14M  PE= $2.63M , CE < PE by 18.7%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.4914 gamma=0.000290 theta=-280.18 vega=16.85 iv=0.33] | PE[delta=-0.5090 gamma=0.000297 theta=-273.64 vega=16.85 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=RESISTANCE fresh_CE=+$21.37K fresh_PE=+$4.08K -> CE_dominant by 80.9% (resistance HOLDING (bearish)) | cumulative CE=-$306.25K PE=+$320.67K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:00:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=True (streak=1 minmove=True) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=True
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=True
+CHOI/OI at S/R: CEoich=-3.8 PEoich=3.9 choi_valid=False choi_pct=0.0% | CE_total=37.6 PE_total=39.8 oi_pct=5.4%
+LOGIC1_MORNING_TRAP (window=True): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=0.1 | isCE_DomRes_once=True (streak=1) fresh_CE=0.3
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1410 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_not_building(CE>0 and PE>0 required)
+
+PCR_TREND [2026-10-20 18:00:00 IST] direction=down consecutive_cycles=2 prev_pcr=0.5120 curr_pcr=0.4326
+
+ENTRY_SKIPPED [2026-10-20 18:00:00 IST] no live entry: no_sensex_signal(choi_not_building(CE>0 and PE>0 required)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:00:00 IST] waiting 179.7s for next 3-min candle close.
+SIGNAL [2026-10-20 18:03:00 IST] index(.DEXBTUSD)=81579.30 perp(BTCUSD)=81544.50 atm_strike=81600 pcr=0.4707 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:03:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.20M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   100.00 CALL added +$81.55   PUT added +$8.15K  CE_OI=$4.95M PE_OI=$92.52K
+pcr3 =  BTC-82800   0.10   -0.00 CALL unwind -$285.09K   PUT unwind +$0.00  CE_OI=$1.35M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.04   -0.15 CALL unwind -$13.30K   PUT added +$1.96K  CE_OI=$2.88M PE_OI=$107.91K
+pcr5 =  BTC-82400   0.01   -0.00 CALL unwind -$40.78K   PUT unwind +$0.00  CE_OI=$5.74M PE_OI=$37.39K
+pcr6 =  BTC-82200   0.03   -2.20 CALL unwind -$4.08K   PUT added +$8.97K  CE_OI=$5.99M PE_OI=$201.02K
+pcr7 =  BTC-82000   0.08   0.29 CALL added +$58.32K   PUT added +$17.13K  CE_OI=$9.15M PE_OI=$771.72K
+pcr8 =  BTC-81800   0.26   -0.09 CALL unwind -$14.19K   PUT added +$1.30K  CE_OI=$2.59M PE_OI=$663.37K
+pcr9 =  BTC-81600   1.06   1.63 CALL added +$24.96K   PUT added +$40.70K  CE_OI=$3.09M PE_OI=$3.28M <== ATM
+pcr10 =  BTC-81400   1.79   113.69 CALL added +$10.69K   PUT added +$1.21M  CE_OI=$2.15M PE_OI=$3.85M
+pcr11 =  BTC-81200   7.55   -574.00 CALL added +$163.08   PUT unwind -$93.62K  CE_OI=$212.17K PE_OI=$1.60M
+pcr12 =  BTC-81000   2.19   -0.02 CALL unwind -$16.72K   PUT added +$407.84  CE_OI=$1.43M PE_OI=$3.12M
+pcr13 =  BTC-80800   4.32   0.00 CALL added +$40.29K   PUT unwind +$0.00  CE_OI=$197.52K PE_OI=$853.42K
+pcr14 =  BTC-80600   10.74   nan CALL unwind +$0.00   PUT added +$43.23K  CE_OI=$82.21K PE_OI=$882.63K
+pcr15 =  BTC-80400   30.64   nan CALL unwind +$0.00   PUT added +$81.58K  CE_OI=$41.64K PE_OI=$1.27M
+pcr16 =  BTC-80200   73.75   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$13.60K PE_OI=$1.01M
+pcr17 =  BTC-80000   58.67   nan CALL unwind +$0.00   PUT unwind -$104.05K  CE_OI=$117.10K PE_OI=$6.86M
+PCRSUM== 191.26
+
+AVG_OIPCR_9STRIKE= 0.47  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81579.30
+BTC PERP/FUT (BTCUSD)  = 81544.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.748, 0.6219, 0.5548, 0.5869] atmStrikeNotShiftedCount= 5  (full 17 strikes, curr=0.5869)
+avgOiPcr9List2 = [0.684, 0.512, 0.4326, 0.4707] atmStrikeNotShiftedCount= 5  (central 9, curr=0.4707)
+==== PCR trend check 2026-10-20 18:03:00 IST ====
+PCR9_SEQ_FLAT: 0.5120 -> 0.4326 -> 0.4707 (not monotonic)
+PCR_SEQ_FLAT: 0.6219 -> 0.5548 -> 0.5869 (not monotonic)
+avgOiPcr9List2_InvariantWindow  = [0.512, 0.4326, 0.4707]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6219, 0.5548, 0.5869]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.5120 -> 0.4326 -> 0.4707 (not monotonic)
+17_SEQ_FLAT_InvariantWindow: 0.6219 -> 0.5548 -> 0.5869 (not monotonic)
+TOTAL_PCR (full chain) = 0.6713  [total CE_OI= $101.93M  total PE_OI= $68.40M]
+totalPcrList = [0.671, 0.6532, 0.6713]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6710 -> 0.6532 -> 0.6713 (not monotonic)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+SUPP_RES=== 81600.00 role=RESISTANCE (nearest listed strike to spot 81579.30; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81579.30 is 81600 (21 away)
+CEoich val =  -$281.32K  PEoich val =  +$361.40K , CE < PE by 177.8%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.09M  PE= $3.28M , CE < PE by 5.8%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.15M  PE= $3.85M , CE < PE by 44.1%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.4930 gamma=0.000290 theta=-280.90 vega=16.83 iv=0.33] | PE[delta=-0.5073 gamma=0.000296 theta=-274.67 vega=16.83 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=RESISTANCE fresh_CE=+$24.96K fresh_PE=+$40.70K -> PE_dominant by 38.7% (resistance CHALLENGED (bullish warning)) | cumulative CE=-$281.32K PE=+$361.40K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:03:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=-3.4 PEoich=4.4 choi_valid=False choi_pct=0.0% | CE_total=37.9 PE_total=40.3 oi_pct=5.8%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.5 | isCE_DomRes_once=False (streak=0) fresh_CE=0.3
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1407 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 18:03:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.4326 curr_pcr=0.4707
+
+ENTRY_SKIPPED [2026-10-20 18:03:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:03:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 18:06:00 IST] index(.DEXBTUSD)=81507.40 perp(BTCUSD)=81473.00 atm_strike=81600 pcr=0.4875 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx2 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:06:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   -0.00 CALL unwind -$8.15K   PUT unwind +$0.00  CE_OI=$2.19M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   0.00 CALL added +$17.03K   PUT unwind +$0.00  CE_OI=$4.96M PE_OI=$92.52K
+pcr3 =  BTC-82800   0.10   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.35M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.04   -0.00 CALL unwind -$16.30K   PUT unwind +$0.00  CE_OI=$2.86M PE_OI=$107.91K
+pcr5 =  BTC-82400   0.01   0.01 CALL added +$115.00K   PUT added +$1.63K  CE_OI=$5.85M PE_OI=$38.94K
+pcr6 =  BTC-82200   0.03   -0.00 CALL unwind -$20.69K   PUT unwind +$0.00  CE_OI=$5.97M PE_OI=$201.02K
+pcr7 =  BTC-82000   0.08   0.00 CALL added +$7.17K   PUT unwind +$0.00  CE_OI=$9.15M PE_OI=$771.95K
+pcr8 =  BTC-81800   0.25   0.00 CALL added +$12.87K   PUT unwind +$0.00  CE_OI=$2.60M PE_OI=$663.37K
+pcr9 =  BTC-81600   1.05   0.24 CALL added +$38.30K   PUT added +$9.04K  CE_OI=$3.13M PE_OI=$3.29M <== ATM
+pcr10 =  BTC-81400   1.77   3.18 CALL unwind -$26.81K   PUT unwind -$85.31K  CE_OI=$2.12M PE_OI=$3.76M
+pcr11 =  BTC-81200   7.45   -1.03 CALL added +$2.53K   PUT unwind -$2.61K  CE_OI=$214.59K PE_OI=$1.60M
+pcr12 =  BTC-81000   2.66   -819.20 CALL unwind -$814.93   PUT added +$667.47K  CE_OI=$1.42M PE_OI=$3.79M
+pcr13 =  BTC-80800   4.25   -84.00 CALL added +$163.13   PUT unwind -$13.69K  CE_OI=$197.72K PE_OI=$838.66K
+pcr14 =  BTC-80600   12.02   nan CALL unwind +$0.00   PUT added +$105.68K  CE_OI=$82.21K PE_OI=$988.04K
+pcr15 =  BTC-80400   38.20   -0.00 CALL unwind -$8.23K   PUT unwind +$0.00  CE_OI=$33.32K PE_OI=$1.27M
+pcr16 =  BTC-80200   73.81   nan CALL unwind +$0.00   PUT added +$814.55  CE_OI=$13.60K PE_OI=$1.00M
+pcr17 =  BTC-80000   59.29   500.00 CALL added +$162.94   PUT added +$81.50K  CE_OI=$116.99K PE_OI=$6.94M
+PCRSUM== 201.04
+
+AVG_OIPCR_9STRIKE= 0.49  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81507.40
+BTC PERP/FUT (BTCUSD)  = 81473.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.5548, 0.5869, 0.6034] atmStrikeNotShiftedCount= 6  (full 17 strikes, curr=0.6034)
+avgOiPcr9List2 = [0.4326, 0.4707, 0.4875] atmStrikeNotShiftedCount= 6  (central 9, curr=0.4875)
+==== PCR trend check 2026-10-20 18:06:00 IST ====
+PCR9_SEQ_INC: 0.4326 -> 0.4707 -> 0.4875 | step1 +8.81% | step2 +3.58% (central 9 rising)
+is9PcrInc = True
+is9PcrInc_MinMove = True  (smallest step 3.58% vs 0.10% threshold -> meaningful)
+PCR_SEQ_INC: 0.5548 -> 0.5869 -> 0.6034 | step1 +5.78% | step2 +2.82%
+isPcrInc = True
+isPcrInc_MinMove = True  (smallest step 2.82% vs 0.10% threshold -> meaningful)
+PCR9_SEQ_INC_STREAK = 1 consecutive cycle(s) rising (bullish trend building)
+PCR_SEQ_INC_STREAK = 1 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.4326, 0.4707, 0.4875]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.5548, 0.5869, 0.6034]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.4326 -> 0.4707 -> 0.4875 | step1 +8.81% | step2 +3.58%
+is9PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 3.58% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.5548 -> 0.5869 -> 0.6034 | step1 +5.78% | step2 +2.82%
+is17PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 2.82% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6894  [total CE_OI= $102.29M  total PE_OI= $70.47M]
+totalPcrList = [0.6532, 0.6713, 0.6894]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6532 -> 0.6713 -> 0.6894 | step1 +2.77% | step2 +2.71%
+isTotalPcrInc = True  (streak=1 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = True  (smallest step 2.71% vs 0.10% threshold -> meaningful)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=False (up_streak=2)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=False (up_streak=2)
+SUPP_RES=== 81600.00 role=RESISTANCE (nearest listed strike to spot 81507.40; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81507.40 is 81600 (93 away)
+CEoich val =  -$242.79K  PEoich val =  +$370.01K , CE < PE by 165.6%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.13M  PE= $3.29M , CE < PE by 4.9%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.12M  PE= $3.76M , CE < PE by 43.5%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.4741 gamma=0.000291 theta=-279.63 vega=16.77 iv=0.33] | PE[delta=-0.5266 gamma=0.000298 theta=-272.91 vega=16.77 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=RESISTANCE fresh_CE=+$38.30K fresh_PE=+$9.04K -> CE_dominant by 76.4% (resistance HOLDING (bearish)) | cumulative CE=-$242.79K PE=+$370.01K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:06:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=1 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=-3.0 PEoich=4.5 choi_valid=False choi_pct=0.0% | CE_total=38.4 PE_total=40.4 oi_pct=4.9%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=0.1 | isCE_DomRes_once=True (streak=1) fresh_CE=0.5
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1404 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_not_building(CE>0 and PE>0 required)
+
+PCR_TREND [2026-10-20 18:06:00 IST] direction=up consecutive_cycles=2 prev_pcr=0.4707 curr_pcr=0.4875
+
+ENTRY_SKIPPED [2026-10-20 18:06:00 IST] no live entry: no_sensex_signal(choi_not_building(CE>0 and PE>0 required)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:06:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 18:09:00 IST] index(.DEXBTUSD)=81509.30 perp(BTCUSD)=81476.50 atm_strike=81600 pcr=0.4896 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx3 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:09:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.19M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   0.00 CALL added +$49.15K   PUT unwind +$0.00  CE_OI=$5.01M PE_OI=$92.52K
+pcr3 =  BTC-82800   0.10   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.35M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.04   -0.00 CALL unwind -$10.03K   PUT unwind +$0.00  CE_OI=$2.85M PE_OI=$107.91K
+pcr5 =  BTC-82400   0.01   2.33 CALL added +$244.53   PUT added +$570.60  CE_OI=$5.85M PE_OI=$39.53K
+pcr6 =  BTC-82200   0.03   0.00 CALL added +$4.89K   PUT unwind +$0.00  CE_OI=$5.98M PE_OI=$201.02K
+pcr7 =  BTC-82000   0.08   -0.00 CALL unwind -$81.55   PUT unwind +$0.00  CE_OI=$9.16M PE_OI=$771.95K
+pcr8 =  BTC-81800   0.25   0.00 CALL added +$17.04K   PUT unwind +$0.00  CE_OI=$2.62M PE_OI=$663.37K
+pcr9 =  BTC-81600   1.05   0.61 CALL added +$6.68K   PUT added +$4.08K  CE_OI=$3.13M PE_OI=$3.29M <== ATM
+pcr10 =  BTC-81400   1.79   -0.08 CALL unwind -$18.67K   PUT added +$1.55K  CE_OI=$2.10M PE_OI=$3.76M
+pcr11 =  BTC-81200   7.49   9.82 CALL added +$4.48K   PUT added +$44.02K  CE_OI=$219.10K PE_OI=$1.64M
+pcr12 =  BTC-81000   2.67   nan CALL unwind +$0.00   PUT added +$18.99K  CE_OI=$1.42M PE_OI=$3.81M
+pcr13 =  BTC-80800   4.25   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$197.72K PE_OI=$838.66K
+pcr14 =  BTC-80600   12.02   nan CALL unwind +$0.00   PUT added +$244.53  CE_OI=$82.21K PE_OI=$987.89K
+pcr15 =  BTC-80400   38.20   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$33.32K PE_OI=$1.27M
+pcr16 =  BTC-80200   74.41   nan CALL unwind +$0.00   PUT added +$8.15K  CE_OI=$13.60K PE_OI=$1.01M
+pcr17 =  BTC-80000   58.75   nan CALL unwind +$0.00   PUT unwind -$63.20K  CE_OI=$116.99K PE_OI=$6.88M
+PCRSUM== 201.17
+
+AVG_OIPCR_9STRIKE= 0.49  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81509.30
+BTC PERP/FUT (BTCUSD)  = 81476.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.5548, 0.5869, 0.6034, 0.603] atmStrikeNotShiftedCount= 7  (full 17 strikes, curr=0.6030)
+avgOiPcr9List2 = [0.4326, 0.4707, 0.4875, 0.4896] atmStrikeNotShiftedCount= 7  (central 9, curr=0.4896)
+==== PCR trend check 2026-10-20 18:09:00 IST ====
+PCR9_SEQ_INC: 0.4707 -> 0.4875 -> 0.4896 | step1 +3.58% | step2 +0.42% (central 9 rising)
+is9PcrInc = True
+is9PcrInc_MinMove = True  (smallest step 0.42% vs 0.10% threshold -> meaningful)
+PCR_SEQ_FLAT: 0.5869 -> 0.6034 -> 0.6030 (not monotonic)
+PCR9_SEQ_INC_STREAK = 2 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.4707, 0.4875, 0.4896]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.5869, 0.6034, 0.603]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.4707 -> 0.4875 -> 0.4896 | step1 +3.58% | step2 +0.42%
+is9PcrInc_InvariantWindow = True  (streak=2 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.42% vs 0.10% threshold -> meaningful)
+17_SEQ_FLAT_InvariantWindow: 0.5869 -> 0.6034 -> 0.6030 (not monotonic)
+TOTAL_PCR (full chain) = 0.6900  [total CE_OI= $102.50M  total PE_OI= $70.68M]
+totalPcrList = [0.6713, 0.6894, 0.69]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6713 -> 0.6894 -> 0.6900 | step1 +2.71% | step2 +0.09%
+isTotalPcrInc = True  (streak=2 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = False  (smallest step 0.09% vs 0.10% threshold -> drift/noise)
+
+PCR17_DOMINANCE: CE_dominant (PCR falling) once=True twice=False thrice=False (down_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=True (up_streak=3)
+SUPP_RES=== 81600.00 role=RESISTANCE (nearest listed strike to spot 81509.30; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81509.30 is 81600 (91 away)
+CEoich val =  -$236.14K  PEoich val =  +$374.30K , CE < PE by 163.1%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.13M  PE= $3.29M , CE < PE by 4.9%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.10M  PE= $3.76M , CE < PE by 44.1%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.4776 gamma=0.000290 theta=-281.33 vega=16.76 iv=0.33] | PE[delta=-0.5231 gamma=0.000297 theta=-274.68 vega=16.76 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=RESISTANCE fresh_CE=+$6.68K fresh_PE=+$4.08K -> CE_dominant by 39.0% (resistance HOLDING (bearish)) | cumulative CE=-$236.14K PE=+$374.30K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:09:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=-2.9 PEoich=4.6 choi_valid=False choi_pct=0.0% | CE_total=38.5 PE_total=40.4 oi_pct=4.9%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=0.0 | isCE_DomRes_once=True (streak=2) fresh_CE=0.1
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1401 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 18:09:00 IST] direction=up consecutive_cycles=3 prev_pcr=0.4875 curr_pcr=0.4896
+
+ENTRY_SKIPPED [2026-10-20 18:09:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:09:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 18:12:00 IST] index(.DEXBTUSD)=81589.20 perp(BTCUSD)=81556.50 atm_strike=81600 pcr=0.4925 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx4 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:12:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.19M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   -0.18 CALL unwind -$5.95K   PUT added +$1.06K  CE_OI=$5.01M PE_OI=$93.65K
+pcr3 =  BTC-82800   0.10   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.35M PE_OI=$134.21K
+pcr4 =  BTC-82600   0.06   -0.00 CALL unwind -$1.10M   PUT unwind +$0.00  CE_OI=$1.75M PE_OI=$107.91K
+pcr5 =  BTC-82400   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.85M PE_OI=$39.53K
+pcr6 =  BTC-82200   0.03   0.00 CALL added +$815.74   PUT unwind +$0.00  CE_OI=$5.98M PE_OI=$201.02K
+pcr7 =  BTC-82000   0.08   -0.07 CALL unwind -$30.10K   PUT added +$2.04K  CE_OI=$9.13M PE_OI=$773.99K
+pcr8 =  BTC-81800   0.25   0.00 CALL added +$33.04K   PUT unwind +$0.00  CE_OI=$2.66M PE_OI=$663.02K
+pcr9 =  BTC-81600   1.03   -0.16 CALL added +$53.91K   PUT unwind -$8.57K  CE_OI=$3.19M PE_OI=$3.29M <== ATM
+pcr10 =  BTC-81400   1.73   -0.48 CALL added +$57.90K   PUT unwind -$27.74K  CE_OI=$2.16M PE_OI=$3.74M
+pcr11 =  BTC-81200   7.12   1.65 CALL added +$15.09K   PUT added +$24.87K  CE_OI=$234.36K PE_OI=$1.67M
+pcr12 =  BTC-81000   2.79   nan CALL unwind +$0.00   PUT added +$169.02K  CE_OI=$1.43M PE_OI=$3.98M
+pcr13 =  BTC-80800   4.17   -0.63 CALL added +$3.26K   PUT unwind -$2.04K  CE_OI=$201.04K PE_OI=$836.84K
+pcr14 =  BTC-80600   6.60   0.00 CALL added +$67.56K   PUT unwind +$0.00  CE_OI=$149.81K PE_OI=$988.84K
+pcr15 =  BTC-80400   39.22   -65.25 CALL unwind -$326.38   PUT added +$21.29K  CE_OI=$33.05K PE_OI=$1.30M
+pcr16 =  BTC-80200   74.47   nan CALL unwind +$0.00   PUT added +$815.58  CE_OI=$13.60K PE_OI=$1.01M
+pcr17 =  BTC-80000   60.82   1550.00 CALL added +$163.19   PUT added +$252.88K  CE_OI=$117.34K PE_OI=$7.13M
+PCRSUM== 198.51
+
+AVG_OIPCR_9STRIKE= 0.49  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81589.20
+BTC PERP/FUT (BTCUSD)  = 81556.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.6034, 0.603, 0.6267] atmStrikeNotShiftedCount= 8  (full 17 strikes, curr=0.6267)
+avgOiPcr9List2 = [0.4875, 0.4896, 0.4925] atmStrikeNotShiftedCount= 8  (central 9, curr=0.4925)
+==== PCR trend check 2026-10-20 18:12:00 IST ====
+PCR9_SEQ_INC: 0.4875 -> 0.4896 -> 0.4925 | step1 +0.42% | step2 +0.61% (central 9 rising)
+is9PcrInc = True
+is9PcrInc_MinMove = True  (smallest step 0.42% vs 0.10% threshold -> meaningful)
+PCR_SEQ_FLAT: 0.6034 -> 0.6030 -> 0.6267 (not monotonic)
+PCR9_SEQ_INC_STREAK = 3 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.4875, 0.4896, 0.4925]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6034, 0.603, 0.6267]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.4875 -> 0.4896 -> 0.4925 | step1 +0.42% | step2 +0.61%
+is9PcrInc_InvariantWindow = True  (streak=3 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.42% vs 0.10% threshold -> meaningful)
+17_SEQ_FLAT_InvariantWindow: 0.6034 -> 0.6030 -> 0.6267 (not monotonic)
+TOTAL_PCR (full chain) = 0.6930  [total CE_OI= $104.05M  total PE_OI= $72.08M]
+totalPcrList = [0.6894, 0.69, 0.693]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6894 -> 0.6900 -> 0.6930 | step1 +0.09% | step2 +0.43%
+isTotalPcrInc = True  (streak=3 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = False  (smallest step 0.09% vs 0.10% threshold -> drift/noise)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=True (up_streak=4)
+SUPP_RES=== 81600.00 role=RESISTANCE (nearest listed strike to spot 81589.20; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81589.20 is 81600 (11 away)
+CEoich val =  -$182.38K  PEoich val =  +$366.03K , CE < PE by 149.8%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.19M  PE= $3.29M , CE < PE by 3.0%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.16M  PE= $3.74M , CE < PE by 42.1%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.4961 gamma=0.000290 theta=-282.69 vega=16.78 iv=0.33] | PE[delta=-0.5041 gamma=0.000297 theta=-276.17 vega=16.78 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=RESISTANCE fresh_CE=+$53.91K fresh_PE=-$8.57K -> CE_dominant by 115.9% (resistance HOLDING (bearish)) | cumulative CE=-$182.38K PE=+$366.03K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:12:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81600.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=-2.2 PEoich=4.5 choi_valid=False choi_pct=0.0% | CE_total=39.1 PE_total=40.3 oi_pct=3.0%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=-0.1 | isCE_DomRes_once=True (streak=3) fresh_CE=0.7
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1398 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 18:12:00 IST] direction=up consecutive_cycles=4 prev_pcr=0.4896 curr_pcr=0.4925
+
+ENTRY_SKIPPED [2026-10-20 18:12:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:12:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 18:15:00 IST] index(.DEXBTUSD)=81696.70 perp(BTCUSD)=81663.00 atm_strike=81600 pcr=0.4971 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx5 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:15:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.19M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.02   0.00 CALL added +$222.02K   PUT unwind +$0.00  CE_OI=$5.24M PE_OI=$93.65K
+pcr3 =  BTC-82800   0.10   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.35M PE_OI=$134.42K
+pcr4 =  BTC-82600   0.06   -0.00 CALL unwind -$63.55K   PUT unwind +$0.00  CE_OI=$1.69M PE_OI=$107.91K
+pcr5 =  BTC-82400   0.01   0.00 CALL added +$29.48K   PUT unwind +$0.00  CE_OI=$5.89M PE_OI=$39.53K
+pcr6 =  BTC-82200   0.03   -0.00 CALL unwind -$163.29   PUT unwind +$0.00  CE_OI=$5.99M PE_OI=$201.35K
+pcr7 =  BTC-82000   0.09   -0.00 CALL unwind -$36.11K   PUT unwind +$0.00  CE_OI=$9.11M PE_OI=$775.07K
+pcr8 =  BTC-81800   0.26   -0.01 CALL unwind -$124.83K   PUT added +$816.89  CE_OI=$2.53M PE_OI=$665.36K
+pcr9 =  BTC-81600   1.00   0.22 CALL added +$124.58K   PUT added +$27.61K  CE_OI=$3.32M PE_OI=$3.32M <== ATM
+pcr10 =  BTC-81400   1.79   -0.25 CALL unwind -$66.48K   PUT added +$16.91K  CE_OI=$2.10M PE_OI=$3.76M
+pcr11 =  BTC-81200   7.32   -0.49 CALL unwind -$6.21K   PUT added +$3.02K  CE_OI=$228.48K PE_OI=$1.67M
+pcr12 =  BTC-81000   2.81   nan CALL unwind +$0.00   PUT added +$33.57K  CE_OI=$1.43M PE_OI=$4.02M
+pcr13 =  BTC-80800   4.20   6.27 CALL added +$3.59K   PUT added +$22.54K  CE_OI=$204.87K PE_OI=$861.37K
+pcr14 =  BTC-80600   6.85   nan CALL unwind +$0.00   PUT added +$36.99K  CE_OI=$149.92K PE_OI=$1.03M
+pcr15 =  BTC-80400   39.23   nan CALL unwind +$0.00   PUT added +$326.34  CE_OI=$33.04K PE_OI=$1.30M
+pcr16 =  BTC-80200   74.48   nan CALL unwind +$0.00   PUT added +$81.64  CE_OI=$13.60K PE_OI=$1.02M
+pcr17 =  BTC-80000   60.15   -20.00 CALL added +$980.18   PUT unwind -$19.60K  CE_OI=$118.44K PE_OI=$7.12M
+PCRSUM== 198.41
+
+AVG_OIPCR_9STRIKE= 0.50  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81696.70
+BTC PERP/FUT (BTCUSD)  = 81663.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.603, 0.6267, 0.6284] atmStrikeNotShiftedCount= 9  (full 17 strikes, curr=0.6284)
+avgOiPcr9List2 = [0.4896, 0.4925, 0.4971] atmStrikeNotShiftedCount= 9  (central 9, curr=0.4971)
+==== PCR trend check 2026-10-20 18:15:00 IST ====
+PCR9_SEQ_INC: 0.4896 -> 0.4925 -> 0.4971 | step1 +0.61% | step2 +0.94% (central 9 rising)
+is9PcrInc = True
+is9PcrInc_MinMove = True  (smallest step 0.61% vs 0.10% threshold -> meaningful)
+PCR_SEQ_INC: 0.6030 -> 0.6267 -> 0.6284 | step1 +3.92% | step2 +0.27%
+isPcrInc = True
+isPcrInc_MinMove = True  (smallest step 0.27% vs 0.10% threshold -> meaningful)
+PCR9_SEQ_INC_STREAK = 4 consecutive cycle(s) rising (bullish trend building)
+PCR_SEQ_INC_STREAK = 1 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.4896, 0.4925, 0.4971]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.603, 0.6267, 0.6284]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.4896 -> 0.4925 -> 0.4971 | step1 +0.61% | step2 +0.94%
+is9PcrInc_InvariantWindow = True  (streak=4 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.61% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.6030 -> 0.6267 -> 0.6284 | step1 +3.92% | step2 +0.27%
+is17PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.27% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6940  [total CE_OI= $104.63M  total PE_OI= $72.62M]
+totalPcrList = [0.69, 0.693, 0.694]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6900 -> 0.6930 -> 0.6940 | step1 +0.43% | step2 +0.15%
+isTotalPcrInc = True  (streak=4 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = True  (smallest step 0.15% vs 0.10% threshold -> meaningful)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=False (up_streak=2)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=True (up_streak=5)
+SUPP_RES=== 81600.00 role=SUPPORT (nearest listed strike to spot 81696.70; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81696.70 is 81600 (97 away)
+CEoich val =  -$58.08K  PEoich val =  +$394.14K , CE < PE by 114.7%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.32M  PE= $3.32M , CE < PE by 0.0%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.10M  PE= $3.76M , CE < PE by 44.1%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.5291 gamma=0.000288 theta=-283.43 vega=16.75 iv=0.33] | PE[delta=-0.4704 gamma=0.000295 theta=-277.08 vega=16.74 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=SUPPORT fresh_CE=+$124.58K fresh_PE=+$27.61K -> CE_dominant by 77.8% (support UNDERMINED (bearish warning)) | cumulative CE=-$58.08K PE=+$394.14K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:15:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=1 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81600.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=-0.7 PEoich=4.8 choi_valid=False choi_pct=0.0% | CE_total=40.6 PE_total=40.7 oi_pct=0.0%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.3 | isCE_DomRes_once=False (streak=0) fresh_CE=1.5
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1395 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_not_building(CE>0 and PE>0 required)
+
+PCR_TREND [2026-10-20 18:15:00 IST] direction=up consecutive_cycles=5 prev_pcr=0.4925 curr_pcr=0.4971
+
+ENTRY_SKIPPED [2026-10-20 18:15:00 IST] no live entry: no_sensex_signal(choi_not_building(CE>0 and PE>0 required)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:15:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 18:18:00 IST] index(.DEXBTUSD)=81687.60 perp(BTCUSD)=81649.50 atm_strike=81600 pcr=0.5071 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx6 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:18:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.19M PE_OI=$22.56K
+pcr2 =  BTC-83000   0.03   -0.55 CALL unwind -$66.97K   PUT added +$36.77K  CE_OI=$5.17M PE_OI=$130.58K
+pcr3 =  BTC-82800   0.10   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.35M PE_OI=$134.42K
+pcr4 =  BTC-82600   0.06   0.22 CALL added +$735.07   PUT added +$163.56  CE_OI=$1.69M PE_OI=$108.36K
+pcr5 =  BTC-82400   0.02   -1.80 CALL unwind -$28.26K   PUT added +$50.86K  CE_OI=$5.86M PE_OI=$90.46K
+pcr6 =  BTC-82200   0.04   -0.30 CALL unwind -$67.31K   PUT added +$20.26K  CE_OI=$5.92M PE_OI=$221.63K
+pcr7 =  BTC-82000   0.08   0.13 CALL unwind -$108.80K   PUT unwind -$14.29K  CE_OI=$9.00M PE_OI=$760.32K
+pcr8 =  BTC-81800   0.27   0.39 CALL added +$84.78K   PUT added +$32.82K  CE_OI=$2.62M PE_OI=$697.76K
+pcr9 =  BTC-81600   1.00   1.04 CALL added +$63.31K   PUT added +$65.60K  CE_OI=$3.38M PE_OI=$3.39M <== ATM
+pcr10 =  BTC-81400   1.87   -0.54 CALL unwind -$69.76K   PUT added +$37.74K  CE_OI=$2.03M PE_OI=$3.80M
+pcr11 =  BTC-81200   9.81   -0.21 CALL unwind -$56.75K   PUT added +$11.85K  CE_OI=$171.98K PE_OI=$1.69M
+pcr12 =  BTC-81000   2.84   0.09 CALL unwind -$14.70K   PUT unwind -$1.39K  CE_OI=$1.41M PE_OI=$4.02M
+pcr13 =  BTC-80800   4.21   4.29 CALL added +$571.55   PUT added +$2.45K  CE_OI=$205.35K PE_OI=$863.95K
+pcr14 =  BTC-80600   6.85   6.72 CALL unwind -$1.47K   PUT unwind -$9.88K  CE_OI=$148.46K PE_OI=$1.02M
+pcr15 =  BTC-80400   36.57   nan CALL unwind +$0.00   PUT unwind -$88.26K  CE_OI=$33.04K PE_OI=$1.21M
+pcr16 =  BTC-80200   74.48   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$13.60K PE_OI=$1.02M
+pcr17 =  BTC-80000   58.60   183.39 CALL unwind -$1.47K   PUT unwind -$269.80K  CE_OI=$117.10K PE_OI=$6.86M
+PCRSUM== 196.84
+
+AVG_OIPCR_9STRIKE= 0.51  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81687.60
+BTC PERP/FUT (BTCUSD)  = 81649.50
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81600: 81600}
+avgOiPcrList2  = [0.603, 0.6267, 0.6284, 0.6294] atmStrikeNotShiftedCount= 10  (full 17 strikes, curr=0.6294)
+avgOiPcr9List2 = [0.4896, 0.4925, 0.4971, 0.5071] atmStrikeNotShiftedCount= 10  (central 9, curr=0.5071)
+==== PCR trend check 2026-10-20 18:18:00 IST ====
+PCR9_SEQ_INC: 0.4925 -> 0.4971 -> 0.5071 | step1 +0.94% | step2 +2.0% (central 9 rising)
+is9PcrInc = True
+is9PcrInc_MinMove = True  (smallest step 0.94% vs 0.10% threshold -> meaningful)
+PCR_SEQ_INC: 0.6267 -> 0.6284 -> 0.6294 | step1 +0.27% | step2 +0.16%
+isPcrInc = True
+isPcrInc_MinMove = True  (smallest step 0.16% vs 0.10% threshold -> meaningful)
+PCR9_SEQ_INC_STREAK = 5 consecutive cycle(s) rising (bullish trend building)
+PCR_SEQ_INC_STREAK = 2 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.4925, 0.4971, 0.5071]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6267, 0.6284, 0.6294]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.4925 -> 0.4971 -> 0.5071 | step1 +0.94% | step2 +2.0%
+is9PcrInc_InvariantWindow = True  (streak=5 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.94% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.6267 -> 0.6284 -> 0.6294 | step1 +0.27% | step2 +0.16%
+is17PcrInc_InvariantWindow = True  (streak=2 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.16% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6910  [total CE_OI= $105.13M  total PE_OI= $72.64M]
+totalPcrList = [0.693, 0.694, 0.691]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6930 -> 0.6940 -> 0.6910 (not monotonic)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=True (up_streak=3)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=True (up_streak=6)
+SUPP_RES=== 81600.00 role=SUPPORT (nearest listed strike to spot 81687.60; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81687.60 is 81600 (88 away)
+CEoich val =  +$5.23K  PEoich val =  +$459.75K , CE < PE by 98.9%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $3.38M  PE= $3.39M , CE < PE by 0.1%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.03M  PE= $3.80M , CE < PE by 46.5%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.5251 gamma=0.000289 theta=-283.96 vega=16.74 iv=0.33] | PE[delta=-0.4745 gamma=0.000295 theta=-277.72 vega=16.74 iv=0.32]
+INCR_CHOI: SUPP_RES=81600 role=SUPPORT fresh_CE=+$63.31K fresh_PE=+$65.60K -> PE_dominant by 3.5% (support HOLDING (bullish)) | cumulative CE=+$5.23K PE=+$459.75K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:18:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=2 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81600.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=0.1 PEoich=5.6 choi_valid=True choi_pct=98.9% | CE_total=41.4 PE_total=41.5 oi_pct=0.1%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=True bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC2_TREND_CONVERGENCE (tradeable=True)
+CHOI_DOM_GATE: gate_on=True bull_ok=True bear_ok=False | isPE_DomSupp_once=True (streak=1) fresh_PE=0.8 | isCE_DomRes_once=False (streak=0) fresh_CE=0.8
+RISK_GATES: sl_count=0/2 halt=False | mins_to_expiry=1392 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = BULL (live_eligible=True)
+
+OPT_RANGE_DEBUG: MAIN  symbol=P-BTC-81600-211026 | candles_after_skip1st=9 | ranges=[88.0, 33.0, 56.0, 33.0, 59.0, 32.0, 54.0, 72.0, 70.0] | median_all=56.00
+OPT_OHLC_ENTRY: MAIN  symbol=P-BTC-81600-211026 | candles=9 | open=[596.0, 519.0, 503.0, 562.0, 561.0, 582.0, 582.0, 559.0, 487.0, 489.0] | high=[596.0, 521.0, 559.0, 583.0, 611.0, 587.0, 582.0, 559.0, 523.0, 489.0] | low=[508.0, 488.0, 503.0, 550.0, 552.0, 555.0, 528.0, 487.0, 453.0, 489.0] | close=[508.0, 510.0, 555.0, 550.0, 609.0, 579.0, 546.0, 499.0, 489.0, 489.0] | median_range=56.00
+OPT_RANGE_DEBUG: HEDGE symbol=P-BTC-80400-211026 | candles_after_skip1st=7 | ranges=[32.0, 8.0, 14.0, 6.0, 2.0, 20.0, 16.6] | median_all=14.00
+OPT_OHLC_ENTRY: HEDGE symbol=P-BTC-80400-211026 | candles=7 | open=[193.0, 161.0, 174.0, 196.0, 212.0, 187.0, 197.0, 177.0, 156.6, 156.0] | high=[193.0, 166.0, 174.0, 196.0, 218.0, 187.0, 197.0, 177.0, 156.6, 156.0] | low=[161.0, 158.0, 174.0, 182.0, 212.0, 185.0, 177.0, 177.0, 140.0, 156.0] | close=[161.0, 163.0, 174.0, 182.0, 218.0, 185.0, 182.0, 177.0, 156.0, 156.0] | median_range=14.00
+HEDGE_OFFSET: source=DELTA used_ratio=0.408 raw=0.408 | delta_ratio=0.408 range_ratio=0.250 premium_ratio=0.319 | (main_delta=-0.4745 hedge_delta=0.1934 main_range=56.00 hedge_range=14.00) effective_sl=134.40 -> net_sl_points=79.61
+LOT_ROUNDING: raw_lots=125.612 frac=0.612 (roundup>=0.75) -> lots=125 | loss_per_lot=$0.0796 risk_budget=$10.00
+RISK_SIZING: effective_sl=134.40 main=489.00 hedge=156.00 main_range=56.00 hedge_range=14.00 FIXED_RISK=$10.00 contract_value=0.001 -> lots=125 (net_sl=79.61 -> modelled_risk=$9.95)
+TRADE_PLAN [2026-10-20 18:18:01 IST] BULL credit_put_spread(bull) expiry=211026
+  MAIN  SELL P-BTC-81600-211026 strike=81600 premium=489.00 delta=-0.4745
+  HEDGE BUY  P-BTC-80400-211026 strike=80400 premium=156.00 delta=0.1934 oi=15
+  SL/TGT basis=candle_median(9c)=56.00 -> MONITOR sl=134.40 tgt=224.00 (mult 2.4/4.0; MAIN-LEG premium levels, what the position is managed on — exactly like Sensex); net_sl_pts=79.61 is the hedge-adjusted RISK-BUDGET basis sizing uses
+  SIZE lots=125 offset_ratio=0.408(DELTA) net_sl_pts=79.61 (risk budget $10.00)
+  EST credit=333.00  modelled max_risk=$9.95  max_reward=$16.59
+  MARGIN est_defined_risk=$108.38  available=$538.51  fits=yes (portfolio-margin estimate; sizing not capped)
+  WOULD_PLACE_LIMIT (marketable, slip<=4t):
+  MAIN  SELL: limit=490.0 touch_bid/ask=492.0/500.0 spread=1.6% fillable=10837 depth_ratio=86.70 ok=True
+  HEDGE BUY : limit=165.0 touch_bid/ask=160.0/163.0 spread=1.9% fillable=7225 depth_ratio=57.80 ok=True
+  LIQUIDITY_GATE ok=True (both legs must pass to place live; max_spread=25.0% min_depth_ratio=1.0)
+PCR_TREND [2026-10-20 18:18:01 IST] direction=up consecutive_cycles=6 prev_pcr=0.4971 curr_pcr=0.5071
+
+LIVE_ENTRY [2026-10-20 18:18:01 IST] credit_put_spread(bull) size=125 BUY hedge=P-BTC-80400-211026 FIRST then SELL main=P-BTC-81600-211026 (plan: main_strike=81600 hedge_strike=80400 effective_sl=134.40 effective_tgt=224.00 order=limit(slip<=4t) main_limit=490.0 hedge_limit=165.0 expiry=211026).
+LIVE_ENTRY_OK [2026-10-20 18:18:04 IST] credit_put_spread(bull) opened: SELL P-BTC-81600-211026 (id=1617826803) / BUY P-BTC-80400-211026 (id=1617826777) size=125.
+ENTRY_SL_TGT: spread=CREDIT  EntryPrem=489.00  SL=623.40  Target=265.00  AnchorSrc=MAIN_LEG_LTP  SL_Source=OPTION_RANGE(median=56.00,SLx2.4,Tgtx4.0)  lots=125  net_credit=333.00
+ENTRY_OPENED [2026-10-20 18:18:04 IST] position recorded open; trades_today=1.
+MONITOR_LOOP [2026-10-20 18:18:04 IST] position OPEN — switching to 2s SL/target polling until it closes.
+2026-10-20 18:19:00 IST In Trade ( CREDIT ). No Exit. ltp= 521.00  SL= 623.40  target= 265.00
+2026-10-20 18:20:00 IST In Trade ( CREDIT ). No Exit. ltp= 524.00  SL= 623.40  target= 265.00
+2026-10-20 18:21:00 IST In Trade ( CREDIT ). No Exit. ltp= 550.00  SL= 623.40  target= 265.00
+2026-10-20 18:22:00 IST In Trade ( CREDIT ). No Exit. ltp= 507.00  SL= 623.40  target= 265.00
+2026-10-20 18:23:00 IST In Trade ( CREDIT ). No Exit. ltp= 493.00  SL= 623.40  target= 265.00
+2026-10-20 18:24:01 IST In Trade ( CREDIT ). No Exit. ltp= 492.00  SL= 623.40  target= 265.00
+2026-10-20 18:27:01 IST In Trade ( CREDIT ). No Exit. ltp= 513.00  SL= 623.40  target= 265.00
+2026-10-20 18:28:00 IST In Trade ( CREDIT ). No Exit. ltp= 504.00  SL= 623.40  target= 265.00
+2026-10-20 18:29:00 IST In Trade ( CREDIT ). No Exit. ltp= 519.00  SL= 623.40  target= 265.00
+2026-10-20 18:30:01 IST In Trade ( CREDIT ). No Exit. ltp= 526.00  SL= 623.40  target= 265.00
+2026-10-20 18:31:00 IST In Trade ( CREDIT ). No Exit. ltp= 543.00  SL= 623.40  target= 265.00
+2026-10-20 18:32:00 IST In Trade ( CREDIT ). No Exit. ltp= 581.00  SL= 623.40  target= 265.00
+2026-10-20 18:32:44 IST LTP_SL_WATCH: ltp=625.00 SL=623.40 confirm=1/2
+2026-10-20 18:32:46 IST LTP_SL_WATCH: ltp=625.00 SL=623.40 confirm=2/2
+2026-10-20 18:32:46 IST SL Hit (LTP)
+SL_COUNT [2026-10-20 18:32:46 IST] untrailed stop-loss -> untrailed_sl_count=1/2
+MONITOR_EXIT_OK [2026-10-20 18:32:48 IST] EXITED reason=stop_loss unrealized=-136.00 pts (pnl=-10.07); position recorded closed.
+MONITOR_LOOP [2026-10-20 18:32:48 IST] position CLOSED — resuming normal 3-min candle cadence.
+SIGNAL_LOOP [2026-10-20 18:32:48 IST] waiting 11.5s for next 3-min candle close.
+SIGNAL [2026-10-20 18:33:00 IST] index(.DEXBTUSD)=81472.80 perp(BTCUSD)=81430.00 atm_strike=81400 pcr=0.6618 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx7 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:33:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.02   0.00 CALL added +$225.46K   PUT unwind +$0.00  CE_OI=$5.38M PE_OI=$130.19K
+pcr2 =  BTC-82800   0.10   0.04 CALL added +$44.40K   PUT added +$1.63K  CE_OI=$1.39M PE_OI=$136.03K
+pcr3 =  BTC-82600   0.06   0.00 CALL added +$44.24K   PUT unwind +$0.00  CE_OI=$1.73M PE_OI=$108.14K
+pcr4 =  BTC-82400   0.02   -3.11 CALL unwind -$9.12K   PUT added +$28.36K  CE_OI=$5.84M PE_OI=$118.64K
+pcr5 =  BTC-82200   0.03   0.62 CALL unwind -$57.19K   PUT unwind -$35.36K  CE_OI=$5.85M PE_OI=$185.66K
+pcr6 =  BTC-82000   0.09   0.22 CALL added +$97.30K   PUT added +$21.52K  CE_OI=$9.07M PE_OI=$780.51K
+pcr7 =  BTC-81800   0.28   0.09 CALL unwind -$159.15K   PUT unwind -$13.76K  CE_OI=$2.45M PE_OI=$682.14K
+pcr8 =  BTC-81600   1.16   -13.40 CALL unwind -$37.80K   PUT added +$506.38K  CE_OI=$3.34M PE_OI=$3.88M
+pcr9 =  BTC-81400   1.73   0.40 CALL added +$220.86K   PUT added +$88.07K  CE_OI=$2.25M PE_OI=$3.88M <== ATM
+pcr10 =  BTC-81200   6.93   -1.68 CALL added +$57.24K   PUT unwind -$96.02K  CE_OI=$228.48K PE_OI=$1.58M
+pcr11 =  BTC-81000   2.51   -12.42 CALL added +$31.19K   PUT unwind -$387.35K  CE_OI=$1.44M PE_OI=$3.62M
+pcr12 =  BTC-80800   4.38   nan CALL unwind +$0.00   PUT added +$36.58K  CE_OI=$204.79K PE_OI=$898.17K
+pcr13 =  BTC-80600   6.87   9.64 CALL added +$897.82   PUT added +$8.64K  CE_OI=$149.28K PE_OI=$1.02M
+pcr14 =  BTC-80400   10.54   0.00 CALL added +$81.66K   PUT added +$325.75  CE_OI=$114.73K PE_OI=$1.21M
+pcr15 =  BTC-80200   85.88   nan CALL unwind +$0.00   PUT added +$155.41K  CE_OI=$13.60K PE_OI=$1.17M
+pcr16 =  BTC-80000   38.64   1.81 CALL added +$63.19K   PUT added +$114.20K  CE_OI=$179.81K PE_OI=$6.95M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.66  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81472.80
+BTC PERP/FUT (BTCUSD)  = 81430.00
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81600: 81400}
+avgOiPcrList2  = [0.6648] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.6648)
+avgOiPcr9List2 = [0.6618] atmStrikeNotShiftedCount= 1  (central 9, curr=0.6618)
+==== PCR trend check 2026-10-20 18:33:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.6504, 0.6607, 0.6618]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6628, 0.6641, 0.6648]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.6504 -> 0.6607 -> 0.6618 | step1 +1.58% | step2 +0.17%
+is9PcrInc_InvariantWindow = True  (streak=6 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.17% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.6628 -> 0.6641 -> 0.6648 | step1 +0.2% | step2 +0.11%
+is17PcrInc_InvariantWindow = True  (streak=3 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.11% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7207  [total CE_OI= $106.57M  total PE_OI= $76.80M]
+totalPcrList = [0.694, 0.691, 0.7207]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6940 -> 0.6910 -> 0.7207 (not monotonic)
+SUPP_RES=== 81400.00 role=SUPPORT (nearest listed strike to spot 81472.80; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81472.80 is 81400 (73 away)
+CEoich val =  +$677.66K  PEoich val =  +$1.48M , CE < PE by 54.3%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.25M  PE= $3.88M , CE < PE by 42.0%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.34M  PE= $3.88M , CE < PE by 14.1%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.5199 gamma=0.000292 theta=-284.56 vega=16.61 iv=0.33] | PE[delta=-0.4798 gamma=0.000299 theta=-278.01 vega=16.61 iv=0.32]
+INCR_CHOI: SUPP_RES=81400 role=SUPPORT fresh_CE=+$220.86K fresh_PE=+$88.07K -> CE_dominant by 60.1% (support UNDERMINED (bearish warning)) | cumulative CE=+$677.66K PE=+$1.48M
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:33:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=3 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81400.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=8.3 PEoich=18.2 choi_valid=True choi_pct=54.3% | CE_total=27.6 PE_total=47.6 oi_pct=42.0%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=True bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC2_TREND_CONVERGENCE (tradeable=True)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=1.1 | isCE_DomRes_once=False (streak=0) fresh_CE=2.7
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1377 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_dominance_bull(need PE dominant, fresh_PE>=0)
+
+PCR_TREND [2026-10-20 18:33:00 IST] direction=up consecutive_cycles=7 prev_pcr=0.5071 curr_pcr=0.6618
+
+ENTRY_SKIPPED [2026-10-20 18:33:00 IST] no live entry: no_sensex_signal(choi_dominance_bull(need PE dominant, fresh_PE>=0)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:33:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 18:36:00 IST] index(.DEXBTUSD)=81448.70 perp(BTCUSD)=81415.00 atm_strike=81400 pcr=0.6772 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx8 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:36:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.02   0.00 CALL added +$122.21K   PUT unwind +$0.00  CE_OI=$5.51M PE_OI=$130.19K
+pcr2 =  BTC-82800   0.10   nan CALL unwind +$0.00   PUT added +$814.76  CE_OI=$1.39M PE_OI=$136.72K
+pcr3 =  BTC-82600   0.06   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.73M PE_OI=$108.14K
+pcr4 =  BTC-82400   0.02   0.00 CALL added +$3.67K   PUT unwind +$0.00  CE_OI=$5.84M PE_OI=$118.64K
+pcr5 =  BTC-82200   0.03   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$5.85M PE_OI=$185.66K
+pcr6 =  BTC-82000   0.09   0.00 CALL added +$1.39K   PUT unwind +$0.00  CE_OI=$9.07M PE_OI=$780.15K
+pcr7 =  BTC-81800   0.27   0.07 CALL added +$61.33K   PUT added +$4.16K  CE_OI=$2.52M PE_OI=$686.75K
+pcr8 =  BTC-81600   1.17   5.48 CALL added +$3.75K   PUT added +$20.52K  CE_OI=$3.34M PE_OI=$3.90M
+pcr9 =  BTC-81400   1.57   0.17 CALL added +$245.56K   PUT added +$41.54K  CE_OI=$2.49M PE_OI=$3.92M <== ATM
+pcr10 =  BTC-81200   6.85   -1.69 CALL added +$2.12K   PUT unwind -$3.58K  CE_OI=$230.63K PE_OI=$1.58M
+pcr11 =  BTC-81000   2.91   nan CALL unwind +$0.00   PUT added +$576.28K  CE_OI=$1.44M PE_OI=$4.20M
+pcr12 =  BTC-80800   4.37   nan CALL unwind +$0.00   PUT unwind -$2.93K  CE_OI=$204.79K PE_OI=$895.37K
+pcr13 =  BTC-80600   6.62   nan CALL unwind +$0.00   PUT unwind -$36.90K  CE_OI=$149.28K PE_OI=$985.91K
+pcr14 =  BTC-80400   10.90   nan CALL unwind +$0.00   PUT added +$40.72K  CE_OI=$114.73K PE_OI=$1.25M
+pcr15 =  BTC-80200   66.41   1.38 CALL added +$4.07K   PUT added +$5.62K  CE_OI=$17.68K PE_OI=$1.17M
+pcr16 =  BTC-80000   39.30   nan CALL unwind +$0.00   PUT added +$118.75K  CE_OI=$179.81K PE_OI=$7.07M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.68  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81448.70
+BTC PERP/FUT (BTCUSD)  = 81415.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81400: 81400}
+avgOiPcrList2  = [0.6648, 0.6765] atmStrikeNotShiftedCount= 2  (full 17 strikes, curr=0.6765)
+avgOiPcr9List2 = [0.6618, 0.6772] atmStrikeNotShiftedCount= 2  (central 9, curr=0.6772)
+==== PCR trend check 2026-10-20 18:36:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.6607, 0.6618, 0.6772]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6641, 0.6648, 0.6765]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.6607 -> 0.6618 -> 0.6772 | step1 +0.17% | step2 +2.34%
+is9PcrInc_InvariantWindow = True  (streak=7 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.17% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.6641 -> 0.6648 -> 0.6765 | step1 +0.11% | step2 +1.76%
+is17PcrInc_InvariantWindow = True  (streak=4 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.11% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7182  [total CE_OI= $109.29M  total PE_OI= $78.48M]
+totalPcrList = [0.691, 0.7207, 0.7182]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6910 -> 0.7207 -> 0.7182 (not monotonic)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+SUPP_RES=== 81400.00 role=SUPPORT (nearest listed strike to spot 81448.70; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81448.70 is 81400 (49 away)
+CEoich val =  +$923.02K  PEoich val =  +$1.53M , CE < PE by 39.5%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.49M  PE= $3.92M , CE < PE by 36.4%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.34M  PE= $3.90M , CE < PE by 14.4%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.5172 gamma=0.000292 theta=-285.52 vega=16.60 iv=0.33] | PE[delta=-0.4825 gamma=0.000298 theta=-278.90 vega=16.60 iv=0.32]
+INCR_CHOI: SUPP_RES=81400 role=SUPPORT fresh_CE=+$245.56K fresh_PE=+$41.54K -> CE_dominant by 83.1% (support UNDERMINED (bearish warning)) | cumulative CE=+$923.02K PE=+$1.53M
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:36:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=4 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81400.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=11.3 PEoich=18.7 choi_valid=True choi_pct=39.5% | CE_total=30.6 PE_total=48.1 oi_pct=36.4%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=True bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC2_TREND_CONVERGENCE (tradeable=True)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.5 | isCE_DomRes_once=False (streak=0) fresh_CE=3.0
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1374 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_dominance_bull(need PE dominant, fresh_PE>=0)
+
+PCR_TREND [2026-10-20 18:36:00 IST] direction=up consecutive_cycles=8 prev_pcr=0.6618 curr_pcr=0.6772
+
+ENTRY_SKIPPED [2026-10-20 18:36:00 IST] no live entry: no_sensex_signal(choi_dominance_bull(need PE dominant, fresh_PE>=0)) (dir=None)
+SIGNAL_LOOP [2026-10-20 18:36:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 18:39:00 IST] index(.DEXBTUSD)=81450.20 perp(BTCUSD)=81415.00 atm_strike=81400 pcr=0.6846 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx9 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 18:39:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83000   0.02   0.00 CALL added +$180.47K   PUT unwind +$0.00  CE_OI=$5.69M PE_OI=$130.19K
+pcr2 =  BTC-82800   0.10   0.00 CALL added +$1.30K   PUT unwind +$0.00  CE_OI=$1.39M PE_OI=$136.72K
+pcr3 =  BTC-82600   0.06   0.00 CALL added +$1.06K   PUT unwind +$0.00  CE_OI=$1.74M PE_OI=$108.14K
+pcr4 =  BTC-82400   0.02   -0.00 CALL unwind -$733.04   PUT unwind +$0.00  CE_OI=$5.84M PE_OI=$118.64K
+pcr5 =  BTC-82200   0.03   0.00 CALL added +$8.15K   PUT unwind +$0.00  CE_OI=$5.86M PE_OI=$185.66K
+pcr6 =  BTC-82000   0.09   0.00 CALL added +$39.19K   PUT unwind +$0.00  CE_OI=$9.11M PE_OI=$780.15K
+pcr7 =  BTC-81800   0.34   39.16 CALL added +$4.15K   PUT added +$162.64K  CE_OI=$2.52M PE_OI=$849.12K
+pcr8 =  BTC-81600   1.16   0.04 CALL added +$35.11K   PUT added +$1.30K  CE_OI=$3.37M PE_OI=$3.90M
+pcr9 =  BTC-81400   1.57   1.71 CALL added +$38.94K   PUT added +$66.38K  CE_OI=$2.53M PE_OI=$3.98M <== ATM
+pcr10 =  BTC-81200   6.82   -10.00 CALL added +$407.33   PUT unwind -$4.07K  CE_OI=$231.12K PE_OI=$1.58M
+pcr11 =  BTC-81000   2.91   1.20 CALL added +$4.07K   PUT added +$4.89K  CE_OI=$1.44M PE_OI=$4.20M
+pcr12 =  BTC-80800   4.58   271.00 CALL added +$163.00   PUT added +$44.15K  CE_OI=$205.13K PE_OI=$939.20K
+pcr13 =  BTC-80600   6.61   0.50 CALL added +$162.98   PUT added +$81.46  CE_OI=$149.21K PE_OI=$986.14K
+pcr14 =  BTC-80400   10.89   1.50 CALL added +$162.98   PUT added +$244.39  CE_OI=$114.66K PE_OI=$1.25M
+pcr15 =  BTC-80200   65.80   0.00 CALL added +$162.96   PUT unwind +$0.00  CE_OI=$17.84K PE_OI=$1.17M
+pcr16 =  BTC-80000   41.69   -309.87 CALL unwind -$1.22K   PUT added +$378.58K  CE_OI=$178.64K PE_OI=$7.45M
+pcr17 =  BTC-79800   nan   nan CALL unwind 0.0   PUT unwind 0.0  CE_OI=0.0 PE_OI=0.0
+PCRSUM== nan
+
+AVG_OIPCR_9STRIKE= 0.68  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81450.20
+BTC PERP/FUT (BTCUSD)  = 81415.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81400: 81400}
+avgOiPcrList2  = [0.6648, 0.6765, 0.6875] atmStrikeNotShiftedCount= 3  (full 17 strikes, curr=0.6875)
+avgOiPcr9List2 = [0.6618, 0.6772, 0.6846] atmStrikeNotShiftedCount= 3  (central 9, curr=0.6846)
+==== PCR trend check 2026-10-20 18:39:00 IST ====
+PCR9_SEQ_INC: 0.6618 -> 0.6772 -> 0.6846 | step1 +2.34% | step2 +1.09% (central 9 rising)
+is9PcrInc = True
+is9PcrInc_MinMove = True  (smallest step 1.09% vs 0.10% threshold -> meaningful)
+PCR_SEQ_INC: 0.6648 -> 0.6765 -> 0.6875 | step1 +1.76% | step2 +1.62%
+isPcrInc = True
+isPcrInc_MinMove = True  (smallest step 1.62% vs 0.10% threshold -> meaningful)
+PCR9_SEQ_INC_STREAK = 1 consecutive cycle(s) rising (bullish trend building)
+PCR_SEQ_INC_STREAK = 1 consecutive cycle(s) rising (bullish trend building)
+avgOiPcr9List2_InvariantWindow  = [0.6618, 0.6772, 0.6846]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6648, 0.6765, 0.6875]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.6618 -> 0.6772 -> 0.6846 | step1 +2.34% | step2 +1.09%
+is9PcrInc_InvariantWindow = True  (streak=8 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 1.09% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.6648 -> 0.6765 -> 0.6875 | step1 +1.76% | step2 +1.62%
+is17PcrInc_InvariantWindow = True  (streak=5 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 1.62% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7302  [total CE_OI= $110.74M  total PE_OI= $80.86M]
+totalPcrList = [0.7207, 0.7182, 0.7302]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.7207 -> 0.7182 -> 0.7302 (not monotonic)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=False (up_streak=2)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=True thrice=False (up_streak=2)
+SUPP_RES=== 81400.00 role=SUPPORT (nearest listed strike to spot 81450.20; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81450.20 is 81400 (50 away)
+CEoich val =  +$962.09K  PEoich val =  +$1.59M , CE < PE by 39.6%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81400 (S/R line 81500)): CE= $2.53M  PE= $3.98M , CE < PE by 36.5%
+SR_NEIGHBOUR TOTAL OI (strike 81600, other side of S/R line 81500): CE= $3.37M  PE= $3.90M , CE < PE by 13.6%  [monitor-only]
+SR_GREEKS (strike 81400): CE[delta=0.5180 gamma=0.000292 theta=-285.84 vega=16.58 iv=0.33] | PE[delta=-0.4818 gamma=0.000299 theta=-279.24 vega=16.58 iv=0.32]
+INCR_CHOI: SUPP_RES=81400 role=SUPPORT fresh_CE=+$38.94K fresh_PE=+$66.38K -> PE_dominant by 41.3% (support HOLDING (bullish)) | cumulative CE=+$962.09K PE=+$1.59M
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 18:39:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=5 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81400.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=11.8 PEoich=19.5 choi_valid=True choi_pct=39.6% | CE_total=31.1 PE_total=48.9 oi_pct=36.5%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=True bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC2_TREND_CONVERGENCE (tradeable=True)
+CHOI_DOM_GATE: gate_on=True bull_ok=True bear_ok=False | isPE_DomSupp_once=True (streak=1) fresh_PE=0.8 | isCE_DomRes_once=False (streak=0) fresh_CE=0.5
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1371 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = BULL (live_eligible=True)
+
+OPT_RANGE_DEBUG: MAIN  symbol=P-BTC-81400-211026 | candles_after_skip1st=9 | ranges=[54.0, 63.0, 40.0, 54.0, 7.0, 19.0, 81.0, 21.0, 22.0] | median_all=40.00
+OPT_OHLC_ENTRY: MAIN  symbol=P-BTC-81400-211026 | candles=9 | open=[459.0, 404.9, 417.0, 464.0, 415.8, 413.0, 436.0, 502.0, 511.0, 510.0] | high=[459.0, 437.0, 457.0, 464.0, 422.0, 432.0, 517.0, 513.0, 515.0, 510.0] | low=[405.0, 374.0, 417.0, 410.0, 415.0, 413.0, 436.0, 492.0, 493.0, 510.0] | close=[405.0, 415.0, 457.0, 422.0, 419.0, 432.0, 505.0, 513.0, 510.0, 510.0] | median_range=40.00
+OPT_RANGE_DEBUG: HEDGE symbol=P-BTC-80000-211026 | candles_after_skip1st=8 | ranges=[9.0, 6.2, 10.0, 7.0, 4.0, 30.0, 9.0, 13.0] | median_all=9.00
+OPT_OHLC_ENTRY: HEDGE symbol=P-BTC-80000-211026 | candles=8 | open=[122.0, 112.0, 120.0, 119.0, 118.0, 121.0, 121.0, 133.0, 142.0, 140.0] | high=[122.0, 112.0, 130.0, 119.0, 118.0, 121.0, 151.0, 142.0, 143.0, 140.0] | low=[113.0, 105.8, 120.0, 112.0, 114.0, 121.0, 121.0, 133.0, 130.0, 140.0] | close=[113.0, 106.0, 126.0, 112.0, 115.0, 121.0, 143.0, 142.0, 140.0, 140.0] | median_range=9.00
+HEDGE_OFFSET: source=DELTA used_ratio=0.348 raw=0.348 | delta_ratio=0.348 range_ratio=0.225 premium_ratio=0.275 | (main_delta=-0.4818 hedge_delta=0.1676 main_range=40.00 hedge_range=9.00) effective_sl=96.00 -> net_sl_points=62.60
+LOT_ROUNDING: raw_lots=159.755 frac=0.755 (roundup>=0.75) -> lots=160 | loss_per_lot=$0.0626 risk_budget=$10.00
+RISK_SIZING: effective_sl=96.00 main=510.00 hedge=140.00 main_range=40.00 hedge_range=9.00 FIXED_RISK=$10.00 contract_value=0.001 -> lots=160 (net_sl=62.60 -> modelled_risk=$10.02)
+TRADE_PLAN [2026-10-20 18:39:01 IST] BULL credit_put_spread(bull) expiry=211026
+  MAIN  SELL P-BTC-81400-211026 strike=81400 premium=510.00 delta=-0.4818
+  HEDGE BUY  P-BTC-80000-211026 strike=80000 premium=140.00 delta=0.1676 oi=91
+  SL/TGT basis=candle_median(9c)=40.00 -> MONITOR sl=96.00 tgt=160.00 (mult 2.4/4.0; MAIN-LEG premium levels, what the position is managed on — exactly like Sensex); net_sl_pts=62.60 is the hedge-adjusted RISK-BUDGET basis sizing uses
+  SIZE lots=160 offset_ratio=0.348(DELTA) net_sl_pts=62.60 (risk budget $10.00)
+  EST credit=370.00  modelled max_risk=$10.02  max_reward=$16.69
+  MARGIN est_defined_risk=$164.80  available=$522.98  fits=yes (portfolio-margin estimate; sizing not capped)
+  WOULD_PLACE_LIMIT (marketable, slip<=4t):
+  MAIN  SELL: limit=505.0 touch_bid/ask=507.0/511.0 spread=0.8% fillable=14074 depth_ratio=87.96 ok=True
+  HEDGE BUY : limit=141.0 touch_bid/ask=136.0/139.0 spread=2.2% fillable=7327 depth_ratio=45.79 ok=True
+  LIQUIDITY_GATE ok=True (both legs must pass to place live; max_spread=25.0% min_depth_ratio=1.0)
+PCR_TREND [2026-10-20 18:39:01 IST] direction=up consecutive_cycles=9 prev_pcr=0.6772 curr_pcr=0.6846
+
+LIVE_ENTRY [2026-10-20 18:39:01 IST] credit_put_spread(bull) size=160 BUY hedge=P-BTC-80000-211026 FIRST then SELL main=P-BTC-81400-211026 (plan: main_strike=81400 hedge_strike=80000 effective_sl=96.00 effective_tgt=160.00 order=limit(slip<=4t) main_limit=505.0 hedge_limit=141.0 expiry=211026).
+LIVE_ENTRY_OK [2026-10-20 18:39:03 IST] credit_put_spread(bull) opened: SELL P-BTC-81400-211026 (id=1617866228) / BUY P-BTC-80000-211026 (id=1617866201) size=160.
+ENTRY_SL_TGT: spread=CREDIT  EntryPrem=510.00  SL=606.00  Target=350.00  AnchorSrc=MAIN_LEG_LTP  SL_Source=OPTION_RANGE(median=40.00,SLx2.4,Tgtx4.0)  lots=160  net_credit=370.00
+ENTRY_OPENED [2026-10-20 18:39:03 IST] position recorded open; trades_today=2.
+MONITOR_LOOP [2026-10-20 18:39:03 IST] position OPEN — switching to 2s SL/target polling until it closes.
+2026-10-20 18:40:01 IST In Trade ( CREDIT ). No Exit. ltp= 512.00  SL= 606.00  target= 350.00
+2026-10-20 18:41:00 IST In Trade ( CREDIT ). No Exit. ltp= 496.00  SL= 606.00  target= 350.00
+2026-10-20 18:42:01 IST In Trade ( CREDIT ). No Exit. ltp= 479.00  SL= 606.00  target= 350.00
+2026-10-20 18:44:00 IST In Trade ( CREDIT ). No Exit. ltp= 507.00  SL= 606.00  target= 350.00
+2026-10-20 18:45:00 IST In Trade ( CREDIT ). No Exit. ltp= 525.00  SL= 606.00  target= 350.00
+2026-10-20 18:46:01 IST In Trade ( CREDIT ). No Exit. ltp= 503.00  SL= 606.00  target= 350.00
+2026-10-20 18:47:01 IST In Trade ( CREDIT ). No Exit. ltp= 519.00  SL= 606.00  target= 350.00
+2026-10-20 18:48:01 IST In Trade ( CREDIT ). No Exit. ltp= 491.00  SL= 606.00  target= 350.00
+2026-10-20 18:49:01 IST In Trade ( CREDIT ). No Exit. ltp= 490.00  SL= 606.00  target= 350.00
+2026-10-20 18:50:01 IST In Trade ( CREDIT ). No Exit. ltp= 477.00  SL= 606.00  target= 350.00
+2026-10-20 18:51:01 IST In Trade ( CREDIT ). No Exit. ltp= 475.00  SL= 606.00  target= 350.00
+2026-10-20 18:52:00 IST In Trade ( CREDIT ). No Exit. ltp= 490.00  SL= 606.00  target= 350.00
+2026-10-20 18:54:00 IST In Trade ( CREDIT ). No Exit. ltp= 463.00  SL= 606.00  target= 350.00
+2026-10-20 18:55:00 IST In Trade ( CREDIT ). No Exit. ltp= 467.00  SL= 606.00  target= 350.00
+2026-10-20 18:56:00 IST In Trade ( CREDIT ). No Exit. ltp= 494.00  SL= 606.00  target= 350.00
+2026-10-20 18:57:00 IST In Trade ( CREDIT ). No Exit. ltp= 508.00  SL= 606.00  target= 350.00
+2026-10-20 18:58:01 IST In Trade ( CREDIT ). No Exit. ltp= 527.00  SL= 606.00  target= 350.00
+2026-10-20 18:59:01 IST In Trade ( CREDIT ). No Exit. ltp= 517.00  SL= 606.00  target= 350.00
+2026-10-20 19:00:01 IST In Trade ( CREDIT ). No Exit. ltp= 519.00  SL= 606.00  target= 350.00
+2026-10-20 19:01:00 IST In Trade ( CREDIT ). No Exit. ltp= 493.40  SL= 606.00  target= 350.00
+2026-10-20 19:02:00 IST In Trade ( CREDIT ). No Exit. ltp= 561.00  SL= 606.00  target= 350.00
+2026-10-20 19:03:01 IST In Trade ( CREDIT ). No Exit. ltp= 556.00  SL= 606.00  target= 350.00
+2026-10-20 19:04:01 IST In Trade ( CREDIT ). No Exit. ltp= 536.00  SL= 606.00  target= 350.00
+2026-10-20 19:05:01 IST In Trade ( CREDIT ). No Exit. ltp= 526.00  SL= 606.00  target= 350.00
+2026-10-20 19:06:00 IST In Trade ( CREDIT ). No Exit. ltp= 518.00  SL= 606.00  target= 350.00
+MONITOR_TRAIL [2026-10-20 19:06:56 IST] SL moved to BREAKEVEN: main-leg unrealized 97.00 pts >= 0.60 * target 160.00 (effective SL now the entry premium 510.00).
+2026-10-20 19:07:00 IST In Trade ( CREDIT ). No Exit. ltp= 410.00  SL= 510.00  target= 350.00  (SL@breakeven)
+2026-10-20 19:08:00 IST In Trade ( CREDIT ). No Exit. ltp= 367.00  SL= 510.00  target= 350.00  (SL@breakeven)
+2026-10-20 19:09:00 IST In Trade ( CREDIT ). No Exit. ltp= 387.00  SL= 510.00  target= 350.00  (SL@breakeven)
+2026-10-20 19:09:52 IST LTP_TGT_WATCH: ltp=350.00 target=350.00 confirm=1/2
+2026-10-20 19:09:54 IST LTP_TGT_WATCH: ltp=350.00 target=350.00 confirm=2/2
+2026-10-20 19:09:54 IST Target hit (LTP)
+SESSION_WIN [2026-10-20 19:09:54 IST] target hit — no further entries this contract session (a loss would have allowed re-entry up to 2 SLs).
+MONITOR_EXIT_OK [2026-10-20 19:09:56 IST] EXITED reason=target unrealized=160.00 pts (pnl=16.69); position recorded closed.
+MONITOR_LOOP [2026-10-20 19:09:56 IST] position CLOSED — resuming normal 3-min candle cadence.
+SIGNAL_LOOP [2026-10-20 19:09:56 IST] waiting 123.6s for next 3-min candle close.
+SIGNAL [2026-10-20 19:12:00 IST] index(.DEXBTUSD)=81733.20 perp(BTCUSD)=81692.50 atm_strike=81800 pcr=0.3877 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:12:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83400   0.01   0.01 CALL added +$1.53M   PUT added +$17.87K  CE_OI=$1.53M PE_OI=$17.87K
+pcr2 =  BTC-83200   0.01   0.01 CALL added +$2.38M   PUT added +$21.81K  CE_OI=$2.38M PE_OI=$21.81K
+pcr3 =  BTC-83000   0.02   -0.59 CALL added +$62.49K   PUT unwind -$36.67K  CE_OI=$5.76M PE_OI=$93.83K
+pcr4 =  BTC-82800   0.09   0.01 CALL added +$179.73K   PUT added +$1.23K  CE_OI=$1.58M PE_OI=$138.37K
+pcr5 =  BTC-82600   0.02   0.00 CALL added +$4.14M   PUT added +$15.11K  CE_OI=$5.88M PE_OI=$123.36K
+pcr6 =  BTC-82400   0.01   -0.99 CALL added +$78.91K   PUT unwind -$78.50K  CE_OI=$5.94M PE_OI=$40.44K
+pcr7 =  BTC-82200   0.03   -8.38 CALL unwind -$1.06K   PUT added +$8.91K  CE_OI=$5.87M PE_OI=$195.13K
+pcr8 =  BTC-82000   0.08   -0.01 CALL added +$799.97K   PUT unwind -$9.15K  CE_OI=$9.94M PE_OI=$773.52K
+pcr9 =  BTC-81800   0.23   -0.76 CALL added +$286.86K   PUT unwind -$216.60K  CE_OI=$2.82M PE_OI=$635.26K <== ATM
+pcr10 =  BTC-81600   0.76   0.07 CALL added +$1.97M   PUT added +$133.30K  CE_OI=$5.35M PE_OI=$4.05M
+pcr11 =  BTC-81400   1.55   2.80 CALL unwind -$45.12K   PUT unwind -$126.31K  CE_OI=$2.49M PE_OI=$3.87M
+pcr12 =  BTC-81200   7.82   82.47 CALL added +$3.10K   PUT added +$256.02K  CE_OI=$234.92K PE_OI=$1.84M
+pcr13 =  BTC-81000   2.75   45.54 CALL unwind -$5.31K   PUT unwind -$241.86K  CE_OI=$1.44M PE_OI=$3.97M
+pcr14 =  BTC-80800   6.37   -9.62 CALL unwind -$23.03K   PUT added +$221.56K  CE_OI=$182.52K PE_OI=$1.16M
+pcr15 =  BTC-80600   6.12   4.15 CALL added +$37.25K   PUT added +$154.57K  CE_OI=$186.84K PE_OI=$1.14M
+pcr16 =  BTC-80400   42.40   -0.99 CALL unwind -$83.55K   PUT added +$82.27K  CE_OI=$31.47K PE_OI=$1.33M
+pcr17 =  BTC-80200   21.65   -2.22 CALL added +$33.08K   PUT unwind -$73.42K  CE_OI=$50.97K PE_OI=$1.10M
+PCRSUM== 89.92
+
+AVG_OIPCR_9STRIKE= 0.39  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81733.20
+BTC PERP/FUT (BTCUSD)  = 81692.50
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81400: 81800}
+avgOiPcrList2  = [0.397] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.3970)
+avgOiPcr9List2 = [0.3877] atmStrikeNotShiftedCount= 1  (central 9, curr=0.3877)
+==== PCR trend check 2026-10-20 19:12:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.4759, 0.4811, 0.3877]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.4615, 0.4645, 0.397]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.4759 -> 0.4811 -> 0.3877 (not monotonic)
+17_SEQ_FLAT_InvariantWindow: 0.4615 -> 0.4645 -> 0.3970 (not monotonic)
+TOTAL_PCR (full chain) = 0.6873  [total CE_OI= $130.13M  total PE_OI= $89.45M]
+totalPcrList = [0.7182, 0.7302, 0.6873]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.7182 -> 0.7302 -> 0.6873 (not monotonic)
+SUPP_RES=== 81800.00 role=RESISTANCE (nearest listed strike to spot 81733.20; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81733.20 is 81800 (67 away)
+CEoich val =  +$408.55K  PEoich val =  +$159.24K , CE > PE by 61.0%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81800 (S/R line 81500)): CE= $2.82M  PE= $635.26K , CE > PE by 77.4%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.49M  PE= $3.87M , CE < PE by 35.6%  [monitor-only]
+SR_GREEKS (strike 81800): CE[delta=0.4837 gamma=0.000303 theta=-281.78 vega=16.44 iv=0.32] | PE[delta=-0.5168 gamma=0.000311 theta=-275.29 vega=16.44 iv=0.31]
+INCR_CHOI: SUPP_RES=81800 role=RESISTANCE fresh_CE=+$286.86K fresh_PE=-$216.60K -> CE_dominant by 175.5% (resistance HOLDING (bearish)) | cumulative CE=+$408.55K PE=+$159.24K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:12:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81800.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=5.0 PEoich=1.9 choi_valid=True choi_pct=61.0% | CE_total=34.4 PE_total=7.8 oi_pct=77.4%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=-2.7 | isCE_DomRes_once=True (streak=1) fresh_CE=3.5
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1338 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 19:12:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.6846 curr_pcr=0.3877
+
+ENTRY_SKIPPED [2026-10-20 19:12:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:12:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 19:15:00 IST] index(.DEXBTUSD)=81647.90 perp(BTCUSD)=81610.50 atm_strike=81600 pcr=0.4345 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:15:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.38M PE_OI=$21.81K
+pcr2 =  BTC-83000   0.02   0.02 CALL unwind -$36.66K   PUT unwind -$817.48  CE_OI=$5.73M PE_OI=$93.11K
+pcr3 =  BTC-82800   0.08   0.00 CALL added +$85.76K   PUT unwind +$0.00  CE_OI=$1.66M PE_OI=$138.33K
+pcr4 =  BTC-82600   0.02   0.00 CALL added +$16.33K   PUT unwind +$0.00  CE_OI=$5.89M PE_OI=$123.36K
+pcr5 =  BTC-82400   0.01   -0.00 CALL unwind -$5.14K   PUT unwind +$0.00  CE_OI=$5.93M PE_OI=$40.44K
+pcr6 =  BTC-82200   0.03   0.04 CALL unwind -$32.00K   PUT unwind -$1.23K  CE_OI=$5.84M PE_OI=$193.81K
+pcr7 =  BTC-82000   0.08   0.36 CALL unwind -$9.14K   PUT unwind -$3.27K  CE_OI=$9.92M PE_OI=$769.58K
+pcr8 =  BTC-81800   0.09   0.00 CALL added +$4.09M   PUT added +$81.65  CE_OI=$6.90M PE_OI=$634.93K
+pcr9 =  BTC-81600   0.73   -1.27 CALL added +$62.70K   PUT unwind -$79.52K  CE_OI=$5.41M PE_OI=$3.97M <== ATM
+pcr10 =  BTC-81400   1.58   -35.15 CALL unwind -$1.63K   PUT added +$57.42K  CE_OI=$2.49M PE_OI=$3.93M
+pcr11 =  BTC-81200   10.40   -0.39 CALL unwind -$56.06K   PUT added +$22.05K  CE_OI=$178.89K PE_OI=$1.86M
+pcr12 =  BTC-81000   2.82   nan CALL unwind +$0.00   PUT added +$102.89K  CE_OI=$1.44M PE_OI=$4.07M
+pcr13 =  BTC-80800   6.47   111.50 CALL added +$163.30   PUT added +$18.22K  CE_OI=$182.65K PE_OI=$1.18M
+pcr14 =  BTC-80600   6.12   nan CALL unwind +$0.00   PUT added +$816.58  CE_OI=$186.84K PE_OI=$1.14M
+pcr15 =  BTC-80400   44.35   nan CALL unwind +$0.00   PUT added +$61.32K  CE_OI=$31.47K PE_OI=$1.39M
+pcr16 =  BTC-80200   24.83   nan CALL unwind +$0.00   PUT added +$161.84K  CE_OI=$50.97K PE_OI=$1.27M
+pcr17 =  BTC-80000   43.15   43.15 CALL added +$196.49K   PUT added +$8.47M  CE_OI=$196.49K PE_OI=$8.47M
+PCRSUM== 140.79
+
+AVG_OIPCR_9STRIKE= 0.43  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81647.90
+BTC PERP/FUT (BTCUSD)  = 81610.50
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81800: 81600}
+avgOiPcrList2  = [0.5382] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.5382)
+avgOiPcr9List2 = [0.4345] atmStrikeNotShiftedCount= 1  (central 9, curr=0.4345)
+==== PCR trend check 2026-10-20 19:15:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.5315, 0.4825, 0.4345]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.6519, 0.5601, 0.5382]  (full 17, re-measured on current strikes)
+9_SEQ_DEC_InvariantWindow: 0.5315 -> 0.4825 -> 0.4345 | step1 -9.22% | step2 -9.94%
+is9PcrDecr_InvariantWindow = True  (streak=1 consecutive cycle(s) falling)
+is9PcrDecr_InvariantWindow_MinMove = True  (smallest step 9.22% vs 0.10% threshold -> meaningful)
+17_SEQ_DEC_InvariantWindow: 0.6519 -> 0.5601 -> 0.5382 | step1 -14.09% | step2 -3.9%
+is17PcrDecr_InvariantWindow = True  (streak=1 consecutive cycle(s) falling)
+is17PcrDecr_InvariantWindow_MinMove = True  (smallest step 3.90% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6920  [total CE_OI= $135.37M  total PE_OI= $93.68M]
+totalPcrList = [0.7302, 0.6873, 0.692]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.7302 -> 0.6873 -> 0.6920 (not monotonic)
+SUPP_RES=== 81600.00 role=SUPPORT (nearest listed strike to spot 81647.90; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81647.90 is 81600 (48 away)
+CEoich val =  +$2.03M  PEoich val =  +$1.04M , CE > PE by 48.7%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81600 (S/R line 81500)): CE= $5.41M  PE= $3.97M , CE > PE by 26.7%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.49M  PE= $3.93M , CE < PE by 36.5%  [monitor-only]
+SR_GREEKS (strike 81600): CE[delta=0.5167 gamma=0.000308 theta=-278.04 vega=16.40 iv=0.31] | PE[delta=-0.4830 gamma=0.000316 theta=-271.36 vega=16.40 iv=0.31]
+INCR_CHOI: SUPP_RES=81600 role=SUPPORT fresh_CE=+$62.70K fresh_PE=-$79.52K -> CE_dominant by 178.9% (support UNDERMINED (bearish warning)) | cumulative CE=+$2.03M PE=+$1.04M
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:15:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=True (streak=1 minmove=True) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=True
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=81600.00 role=SUPPORT) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=24.9 PEoich=12.8 choi_valid=True choi_pct=48.7% | CE_total=66.3 PE_total=48.6 oi_pct=26.7%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=-1.0 | isCE_DomRes_once=False (streak=0) fresh_CE=0.8
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1335 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=no_logic_mode_qualified
+
+PCR_TREND [2026-10-20 19:15:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.3877 curr_pcr=0.4345
+
+ENTRY_SKIPPED [2026-10-20 19:15:00 IST] no live entry: no_sensex_signal(no_logic_mode_qualified) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:15:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 19:18:00 IST] index(.DEXBTUSD)=81746.50 perp(BTCUSD)=81709.00 atm_strike=81800 pcr=0.3358 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:18:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83400   0.01   0.01 CALL added +$1.42M   PUT added +$17.92K  CE_OI=$1.42M PE_OI=$17.92K
+pcr2 =  BTC-83200   0.01   0.00 CALL added +$188.14K   PUT unwind +$0.00  CE_OI=$2.57M PE_OI=$21.81K
+pcr3 =  BTC-83000   0.02   0.00 CALL added +$46.60K   PUT unwind +$0.00  CE_OI=$5.78M PE_OI=$93.11K
+pcr4 =  BTC-82800   0.09   0.83 CALL added +$17.18K   PUT added +$14.33K  CE_OI=$1.68M PE_OI=$152.91K
+pcr5 =  BTC-82600   0.02   -0.00 CALL unwind -$10.71K   PUT unwind +$0.00  CE_OI=$5.89M PE_OI=$123.47K
+pcr6 =  BTC-82400   0.01   0.03 CALL added +$62.95K   PUT added +$1.80K  CE_OI=$6.00M PE_OI=$42.30K
+pcr7 =  BTC-82200   0.03   -0.21 CALL added +$48.81K   PUT unwind -$10.47K  CE_OI=$5.89M PE_OI=$183.68K
+pcr8 =  BTC-82000   0.08   0.06 CALL added +$132.85K   PUT added +$7.77K  CE_OI=$10.07M PE_OI=$778.95K
+pcr9 =  BTC-81800   0.11   1.62 CALL added +$86.69K   PUT added +$140.67K  CE_OI=$7.00M PE_OI=$776.97K <== ATM
+pcr10 =  BTC-81600   0.73   1.98 CALL unwind -$28.29K   PUT unwind -$55.96K  CE_OI=$5.39M PE_OI=$3.92M
+pcr11 =  BTC-81400   1.19   16.75 CALL unwind -$61.89K   PUT unwind -$1.04M  CE_OI=$2.43M PE_OI=$2.89M
+pcr12 =  BTC-81200   9.54   5.42 CALL added +$37.22K   PUT added +$201.79K  CE_OI=$216.26K PE_OI=$2.07M
+pcr13 =  BTC-81000   2.81   1.83 CALL added +$23.79K   PUT added +$43.51K  CE_OI=$1.47M PE_OI=$4.12M
+pcr14 =  BTC-80800   6.44   11.60 CALL unwind -$817.58   PUT unwind -$9.49K  CE_OI=$182.07K PE_OI=$1.17M
+pcr15 =  BTC-80600   7.85   59.67 CALL added +$6.22K   PUT added +$371.08K  CE_OI=$193.34K PE_OI=$1.52M
+pcr16 =  BTC-80400   54.48   nan CALL unwind +$0.00   PUT added +$319.03K  CE_OI=$31.51K PE_OI=$1.72M
+pcr17 =  BTC-80200   29.51   87.98 CALL added +$4.09K   PUT added +$359.93K  CE_OI=$55.08K PE_OI=$1.63M
+PCRSUM== 112.93
+
+AVG_OIPCR_9STRIKE= 0.34  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81746.50
+BTC PERP/FUT (BTCUSD)  = 81709.00
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81600: 81800}
+avgOiPcrList2  = [0.3769] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.3769)
+avgOiPcr9List2 = [0.3358] atmStrikeNotShiftedCount= 1  (central 9, curr=0.3358)
+==== PCR trend check 2026-10-20 19:18:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.3877, 0.3541, 0.3358]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.397, 0.3736, 0.3769]  (full 17, re-measured on current strikes)
+9_SEQ_DEC_InvariantWindow: 0.3877 -> 0.3541 -> 0.3358 | step1 -8.66% | step2 -5.16%
+is9PcrDecr_InvariantWindow = True  (streak=2 consecutive cycle(s) falling)
+is9PcrDecr_InvariantWindow_MinMove = True  (smallest step 5.16% vs 0.10% threshold -> meaningful)
+17_SEQ_FLAT_InvariantWindow: 0.3970 -> 0.3736 -> 0.3769 (not monotonic)
+TOTAL_PCR (full chain) = 0.6910  [total CE_OI= $135.98M  total PE_OI= $94.05M]
+totalPcrList = [0.6873, 0.692, 0.691]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6873 -> 0.6920 -> 0.6910 (not monotonic)
+SUPP_RES=== 81800.00 role=RESISTANCE (nearest listed strike to spot 81746.50; 500 line 81500.00 had no OI) no_trade=[81500.00, 81500.00] | spot below level => RESISTANCE => look for BEAR trade
+SR_FALLBACK: 500 line 81500 is not a listed strike; nearest listed strike to spot 81746.50 is 81800 (54 away)
+CEoich val =  +$4.59M  PEoich val =  +$300.23K , CE > PE by 93.5%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 81800 (S/R line 81500)): CE= $7.00M  PE= $776.97K , CE > PE by 88.9%
+SR_NEIGHBOUR TOTAL OI (strike 81400, other side of S/R line 81500): CE= $2.43M  PE= $2.89M , CE < PE by 15.9%  [monitor-only]
+SR_GREEKS (strike 81800): CE[delta=0.4887 gamma=0.000329 theta=-261.30 vega=16.41 iv=0.29] | PE[delta=-0.5117 gamma=0.000338 theta=-253.94 vega=16.41 iv=0.29]
+INCR_CHOI: SUPP_RES=81800 role=RESISTANCE fresh_CE=+$86.69K fresh_PE=+$140.67K -> PE_dominant by 38.3% (resistance CHALLENGED (bullish warning)) | cumulative CE=+$4.59M PE=+$300.23K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:18:00 IST ====
+PCR17_INVARIANT gate: inc=False (streak=0 minmove=False) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=False bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=81800.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=56.2 PEoich=3.7 choi_valid=True choi_pct=93.5% | CE_total=85.6 PE_total=9.5 oi_pct=88.9%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=1.7 | isCE_DomRes_once=False (streak=0) fresh_CE=1.1
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1332 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=pcr17_invariant_run(streak>=1+minmove)
+
+PCR_TREND [2026-10-20 19:18:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.4345 curr_pcr=0.3358
+
+ENTRY_SKIPPED [2026-10-20 19:18:00 IST] no live entry: no_sensex_signal(pcr17_invariant_run(streak>=1+minmove)) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:18:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 19:21:00 IST] index(.DEXBTUSD)=81845.80 perp(BTCUSD)=81810.00 atm_strike=81800 pcr=0.3516 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:21:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83400   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$1.42M PE_OI=$17.92K
+pcr2 =  BTC-83200   0.01   -0.00 CALL unwind -$5.73K   PUT unwind +$0.00  CE_OI=$2.57M PE_OI=$21.86K
+pcr3 =  BTC-83000   0.02   0.78 CALL added +$36.27K   PUT added +$28.18K  CE_OI=$5.82M PE_OI=$121.50K
+pcr4 =  BTC-82800   0.09   -0.24 CALL added +$8.11K   PUT unwind -$1.97K  CE_OI=$1.69M PE_OI=$151.06K
+pcr5 =  BTC-82600   0.02   0.10 CALL unwind -$28.41K   PUT unwind -$2.87K  CE_OI=$5.87M PE_OI=$120.82K
+pcr6 =  BTC-82400   0.01   0.00 CALL added +$183.82K   PUT unwind +$0.00  CE_OI=$6.19M PE_OI=$42.36K
+pcr7 =  BTC-82200   0.05   -1.21 CALL unwind -$66.75K   PUT added +$80.68K  CE_OI=$5.84M PE_OI=$264.57K
+pcr8 =  BTC-82000   0.09   0.39 CALL added +$256.92K   PUT added +$100.15K  CE_OI=$10.34M PE_OI=$879.74K
+pcr9 =  BTC-81800   0.17   -5.49 CALL unwind -$76.28K   PUT added +$418.61K  CE_OI=$6.93M PE_OI=$1.20M <== ATM
+pcr10 =  BTC-81600   0.78   0.25 CALL unwind -$512.32K   PUT unwind -$127.61K  CE_OI=$4.89M PE_OI=$3.80M
+pcr11 =  BTC-81400   1.29   -0.65 CALL unwind -$128.22K   PUT added +$83.50K  CE_OI=$2.31M PE_OI=$2.98M
+pcr12 =  BTC-81200   10.00   -3.79 CALL unwind -$7.13K   PUT added +$27.02K  CE_OI=$209.56K PE_OI=$2.09M
+pcr13 =  BTC-81000   2.86   0.65 CALL unwind -$35.63K   PUT unwind -$23.09K  CE_OI=$1.44M PE_OI=$4.10M
+pcr14 =  BTC-80800   7.38   -26.29 CALL unwind -$5.08K   PUT added +$133.54K  CE_OI=$177.32K PE_OI=$1.31M
+pcr15 =  BTC-80600   7.83   0.33 CALL added +$491.81   PUT added +$163.86  CE_OI=$194.18K PE_OI=$1.52M
+pcr16 =  BTC-80400   61.90   -52.40 CALL unwind -$2.05K   PUT added +$107.25K  CE_OI=$29.48K PE_OI=$1.82M
+pcr17 =  BTC-80200   30.41   nan CALL unwind +$0.00   PUT added +$49.46K  CE_OI=$55.08K PE_OI=$1.68M
+PCRSUM== 122.92
+
+AVG_OIPCR_9STRIKE= 0.35  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81845.80
+BTC PERP/FUT (BTCUSD)  = 81810.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {81800: 81800}
+avgOiPcrList2  = [0.3769, 0.3951] atmStrikeNotShiftedCount= 2  (full 17 strikes, curr=0.3951)
+avgOiPcr9List2 = [0.3358, 0.3516] atmStrikeNotShiftedCount= 2  (central 9, curr=0.3516)
+==== PCR trend check 2026-10-20 19:21:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.3541, 0.3358, 0.3516]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.3736, 0.3769, 0.3951]  (full 17, re-measured on current strikes)
+9_SEQ_FLAT_InvariantWindow: 0.3541 -> 0.3358 -> 0.3516 (not monotonic)
+17_SEQ_INC_InvariantWindow: 0.3736 -> 0.3769 -> 0.3951 | step1 +0.9% | step2 +4.82%
+is17PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 0.90% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6665  [total CE_OI= $137.40M  total PE_OI= $91.60M]
+totalPcrList = [0.692, 0.691, 0.6665]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_DEC: 0.6920 -> 0.6910 -> 0.6665 | step1 -0.14% | step2 -3.55%
+isTotalPcrDecr = True  (streak=1 consecutive cycle(s) falling)
+isTotalPcrDecr_MinMove = True  (smallest step 0.14% vs 0.10% threshold -> meaningful)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+SUPP_RES=== 82000.00 role=RESISTANCE (nearest 500 to spot 81845.80) no_trade=[82000.00, 82000.00] | spot below level => RESISTANCE => look for BEAR trade
+CEoich val =  +$5.22M  PEoich val =  +$225.93K , CE > PE by 95.7%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 82000): CE= $10.34M  PE= $879.74K , CE > PE by 91.5%
+SR_GREEKS (strike 82000): CE[delta=0.4533 gamma=0.000333 theta=-255.69 vega=16.31 iv=0.29] | PE[delta=-0.5480 gamma=0.000341 theta=-249.26 vega=16.30 iv=0.28]
+INCR_CHOI: SUPP_RES=82000 role=RESISTANCE fresh_CE=+$256.92K fresh_PE=+$100.15K -> CE_dominant by 61.0% (resistance HOLDING (bearish)) | cumulative CE=+$5.22M PE=+$225.93K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:21:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=1 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=82000.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=63.8 PEoich=2.8 choi_valid=True choi_pct=95.7% | CE_total=126.3 PE_total=10.7 oi_pct=91.5%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=True | isPE_DomSupp_once=False (streak=0) fresh_PE=1.2 | isCE_DomRes_once=True (streak=1) fresh_CE=3.1
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1329 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=no_logic_mode_qualified
+
+PCR_TREND [2026-10-20 19:21:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.3358 curr_pcr=0.3516
+
+ENTRY_SKIPPED [2026-10-20 19:21:00 IST] no live entry: no_sensex_signal(no_logic_mode_qualified) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:21:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 19:24:00 IST] index(.DEXBTUSD)=81937.10 perp(BTCUSD)=81902.50 atm_strike=82000 pcr=0.2723 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:24:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83600   0.02   0.02 CALL added +$2.65M   PUT added +$49.58K  CE_OI=$2.65M PE_OI=$49.58K
+pcr2 =  BTC-83400   0.01   0.00 CALL added +$11.31K   PUT unwind +$0.00  CE_OI=$1.44M PE_OI=$17.92K
+pcr3 =  BTC-83200   0.01   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$2.57M PE_OI=$21.86K
+pcr4 =  BTC-83000   0.02   0.02 CALL added +$131.75K   PUT added +$2.05K  CE_OI=$5.96M PE_OI=$123.55K
+pcr5 =  BTC-82800   0.09   -0.00 CALL unwind -$18.50K   PUT unwind +$0.00  CE_OI=$1.67M PE_OI=$151.06K
+pcr6 =  BTC-82600   0.02   0.04 CALL added +$93.29K   PUT added +$3.36K  CE_OI=$5.97M PE_OI=$124.07K
+pcr7 =  BTC-82400   0.02   501.50 CALL added +$163.71   PUT added +$82.11K  CE_OI=$6.19M PE_OI=$124.43K
+pcr8 =  BTC-82200   0.04   -0.04 CALL added +$21.87K   PUT unwind -$983.36  CE_OI=$5.86M PE_OI=$263.70K
+pcr9 =  BTC-82000   0.09   -0.89 CALL unwind -$46.71K   PUT added +$41.79K  CE_OI=$10.30M PE_OI=$922.16K <== ATM
+pcr10 =  BTC-81800   0.18   0.55 CALL added +$85.13K   PUT added +$46.79K  CE_OI=$7.02M PE_OI=$1.24M
+pcr11 =  BTC-81600   0.85   -0.11 CALL unwind -$365.19K   PUT added +$40.89K  CE_OI=$4.52M PE_OI=$3.84M
+pcr12 =  BTC-81400   1.39   -4.24 CALL unwind -$40.31K   PUT added +$171.11K  CE_OI=$2.27M PE_OI=$3.15M
+pcr13 =  BTC-81200   7.42   1.10 CALL added +$85.31K   PUT added +$93.87K  CE_OI=$294.85K PE_OI=$2.19M
+pcr14 =  BTC-81000   6.89   -0.31 CALL unwind -$803.74K   PUT added +$246.04K  CE_OI=$631.62K PE_OI=$4.35M
+pcr15 =  BTC-80800   6.94   -7.03 CALL added +$5.65K   PUT unwind -$39.71K  CE_OI=$183.02K PE_OI=$1.27M
+pcr16 =  BTC-80600   7.83   nan CALL unwind +$0.00   PUT unwind +$0.00  CE_OI=$194.18K PE_OI=$1.52M
+pcr17 =  BTC-80400   62.26   nan CALL unwind +$0.00   PUT added +$10.65K  CE_OI=$29.47K PE_OI=$1.84M
+PCRSUM== 94.08
+
+AVG_OIPCR_9STRIKE= 0.27  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81937.10
+BTC PERP/FUT (BTCUSD)  = 81902.50
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {81800: 82000}
+avgOiPcrList2  = [0.367] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.3670)
+avgOiPcr9List2 = [0.2723] atmStrikeNotShiftedCount= 1  (central 9, curr=0.2723)
+==== PCR trend check 2026-10-20 19:24:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.2452, 0.2603, 0.2723]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.3352, 0.3501, 0.367]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.2452 -> 0.2603 -> 0.2723 | step1 +6.16% | step2 +4.59%
+is9PcrInc_InvariantWindow = True  (streak=1 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 4.59% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.3352 -> 0.3501 -> 0.3670 | step1 +4.44% | step2 +4.83%
+is17PcrInc_InvariantWindow = True  (streak=2 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 4.44% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6766  [total CE_OI= $137.80M  total PE_OI= $93.29M]
+totalPcrList = [0.691, 0.6665, 0.6766]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6910 -> 0.6665 -> 0.6766 (not monotonic)
+SUPP_RES=== 82000.00 role=RESISTANCE (nearest 500 to spot 81937.10) no_trade=[82000.00, 82000.00] | spot below level => RESISTANCE => look for BEAR trade
+CEoich val =  +$5.18M  PEoich val =  +$267.89K , CE > PE by 94.8%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 82000): CE= $10.30M  PE= $922.16K , CE > PE by 91.0%
+SR_GREEKS (strike 82000): CE[delta=0.4830 gamma=0.000337 theta=-255.62 vega=16.41 iv=0.29] | PE[delta=-0.5176 gamma=0.000346 theta=-249.15 vega=16.40 iv=0.28]
+INCR_CHOI: SUPP_RES=82000 role=RESISTANCE fresh_CE=-$46.71K fresh_PE=+$41.79K -> PE_dominant by 189.5% (resistance CHALLENGED (bullish warning)) | cumulative CE=+$5.18M PE=+$267.89K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:24:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=2 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=82000.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=63.2 PEoich=3.3 choi_valid=True choi_pct=94.8% | CE_total=125.7 PE_total=11.3 oi_pct=91.0%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.5 | isCE_DomRes_once=False (streak=0) fresh_CE=-0.6
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1326 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=no_logic_mode_qualified
+
+PCR_TREND [2026-10-20 19:24:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.3516 curr_pcr=0.2723
+
+ENTRY_SKIPPED [2026-10-20 19:24:00 IST] no live entry: no_sensex_signal(no_logic_mode_qualified) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:24:00 IST] waiting 179.4s for next 3-min candle close.
+SIGNAL [2026-10-20 19:27:00 IST] index(.DEXBTUSD)=81906.30 perp(BTCUSD)=81872.00 atm_strike=82000 pcr=0.2832 bias=BEAR position=resistance_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:27:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83600   0.02   0.00 CALL added +$48.24K   PUT unwind +$0.00  CE_OI=$2.70M PE_OI=$49.57K
+pcr2 =  BTC-83400   0.01   -0.18 CALL added +$35.57K   PUT unwind -$6.56K  CE_OI=$1.47M PE_OI=$11.39K
+pcr3 =  BTC-83200   0.01   -0.00 CALL unwind -$8.19K   PUT unwind +$0.00  CE_OI=$2.56M PE_OI=$21.86K
+pcr4 =  BTC-83000   0.02   0.00 CALL added +$50.95K   PUT unwind +$0.00  CE_OI=$6.01M PE_OI=$123.54K
+pcr5 =  BTC-82800   0.09   1.33 CALL added +$245.79   PUT added +$327.68  CE_OI=$1.68M PE_OI=$151.39K
+pcr6 =  BTC-82600   0.02   0.01 CALL added +$15.97K   PUT added +$81.90  CE_OI=$5.98M PE_OI=$124.24K
+pcr7 =  BTC-82400   0.02   0.08 CALL unwind -$97.10K   PUT unwind -$8.19K  CE_OI=$6.10M PE_OI=$116.28K
+pcr8 =  BTC-82200   0.04   0.00 CALL added +$58.49K   PUT unwind +$0.00  CE_OI=$5.92M PE_OI=$263.49K
+pcr9 =  BTC-82000   0.10   -0.00 CALL unwind -$611.44K   PUT added +$2.21K  CE_OI=$9.69M PE_OI=$923.76K <== ATM
+pcr10 =  BTC-81800   0.21   -4.18 CALL unwind -$46.11K   PUT added +$192.59K  CE_OI=$6.97M PE_OI=$1.44M
+pcr11 =  BTC-81600   0.93   0.20 CALL unwind -$500.70K   PUT unwind -$99.53K  CE_OI=$4.02M PE_OI=$3.74M
+pcr12 =  BTC-81400   1.53   0.18 CALL unwind -$241.13K   PUT unwind -$43.26K  CE_OI=$2.03M PE_OI=$3.11M
+pcr13 =  BTC-81200   7.54   nan CALL unwind +$0.00   PUT added +$35.88K  CE_OI=$294.67K PE_OI=$2.22M
+pcr14 =  BTC-81000   7.99   -1.42 CALL unwind -$74.01K   PUT added +$105.20K  CE_OI=$557.89K PE_OI=$4.46M
+pcr15 =  BTC-80800   10.51   -0.10 CALL unwind -$61.66K   PUT added +$6.14K  CE_OI=$121.27K PE_OI=$1.28M
+pcr16 =  BTC-80600   7.82   nan CALL unwind +$0.00   PUT unwind -$1.39K  CE_OI=$194.18K PE_OI=$1.52M
+pcr17 =  BTC-80400   63.76   nan CALL unwind +$0.00   PUT added +$44.08K  CE_OI=$29.47K PE_OI=$1.88M
+PCRSUM== 100.62
+
+AVG_OIPCR_9STRIKE= 0.28  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 81906.30
+BTC PERP/FUT (BTCUSD)  = 81872.00
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {82000: 82000}
+avgOiPcrList2  = [0.367, 0.3804] atmStrikeNotShiftedCount= 2  (full 17 strikes, curr=0.3804)
+avgOiPcr9List2 = [0.2723, 0.2832] atmStrikeNotShiftedCount= 2  (central 9, curr=0.2832)
+==== PCR trend check 2026-10-20 19:27:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.2603, 0.2723, 0.2832]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.3501, 0.367, 0.3804]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.2603 -> 0.2723 -> 0.2832 | step1 +4.59% | step2 +4.02%
+is9PcrInc_InvariantWindow = True  (streak=2 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 4.02% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.3501 -> 0.3670 -> 0.3804 | step1 +4.83% | step2 +3.64%
+is17PcrInc_InvariantWindow = True  (streak=3 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 3.64% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.6835  [total CE_OI= $136.40M  total PE_OI= $93.25M]
+totalPcrList = [0.6665, 0.6766, 0.6835]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6665 -> 0.6766 -> 0.6835 | step1 +1.52% | step2 +1.02%
+isTotalPcrInc = True  (streak=1 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = True  (smallest step 1.02% vs 0.10% threshold -> meaningful)
+
+PCR17_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+PCR9_DOMINANCE: PE_dominant (PCR rising) once=True twice=False thrice=False (up_streak=1)
+SUPP_RES=== 82000.00 role=RESISTANCE (nearest 500 to spot 81906.30) no_trade=[82000.00, 82000.00] | spot below level => RESISTANCE => look for BEAR trade
+CEoich val =  +$4.57M  PEoich val =  +$269.92K , CE > PE by 94.1%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 82000): CE= $9.69M  PE= $923.76K , CE > PE by 90.5%
+SR_GREEKS (strike 82000): CE[delta=0.4699 gamma=0.000339 theta=-254.25 vega=16.35 iv=0.29] | PE[delta=-0.5310 gamma=0.000347 theta=-247.87 vega=16.34 iv=0.28]
+INCR_CHOI: SUPP_RES=82000 role=RESISTANCE fresh_CE=-$611.44K fresh_PE=+$2.21K -> PE_dominant by 100.4% (resistance CHALLENGED (bullish warning)) | cumulative CE=+$4.57M PE=+$269.92K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:27:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=3 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=False below=True (SUPP_RES=82000.00 role=RESISTANCE) -> bull_mandatory=False bear_mandatory=False
+CHOI/OI at S/R: CEoich=55.8 PEoich=3.3 choi_valid=True choi_pct=94.1% | CE_total=118.2 PE_total=11.3 oi_pct=90.5%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.0 | isCE_DomRes_once=False (streak=0) fresh_CE=-7.5
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1323 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=no_logic_mode_qualified
+
+PCR_TREND [2026-10-20 19:27:00 IST] direction=up consecutive_cycles=1 prev_pcr=0.2723 curr_pcr=0.2832
+
+ENTRY_SKIPPED [2026-10-20 19:27:00 IST] no live entry: no_sensex_signal(no_logic_mode_qualified) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:27:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 19:30:00 IST] index(.DEXBTUSD)=82141.70 perp(BTCUSD)=82102.00 atm_strike=82200 pcr=0.3444 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx2 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:30:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-83800   0.00   0.00 CALL added +$5.37M   PUT added +$13.52K  CE_OI=$5.37M PE_OI=$13.52K
+pcr2 =  BTC-83600   0.01   nan CALL unwind +$0.00   PUT unwind -$17.01K  CE_OI=$2.70M PE_OI=$32.70K
+pcr3 =  BTC-83400   0.01   -0.00 CALL unwind -$41.88K   PUT unwind +$0.00  CE_OI=$1.44M PE_OI=$11.39K
+pcr4 =  BTC-83200   0.01   -0.00 CALL unwind -$23.99K   PUT unwind +$0.00  CE_OI=$2.54M PE_OI=$21.86K
+pcr5 =  BTC-83000   0.02   0.03 CALL unwind -$717.16K   PUT unwind -$24.63K  CE_OI=$5.31M PE_OI=$99.16K
+pcr6 =  BTC-82800   0.02   73.68 CALL unwind -$1.56K   PUT unwind -$114.95K  CE_OI=$1.68M PE_OI=$36.78K
+pcr7 =  BTC-82600   0.06   -0.00 CALL unwind -$3.78M   PUT added +$1.97K  CE_OI=$2.22M PE_OI=$126.59K
+pcr8 =  BTC-82400   0.06   -0.00 CALL unwind -$4.14M   PUT unwind +$0.00  CE_OI=$1.97M PE_OI=$116.63K
+pcr9 =  BTC-82200   0.13   0.00 CALL unwind -$3.92M   PUT unwind -$1.56K  CE_OI=$2.01M PE_OI=$262.83K <== ATM
+pcr10 =  BTC-82000   0.23   -0.09 CALL unwind -$4.05M   PUT added +$355.58K  CE_OI=$5.67M PE_OI=$1.28M
+pcr11 =  BTC-81800   0.29   -0.59 CALL unwind -$703.90K   PUT added +$411.97K  CE_OI=$6.29M PE_OI=$1.85M
+pcr12 =  BTC-81600   0.94   0.76 CALL unwind -$153.34K   PUT unwind -$116.51K  CE_OI=$3.88M PE_OI=$3.63M
+pcr13 =  BTC-81400   2.02   -0.00 CALL unwind -$489.03K   PUT added +$2.22K  CE_OI=$1.54M PE_OI=$3.12M
+pcr14 =  BTC-81200   8.26   -7.44 CALL unwind -$13.47K   PUT added +$100.21K  CE_OI=$282.15K PE_OI=$2.33M
+pcr15 =  BTC-81000   8.15   -78.08 CALL unwind -$1.07K   PUT added +$83.40K  CE_OI=$558.12K PE_OI=$4.55M
+pcr16 =  BTC-80800   11.83   -0.59 CALL unwind -$12.89K   PUT added +$7.64K  CE_OI=$108.73K PE_OI=$1.29M
+pcr17 =  BTC-80600   8.36   1.59 CALL unwind -$15.44K   PUT unwind -$24.57K  CE_OI=$179.08K PE_OI=$1.50M
+PCRSUM== 40.40
+
+AVG_OIPCR_9STRIKE= 0.34  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 82141.70
+BTC PERP/FUT (BTCUSD)  = 82102.00
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {82000: 82200}
+avgOiPcrList2  = [0.4634] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.4634)
+avgOiPcr9List2 = [0.3444] atmStrikeNotShiftedCount= 1  (central 9, curr=0.3444)
+==== PCR trend check 2026-10-20 19:30:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.1998, 0.2064, 0.3444]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.3074, 0.3183, 0.4634]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.1998 -> 0.2064 -> 0.3444 | step1 +3.29% | step2 +66.88%
+is9PcrInc_InvariantWindow = True  (streak=3 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 3.29% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.3074 -> 0.3183 -> 0.4634 | step1 +3.57% | step2 +45.57%
+is17PcrInc_InvariantWindow = True  (streak=4 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 3.57% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7637  [total CE_OI= $122.19M  total PE_OI= $93.31M]
+totalPcrList = [0.6766, 0.6835, 0.7637]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_INC: 0.6766 -> 0.6835 -> 0.7637 | step1 +1.02% | step2 +11.72%
+isTotalPcrInc = True  (streak=2 consecutive cycle(s) rising)
+isTotalPcrInc_MinMove = True  (smallest step 1.02% vs 0.10% threshold -> meaningful)
+SUPP_RES=== 82000.00 role=SUPPORT (nearest 500 to spot 82141.70) no_trade=[82000.00, 82000.00] | spot above level => SUPPORT => look for BULL trade
+CEoich val =  +$535.99K  PEoich val =  +$626.30K , CE < PE by 14.4%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 82000): CE= $5.67M  PE= $1.28M , CE > PE by 77.4%
+SR_GREEKS (strike 82000): CE[delta=0.5559 gamma=0.000347 theta=-245.19 vega=16.26 iv=0.28] | PE[delta=-0.4428 gamma=0.000356 theta=-238.91 vega=16.26 iv=0.27]
+INCR_CHOI: SUPP_RES=82000 role=SUPPORT fresh_CE=-$4.05M fresh_PE=+$355.58K -> PE_dominant by 108.8% (support HOLDING (bullish)) | cumulative CE=+$535.99K PE=+$626.30K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:30:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=4 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=82000.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=6.5 PEoich=7.6 choi_valid=True choi_pct=14.4% | CE_total=69.0 PE_total=15.6 oi_pct=77.4%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=False bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=True bear_ok=False | isPE_DomSupp_once=True (streak=1) fresh_PE=4.3 | isCE_DomRes_once=False (streak=0) fresh_CE=-49.2
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1320 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=no_logic_mode_qualified
+
+PCR_TREND [2026-10-20 19:30:00 IST] direction=up consecutive_cycles=2 prev_pcr=0.2832 curr_pcr=0.3444
+
+ENTRY_SKIPPED [2026-10-20 19:30:00 IST] no live entry: no_sensex_signal(no_logic_mode_qualified) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:30:00 IST] waiting 179.3s for next 3-min candle close.
+SIGNAL [2026-10-20 19:33:00 IST] index(.DEXBTUSD)=82442.10 perp(BTCUSD)=82408.00 atm_strike=82400 pcr=0.3019 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=downx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:33:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84000   0.00   0.00 CALL added +$18.84M   PUT added +$64.87K  CE_OI=$18.84M PE_OI=$64.87K
+pcr2 =  BTC-83800   0.00   0.00 CALL added +$293.34K   PUT unwind +$0.00  CE_OI=$5.68M PE_OI=$13.52K
+pcr3 =  BTC-83600   0.02   -0.01 CALL unwind -$404.67K   PUT added +$4.20K  CE_OI=$2.31M PE_OI=$36.97K
+pcr4 =  BTC-83400   0.00   0.00 CALL added +$970.76K   PUT unwind +$0.00  CE_OI=$2.41M PE_OI=$11.39K
+pcr5 =  BTC-83200   0.01   0.10 CALL added +$8.81K   PUT added +$905.98  CE_OI=$2.56M PE_OI=$22.90K
+pcr6 =  BTC-83000   0.04   -0.19 CALL unwind -$399.46K   PUT added +$75.13K  CE_OI=$4.93M PE_OI=$174.64K
+pcr7 =  BTC-82800   0.13   8.77 CALL added +$21.18K   PUT added +$185.64K  CE_OI=$1.70M PE_OI=$222.56K
+pcr8 =  BTC-82600   0.06   0.02 CALL unwind -$371.95K   PUT unwind -$7.66K  CE_OI=$1.86M PE_OI=$119.24K
+pcr9 =  BTC-82400   0.03   0.00 CALL added +$1.65M   PUT added +$6.68K  CE_OI=$3.63M PE_OI=$123.73K <== ATM
+pcr10 =  BTC-82200   0.50   14.13 CALL added +$54.57K   PUT added +$771.03K  CE_OI=$2.07M PE_OI=$1.03M
+pcr11 =  BTC-82000   0.48   -0.84 CALL unwind -$1.11M   PUT added +$931.26K  CE_OI=$4.58M PE_OI=$2.22M
+pcr12 =  BTC-81800   0.31   0.13 CALL unwind -$475.86K   PUT unwind -$59.93K  CE_OI=$5.84M PE_OI=$1.80M
+pcr13 =  BTC-81600   1.01   0.26 CALL unwind -$400.53K   PUT unwind -$102.67K  CE_OI=$3.49M PE_OI=$3.54M
+pcr14 =  BTC-81400   3.11   0.22 CALL unwind -$583.34K   PUT unwind -$126.40K  CE_OI=$965.05K PE_OI=$3.00M
+pcr15 =  BTC-81200   8.92   -2.96 CALL unwind -$15.65K   PUT added +$46.33K  CE_OI=$267.15K PE_OI=$2.38M
+pcr16 =  BTC-81000   9.16   71.55 CALL added +$9.06K   PUT added +$648.62K  CE_OI=$568.88K PE_OI=$5.21M
+pcr17 =  BTC-80800   13.65   -205.00 CALL unwind -$906.70   PUT added +$185.81K  CE_OI=$108.23K PE_OI=$1.48M
+PCRSUM== 37.43
+
+AVG_OIPCR_9STRIKE= 0.30  (central 9 strikes, Req 9.7)
+BTC SPOT (.DEXBTUSD)   = 82442.10
+BTC PERP/FUT (BTCUSD)  = 82408.00
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {82200: 82400}
+avgOiPcrList2  = [0.3473] atmStrikeNotShiftedCount= 1  (full 17 strikes, curr=0.3473)
+avgOiPcr9List2 = [0.3019] atmStrikeNotShiftedCount= 1  (central 9, curr=0.3019)
+==== PCR trend check 2026-10-20 19:33:00 IST ====
+avgOiPcr9List2_InvariantWindow  = [0.141, 0.2354, 0.3019]  (central 9, re-measured on current strikes)
+avgOiPcrList2_InvariantWindow   = [0.238, 0.3072, 0.3473]  (full 17, re-measured on current strikes)
+9_SEQ_INC_InvariantWindow: 0.1410 -> 0.2354 -> 0.3019 | step1 +66.9% | step2 +28.29%
+is9PcrInc_InvariantWindow = True  (streak=4 consecutive cycle(s) rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 28.29% vs 0.10% threshold -> meaningful)
+17_SEQ_INC_InvariantWindow: 0.2380 -> 0.3072 -> 0.3473 | step1 +29.03% | step2 +13.06%
+is17PcrInc_InvariantWindow = True  (streak=5 consecutive cycle(s) rising)
+is17PcrInc_InvariantWindow_MinMove = True  (smallest step 13.06% vs 0.10% threshold -> meaningful)
+TOTAL_PCR (full chain) = 0.7414  [total CE_OI= $122.86M  total PE_OI= $91.09M]
+totalPcrList = [0.6835, 0.7637, 0.7414]  (full chain, last 3 cycles)
+TOTAL_PCR_SEQ_FLAT: 0.6835 -> 0.7637 -> 0.7414 (not monotonic)
+SUPP_RES=== 82400.00 role=SUPPORT (nearest listed strike to spot 82442.10; 500 line 82500.00 had no OI) no_trade=[82500.00, 82500.00] | spot above level => SUPPORT => look for BULL trade
+SR_FALLBACK: 500 line 82500 is not a listed strike; nearest listed strike to spot 82442.10 is 82400 (42 away)
+CEoich val =  +$2.96M  PEoich val =  +$76.09K , CE > PE by 97.4%  (cumulative since contract start)
+SUPP_RES TOTAL OI (strike 82400 (S/R line 82500)): CE= $3.63M  PE= $123.73K , CE > PE by 96.6%
+SR_NEIGHBOUR TOTAL OI (strike 82600, other side of S/R line 82500): CE= $1.86M  PE= $119.24K , CE > PE by 93.6%  [monitor-only]
+SR_GREEKS (strike 82400): CE[delta=0.5160 gamma=0.000360 theta=-241.05 vega=16.45 iv=0.27] | PE[delta=-0.4837 gamma=0.000371 theta=-234.31 vega=16.45 iv=0.26]
+INCR_CHOI: SUPP_RES=82400 role=SUPPORT fresh_CE=+$1.65M fresh_PE=+$6.68K -> CE_dominant by 99.6% (support UNDERMINED (bearish warning)) | cumulative CE=+$2.96M PE=+$76.09K
+
+==== ENTRY CRITERIA (Sensex-equivalent) 2026-10-20 19:33:00 IST ====
+PCR17_INVARIANT gate: inc=True (streak=5 minmove=True) dec=False (streak=0 minmove=False) min_streak=1 require_minmove=True -> bull_pcr_ok=True bear_pcr_ok=False
+MANDATORY: in_trade_zone=True spot_vs_SR: above=True below=False (SUPP_RES=82400.00 role=SUPPORT) -> bull_mandatory=True bear_mandatory=False
+CHOI/OI at S/R: CEoich=35.9 PEoich=0.9 choi_valid=True choi_pct=97.4% | CE_total=44.0 PE_total=1.5 oi_pct=96.6%
+LOGIC1_MORNING_TRAP (window=False): bull=False bear=False  [CHOI>=15%]
+LOGIC2_TREND_CONVERGENCE: bull=False bear=False  [CHOI>=10%, total OI simply >]
+LOGIC3_CHOI_15PCT (observation-only): bull=True bear=False  [CHOI>=15%]
+ENTRY_MODE = LOGIC3_CHOI_15PCT (tradeable=False)
+CHOI_DOM_GATE: gate_on=True bull_ok=False bear_ok=False | isPE_DomSupp_once=False (streak=0) fresh_PE=0.1 | isCE_DomRes_once=False (streak=0) fresh_CE=20.0
+RISK_GATES: sl_count=1/2 halt=False | mins_to_expiry=1317 cutoff_lead=60min (16:30 IST) after_cutoff=False
+ENTRY_DECISION = NONE (live_eligible=False)  blockers=choi_dominance_bull(need PE dominant, fresh_PE>=0)
+
+PCR_TREND [2026-10-20 19:33:00 IST] direction=down consecutive_cycles=1 prev_pcr=0.3444 curr_pcr=0.3019
+
+ENTRY_SKIPPED [2026-10-20 19:33:00 IST] no live entry: no_sensex_signal(choi_dominance_bull(need PE dominant, fresh_PE>=0)) (dir=None)
+SIGNAL_LOOP [2026-10-20 19:33:00 IST] waiting 179.6s for next 3-min candle close.
+SIGNAL [2026-10-20 19:36:00 IST] index(.DEXBTUSD)=82492.70 perp(BTCUSD)=82459.00 atm_strike=82400 pcr=0.4202 bias=BULL position=support_side pcr_label=PCR_LOW(call-heavy,provisional-bearish) pcr_trend=upx1 expiry=21-10-2026
+====after 3 min ochain==== 2026-10-20 19:36:00 IST
+                                    oipcr   choipcr   CE_OI($) / PE_OI($) (same strike, USD notional ~ Delta UI)
+pcr1 =  BTC-84000   0.00   0.00 CALL added +$455.48K   PUT unwind +$0.00  CE_OI=$19.32M PE_OI=$64.87K
+pcr2 =  BTC-83800   0.00   -0.23 CALL added +$45.20K   PUT unwind -$10.39K  CE_OI=$5.73M PE_OI=$3.30K
+pcr3 =  BTC-83600   0.01   0.70 CALL unwind -$18.89K   PUT unwind -$13.20K  CE_OI=$2.29M PE_OI=$23.84K
+pcr4 =  BTC-83400   0.00   0.00 CALL added +$42.46K   PUT unwind +$0.00  CE_OI=$2.46M PE_OI=$11.39K
+pcr5 =  BTC-83200   0.01   -0.00 CALL unwind -$40.60K   PUT unwind +$0.00  CE_OI=$2.52M PE_OI=$22.90K
+pcr6 =  BTC-83000   0.05   -0.84 CALL unwind -$107.82K   PUT added +$90.35K  CE_OI=$4.82M PE_OI=$265.29K
+pcr7 =  BTC-82800   0.15   -0.26 CALL unwind -$63.29K   PUT added +$16.75K  CE_OI=$1.64M PE_OI=$239.61K
+pcr8 =  BTC-82600   0.09   -0.81 CALL unwind -$50.33K   PUT added +$40.91K  CE_OI=$1.81M PE_OI=$160.35K
