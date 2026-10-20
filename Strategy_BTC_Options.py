@@ -3231,7 +3231,7 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
         if hi is not None and lo is not None and (hi - lo) > 0:
             ranges.append(float(hi - lo))
     if not ranges:
-        return None, 0
+        return None, 0, None
     # Median of ALL available valid ranges — no minimum-candle requirement.
     # Whatever candles exist for this freshly-listed option (even 1) are used;
     # the premium-fraction fallback only applies when there is NO candle at all.
@@ -3242,7 +3242,33 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
         median = ranges_sorted[mid]
     else:
         median = (ranges_sorted[mid - 1] + ranges_sorted[mid]) / 2.0
-    return median, n_used
+    # OHLC of the SAME candles the median was taken over, so the entry log can
+    # be cross-checked against the option chart (Sensex OPT_OHLC_ENTRY).
+    detail = {
+        "ranges": [round(r, 2) for r in ranges],
+        "open": [c.get("open") for c in body],
+        "high": [c.get("high") for c in body],
+        "low": [c.get("low") for c in body],
+        "close": [c.get("close") for c in body],
+    }
+    return median, n_used, detail
+
+
+def _log_opt_range(symbol, label, median, n_used, detail):
+    """Log one leg's candle-range median + the OHLC it came from, in the Sensex
+    OPT_RANGE_DEBUG / OPT_OHLC_ENTRY format so an entry can be replayed against
+    the option chart. No-op when the leg has no candle history."""
+    if detail is None:
+        print("OPT_RANGE_DEBUG: {} symbol={} | no candle history "
+              "(median unavailable)".format(label, symbol))
+        return
+    print("OPT_RANGE_DEBUG: {} symbol={} | candles_after_skip1st={} "
+          "| ranges={} | median_all={}".format(
+              label, symbol, n_used, detail["ranges"], _fmt(median, 2)))
+    print("OPT_OHLC_ENTRY: {} symbol={} | candles={} | open={} | high={} "
+          "| low={} | close={} | median_range={}".format(
+              label, symbol, n_used, detail["open"], detail["high"],
+              detail["low"], detail["close"], _fmt(median, 2)))
 
 
 def select_hedge_by_delta(main_strike, option_type, chain,
@@ -3425,16 +3451,25 @@ def _enrich_chain_greeks(chain, main_strike, option_type, expiry, client):
 
 
 def calc_lots_by_risk(effective_sl_points, main_premium=None,
-                      hedge_premium=None, main_delta=None, hedge_delta=None):
+                      hedge_premium=None, main_delta=None, hedge_delta=None,
+                      main_range=None, hedge_range=None):
     """
     Size contracts so an SL-hit loses ~= FIXED_RISK_PER_TRADE USD, NET of the
     hedge (Sensex calc_lots_by_risk). The hedge offsets part of the short-leg
-    loss; the offset ratio is picked DELTA-first, then premium, then none:
+    loss; the offset ratio is picked DELTA -> RANGE -> PREMIUM -> none, the same
+    priority Sensex uses:
 
-        delta_ratio   = |hedge_delta| / |main_delta|     (preferred)
-        premium_ratio = hedge_premium / main_premium     (fallback)
+        delta_ratio   = |hedge_delta| / |main_delta|      (preferred — delta IS
+                        d(price)/d(underlying), the true P&L offset)
+        range_ratio   = hedge_range / main_range          (empirical proxy)
+        premium_ratio = hedge_premium / main_premium       (last resort; it
+                        systematically UNDER-states the offset)
         net_sl_points = effective_sl * (1 - clamped_ratio)
         lots          = FIXED_RISK / (net_sl_points * CONTRACT_VALUE)
+
+    All candidate ratios are logged every time (HEDGE_OFFSET), even the unused
+    ones, so DELTA vs RANGE vs PREMIUM stay comparable against the realized
+    offset — exactly like the Sensex log.
 
     Returns ``(lots, offset_ratio, net_sl_points, ratio_source)``. ``lots`` is a
     whole contract count clamped to [MIN_LOTS, MAX_LOTS] with the fractional
@@ -3448,6 +3483,9 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None,
     if (main_delta is not None and hedge_delta is not None
             and abs(main_delta) > 0 and abs(hedge_delta) > 0):
         delta_ratio = abs(hedge_delta) / abs(main_delta)
+    range_ratio = None
+    if (main_range and hedge_range and main_range > 0 and hedge_range > 0):
+        range_ratio = hedge_range / main_range
     premium_ratio = None
     if (main_premium and hedge_premium and main_premium > 0
             and 0 < hedge_premium < main_premium):
@@ -3455,6 +3493,8 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None,
 
     if delta_ratio is not None:
         raw_ratio, source = delta_ratio, "DELTA"
+    elif range_ratio is not None:
+        raw_ratio, source = range_ratio, "RANGE"
     elif premium_ratio is not None:
         raw_ratio, source = premium_ratio, "PREMIUM"
     else:
@@ -3467,6 +3507,17 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None,
                            min(raw_ratio, HEDGE_OFFSET_RATIO_MAX))
         net_sl_points = effective_sl_points * (1 - offset_ratio)
 
+    print("HEDGE_OFFSET: source={src} used_ratio={used} raw={raw} "
+          "| delta_ratio={d} range_ratio={r} premium_ratio={p} "
+          "| (main_delta={md} hedge_delta={hd} main_range={mr} "
+          "hedge_range={hr}) effective_sl={esl} -> net_sl_points={nsl}".format(
+              src=source, used=_fmt(offset_ratio, 3), raw=_fmt(raw_ratio, 3),
+              d=_fmt(delta_ratio, 3), r=_fmt(range_ratio, 3),
+              p=_fmt(premium_ratio, 3), md=_fmt(main_delta, 4),
+              hd=_fmt(hedge_delta, 4), mr=_fmt(main_range, 2),
+              hr=_fmt(hedge_range, 2), esl=_fmt(effective_sl_points, 2),
+              nsl=_fmt(net_sl_points, 2)))
+
     if net_sl_points <= 0:
         return MIN_LOTS, offset_ratio, net_sl_points, source
 
@@ -3478,6 +3529,11 @@ def calc_lots_by_risk(effective_sl_points, main_premium=None,
     frac = raw_lots - int(raw_lots)
     lots = int(raw_lots) + 1 if frac >= LOT_ROUNDUP_FRACTION else int(raw_lots)
     lots = max(MIN_LOTS, min(lots, MAX_LOTS))
+    print("LOT_ROUNDING: raw_lots={raw} frac={f} (roundup>={rf}) -> lots={l} "
+          "| loss_per_lot=${lpl} risk_budget=${rb}".format(
+              raw=_fmt(raw_lots, 3), f=_fmt(frac, 3), rf=LOT_ROUNDUP_FRACTION,
+              l=lots, lpl=_fmt(loss_per_lot, 4),
+              rb=_fmt(FIXED_RISK_PER_TRADE, 2)))
     return lots, offset_ratio, net_sl_points, source
 
 
@@ -3761,8 +3817,18 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     main_premium = _ltp(main_symbol)
     hedge_premium = _ltp(hedge_symbol)
 
+    # ---- Candle-range medians + OHLC for BOTH legs (Sensex entry sequence) --
+    # Order mirrors Sensex: greeks/strikes -> per-leg premium -> MAIN leg range
+    # + OHLC -> HEDGE leg range + OHLC -> offset ratio -> sizing -> SL/target.
+    # Both reads are ENTRY-TIME ONLY (never on the per-cycle path).
+    median_range, n_used, main_detail = option_candle_median_range(
+        main_symbol, client)
+    _log_opt_range(main_symbol, "MAIN ", median_range, n_used, main_detail)
+    hedge_median, hedge_n, hedge_detail = option_candle_median_range(
+        hedge_symbol, client)
+    _log_opt_range(hedge_symbol, "HEDGE", hedge_median, hedge_n, hedge_detail)
+
     # ---- SL/target basis: short-leg candle-range median × multiplier ----
-    median_range, n_used = option_candle_median_range(main_symbol, client)
     if median_range and median_range > 0:
         # --- Guard 1: LOW-SAMPLE median (Sensex LOW_SAMPLE_MEDIAN_HALVED) ---
         # A thin window right after the daily contract roll is all opening
@@ -3822,7 +3888,18 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         lots, offset_ratio, net_sl_points, ratio_source = calc_lots_by_risk(
             effective_sl, main_premium=main_premium,
             hedge_premium=hedge_premium, main_delta=main_delta,
-            hedge_delta=hedge_delta)
+            hedge_delta=hedge_delta, main_range=median_range,
+            hedge_range=hedge_median)
+        print("RISK_SIZING: effective_sl={esl} main={mp} hedge={hp} "
+              "main_range={mr} hedge_range={hr} FIXED_RISK=${fr} "
+              "contract_value={cv} -> lots={l} (net_sl={nsl} -> "
+              "modelled_risk=${mrisk})".format(
+                  esl=_fmt(effective_sl, 2), mp=_fmt(main_premium, 2),
+                  hp=_fmt(hedge_premium, 2), mr=_fmt(median_range, 2),
+                  hr=_fmt(hedge_median, 2),
+                  fr=_fmt(FIXED_RISK_PER_TRADE, 2), cv=CONTRACT_VALUE,
+                  l=lots, nsl=_fmt(net_sl_points, 2),
+                  mrisk=_fmt((net_sl_points or 0) * CONTRACT_VALUE * lots, 2)))
     else:
         lots, offset_ratio, net_sl_points, ratio_source = (
             MIN_LOTS, None, None, "none")
@@ -4330,6 +4407,22 @@ def _place_live_entry(client, bias, position, snapshot, index_price,
           "size={}.".format(
               _now_ist(), spread_kind, main_symbol, main_res.get("id"),
               hedge_symbol, hedge_res.get("id"), size))
+    # Sensex ENTRY_SL_TGT: the exact levels the MAIN SELL LEG is now watched on,
+    # so the in-trade heartbeat can be tied straight back to this line. The
+    # legacy (no-plan) path carries no per-trade SL/target, hence the guard.
+    if effective_sl is not None and effective_tgt is not None:
+        _sl_lvl = float(main_entry_px) + float(effective_sl)
+        _tg_lvl = float(main_entry_px) - float(effective_tgt)
+    else:
+        _sl_lvl = _tg_lvl = None
+    print("ENTRY_SL_TGT: spread=CREDIT  EntryPrem={ep}  SL={sl}  Target={tg}  "
+          "AnchorSrc=MAIN_LEG_LTP  SL_Source=OPTION_RANGE(median={m},SLx{sm},"
+          "Tgtx{tm})  lots={l}  net_credit={c}".format(
+              ep=_fmt(main_entry_px, 2), sl=_fmt(_sl_lvl, 2),
+              tg=_fmt(_tg_lvl, 2),
+              m=_fmt((plan or {}).get("median_range"), 2),
+              sm=SL_MULTIPLIER, tm=TARGET_MULTIPLIER, l=size,
+              c=_fmt(entry_credit, 2)))
     return {"ok": True, "opened": True, "open_position": open_position,
             "main_leg": main_res, "hedge_leg": hedge_res}
 
