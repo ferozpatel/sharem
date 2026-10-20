@@ -174,7 +174,10 @@ DAILY_EXPIRY_UTC_HOUR = 12
 # whole strategy is still OBSERVATION_MODE, so these are tuning knobs for later.
 CHOI_MORNING_PCT = 15       # LOGIC1: cumulative-CHOI gap must be >= this (%)
 CHOI_CONVERGE_PCT = 10      # LOGIC2: cumulative-CHOI gap must be >= this (%)
-OI_CONVERGE_PCT = 2         # LOGIC2: total-OI gap must be >= this (%)
+# OI_CONVERGE_PCT retired: LOGIC2's TOTAL-OI leg is now a plain `>` comparison
+# (no percentage-gap requirement). Kept only because oi_pct is still LOGGED so
+# the size of the total-OI gap stays visible for study.
+OI_CONVERGE_PCT = 2         # (unused in the gate; logging/reference only)
 CHOI_TRAP_PCT = 15          # LOGIC3: cumulative-CHOI gap must be >= this (%)
 
 # LOGIC3 is ALWAYS observation-only and never places an order, exactly as in the
@@ -253,7 +256,7 @@ MAX_TRADES_PER_DAY = None
 # Per the user: start live small at $10 net risk/trade for a few days, then
 # scale up. SL multiplier 2.5, target 4.0.
 FIXED_RISK_PER_TRADE = 10.0       # USD risked if the SL is hit (net of hedge)
-SL_MULTIPLIER = 2.5               # effective_sl  = median_range * this
+SL_MULTIPLIER = 2.4               # effective_sl  = median_range * this
 TARGET_MULTIPLIER = 4.0           # effective_tgt = median_range * this
 
 # Delta BTC-option contract spec (from the product catalog AND confirmed against
@@ -320,7 +323,7 @@ MAX_TGT_PREMIUM_FRACTION = 0.70
 # Fallback when a freshly-listed option has no usable candle history yet: size
 # SL/target as a fraction of the entry premium instead of the candle median.
 SL_PREMIUM_FALLBACK_FRACTION = 0.40   # effective_sl  = entry_premium * this
-TGT_PREMIUM_FALLBACK_FRACTION = 0.64  # effective_tgt = entry_premium * this (keeps 2.5:4.0)
+TGT_PREMIUM_FALLBACK_FRACTION = 0.667  # effective_tgt = premium * this (keeps 2.4:4.0 R:R 1.67)
 
 # ---- Order-book liquidity + marketable-limit entry (slippage control) ----
 # Entry orders use a MARKETABLE LIMIT (cross to the touch, capped) instead of a
@@ -2068,13 +2071,18 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
     logic1_bear = (morning and bear_mandatory and (pe_total > ce_total)
                    and (ce_choi > pe_choi and choi_pct >= CHOI_MORNING_PCT))
 
-    # ----- LOGIC2: trend convergence (CHOI >= 10% AND total OI >= 2%) -----
+    # ----- LOGIC2: trend convergence (CHOI >= 10% AND total OI simply >) -----
+    # TOTAL OI is a PLAIN comparison (pe_total > ce_total) — no percentage-gap
+    # requirement. The old `oi_pct >= OI_CONVERGE_PCT` (2%) extra filter is
+    # removed per the user: total OI only has to be on the right side. The
+    # magnitude filter stays on the CHANGE in OI (choi_pct >= 10%), which is
+    # where the directional information actually is.
     logic2_bull = (bull_mandatory
                    and (pe_choi > ce_choi and choi_pct >= CHOI_CONVERGE_PCT)
-                   and (pe_total > ce_total and oi_pct >= OI_CONVERGE_PCT))
+                   and (pe_total > ce_total))
     logic2_bear = (bear_mandatory
                    and (ce_choi > pe_choi and choi_pct >= CHOI_CONVERGE_PCT)
-                   and (ce_total > pe_total and oi_pct >= OI_CONVERGE_PCT))
+                   and (ce_total > pe_total))
 
     # ----- LOGIC3: CHOI trap >= 15% (ALWAYS observation-only) -----
     # Note the deliberate inversion vs LOGIC2: bull wants the CALL side dominant
@@ -2211,9 +2219,9 @@ def log_sensex_entry_criteria(result, sr_level, sr_role, sr_oi, dominance,
     print("LOGIC1_MORNING_TRAP (window={}): bull={} bear={}  [CHOI>={}%]".format(
         r["morning_window"], r["logic1"][0], r["logic1"][1],
         CHOI_MORNING_PCT))
-    print("LOGIC2_TREND_CONVERGENCE: bull={} bear={}  [CHOI>={}%, OI>={}%]"
-          .format(r["logic2"][0], r["logic2"][1], CHOI_CONVERGE_PCT,
-                  OI_CONVERGE_PCT))
+    print("LOGIC2_TREND_CONVERGENCE: bull={} bear={}  [CHOI>={}%, total OI "
+          "simply >]".format(r["logic2"][0], r["logic2"][1],
+                             CHOI_CONVERGE_PCT))
     print("LOGIC3_CHOI_15PCT (observation-only): bull={} bear={}  [CHOI>={}%]"
           .format(r["logic3"][0], r["logic3"][1], CHOI_TRAP_PCT))
     print("ENTRY_MODE = {} (tradeable={})".format(r["mode"],
@@ -5117,8 +5125,8 @@ def startup():
               PCR_ENTRY_STREAK_MIN, PCR_MIN_STEP_PCT, PCR_ENTRY_REQUIRE_MINMOVE))
     print("  logic1_morning       = CHOI >= {}%  (window 17:30-18:03 IST)"
           .format(CHOI_MORNING_PCT))
-    print("  logic2_convergence   = CHOI >= {}% AND total OI >= {}%".format(
-        CHOI_CONVERGE_PCT, OI_CONVERGE_PCT))
+    print("  logic2_convergence   = CHOI >= {}% AND total OI on the right side "
+          "(plain >, no % gap)".format(CHOI_CONVERGE_PCT))
     print("  logic3_choi_trap     = CHOI >= {}%  (observation-only={})".format(
         CHOI_TRAP_PCT, LOGIC3_OBSERVATION_ONLY))
     print("  choi_dominance_gate  = {}".format(USE_CHOI_DOMINANCE_GATE))
