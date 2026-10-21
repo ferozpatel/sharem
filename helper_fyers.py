@@ -878,7 +878,13 @@ def getClosestOptions1(response_data):
         return [{
             "symbol": option.get("symbol"),
             "option_type": option.get("option_type"),
-            # "strike_price": option.get("strike_price"),
+            # strike_price re-enabled: the INVARIANT-WINDOW PCR needs a stable
+            # numeric strike key to re-measure past cycles' OI over the CURRENT
+            # strike set. Parsing it out of `symbol` would work but is brittle
+            # across expiry-code formats. dfochain is built with
+            # pd.DataFrame(list-of-dicts) and every consumer reads by COLUMN
+            # NAME, so adding a column is safe.
+            "strike_price": option.get("strike_price"),
             # "ltp": option.get("ltp"),
             "volume": option.get("volume"),
             "oi": option.get("oi"),

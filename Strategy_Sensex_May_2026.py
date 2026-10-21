@@ -1476,6 +1476,136 @@ def fetch_ochain_safe(strikecount, sname, fyers_client, use_closest1=False, retr
     return None, None
 
 
+# ============================================================
+# INVARIANT-WINDOW PCR (17 + 9 strike) — OBSERVATION / LOG ONLY
+# ============================================================
+# The existing avgOiPcrList2 / avgOiPcr9List2 series are POSITIONAL: pcr1..pcr17
+# read dfochain rows -2,-4,...,-34, so when the ATM shifts the underlying STRIKE
+# SET changes and the 3 values in the window are no longer measuring the same
+# thing. Today that is handled by throwing the window away on a shift
+# (avgOiPcrList2 = avgOiPcrList2[-1:]) and requiring atmStrikeNotShiftedCount>=3,
+# which costs ~9 minutes of rebuild every time price trends.
+#
+# The INVARIANT window instead keeps the last 3 cycles' per-strike OI and
+# RE-MEASURES each of them over the CURRENT strike set, so an ATM shift cannot
+# fake (or destroy) a PCR trend. Zero extra API calls — it reuses the dfochain
+# already fetched each cycle.
+#
+# STRICTLY LOG-ONLY. Nothing here feeds entry, sizing or exits; the existing
+# series/flags are untouched. Mirrors the BTC implementation so the two logs
+# read the same way.
+INV_PCR_WINDOW = 3        # cycles kept (matches the existing 3-value window)
+INV_PCR_MIN_STEP_PCT = 0.1  # a step smaller than this is drift, not a move
+chainOiHistory = []      # last INV_PCR_WINDOW maps of {strike: (ce_oi, pe_oi)}
+
+
+def build_strike_oi_map(dfochain):
+    """``{int(strike): (ce_oi, pe_oi)}`` for the current cycle. Never raises."""
+    out = {}
+    try:
+        if 'strike_price' not in dfochain.columns:
+            return out
+        sp = dfochain['strike_price'].to_numpy()
+        ot = dfochain['option_type'].to_numpy()
+        oiarr = dfochain['oi'].to_numpy()
+        for i in range(len(sp)):
+            try:
+                k = int(float(sp[i]))
+            except (TypeError, ValueError):
+                continue
+            ce, pe = out.get(k, (0.0, 0.0))
+            try:
+                v = float(oiarr[i] or 0)
+            except (TypeError, ValueError):
+                v = 0.0
+            if ot[i] == 'CE':
+                ce = v
+            elif ot[i] == 'PE':
+                pe = v
+            out[k] = (ce, pe)
+    except Exception as e:
+        print(f"INV_WINDOW_WARN: build_strike_oi_map failed: {type(e).__name__}: {e}")
+    return out
+
+
+def ordered_pcr_strikes(dfochain, count=17):
+    """The strikes pcr1..pcr17 use, in that same order (rows -2,-4,...,-34)."""
+    try:
+        if 'strike_price' not in dfochain.columns:
+            return []
+        sp = dfochain['strike_price'].to_numpy()
+        out = []
+        for n in range(1, count + 1):
+            idx = -2 * n
+            if abs(idx) > len(sp):
+                break
+            try:
+                out.append(int(float(sp[idx])))
+            except (TypeError, ValueError):
+                continue
+        return out
+    except Exception as e:
+        print(f"INV_WINDOW_WARN: ordered_pcr_strikes failed: {type(e).__name__}: {e}")
+        return []
+
+
+def invariant_avg_pcr(snapshot, strikes):
+    """Average same-strike PE/CE PCR over ``strikes`` using ONE historical OI
+    snapshot. Returns ``(avg, covered)``; ``avg`` is None when no strike in
+    ``strikes`` has usable OI in that snapshot."""
+    vals = []
+    for k in strikes:
+        pair = snapshot.get(k)
+        if not pair:
+            continue
+        ce, pe = pair
+        if ce and ce > 0:
+            vals.append(pe / ce)
+    if not vals:
+        return None, 0
+    return round(sum(vals) / len(vals), 4), len(vals)
+
+
+def log_invariant_pcr_window(label, series):
+    """Print one invariant series + its monotonic-run / MinMove verdict.
+
+    ``series`` is oldest-first. Detection is WITHIN the window (no cross-cycle
+    streak state is kept — this is a logging aid, not a gate)."""
+    try:
+        shown = [round(v, 4) for v in series]
+        print(f"avgOiPcr{label}List2_InvariantWindow  = {shown}"
+              f"  ({label}-strike, re-measured on current strikes)")
+        if len(series) < INV_PCR_WINDOW:
+            print(f"is{label}PcrInc_InvariantWindow = building"
+                  f" ({len(series)}/{INV_PCR_WINDOW} cycles)")
+            return
+        steps = []
+        for i in range(1, len(series)):
+            prev = series[i - 1]
+            steps.append(round((series[i] - prev) / prev * 100, 2) if prev else 0.0)
+        chain = " -> ".join(str(round(v, 4)) for v in series)
+        step_txt = " | ".join(f"step{i+1} {s:+.2f}%" for i, s in enumerate(steps))
+        rising = all(series[i] > series[i - 1] for i in range(1, len(series)))
+        falling = all(series[i] < series[i - 1] for i in range(1, len(series)))
+        smallest = min(abs(s) for s in steps) if steps else 0.0
+        minmove = smallest > INV_PCR_MIN_STEP_PCT
+        if rising:
+            print(f"{label}_SEQ_INC_InvariantWindow: {chain} | {step_txt}")
+            print(f"is{label}PcrInc_InvariantWindow = True  (run={len(series)} rising)")
+            print(f"is{label}PcrInc_InvariantWindow_MinMove = {minmove}"
+                  f"  (smallest step {smallest:.2f}% vs {INV_PCR_MIN_STEP_PCT}% threshold)")
+        elif falling:
+            print(f"{label}_SEQ_DEC_InvariantWindow: {chain} | {step_txt}")
+            print(f"is{label}PcrDecr_InvariantWindow = True  (run={len(series)} falling)")
+            print(f"is{label}PcrDecr_InvariantWindow_MinMove = {minmove}"
+                  f"  (smallest step {smallest:.2f}% vs {INV_PCR_MIN_STEP_PCT}% threshold)")
+        else:
+            print(f"{label}_SEQ_FLAT_InvariantWindow: {chain} | {step_txt} (not monotonic)")
+    except Exception as e:
+        print(f"INV_WINDOW_WARN: log_invariant_pcr_window({label}) failed: "
+              f"{type(e).__name__}: {e}")
+
+
 def getChangeInOI(dfochain, index1, index2):
     oich = dfochain['oich'].to_numpy()
     chInOI = round(oich[index1])
@@ -2803,6 +2933,43 @@ while x == 1:
             print("avgOiPcrList2 =", avgOiPcrList2, "atmStrikeNotShiftedCount=", atmStrikeNotShiftedCount)
             print("avgOiPcr9List2 =", avgOiPcr9List2, "atmStrikeNotShiftedCount=", atmStrikeNotShiftedCount)
             print(IS_ATM_STRIKE_SHIFT, " ", atmStrikeNotShiftedCount, " ", len(avgOiPcrList2))
+
+            # ===== INVARIANT-WINDOW PCR (17 + 9) — OBSERVATION / LOG ONLY =====
+            # Keep the last 3 cycles' per-strike OI and re-measure every one of
+            # them over the CURRENT strike set, so an ATM shift neither fakes nor
+            # destroys a PCR trend. Uses the dfochain already in memory -> ZERO
+            # extra API calls. Touches NO existing variable or gate; wrapped so a
+            # bad cycle can never break the loop.
+            try:
+                _inv_strikes17 = ordered_pcr_strikes(dfochain, 17)
+                if _inv_strikes17:
+                    chainOiHistory.append(build_strike_oi_map(dfochain))
+                    del chainOiHistory[:-INV_PCR_WINDOW]
+                    # Central 9 = pcr5..pcr13 (ATM pcr9 +/- 4), same as
+                    # pcr9StrikeList, taken from the CURRENT ordered strikes.
+                    _inv_strikes9 = _inv_strikes17[4:13]
+                    _ser17, _ser9, _cov = [], [], []
+                    for _snap in chainOiHistory:
+                        _a17, _c17 = invariant_avg_pcr(_snap, _inv_strikes17)
+                        _a9, _c9 = invariant_avg_pcr(_snap, _inv_strikes9)
+                        if _a17 is not None and _a9 is not None:
+                            _ser17.append(_a17)
+                            _ser9.append(_a9)
+                            _cov.append(f"{_c17}/{len(_inv_strikes17)}")
+                    print("==== INVARIANT-WINDOW PCR check (log-only) ====")
+                    print(f"inv_strikes17 = {_inv_strikes17}")
+                    print(f"inv_strikes9  = {_inv_strikes9}  (central 9 = pcr5..pcr13)")
+                    print(f"inv_strike_coverage_per_cycle = {_cov}"
+                          f"  (strikes found in each stored snapshot)")
+                    log_invariant_pcr_window("9", _ser9)
+                    log_invariant_pcr_window("17", _ser17)
+                else:
+                    print("INV_WINDOW_SKIPPED: no strike_price column / strikes "
+                          "unavailable this cycle (needs helper_fyers "
+                          "getClosestOptions1 to return strike_price).")
+            except Exception as _inv_e:
+                print(f"INV_WINDOW_WARN: invariant-window block failed: "
+                      f"{type(_inv_e).__name__}: {_inv_e}")
 
             SUPP_RES = get_support_resistance(anchorLTP)
             if SUPP_RES != "NOTRADEZONE":
