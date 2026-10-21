@@ -253,11 +253,14 @@ POSITION_SIZE = None
 MAX_TRADES_PER_DAY = None
 
 # ---- Sensex-style risk sizing + SL/target (ported; concrete live values) -----
-# Per the user: start live small at $10 net risk/trade for a few days, then
-# scale up. SL multiplier 2.5, target 4.0.
-FIXED_RISK_PER_TRADE = 10.0       # USD risked if the SL is hit (net of hedge)
+# Risk per trade stepped $10 -> $12 (user). Sizing is linear in this value, so
+# it just scales the lot count; the SL/target levels are untouched.
+# SL multiplier 2.4 (Sensex parity); target multiplier raised 4.0 -> 5.0, so
+# R:R moves from 1.67 to 5.0/2.4 = ~2.08. A further target needs more premium
+# decay to pay out, so expect a lower hit rate with a bigger win when it lands.
+FIXED_RISK_PER_TRADE = 12.0       # USD risked if the SL is hit (net of hedge)
 SL_MULTIPLIER = 2.4               # effective_sl  = median_range * this
-TARGET_MULTIPLIER = 4.0           # effective_tgt = median_range * this
+TARGET_MULTIPLIER = 5.0           # effective_tgt = median_range * this
 
 # Delta BTC-option contract spec (from the product catalog AND confirmed against
 # the Delta UI: 1 lot = 0.001 BTC): each contract is contract_value BTC, vanilla
@@ -313,17 +316,23 @@ OPT_RANGE_LOW_SAMPLE_FACTOR = 0.5
 # halved. Sensex LOW_SAMPLE_MEDIAN_THRESHOLD equivalent.
 OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION = 0.35
 # Target-reachability rail (Sensex 2026-10-15 lesson). effective_tgt is
-# median * TARGET_MULTIPLIER (4.0); if the median is inflated the target level
+# median * TARGET_MULTIPLIER; if the median is inflated the target level
 # (premium - effective_tgt) can go NEGATIVE/unreachable, leaving the trade with
 # no exit but the SL. Cap the median so the target never asks the premium to
 # fall more than this fraction. Capping the MEDIAN (not just the target) keeps
-# SL and target on one basis, so R:R stays exactly 1.6.
+# SL and target on one basis, so R:R is preserved whatever the cap does.
+# NOTE: at TARGET_MULTIPLIER=5.0 this binds at median > 0.14 * premium (it was
+# 0.175 at 4.0), so the cap fires more often — watch for MEDIAN_CAPPED lines.
 MAX_TGT_PREMIUM_FRACTION = 0.70
 
 # Fallback when a freshly-listed option has no usable candle history yet: size
 # SL/target as a fraction of the entry premium instead of the candle median.
 SL_PREMIUM_FALLBACK_FRACTION = 0.40   # effective_sl  = entry_premium * this
-TGT_PREMIUM_FALLBACK_FRACTION = 0.667  # effective_tgt = premium * this (keeps 2.4:4.0 R:R 1.67)
+# Holding the 2.4:5.0 ratio here would need 0.40 * (5.0/2.4) = 0.833, i.e. a
+# target demanding 83% premium decay — past the MAX_TGT_PREMIUM_FRACTION (0.70)
+# reachability ceiling. Capped at 0.70, so this rare no-candle-history path runs
+# R:R 0.70/0.40 = 1.75 instead of the candle path's ~2.08.
+TGT_PREMIUM_FALLBACK_FRACTION = 0.70  # effective_tgt = entry_premium * this
 
 # ---- Order-book liquidity + marketable-limit entry (slippage control) ----
 # Entry orders use a MARKETABLE LIMIT (cross to the touch, capped) instead of a
