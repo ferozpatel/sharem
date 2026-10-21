@@ -164,13 +164,19 @@ TRAIL_TRIGGER_TARGET_FRACTION = 0.50
 # LOW-SAMPLE guard below. On 2026-10-15 a 2-candle median of 67.55 combined with these same
 # multipliers produced SL=377 (premium had to rise 75%) and a NEGATIVE target of -54.95. The
 # multipliers were not the problem; the unguarded median was.
-# 2026-10-22: target multiplier 4.0 -> 4.5 for BOTH directions (user). SL stays
-# 2.4, so R:R moves from 1.67 to 4.5/2.4 = 1.875. A further target needs more
-# premium decay to pay out: expect a lower hit rate with a bigger win when it
-# lands. Breakeven win rate moves from ~37% to ~35%.
-SL_MULT_BULL = 2.4
+# 2026-10-22 (user): target 4.0 -> 4.5 and SL 2.4 -> 2.2, BOTH directions.
+# R:R moves 1.67 -> 4.5/2.2 = 2.05 (breakeven win rate ~37% -> ~33%).
+#
+# NOTE the two legs pull in opposite directions on risk:
+#   * TIGHTER SL (2.2) means the premium has less room before the stop fires,
+#     so expect MORE stop-outs on the counter-wiggle the 2.4 widening was
+#     introduced to survive (see the 2026-10-15 note above).
+#   * A tighter SL also SHRINKS net_sl_points, and qty = FIXED_RISK /
+#     (net_sl * LOT_SIZE), so LOTS GO UP ~9% for the same Rs 4,000 budget.
+#     Rupee risk per trade is unchanged; position size is larger.
+SL_MULT_BULL = 2.2
 TARGET_MULT_BULL = 4.5
-SL_MULT_BEAR = 2.4
+SL_MULT_BEAR = 2.2
 TARGET_MULT_BEAR = 4.5
 # Trailing SL (move SL to breakeven once TRAIL_TRIGGER_TARGET_FRACTION of target is covered) is
 # DISABLED for BOTH directions: trailing kept exiting trades at breakeven on a normal pullback
@@ -3536,8 +3542,8 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # BULL: SL = median x SL_MULT_BULL (2.4 — wide stop so the counter-wiggle can't
-                # take us out), Target = median x TARGET_MULT_BULL (4.5). Median is the HIGH-LOW
+                # BULL: SL = median x SL_MULT_BULL (2.2), Target = median x
+                # TARGET_MULT_BULL (4.5). Median is the HIGH-LOW
                 # range, already sanity-checked by the low-sample guard. Reuse
                 # tradeOptRange — computed ONCE inside takeEntryCredit/Debit on the exact traded
                 # strike, right before qty/margin sizing, so SL/Target and qty sizing agree.
@@ -3681,7 +3687,7 @@ while x == 1:
                 dynamic_sl_pt = iv_params.get("sl_point", sl_point)
                 dynamic_tgt_pt = iv_params.get("target_point", target_point)
 
-                # BEAR: SL = median x SL_MULT_BEAR (2.4), Target = median x TARGET_MULT_BEAR (4.5)
+                # BEAR: SL = median x SL_MULT_BEAR (2.2), Target = median x TARGET_MULT_BEAR (4.5)
                 # — same as bull. Median is HIGH-LOW range. Reuse tradeOptRange — computed ONCE
                 # inside takeEntryCredit/Debit on the exact traded strike, right before sizing.
                 opt_range = tradeOptRange
