@@ -310,18 +310,20 @@ HEDGE_MAX_PREMIUM_FRACTION = 0.5
 # ported: per the user that rule is Sensex-only.
 OPT_RANGE_CANDLES = 10
 # Target floor (user rule). The median is NEVER modified to make a target fit —
-# SL and target are always median * 2.4 / median * 5.0 on the RAW median. The
-# only intervention is when the resulting target LEVEL
-# (premium - effective_tgt) comes out <= 0, i.e. the option would have to go
-# below zero to pay out. In that single case the target LEVEL becomes this many
-# premium points, so the position is held until the premium decays to it:
+# SL and target are always median * SL_MULTIPLIER / median * TARGET_MULTIPLIER
+# on the RAW median. The only intervention is on the TARGET LEVEL
+# (premium - effective_tgt): whenever that would land BELOW this value it is
+# pinned to EXACTLY this value, so the trade is held until the premium decays
+# to 15 and then exits.
 #
-#   premium 400, effective_tgt 450 -> level 400-450 = -50  (impossible)
-#   -> target LEVEL = 15, i.e. effective_tgt = 400 - 15 = 385
+#   premium 400, effective_tgt 450 -> level -50  -> pinned to 15 (tgt 385)
+#   premium 400, effective_tgt 397 -> level   3  -> pinned to 15 (tgt 385)
+#   premium 400, effective_tgt 300 -> level 100  -> left alone
 #
-# A SMALL POSITIVE level is left alone (a level of 3 stays 3) — the floor only
-# rescues the negative/zero case. Note this makes the target REACHABLE, not
-# easy: the required decay grows (400 -> 385 points here).
+# Covers the negative/zero case (literally unreachable, premium floors at 0)
+# AND the tiny-positive case (a 3-point level is inside the bid-ask and is not
+# a real target either). Note this makes the target REACHABLE, not easy — the
+# required decay GROWS when the floor fires (400 -> 385 points above).
 TARGET_MIN_PREMIUM_LEVEL = 15.0
 
 # Fallback when a freshly-listed option has no usable candle history yet: size
@@ -3969,29 +3971,34 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         sl_basis = "unavailable(no_candle_history,no_premium)"
         notes.append("sl_target_unavailable")
 
-    # ---- Target floor: rescue an UNREACHABLE (<= 0) target level -----------
-    # Applies to BOTH the candle-median and premium-fallback paths. Only fires
-    # when premium - effective_tgt <= 0 (the option would have to go below zero
-    # to pay out); a small POSITIVE level is left exactly as computed. The SL
-    # and the median are NOT touched — only the target moves.
+    # ---- Target floor: clamp the target LEVEL to a minimum of 15 pts -------
+    # Applies to BOTH the candle-median and premium-fallback paths. Fires
+    # whenever premium - effective_tgt would land BELOW 15 — that covers the
+    # negative/zero (literally unreachable) case AND a tiny positive level like
+    # 3, which is inside the bid-ask and not a real target either. The level is
+    # pinned to exactly 15, so the position is held until the premium decays to
+    # 15 and then exits. The SL and the median are NOT touched — only the
+    # target moves.
     if (effective_tgt is not None and main_premium
             and float(main_premium) > 0):
         _tgt_level = float(main_premium) - float(effective_tgt)
-        if _tgt_level <= 0:
+        if _tgt_level < TARGET_MIN_PREMIUM_LEVEL:
             if float(main_premium) > TARGET_MIN_PREMIUM_LEVEL:
                 _raw_tgt = effective_tgt
                 effective_tgt = float(main_premium) - TARGET_MIN_PREMIUM_LEVEL
                 notes.append("target_floored_to_{}pt_level".format(
                     _fmt(TARGET_MIN_PREMIUM_LEVEL, 0)))
                 print("TARGET_FLOORED [{}] {} target {} x {} = {} pts would "
-                      "put the level at {} (<= 0, unreachable) -> target LEVEL "
-                      "set to {} pts, so effective_tgt={} (decay {} pts). "
-                      "Median and SL unchanged.".format(
+                      "put the level at {} (< {} min) -> target LEVEL pinned "
+                      "to {} pts, so effective_tgt={} (premium {} must decay "
+                      "{} pts). Median and SL unchanged.".format(
                           _now_ist(), main_symbol, _fmt(median_range, 2),
                           TARGET_MULTIPLIER, _fmt(_raw_tgt, 2),
                           _fmt(_tgt_level, 2),
                           _fmt(TARGET_MIN_PREMIUM_LEVEL, 0),
-                          _fmt(effective_tgt, 2), _fmt(effective_tgt, 2)))
+                          _fmt(TARGET_MIN_PREMIUM_LEVEL, 0),
+                          _fmt(effective_tgt, 2), _fmt(main_premium, 2),
+                          _fmt(effective_tgt, 2)))
             else:
                 # Premium is already at/below the floor — nothing sane to aim
                 # at. Leave the target as computed and flag it loudly.
@@ -5263,9 +5270,9 @@ def startup():
               OPT_RANGE_CANDLES, OPT_RANGE_CANDLES))
     print("  median_guards        = NONE — raw median used as-is (no cap, no "
           "low-sample halving); whatever candles exist are medianed")
-    print("  target_floor         = if (premium - target) <= 0 then target "
-          "LEVEL = {} pts (SL + median untouched)".format(
-              _fmt(TARGET_MIN_PREMIUM_LEVEL, 0)))
+    print("  target_floor         = if (premium - target) < {m} then target "
+          "LEVEL pinned to exactly {m} pts (SL + median untouched)".format(
+              m=_fmt(TARGET_MIN_PREMIUM_LEVEL, 0)))
     print("  contract_value       = {} BTC/contract (P&L multiplier)".format(
         CONTRACT_VALUE))
     print("  hedge                = delta band (target |delta|*{} +/-{}) -> "
