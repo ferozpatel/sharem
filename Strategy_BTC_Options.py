@@ -468,7 +468,9 @@ def roll_contract_log():
     try:
         os.makedirs(LOG_DIR, exist_ok=True)
         path = os.path.join(LOG_DIR, "delta_btc_{}.log".format(label))
-        _log_fh = open(path, "a", encoding="utf-8")
+        # buffering=1 => LINE buffered, so each completed line hits the OS on
+        # its own instead of sitting in an 8KB block buffer (see _Tee.write).
+        _log_fh = open(path, "a", encoding="utf-8", buffering=1)
         _log_label = label
         _log_fh.write("==== CONTRACT LOG {} opened {} (rolls at 12:00 UTC / "
                       "17:30 IST) ====\n".format(label, _now_ist()))
@@ -501,6 +503,16 @@ class _Tee(object):
         if fh is not None:
             try:
                 fh.write(data)
+                # FLUSH EVERY WRITE. Without this the file handle is block-
+                # buffered (~8KB) and `roll_contract_log` only flushes on an
+                # actual contract rotation, so in-trade output NEVER reached
+                # disk: once a position opens the bot emits a single ~90-byte
+                # heartbeat per minute, which takes ~90 minutes to fill 8KB.
+                # On 2026-10-21 the file stopped mid-line at the TRADE_PLAN and
+                # the whole 21:06 trade (LIVE_ENTRY/ENTRY_SL_TGT/In Trade/exit)
+                # existed only in the systemd journal. The strategy prints a few
+                # short lines per minute, so per-write flushing is free.
+                fh.flush()
             except Exception:  # noqa: BLE001
                 pass
 
