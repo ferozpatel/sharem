@@ -4716,3 +4716,28 @@ TRADE_PLAN [2026-10-21 21:06:01 IST] BEAR credit_call_spread(bear) expiry=221026
   HEDGE BUY : limit=204.0 touch_bid/ask=193.0/202.0 spread=4.6% fillable=14134 depth_ratio=72.48 ok=True
   LIQUIDITY_GATE ok=True (both legs must pass to place live; max_spread=25.0% min_depth_ratio=1.0)
   NOTES: median_capped_for_target_reachability
+  
+  =C-BTC-84600-221026 (plan: main_strike=84600 hedge_strike=85200 effective_sl=150.86 effective_tgt=314.30 order=limit(slip<=4t) main_limit=429.0 hedge_limit=204.0 expiry=221026).
+Oct 21 21:06:03 ip-172-31-47-198 python3[52927]: LIVE_ENTRY_OK [2026-10-21 21:06:03 IST] credit_call_spread(bear) opened: SELL C-BTC-84600-221026 (id=1620798260) / BUY C-BTC-85200-221026 (id=1620798212) size=195.
+Oct 21 21:06:03 ip-172-31-47-198 python3[52927]: ENTRY_SL_TGT: spread=CREDIT  EntryPrem=449.00  SL=599.86  Target=134.70  AnchorSrc=MAIN_LEG_LTP  SL_Source=OPTION_RANGE(median=62.86,SLx2.4,Tgtx5.0)  lots=195  net_credit=231.00
+Oct 21 21:06:03 ip-172-31-47-198 python3[52927]: ENTRY_OPENED [2026-10-21 21:06:03 IST] position recorded open; trades_today=1.
+Oct 21 21:06:03 ip-172-31-47-198 python3[52927]: MONITOR_LOOP [2026-10-21 21:06:03 IST] position OPEN — switching to 2s SL/target polling until it closes.
+Oct 21 21:07:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:07:01 IST In Trade ( CREDIT ). No Exit. ltp= 429.00  SL= 599.86  target= 134.70
+Oct 21 21:10:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:10:00 IST In Trade ( CREDIT ). No Exit. ltp= 476.00  SL= 599.86  target= 134.70
+Oct 21 21:11:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:11:00 IST In Trade ( CREDIT ). No Exit. ltp= 462.00  SL= 599.86  target= 134.70
+Oct 21 21:12:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:12:00 IST In Trade ( CREDIT ). No Exit. ltp= 457.00  SL= 599.86  target= 134.70
+Oct 21 21:13:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:13:00 IST In Trade ( CREDIT ). No Exit. ltp= 432.00  SL= 599.86  target= 134.70
+Oct 21 21:14:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:14:00 IST In Trade ( CREDIT ). No Exit. ltp= 406.00  SL= 599.86  target= 134.70
+Oct 21 21:15:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:15:01 IST In Trade ( CREDIT ). No Exit. ltp= 400.00  SL= 599.86  target= 134.70
+Oct 21 21:17:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:17:00 IST In Trade ( CREDIT ). No Exit. ltp= 384.00  SL= 599.86  target= 134.70
+Oct 21 21:18:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:18:01 IST In Trade ( CREDIT ). No Exit. ltp= 388.00  SL= 599.86  target= 134.70
+Oct 21 21:19:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:19:00 IST In Trade ( CREDIT ). No Exit. ltp= 383.00  SL= 599.86  target= 134.70
+Oct 21 21:20:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:20:01 IST In Trade ( CREDIT ). No Exit. ltp= 391.00  SL= 599.86  target= 134.70
+Oct 21 21:21:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:21:00 IST In Trade ( CREDIT ). No Exit. ltp= 391.00  SL= 599.86  target= 134.70
+Oct 21 21:22:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:22:00 IST In Trade ( CREDIT ). No Exit. ltp= 385.00  SL= 599.86  target= 134.70
+Oct 21 21:23:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:23:01 IST In Trade ( CREDIT ). No Exit. ltp= 406.00  SL= 599.86  target= 134.70
+Oct 21 21:25:00 ip-172-31-47-198 python3[52927]: 2026-10-21 21:25:00 IST In Trade ( CREDIT ). No Exit. ltp= 414.00  SL= 599.86  target= 134.70
+Oct 21 21:26:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:26:01 IST In Trade ( CREDIT ). No Exit. ltp= 405.00  SL= 599.86  target= 134.70
+Oct 21 21:27:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:27:01 IST In Trade ( CREDIT ). No Exit. ltp= 412.00  SL= 599.86  target= 134.70
+Oct 21 21:28:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:28:01 IST In Trade ( CREDIT ). No Exit. ltp= 436.00  SL= 599.86  target= 134.70
+Oct 21 21:29:01 ip-172-31-47-198 python3[52927]: 2026-10-21 21:29:01 IST In Trade ( CREDIT ). No Exit. ltp= 434.00  SL= 599.86  target= 134.70
