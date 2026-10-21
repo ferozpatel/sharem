@@ -303,18 +303,12 @@ HEDGE_DELTA_TOLERANCE = 0.08
 # STRUCTURALLY instead of us discounting a hedge we know is tight.
 HEDGE_MAX_PREMIUM_FRACTION = 0.5
 
-# Option candle-range median (drives SL/target). Last N 3-min HIGH-LOW ranges;
-# low-sample guard halves a thin-window median that is implausibly large (early
-# in a fresh contract only). Mirrors Sensex get_option_candle_range.
+# Option candle-range median (drives SL/target). The last N 3-min HIGH-LOW
+# ranges are medianed and used AS-IS. Whatever candles exist are used — fewer
+# than N is fine, and the median is NEVER scaled or halved. Sensex's low-sample
+# halving (MIN_MEDIAN_CANDLES / LOW_SAMPLE_MEDIAN_FACTOR) is deliberately NOT
+# ported: per the user that rule is Sensex-only.
 OPT_RANGE_CANDLES = 10
-OPT_RANGE_MIN_MEDIAN_CANDLES = 4
-OPT_RANGE_LOW_SAMPLE_FACTOR = 0.5
-# Sensex uses an ABSOLUTE low-sample threshold (40 premium pts). BTC premiums
-# swing far more with vol/time-to-expiry, so the equivalent test is RELATIVE: a
-# thin window whose median exceeds this fraction of the sold premium is a
-# sampling artifact (opening volatility of a freshly-rolled contract) and is
-# halved. Sensex LOW_SAMPLE_MEDIAN_THRESHOLD equivalent.
-OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION = 0.35
 # Target floor (user rule). The median is NEVER modified to make a target fit —
 # SL and target are always median * 2.4 / median * 5.0 on the RAW median. The
 # only intervention is when the resulting target LEVEL
@@ -3333,12 +3327,11 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
     than 10 exist, the median is still taken over whatever valid candles are
     available (no minimum) — matching Sensex.
 
-    The returned median is used AS-IS for SL/target — it is never scaled to make
-    a target fit. The caller (build_trade_plan) applies only the thin-window
-    low-sample halving (LOW_SAMPLE_MEDIAN_HALVED), which needs the sold premium
-    for its threshold. An unreachable target is handled on the TARGET side by
-    the TARGET_MIN_PREMIUM_LEVEL floor (TARGET_FLOORED), not by touching this
-    median.
+    The returned median is used AS-IS for SL/target — it is never scaled,
+    halved or capped. Sensex's low-sample halving is deliberately NOT ported
+    (Sensex-only, per the user). An unreachable target is handled on the TARGET
+    side by the TARGET_MIN_PREMIUM_LEVEL floor (TARGET_FLOORED), never by
+    touching this median.
     """
     try:
         # getHistorical returns a list of {time,open,high,low,close,volume}
@@ -3957,29 +3950,12 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     _log_opt_range(hedge_symbol, "HEDGE", hedge_median, hedge_n, hedge_detail)
 
     # ---- SL/target basis: short-leg candle-range median × multiplier ----
+    # The median is NEVER adjusted. Whatever candles exist are medianed and used
+    # as-is — no low-sample halving (that is a Sensex-only rule, per the user)
+    # and no target cap. An unreachable target is handled on the TARGET side by
+    # the TARGET_MIN_PREMIUM_LEVEL floor below, which leaves median and SL
+    # untouched.
     if median_range and median_range > 0:
-        # --- Guard 1: LOW-SAMPLE median (Sensex LOW_SAMPLE_MEDIAN_HALVED) ---
-        # A thin window right after the daily contract roll is all opening
-        # volatility, so its median runs rich. Halve it only when the window is
-        # thin AND the median is implausibly large relative to the premium.
-        if (n_used < OPT_RANGE_MIN_MEDIAN_CANDLES and main_premium
-                and main_premium > 0
-                and median_range > main_premium
-                * OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION):
-            _raw = median_range
-            median_range = median_range * OPT_RANGE_LOW_SAMPLE_FACTOR
-            notes.append("low_sample_median_halved")
-            print("LOW_SAMPLE_MEDIAN_HALVED [{}] {} candles={} (< {}) "
-                  "raw_median={} (> {} x premium {}) -> used_median={}".format(
-                      _now_ist(), main_symbol, n_used,
-                      OPT_RANGE_MIN_MEDIAN_CANDLES, _fmt(_raw, 2),
-                      OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION,
-                      _fmt(main_premium, 2), _fmt(median_range, 2)))
-
-        # NOTE: the median is deliberately NOT adjusted to make the target fit.
-        # SL/target come straight off the RAW median; an unreachable target is
-        # handled by the TARGET_MIN_PREMIUM_LEVEL floor below, which moves the
-        # TARGET only and leaves the median and the SL untouched.
         effective_sl = median_range * SL_MULTIPLIER
         effective_tgt = median_range * TARGET_MULTIPLIER
         sl_basis = "candle_median({}c)={}".format(n_used, _fmt(median_range, 2))
@@ -5285,10 +5261,8 @@ def startup():
     print("  median_basis         = last {} x 3m HIGH-LOW (1st skipped); "
           "fewer than {} is still used".format(
               OPT_RANGE_CANDLES, OPT_RANGE_CANDLES))
-    print("  median_guards        = RAW median used as-is (no target cap); "
-          "halve only if <{}c AND >{}x premium".format(
-              OPT_RANGE_MIN_MEDIAN_CANDLES,
-              OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION))
+    print("  median_guards        = NONE — raw median used as-is (no cap, no "
+          "low-sample halving); whatever candles exist are medianed")
     print("  target_floor         = if (premium - target) <= 0 then target "
           "LEVEL = {} pts (SL + median untouched)".format(
               _fmt(TARGET_MIN_PREMIUM_LEVEL, 0)))
