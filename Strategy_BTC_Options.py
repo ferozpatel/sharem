@@ -2096,12 +2096,32 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
     ce_total = sr_oi.get("ce_oi_total") or 0.0
     pe_total = sr_oi.get("pe_oi_total") or 0.0
 
-    # Sensex `_choi_valid`: a NEGATIVE side means writers are UNWINDING, which
-    # inflates the gap without carrying trapped-writer conviction. When either
-    # side is not building, the gap is forced to 0 — which fails every LOGIC
-    # threshold (10/15%), so no trade can fire. This is a hard filter.
-    choi_valid = (ce_choi > 0 and pe_choi > 0)
+    # CHOI validity (user rule, 2026-10-22 — DIVERGES from Sensex `_choi_valid`).
+    #
+    # Sensex required BOTH sides building (ce>0 AND pe>0) and otherwise forced
+    # the gap to 0, which fails every LOGIC threshold. On BTC that vetoed 22 of
+    # 50 cycles on 2026-10-21/22, because "calls unwinding while puts build at
+    # support" is the NORMAL flow on a trending day — and is directionally
+    # BULLISH (call writers covering, put writers defending), not noise. The
+    # 19:57 cycle had every other gate green and was blocked by this alone.
+    #
+    # New rule: only reject when NEITHER side is building. One side negative is
+    # a MIXED-SIGN divergence and is now considered (the informative case); both
+    # negative means both sides are unwinding at once, which carries no
+    # directional conviction, so it stays invalid. Both zero (fresh baseline,
+    # first cycle of a contract) is also invalid — nothing has built yet.
+    #
+    #   ce>0 and pe>0  -> valid (buildup on both sides, as before)
+    #   one side < 0   -> valid (divergence: one building, one unwinding)
+    #   both <= 0      -> INVALID (both unwinding / nothing building)
+    choi_valid = (ce_choi > 0 or pe_choi > 0)
+    # Mixed signs make `_pct_gap` LARGE (e.g. ce=-14.8, pe=64.4 -> 123%), since
+    # it is |a-b| / max(|a|,|b|). That is intended here: the magnitude of a
+    # build-vs-unwind divergence IS the signal strength, and it clears the
+    # 10%/15% LOGIC thresholds comfortably. Read a >100% figure as "the two
+    # sides are moving in OPPOSITE directions", not as a buildup gap.
     choi_pct = _pct_gap(ce_choi, pe_choi) if choi_valid else 0.0
+    choi_mixed = choi_valid and (ce_choi < 0 or pe_choi < 0)
     oi_pct = _pct_gap(ce_total, pe_total)
 
     # ----- Mandatory direction legs (price vs S/R + PCR trend) -----
@@ -2212,7 +2232,8 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
             blockers.append("pcr17_invariant_run(streak>={}+minmove)".format(
                 PCR_ENTRY_STREAK_MIN))
         elif not choi_valid:
-            blockers.append("choi_not_building(CE>0 and PE>0 required)")
+            blockers.append("choi_not_building(both sides unwinding/flat; "
+                            "need at least one side building)")
         elif not (bull_dir_ok or bear_dir_ok):
             blockers.append("no_logic_mode_qualified")
         elif pcr_inc_ok and not dom_ok_bull:
@@ -2241,6 +2262,7 @@ def evaluate_sensex_entry_criteria(index_price, sr_level, position, sr_role,
         "dom_ok_bull": dom_ok_bull,
         "dom_ok_bear": dom_ok_bear,
         "choi_valid": choi_valid,
+        "choi_mixed": choi_mixed,
         "choi_pct": choi_pct,
         "oi_pct": oi_pct,
         "morning_window": morning,
@@ -2272,10 +2294,12 @@ def log_sensex_entry_criteria(result, sr_level, sr_role, sr_oi, dominance,
               r["in_trade_zone"], r["above_level"], r["below_level"],
               _fmt(sr_level), sr_role or "n/a",
               r["bull_mandatory"], r["bear_mandatory"]))
-    print("CHOI/OI at S/R: CEoich={} PEoich={} choi_valid={} choi_pct={}% | "
+    print("CHOI/OI at S/R: CEoich={} PEoich={} choi_valid={}{} choi_pct={}% | "
           "CE_total={} PE_total={} oi_pct={}%".format(
               _fmt(sr_oi.get("ce_choi"), 1), _fmt(sr_oi.get("pe_choi"), 1),
-              r["choi_valid"], r["choi_pct"],
+              r["choi_valid"],
+              "(MIXED: one side unwinding)" if r.get("choi_mixed") else "",
+              r["choi_pct"],
               _fmt(sr_oi.get("ce_oi_total"), 1),
               _fmt(sr_oi.get("pe_oi_total"), 1), r["oi_pct"]))
     print("LOGIC1_MORNING_TRAP (window={}): bull={} bear={}  [CHOI>={}%]".format(
@@ -5203,6 +5227,8 @@ def startup():
           .format(CHOI_MORNING_PCT))
     print("  logic2_convergence   = CHOI >= {}% AND total OI on the right side "
           "(plain >, no % gap)".format(CHOI_CONVERGE_PCT))
+    print("  choi_validity        = valid if EITHER side is building; invalid "
+          "only when BOTH are unwinding/flat (mixed sign = divergence, kept)")
     print("  logic3_choi_trap     = CHOI >= {}%  (observation-only={})".format(
         CHOI_TRAP_PCT, LOGIC3_OBSERVATION_ONLY))
     print("  choi_dominance_gate  = {}".format(USE_CHOI_DOMINANCE_GATE))
