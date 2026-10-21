@@ -3208,21 +3208,45 @@ while x == 1:
             IS_MORNING_WINDOW = (dt1.hour == 9 and dt1.minute < 48)
             print("IS_MORNING_WINDOW=", IS_MORNING_WINDOW, " (active 9:15-9:48 IST)")
 
-            # CHOI % diff is only meaningful when BOTH sides are fresh OI additions (positive).
-            # If either side is negative (unwinding), subtracting a negative artificially
-            # inflates the % diff (e.g. CE=-20000, PE=10000 -> abs(10000-(-20000))/20000=150%)
-            # even though unwinding doesn't carry the same trapped-writer conviction as buildup.
-            _choi_valid = (suppResCeChOi > 0 and suppResPeChOi > 0)
+            # CHOI validity (user rule 2026-10-22, same change already made in BTC).
+            #
+            # WAS: (ce > 0 and pe > 0) — both sides had to be building, and a single
+            # negative side forced _choi_pct to 0, which fails every Logic 1/2/3
+            # CHOI gate. On BTC that vetoed 22 of 50 cycles, because "calls
+            # unwinding while puts build at support" is the NORMAL trending-day
+            # flow and is directionally BULLISH (call writers covering, put
+            # writers defending) rather than noise.
+            #
+            # NOW: valid when EITHER side is building. One side negative is a
+            # MIXED-SIGN divergence and is considered; only BOTH sides unwinding
+            # (or both flat) is skipped, since that carries no directional
+            # conviction either way.
+            #
+            #   ce>0 and pe>0  -> valid (buildup both sides, as before)
+            #   one side < 0   -> valid (divergence: one building, one unwinding)
+            #   both <= 0      -> INVALID, cycle skipped for CHOI logic
+            #
+            # NOTE on the % figure: with mixed signs the gap formula runs LARGE
+            # (CE=-20000, PE=10000 -> 150%). That is intended — the size of a
+            # build-vs-unwind divergence IS the signal strength. Read a >100%
+            # value as "the two sides are moving in OPPOSITE directions", not as
+            # a buildup gap. The direction leg still orients correctly because a
+            # positive always beats a negative in the PE-vs-CE comparison.
+            _choi_valid = (suppResCeChOi > 0 or suppResPeChOi > 0)
+            _choi_mixed = _choi_valid and (suppResCeChOi < 0 or suppResPeChOi < 0)
             if _choi_valid:
                 IS_CHOI_DIFF_GT_25PERC = is_difference_greater_than_25(suppResCeChOi, suppResPeChOi)
+                if _choi_mixed:
+                    _bld = "PE" if suppResPeChOi > 0 else "CE"
+                    _unw = "CE" if suppResPeChOi > 0 else "PE"
+                    print(f"CHOI_MIXED: {_bld} building / {_unw} unwinding at SUPP_RES "
+                          f"(CEchoi={suppResCeChOi}, PEchoi={suppResPeChOi}) - CONSIDERED "
+                          f"(divergence); % gap is inflated by the opposite signs")
             else:
                 IS_CHOI_DIFF_GT_25PERC = False
-                if suppResCeChOi <= 0 and suppResPeChOi <= 0:
-                    print(f"CHOI_UNWIND: both sides unwinding at SUPP_RES (CEchoi={suppResCeChOi}, PEchoi={suppResPeChOi}) - CHOI-based logic skipped this cycle")
-                elif suppResCeChOi <= 0:
-                    print(f"CHOI_UNWIND: CE side unwinding at SUPP_RES (CEchoi={suppResCeChOi}) - CHOI-based logic skipped this cycle")
-                else:
-                    print(f"CHOI_UNWIND: PE side unwinding at SUPP_RES (PEchoi={suppResPeChOi}) - CHOI-based logic skipped this cycle")
+                print(f"CHOI_UNWIND: both sides unwinding/flat at SUPP_RES "
+                      f"(CEchoi={suppResCeChOi}, PEchoi={suppResPeChOi}) - CHOI-based "
+                      f"logic skipped this cycle (need at least one side building)")
             print("================================================")
             print("==== signal check time ====", datetime.now())
             # print("IS_CHOI_DIFF_GT_25PERC==", IS_CHOI_DIFF_GT_25PERC)
@@ -3334,10 +3358,12 @@ while x == 1:
             # Logic 2: Trend convergence (anytime) — CHOI + Total OI both same direction by 10%
             # Logic 3: CHOI trap (anytime) — CHOI dominance + 15% diff
 
-            # _choi_pct is only valid when both sides are positive (fresh buildup) - see
-            # _choi_valid check above. If either side is unwinding, force _choi_pct to 0 so
-            # all Logic 1/2/3 CHOI-diff gates (>=10%, >=15%) correctly fail closed instead of
-            # acting on a distorted/inflated percentage.
+            # _choi_pct is computed whenever _choi_valid — i.e. whenever AT LEAST
+            # ONE side is building (see the _choi_valid block above). Only when
+            # BOTH sides are unwinding/flat is it forced to 0, so all Logic 1/2/3
+            # CHOI-diff gates (>=10%, >=15%) fail closed on a no-conviction cycle.
+            # On a MIXED-SIGN cycle the figure is deliberately large (opposite
+            # signs widen the gap) — that magnitude is the divergence strength.
             if _choi_valid:
                 _larger_ch = max(abs(suppResCeChOi), abs(suppResPeChOi)) if max(abs(suppResCeChOi), abs(suppResPeChOi)) > 0 else 1
                 _choi_pct = round(abs(suppResCeChOi - suppResPeChOi) / _larger_ch * 100, 1)
