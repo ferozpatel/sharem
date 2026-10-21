@@ -315,24 +315,29 @@ OPT_RANGE_LOW_SAMPLE_FACTOR = 0.5
 # sampling artifact (opening volatility of a freshly-rolled contract) and is
 # halved. Sensex LOW_SAMPLE_MEDIAN_THRESHOLD equivalent.
 OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION = 0.35
-# Target-reachability rail (Sensex 2026-10-15 lesson). effective_tgt is
-# median * TARGET_MULTIPLIER; if the median is inflated the target level
-# (premium - effective_tgt) can go NEGATIVE/unreachable, leaving the trade with
-# no exit but the SL. Cap the median so the target never asks the premium to
-# fall more than this fraction. Capping the MEDIAN (not just the target) keeps
-# SL and target on one basis, so R:R is preserved whatever the cap does.
-# NOTE: at TARGET_MULTIPLIER=5.0 this binds at median > 0.14 * premium (it was
-# 0.175 at 4.0), so the cap fires more often — watch for MEDIAN_CAPPED lines.
-MAX_TGT_PREMIUM_FRACTION = 0.70
+# Target floor (user rule). The median is NEVER modified to make a target fit —
+# SL and target are always median * 2.4 / median * 5.0 on the RAW median. The
+# only intervention is when the resulting target LEVEL
+# (premium - effective_tgt) comes out <= 0, i.e. the option would have to go
+# below zero to pay out. In that single case the target LEVEL becomes this many
+# premium points, so the position is held until the premium decays to it:
+#
+#   premium 400, effective_tgt 450 -> level 400-450 = -50  (impossible)
+#   -> target LEVEL = 15, i.e. effective_tgt = 400 - 15 = 385
+#
+# A SMALL POSITIVE level is left alone (a level of 3 stays 3) — the floor only
+# rescues the negative/zero case. Note this makes the target REACHABLE, not
+# easy: the required decay grows (400 -> 385 points here).
+TARGET_MIN_PREMIUM_LEVEL = 15.0
 
 # Fallback when a freshly-listed option has no usable candle history yet: size
 # SL/target as a fraction of the entry premium instead of the candle median.
 SL_PREMIUM_FALLBACK_FRACTION = 0.40   # effective_sl  = entry_premium * this
-# Holding the 2.4:5.0 ratio here would need 0.40 * (5.0/2.4) = 0.833, i.e. a
-# target demanding 83% premium decay — past the MAX_TGT_PREMIUM_FRACTION (0.70)
-# reachability ceiling. Capped at 0.70, so this rare no-candle-history path runs
-# R:R 0.70/0.40 = 1.75 instead of the candle path's ~2.08.
-TGT_PREMIUM_FALLBACK_FRACTION = 0.70  # effective_tgt = entry_premium * this
+# Mirrors the 2.4:5.0 multiplier ratio so this path has the same R:R as the
+# candle path: 0.40 * (5.0/2.4) = 0.833. (It was 0.70 while the now-removed
+# median cap existed; restored to ratio parity.) Level = premium * 0.167, which
+# is always positive, so the TARGET_MIN_PREMIUM_LEVEL floor never fires here.
+TGT_PREMIUM_FALLBACK_FRACTION = 0.833  # effective_tgt = entry_premium * this
 
 # ---- Order-book liquidity + marketable-limit entry (slippage control) ----
 # Entry orders use a MARKETABLE LIMIT (cross to the touch, capped) instead of a
@@ -3328,9 +3333,12 @@ def option_candle_median_range(symbol, client, n_candles=OPT_RANGE_CANDLES):
     than 10 exist, the median is still taken over whatever valid candles are
     available (no minimum) — matching Sensex.
 
-    The low-sample halving and target-reachability caps are applied by the
-    CALLER (build_trade_plan), which knows the sold premium those guards are
-    measured against. See LOW_SAMPLE_MEDIAN_HALVED / MEDIAN_CAPPED.
+    The returned median is used AS-IS for SL/target — it is never scaled to make
+    a target fit. The caller (build_trade_plan) applies only the thin-window
+    low-sample halving (LOW_SAMPLE_MEDIAN_HALVED), which needs the sold premium
+    for its threshold. An unreachable target is handled on the TARGET side by
+    the TARGET_MIN_PREMIUM_LEVEL floor (TARGET_FLOORED), not by touching this
+    median.
     """
     try:
         # getHistorical returns a list of {time,open,high,low,close,volume}
@@ -3968,28 +3976,10 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
                       OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION,
                       _fmt(main_premium, 2), _fmt(median_range, 2)))
 
-        # --- Guard 2: TARGET REACHABILITY (Sensex 2026-10-15 lesson) -------
-        # target level = premium - median*TARGET_MULTIPLIER. If the median is
-        # large relative to the premium that level goes negative/unreachable and
-        # the trade can only end at SL or square-off. Cap the MEDIAN so the
-        # target never demands more than MAX_TGT_PREMIUM_FRACTION of decay;
-        # capping the shared basis keeps R:R at exactly 1.6.
-        if main_premium and main_premium > 0:
-            median_cap = (float(main_premium) * MAX_TGT_PREMIUM_FRACTION
-                          / TARGET_MULTIPLIER)
-            if median_range > median_cap:
-                _raw = median_range
-                median_range = median_cap
-                notes.append("median_capped_for_target_reachability")
-                print("MEDIAN_CAPPED [{}] {} raw_median={} would need the "
-                      "premium to fall {} (> {} of {}) -> capped median={} "
-                      "(target stays reachable; R:R unchanged at {}).".format(
-                          _now_ist(), main_symbol, _fmt(_raw, 2),
-                          _fmt(_raw * TARGET_MULTIPLIER, 2),
-                          MAX_TGT_PREMIUM_FRACTION, _fmt(main_premium, 2),
-                          _fmt(median_range, 2),
-                          _fmt(TARGET_MULTIPLIER / SL_MULTIPLIER, 2)))
-
+        # NOTE: the median is deliberately NOT adjusted to make the target fit.
+        # SL/target come straight off the RAW median; an unreachable target is
+        # handled by the TARGET_MIN_PREMIUM_LEVEL floor below, which moves the
+        # TARGET only and leaves the median and the SL untouched.
         effective_sl = median_range * SL_MULTIPLIER
         effective_tgt = median_range * TARGET_MULTIPLIER
         sl_basis = "candle_median({}c)={}".format(n_used, _fmt(median_range, 2))
@@ -4002,6 +3992,40 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         effective_sl = effective_tgt = None
         sl_basis = "unavailable(no_candle_history,no_premium)"
         notes.append("sl_target_unavailable")
+
+    # ---- Target floor: rescue an UNREACHABLE (<= 0) target level -----------
+    # Applies to BOTH the candle-median and premium-fallback paths. Only fires
+    # when premium - effective_tgt <= 0 (the option would have to go below zero
+    # to pay out); a small POSITIVE level is left exactly as computed. The SL
+    # and the median are NOT touched — only the target moves.
+    if (effective_tgt is not None and main_premium
+            and float(main_premium) > 0):
+        _tgt_level = float(main_premium) - float(effective_tgt)
+        if _tgt_level <= 0:
+            if float(main_premium) > TARGET_MIN_PREMIUM_LEVEL:
+                _raw_tgt = effective_tgt
+                effective_tgt = float(main_premium) - TARGET_MIN_PREMIUM_LEVEL
+                notes.append("target_floored_to_{}pt_level".format(
+                    _fmt(TARGET_MIN_PREMIUM_LEVEL, 0)))
+                print("TARGET_FLOORED [{}] {} target {} x {} = {} pts would "
+                      "put the level at {} (<= 0, unreachable) -> target LEVEL "
+                      "set to {} pts, so effective_tgt={} (decay {} pts). "
+                      "Median and SL unchanged.".format(
+                          _now_ist(), main_symbol, _fmt(median_range, 2),
+                          TARGET_MULTIPLIER, _fmt(_raw_tgt, 2),
+                          _fmt(_tgt_level, 2),
+                          _fmt(TARGET_MIN_PREMIUM_LEVEL, 0),
+                          _fmt(effective_tgt, 2), _fmt(effective_tgt, 2)))
+            else:
+                # Premium is already at/below the floor — nothing sane to aim
+                # at. Leave the target as computed and flag it loudly.
+                notes.append("target_unreachable_premium_below_floor")
+                print("TARGET_FLOOR_SKIPPED [{}] {} premium {} is at/below the "
+                      "{}pt floor; cannot set a sane target level — leaving "
+                      "effective_tgt={} (likely SL/expiry exit only).".format(
+                          _now_ist(), main_symbol, _fmt(main_premium, 2),
+                          _fmt(TARGET_MIN_PREMIUM_LEVEL, 0),
+                          _fmt(effective_tgt, 2)))
 
     # ---- Risk-based sizing ----
     if effective_sl:
@@ -5261,11 +5285,13 @@ def startup():
     print("  median_basis         = last {} x 3m HIGH-LOW (1st skipped); "
           "fewer than {} is still used".format(
               OPT_RANGE_CANDLES, OPT_RANGE_CANDLES))
-    print("  median_guards        = halve if <{}c AND >{}x premium; cap so "
-          "target needs <={}x premium decay".format(
+    print("  median_guards        = RAW median used as-is (no target cap); "
+          "halve only if <{}c AND >{}x premium".format(
               OPT_RANGE_MIN_MEDIAN_CANDLES,
-              OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION,
-              MAX_TGT_PREMIUM_FRACTION))
+              OPT_RANGE_LOW_SAMPLE_PREMIUM_FRACTION))
+    print("  target_floor         = if (premium - target) <= 0 then target "
+          "LEVEL = {} pts (SL + median untouched)".format(
+              _fmt(TARGET_MIN_PREMIUM_LEVEL, 0)))
     print("  contract_value       = {} BTC/contract (P&L multiplier)".format(
         CONTRACT_VALUE))
     print("  hedge                = delta band (target |delta|*{} +/-{}) -> "
