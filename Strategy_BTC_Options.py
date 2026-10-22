@@ -271,9 +271,16 @@ CONTRACT_VALUE = 0.001            # BTC per contract (Delta spec, UI-confirmed)
 
 # Lot bounds + rounding (Sensex-equivalent). MIN keeps a trade placeable; MAX is
 # a safety ceiling; the fractional-lot round-up recovers size lost to flooring.
+# NOTE MAX_LOTS is a backstop only and effectively never binds at BTC's 0.001
+# contract value — the REAL constraint is the margin cap below.
 MIN_LOTS = 1
 MAX_LOTS = 10000
 LOT_ROUNDUP_FRACTION = 0.75
+
+# Fraction of the REAL available balance the planned spread's defined-risk
+# margin may consume (Sensex DEPLOYABLE_CAPITAL_FRACTION). Lots are capped to
+# fit inside this; see the MARGIN_CAP block in build_trade_plan.
+DEPLOYABLE_CAPITAL_FRACTION = 0.97
 
 # Hedge-offset ratio bounds: the discount applied to the short-leg SL for the
 # hedge's share of the loss. Clamped so a noisy ratio can't collapse net SL to
@@ -4056,10 +4063,22 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     max_reward_usd = (net_tgt_points * CONTRACT_VALUE * lots
                       if net_tgt_points else None)
 
-    # ---- Estimated portfolio (defined-risk) margin vs available balance ----
-    # Observation-only: shows whether the planned spread fits available margin.
-    # Does NOT cap sizing (sizing stays pure risk-based). Best-effort — a failed
-    # balance/margin read just leaves the figures None.
+    # ---- Portfolio (defined-risk) margin vs available balance + LOT CAP ----
+    # Sensex `apply_margin_cap` parity. This used to be observation-only, which
+    # on 2026-10-22 04:30 printed "fits=NO" and then placed anyway: the hedge
+    # BUY filled, the main SELL came back 'insufficient_margin', and the hedge
+    # had to be unwound — a wasted round-trip the check had already predicted.
+    #
+    # Now the risk-based lot count is CAPPED so the estimated defined-risk
+    # margin fits inside DEPLOYABLE_CAPITAL_FRACTION of the real available
+    # balance. BTC's estimate is a LOCAL linear formula
+    # (per_lot = max(0, strike_width - net_credit) * CONTRACT_VALUE), so the
+    # cap is solved directly instead of Sensex's step-down loop (which only
+    # exists because Fyers needs an API call per candidate size).
+    #
+    # TRADE-OFF: a capped trade risks LESS than FIXED_RISK_PER_TRADE. That is
+    # deliberate and matches Sensex — a smaller position beats a rejected order.
+    # The MARGIN_CAP line below always states the resulting actual risk.
     est_margin = margin_avail = None
     try:
         est_margin, margin_avail = helper.getSpreadMargin([
@@ -4070,6 +4089,44 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
         ], client)
     except Exception as exc:  # noqa: BLE001 - margin is best-effort/observational
         notes.append("margin_estimate_failed({})".format(type(exc).__name__))
+
+    if (est_margin is not None and margin_avail is not None and lots
+            and est_margin > 0):
+        usable = float(margin_avail) * DEPLOYABLE_CAPITAL_FRACTION
+        if float(est_margin) > usable:
+            per_lot_margin = float(est_margin) / float(lots)
+            capped = int(usable / per_lot_margin) if per_lot_margin > 0 else 0
+            capped = max(0, min(capped, lots))
+            if capped < MIN_LOTS:
+                # Not even the minimum position fits. Refuse rather than fire an
+                # order the exchange will reject (and risk a one-legged fill).
+                notes.append("margin_cap_blocks_entry")
+                print("MARGIN_BLOCKED [{}] even {} lot(s) needs ${} but only "
+                      "${} is usable ({}% of ${} available) — refusing the "
+                      "trade (add funds to raise lots).".format(
+                          _now_ist(), MIN_LOTS,
+                          _fmt(per_lot_margin * MIN_LOTS, 2), _fmt(usable, 2),
+                          int(DEPLOYABLE_CAPITAL_FRACTION * 100),
+                          _fmt(margin_avail, 2)))
+                lots = 0
+            else:
+                _was = lots
+                lots = capped
+                est_margin = per_lot_margin * lots
+                max_risk_usd = (net_sl_points * CONTRACT_VALUE * lots
+                                if net_sl_points else None)
+                max_reward_usd = (net_tgt_points * CONTRACT_VALUE * lots
+                                  if net_tgt_points else None)
+                notes.append("margin_capped_lots({}->{})".format(_was, lots))
+                print("MARGIN_CAP [{}] risk-based lots={} needs ${} > usable "
+                      "${} ({}% of ${}) -> capped to {} lots (est_margin now "
+                      "${}). Trade risks ${} instead of the ${} budget."
+                      .format(_now_ist(), _was,
+                              _fmt(per_lot_margin * _was, 2), _fmt(usable, 2),
+                              int(DEPLOYABLE_CAPITAL_FRACTION * 100),
+                              _fmt(margin_avail, 2), lots, _fmt(est_margin, 2),
+                              _fmt(max_risk_usd, 2),
+                              _fmt(FIXED_RISK_PER_TRADE, 2)))
 
     # ---- Order-book liquidity + marketable-limit prices (ENTRY-TIME only) ----
     # One L2 read per leg (main SELL hits the bid, hedge BUY lifts the ask) to
@@ -5280,7 +5337,10 @@ def startup():
           "grid".format(HEDGE_TARGET_DELTA_FRACTION, HEDGE_DELTA_TOLERANCE,
                         HEDGE_MAX_PREMIUM_FRACTION, HEDGE_OFFSET_STRIKES))
     print("  lots                 = risk-based [{}..{}], offset ratio "
-          "DELTA->PREMIUM->none".format(MIN_LOTS, MAX_LOTS))
+          "DELTA->RANGE->PREMIUM->none".format(MIN_LOTS, MAX_LOTS))
+    print("  margin_cap           = lots capped so defined-risk margin <= {}% "
+          "of available; entry REFUSED if even {} lot won't fit".format(
+              int(DEPLOYABLE_CAPITAL_FRACTION * 100), MIN_LOTS))
 
     print("STARTUP execution (order book + slippage control):")
     print("  entry_order_type     = {} (fallback market when off/no book)"
