@@ -4090,7 +4090,23 @@ def build_trade_plan(bias, position, index_price, snapshot, chain, client,
     except Exception as exc:  # noqa: BLE001 - margin is best-effort/observational
         notes.append("margin_estimate_failed({})".format(type(exc).__name__))
 
-    if (est_margin is not None and margin_avail is not None and lots
+    if (est_margin is None or margin_avail is None) and lots and lots > MIN_LOTS:
+        # Sensex parity: when the margin figures are unavailable there is nothing
+        # to size the capital cap against, so trusting the full risk-based lot
+        # count is the dangerous choice (that is how 1298 lots got attempted).
+        # Fall back to MIN_LOTS rather than running uncapped.
+        _was = lots
+        lots = MIN_LOTS
+        max_risk_usd = (net_sl_points * CONTRACT_VALUE * lots
+                        if net_sl_points else None)
+        max_reward_usd = (net_tgt_points * CONTRACT_VALUE * lots
+                          if net_tgt_points else None)
+        notes.append("margin_unverified_min_lots({}->{})".format(_was, lots))
+        print("MARGIN_UNVERIFIED [{}] est_margin={!r} available={!r} — cannot "
+              "verify the capital cap, so lots dropped {} -> {} (MIN_LOTS) "
+              "instead of running uncapped.".format(
+                  _now_ist(), est_margin, margin_avail, _was, lots))
+    elif (est_margin is not None and margin_avail is not None and lots
             and est_margin > 0):
         usable = float(margin_avail) * DEPLOYABLE_CAPITAL_FRACTION
         if float(est_margin) > usable:
