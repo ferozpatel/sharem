@@ -27,7 +27,14 @@ from delta_client import CredentialLoadError, require_delta
 # LIVE MODE: when False the strategy PLACES REAL ORDERS once a confirmed Sensex
 # signal builds a trade plan (Req 9.3/9.4). Set True to return to observation
 # (log-only, no orders). Operator flipped this False to go live.
-OBSERVATION_MODE = False
+# OBSERVATION / PAPER-TRADE MODE.
+# True  = place NO real orders, but still open a VIRTUAL position when a signal
+#         fires and monitor it exactly like a live trade (2s SL/target polling,
+#         the same "In Trade" heartbeat, the same trailing, the same session
+#         rules). On a confirmed SL/target the virtual position is closed and the
+#         loop returns to the 3-min candle cadence. Nothing touches the exchange.
+# False = live: real orders via _place_live_entry.
+OBSERVATION_MODE = True
 
 # Index-price anchor for the S/R band, no-trade zone, and bias (Req 9.11);
 # the perpetual price is logged only (Req 9.12).
@@ -3136,6 +3143,49 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
             blockers=blockers_str, signal_decision=decision,
             pcr_trend="{}x{}".format(pcr_trend.get("direction"),
                                      pcr_trend.get("streak")))
+        # ---- PAPER TRADE: open a VIRTUAL position and track it as usual ----
+        # No order is transmitted. The position is recorded so the run loop
+        # switches to 2s SL/target polling and the monitor runs end-to-end
+        # exactly as it would live; on a confirmed SL/target the virtual
+        # position closes and the loop returns to the 3-min cadence. Gated on
+        # the SAME trigger as live (confirmed Sensex signal + trade plan +
+        # session rule) so the simulation mirrors live trade selection.
+        if (trade_plan is not None and session_allows_entry
+                and not entry_state.get("position_open")):
+            paper_pos = _build_paper_position(trade_plan)
+            if paper_pos:
+                entry_state["position_open"] = True
+                entry_state["open_position"] = paper_pos
+                entry_state["trades_today"] = (
+                    entry_state.get("trades_today", 0) + 1)
+                entry_state["entry_confirm_count"] = 0
+                _p_sl = (float(paper_pos["main_entry_price"])
+                         + float(paper_pos["effective_sl"]))
+                _p_tg = (float(paper_pos["main_entry_price"])
+                         - float(paper_pos["effective_tgt"]))
+                print("PAPER_ENTRY [{ts}] {kind} (NO REAL ORDER) SELL {ms} / "
+                      "BUY {hs} size={sz} expiry={exp}".format(
+                          ts=_now_ist(), kind=paper_pos["spread_kind"],
+                          ms=paper_pos["main_symbol"],
+                          hs=paper_pos["hedge_symbol"],
+                          sz=paper_pos["size"], exp=paper_pos["expiry"]))
+                print("ENTRY_SL_TGT: spread=CREDIT(PAPER)  EntryPrem={ep}  "
+                      "SL={sl}  Target={tg}  AnchorSrc=PLAN_PREMIUM  "
+                      "SL_Source=OPTION_RANGE(median={m},SLx{sm},Tgtx{tm})  "
+                      "lots={l}  net_credit={c}".format(
+                          ep=_fmt(paper_pos["main_entry_price"], 2),
+                          sl=_fmt(_p_sl, 2), tg=_fmt(_p_tg, 2),
+                          m=_fmt(trade_plan.get("median_range"), 2),
+                          sm=SL_MULTIPLIER, tm=TARGET_MULTIPLIER,
+                          l=paper_pos["size"],
+                          c=_fmt(paper_pos["entry_credit"], 2)))
+                print("PAPER_OPENED [{}] virtual position recorded; "
+                      "trades_today={}.".format(
+                          _now_ist(), entry_state["trades_today"]))
+            else:
+                print("PAPER_ENTRY_SKIPPED [{}] trade plan missing a field the "
+                      "monitor needs (symbols/lots/SL/target/premium); nothing "
+                      "tracked this cycle.".format(_now_ist()))
     elif trade_plan is not None and session_allows_entry:
         # LIVE credit-spread placement driven by the Sensex-equivalent trade
         # plan (plan strikes / risk-based lots / per-trade SL+target). The old
@@ -4262,6 +4312,58 @@ def log_trade_plan(plan, decision_dir):
 # ============================================================
 # LIVE-ORDER HOOK (Req 9.5, 9.16, 9.17) — Task 14.3
 # ============================================================
+def _build_paper_position(plan):
+    """
+    Build a VIRTUAL open_position from a trade plan — no orders, no API calls.
+
+    OBSERVATION_MODE uses this so a signal is tracked end-to-end exactly like a
+    live trade: the monitor reads the same fields, so the 2s polling, the
+    "In Trade" heartbeat, the SL/target levels, trailing and the session rules
+    all behave identically. The only differences from live are that no order is
+    ever transmitted and the anchor is the plan's QUOTED premium rather than a
+    post-fill LTP read, so the simulation carries no entry slippage.
+
+    Returns the position dict, or None when the plan lacks what the monitor
+    needs (symbols, size, SL/target, or the main-leg premium anchor).
+    """
+    if not isinstance(plan, dict):
+        return None
+    main_symbol = plan.get("main_symbol")
+    hedge_symbol = plan.get("hedge_symbol")
+    size = plan.get("lots")
+    effective_sl = plan.get("effective_sl")
+    effective_tgt = plan.get("effective_tgt")
+    main_premium = plan.get("main_premium")
+    if not (main_symbol and hedge_symbol and size and size > 0):
+        return None
+    if effective_sl is None or effective_tgt is None or main_premium is None:
+        return None
+    return {
+        "paper": True,
+        "spread_kind": plan.get("spread_kind"),
+        "option_type": plan.get("option_type"),
+        "main_symbol": main_symbol,
+        "main_strike": plan.get("main_strike"),
+        "main_side": "sell",
+        "main_order_id": None,
+        "main_entry_price": float(main_premium),
+        "hedge_symbol": hedge_symbol,
+        "hedge_strike": plan.get("hedge_strike"),
+        "hedge_side": "buy",
+        "hedge_order_id": None,
+        "hedge_entry_price": plan.get("hedge_premium"),
+        "entry_credit": plan.get("est_credit"),
+        "effective_sl": effective_sl,
+        "effective_tgt": effective_tgt,
+        "offset_ratio": plan.get("offset_ratio"),
+        "size": size,
+        "bias": plan.get("direction"),
+        "position": plan.get("position"),
+        "expiry": plan.get("expiry"),
+        "opened_ts": _now_ist(),
+    }
+
+
 def _place_live_entry(client, bias, position, snapshot, index_price,
                       state=None, plan=None):
     """
@@ -4882,23 +4984,19 @@ def monitor_open_position(client, state):
     if (TRAILING_ENABLED and eff_tgt is not None and not already_breakeven
             and unrealized_points >= TRAIL_TRIGGER_TARGET_FRACTION
             * float(eff_tgt)):
-        if OBSERVATION_MODE:
-            trail_action = "would_trail_to_breakeven"
-            print("MONITOR_TRAIL [{}] WOULD_TRAIL_TO_BREAKEVEN: main-leg "
-                  "unrealized {} pts >= {} * target {} (OBSERVATION_MODE; SL "
-                  "not actually moved).".format(
-                      _now_ist(), _fmt(unrealized_points),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION), _fmt(eff_tgt)))
-        else:
-            state["sl_at_breakeven"] = True
-            already_breakeven = True
-            trail_action = "trailed_to_breakeven"
-            print("MONITOR_TRAIL [{}] SL moved to BREAKEVEN: main-leg "
-                  "unrealized {} pts >= {} * target {} (effective SL now the "
-                  "entry premium {}).".format(
-                      _now_ist(), _fmt(unrealized_points),
-                      _fmt(TRAIL_TRIGGER_TARGET_FRACTION), _fmt(eff_tgt),
-                      _fmt(anchor)))
+        # Trailing APPLIES in paper mode too — otherwise the simulated outcome
+        # would diverge from what live would have done (two of the 2026-10-22
+        # trades were saved from full losses by the breakeven trail).
+        state["sl_at_breakeven"] = True
+        already_breakeven = True
+        trail_action = "trailed_to_breakeven"
+        print("MONITOR_TRAIL [{}] SL moved to BREAKEVEN{}: main-leg "
+              "unrealized {} pts >= {} * target {} (effective SL now the "
+              "entry premium {}).".format(
+                  _now_ist(), " (PAPER)" if OBSERVATION_MODE else "",
+                  _fmt(unrealized_points),
+                  _fmt(TRAIL_TRIGGER_TARGET_FRACTION), _fmt(eff_tgt),
+                  _fmt(anchor)))
 
     # ----- [NEEDS INPUT] guard: no concrete target/SL to evaluate --------
     if eff_tgt is None or eff_sl is None:
@@ -4999,16 +5097,34 @@ def monitor_open_position(client, state):
               "session (a loss would have allowed re-entry up to {} SLs)."
               .format(_now_ist(), MAX_SL_PER_DAY))
 
-    # ----- OBSERVATION mode: log the would-have-exit; place NO orders -----
+    # ----- PAPER mode: close the VIRTUAL position; place NO orders --------
+    # The virtual position MUST be cleared here, otherwise position_open stays
+    # True forever and the run loop never leaves the 2s polling cadence. The
+    # SL-count / session-won rules were already applied above, so a paper
+    # session halts and ends exactly like a live one.
     if OBSERVATION_MODE:
-        print("MONITOR_EXIT [{}] WOULD_HAVE_EXITED reason={} unrealized={} pts "
-              "(pnl={}) confirmed tgt={}/{} sl={}/{} | OBSERVATION_MODE "
-              "(no exit order placed).".format(
+        last_exit = {
+            "reason": exit_reason,
+            "paper": True,
+            "unrealized_points": unrealized_points,
+            "unrealized_pnl": unrealized_pnl,
+            "main_symbol": main_symbol,
+            "hedge_symbol": hedge_symbol,
+            "size": size,
+            "closed_ts": _now_ist(),
+        }
+        state["last_exit"] = last_exit
+        state["position_open"] = False
+        state["open_position"] = None
+        _reset_monitor_state(state)
+        print("PAPER_EXIT [{}] CLOSED (NO REAL ORDER) reason={} "
+              "unrealized={} pts (pnl={}) confirmed tgt={}/{} sl={}/{}; "
+              "virtual position closed — resuming 3-min cadence.".format(
                   _now_ist(), exit_reason, _fmt(unrealized_points),
                   _fmt(unrealized_pnl), tgt_count, TGT_CONFIRM_TICKS,
                   sl_count, SL_CONFIRM_TICKS))
         return {"monitored": True, "priced": True, "actionable": True,
-                "exit": "would_have_exited", "reason": exit_reason,
+                "exit": "paper_closed", "reason": exit_reason,
                 "unrealized_points": unrealized_points,
                 "unrealized_pnl": unrealized_pnl}
 
@@ -5189,11 +5305,26 @@ def handle_expiry_rollover(client, state):
     # OBSERVATION mode: log the would-have-squared-off; place NO orders and
     # mark it done for this expiry so it does not repeat every cycle (Req 9.25).
     if OBSERVATION_MODE:
-        print("WOULD_HAVE_SQUARED_OFF [{}] expiry={} open_position=({}) — "
-              "pre-expiry window (11:45-12:00 UTC); OBSERVATION_MODE (no exit "
-              "order placed) (9.25).".format(_now_ist(), current_expiry, legs))
+        # PAPER: close the VIRTUAL position, same as the live branch does, so a
+        # paper trade cannot sit "open" across the rollover and pin the loop in
+        # 2s polling. No order is placed.
+        print("PAPER_SQUARED_OFF [{}] expiry={} open_position=({}) — "
+              "pre-expiry window (11:45-12:00 UTC); virtual position closed, "
+              "NO REAL ORDER (9.25).".format(
+                  _now_ist(), current_expiry, legs))
+        state["last_exit"] = {
+            "reason": "pre_expiry_square_off", "paper": True,
+            "main_symbol": (open_position or {}).get("main_symbol")
+            if isinstance(open_position, dict) else None,
+            "hedge_symbol": (open_position or {}).get("hedge_symbol")
+            if isinstance(open_position, dict) else None,
+            "closed_ts": _now_ist(),
+        }
+        state["position_open"] = False
+        state["open_position"] = None
+        _reset_monitor_state(state)
         state["squared_off_for"] = current_expiry
-        result["squared_off"] = "would"
+        result["squared_off"] = "paper"
         return result
 
     # LIVE mode: force-exit every open position via exitAll (Req 9.25).
@@ -5424,10 +5555,15 @@ def run():
 
     print("=" * 60)
     if OBSERVATION_MODE:
-        print("OBSERVATION_MODE is ON: the strategy will LOG signals, the PCR "
-              "table, the option-chain snapshot, support/resistance levels, "
-              "and WOULD_HAVE_ENTERED decisions, and will place NO live orders "
-              "(Req 9.3, 9.4).")
+        print("OBSERVATION_MODE is ON (PAPER TRADING): NO live orders are "
+              "placed anywhere (Req 9.3, 9.4). Signals, the PCR table, the "
+              "chain snapshot and S/R levels are logged as usual AND a "
+              "qualifying signal opens a VIRTUAL position that is then tracked "
+              "exactly like a live trade — 2s SL/target polling, the same "
+              "'In Trade' heartbeat, the same breakeven trailing and the same "
+              "session rules (2-SL halt / win-ends-session). On a confirmed "
+              "SL or target the virtual position is closed (PAPER_EXIT) and "
+              "the loop returns to the 3-min candle cadence.")
     else:
         print("OBSERVATION_MODE is OFF: live orders would route through "
               "helper_delta once entry conditions are confirmed (Req 9.5). "
