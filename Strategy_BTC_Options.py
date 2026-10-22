@@ -3152,7 +3152,8 @@ def run_signal_cycle(client, prev_snapshot=None, prev_pcr=None,
         # session rule) so the simulation mirrors live trade selection.
         if (trade_plan is not None and session_allows_entry
                 and not entry_state.get("position_open")):
-            paper_pos = _build_paper_position(trade_plan)
+            paper_pos = _build_paper_position(
+                trade_plan, bias=decision_dir, position=sr_position)
             if paper_pos:
                 entry_state["position_open"] = True
                 entry_state["open_position"] = paper_pos
@@ -4312,7 +4313,7 @@ def log_trade_plan(plan, decision_dir):
 # ============================================================
 # LIVE-ORDER HOOK (Req 9.5, 9.16, 9.17) — Task 14.3
 # ============================================================
-def _build_paper_position(plan):
+def _build_paper_position(plan, bias=None, position=None):
     """
     Build a VIRTUAL open_position from a trade plan — no orders, no API calls.
 
@@ -4357,8 +4358,11 @@ def _build_paper_position(plan):
         "effective_tgt": effective_tgt,
         "offset_ratio": plan.get("offset_ratio"),
         "size": size,
-        "bias": plan.get("direction"),
-        "position": plan.get("position"),
+        # The plan itself carries no bias/position, so the caller passes the
+        # same values the LIVE path records (decision direction + S/R side),
+        # keeping paper and live position dicts field-identical.
+        "bias": bias,
+        "position": position,
         "expiry": plan.get("expiry"),
         "opened_ts": _now_ist(),
     }
