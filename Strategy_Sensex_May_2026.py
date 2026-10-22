@@ -200,6 +200,34 @@ MIN_MEDIAN_CANDLES = 4            # a median below this many candles is treated 
 LOW_SAMPLE_MEDIAN_THRESHOLD = 40  # only halve a thin-window median if it exceeds this
 LOW_SAMPLE_MEDIAN_FACTOR = 0.5    # halve it (67.55 -> 33.78)
 
+# ============================================================
+# TARGET-REACHABILITY MEDIAN CAP (CREDIT spreads only)
+# ============================================================
+# On a CREDIT spread the target level is  premium - (median x TARGET_MULT).  When the
+# median is large relative to the sold premium that level goes to zero or NEGATIVE, i.e.
+# the option would have to trade below zero to pay out — the trade then has no exit but
+# the SL or the 3:24 square-off. That is exactly what happened on 2026-10-15:
+#   median 67.55, premium 215.05 -> target = 215.05 - (67.55 x 4.0) = -54.95  (impossible)
+#
+# RULE: cap the MEDIAN so the target never asks the premium to fall more than
+# MAX_TGT_PREMIUM_FRACTION of its entry value. Capping the median (rather than the target
+# alone) keeps SL, target and qty sizing all on ONE basis, so R:R stays exactly
+# TARGET_MULT/SL_MULT and tradeOptRange remains the single source of truth.
+#
+#   median_cap = premium * MAX_TGT_PREMIUM_FRACTION / TARGET_MULT
+#
+# At TARGET_MULT 4.5 and 0.75 this binds when median > premium * 0.1667, and when it binds
+# the target level lands at premium * 0.25 and the SL at premium * 0.3667.
+#
+# SIDE EFFECTS when it fires (by design — the levels share one basis):
+#   * the SL also tightens (it is median x SL_MULT on the same capped median)
+#   * a tighter SL means MORE lots for the same Rs 4,000 budget (sizing is risk-based)
+# Watch for MEDIAN_CAPPED lines in the log to see how often this binds.
+#
+# NOT applied to DEBIT spreads: there the target is premium + (median x TARGET_MULT), which
+# rises and can never be unreachable, so capping would shrink the median for no reason.
+MAX_TGT_PREMIUM_FRACTION = 0.75
+
 # Lot sizing rounds UP when the fractional lot is >= this (else floors). 0.75 means a 3.75+
 # raw lot count becomes 4. Recovers position size lost to flooring (see calc_lots_by_risk);
 # worst-case net SL overshoot above FIXED_RISK_PER_TRADE is ~(1 - 0.75) = 25% of one lot.
@@ -1395,6 +1423,53 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
         return None
 
 
+def apply_target_reachability_cap(opt_range, main_premium, target_mult, sl_mult,
+                                  option_symbol=""):
+    """
+    Cap the option candle median so a CREDIT spread's target stays reachable.
+
+    Only for CREDIT spreads, where target = premium - (median x target_mult). A large
+    median against a small premium drives that level to zero/negative, leaving the trade
+    with no exit but the SL or the EOD square-off (2026-10-15: median 67.55 on premium
+    215.05 -> target -54.95). See MAX_TGT_PREMIUM_FRACTION for the full rationale.
+
+    The median is the SINGLE basis for SL, target and qty sizing, so capping it here (at
+    the sizing site, before tradeOptRange is stored) keeps all three in agreement and
+    leaves R:R at exactly target_mult/sl_mult. Must be called BEFORE effective_sl_pre /
+    tradeOptRange so the post-entry SL/Target block inherits the same value.
+
+    Returns the median to use (capped or unchanged); never raises.
+    """
+    try:
+        if not opt_range or opt_range <= 0:
+            return opt_range
+        if not main_premium or float(main_premium) <= 0:
+            return opt_range
+        if not target_mult or target_mult <= 0:
+            return opt_range
+
+        median_cap = (float(main_premium) * MAX_TGT_PREMIUM_FRACTION
+                      / float(target_mult))
+        if opt_range <= median_cap:
+            return opt_range
+
+        raw = opt_range
+        capped = round(median_cap, 2)
+        print(f"MEDIAN_CAPPED: symbol={option_symbol}",
+              f"| raw_median={round(raw, 2)}",
+              f"| target would need premium to fall {round(raw * target_mult, 2)}",
+              f"(> {MAX_TGT_PREMIUM_FRACTION} of {main_premium})",
+              f"-> capped_median={capped}",
+              f"| new SL={round(capped * sl_mult, 2)}",
+              f"target={round(capped * target_mult, 2)}",
+              f"| target_level={round(float(main_premium) - capped * target_mult, 2)}",
+              f"| R:R unchanged at {round(target_mult / sl_mult, 2)}")
+        return capped
+    except Exception as e:
+        print("MEDIAN_CAP_ERROR:", str(e))
+        return opt_range
+
+
 def get_entry_anchor_premium(option_symbol, fyers_client):
     """
     Resolve the premium used to anchor SL/Target immediately AFTER a spread is filled.
@@ -1730,6 +1805,11 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
+        # CREDIT spread: target = premium - median x TARGET_MULT, so an oversized median
+        # makes that level zero/negative and unreachable. Cap BEFORE tradeOptRange is
+        # stored so sizing and the post-entry SL/Target use the identical median.
+        opt_range = apply_target_reachability_cap(
+            opt_range, entryPrice, TARGET_MULT_BULL, SL_MULT_BULL, atmPE)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
@@ -1815,6 +1895,11 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
         opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
+        # CREDIT spread: target = premium - median x TARGET_MULT, so an oversized median
+        # makes that level zero/negative and unreachable. Cap BEFORE tradeOptRange is
+        # stored so sizing and the post-entry SL/Target use the identical median.
+        opt_range = apply_target_reachability_cap(
+            opt_range, entryPrice, TARGET_MULT_BEAR, SL_MULT_BEAR, atmCE)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
