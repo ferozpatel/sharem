@@ -3418,7 +3418,7 @@ while x == 1:
             # (The OI-based Support/Resistance diagnostic block that used to sit here —
             # OI_SUPP_RES / OI_SUPPORT / OI_RESISTANCE — was removed. It was pure logging,
             # never wired into any gate. The live S/R remains get_support_resistance()
-            # on the spot anchor, logged as SUPP_RES / SR_NEIGHBOUR.)
+            # on the spot anchor, logged as SUPP_RES.)
 
             # Morning rule: 9:15-9:48 IST. CHOI is noisy/zero in first ~11 candles after open.
             # Use TOTAL OI direction (carried from yesterday's positioning) as the trapped-writers signal.
