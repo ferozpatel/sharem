@@ -3044,18 +3044,45 @@ while x == 1:
                     # pcr9StrikeList, taken from the CURRENT ordered strikes.
                     _inv_strikes9 = _inv_strikes17[4:13]
                     _ser17, _ser9, _cov = [], [], []
+                    _cov17, _cov9 = [], []
                     for _snap in chainOiHistory:
                         _a17, _c17 = invariant_avg_pcr(_snap, _inv_strikes17)
                         _a9, _c9 = invariant_avg_pcr(_snap, _inv_strikes9)
                         if _a17 is not None and _a9 is not None:
                             _ser17.append(_a17)
                             _ser9.append(_a9)
-                            _cov.append(f"{_c17}/{len(_inv_strikes17)}")
+                            _cov.append(f"{_c17}/{len(_inv_strikes17)}"
+                                        f",{_c9}/{len(_inv_strikes9)}")
+                            _cov17.append(_c17)
+                            _cov9.append(_c9)
                     print("==== INVARIANT-WINDOW PCR check (log-only) ====")
                     print(f"inv_strikes17 = {_inv_strikes17}")
                     print(f"inv_strikes9  = {_inv_strikes9}  (central 9 = pcr5..pcr13)")
                     print(f"inv_strike_coverage_per_cycle = {_cov}"
-                          f"  (strikes found in each stored snapshot)")
+                          f"  (17-strike,9-strike found in each stored snapshot)")
+                    # A stored snapshot only holds the 17 strikes that were in the chain
+                    # at THAT time (strikecount=8 -> ATM +/- 8). After an ATM shift the
+                    # older snapshots are missing the new edge strikes, so their average
+                    # is taken over FEWER strikes than the current cycle's. The averages
+                    # are then not strictly comparable and a "trend" may be a coverage
+                    # artifact. Flag it explicitly rather than let the series look clean.
+                    # The 9-strike set is the more fragile of the two: it is small, so
+                    # each missing strike is ~11% of the sample.
+                    if _cov17 and _cov9:
+                        _deg = []
+                        if min(_cov17) < len(_inv_strikes17):
+                            _deg.append(f"17-strike {min(_cov17)}/{len(_inv_strikes17)}")
+                        if min(_cov9) < len(_inv_strikes9):
+                            _deg.append(f"9-strike {min(_cov9)}/{len(_inv_strikes9)}")
+                        if _deg:
+                            print("INV_WINDOW_DEGRADED: not apples-to-apples — "
+                                  f"worst coverage {' and '.join(_deg)}"
+                                  " (ATM shifted; older snapshots predate the current"
+                                  " edge strikes). Treat the verdicts below as"
+                                  " indicative only.")
+                        else:
+                            print("INV_WINDOW_FULL: every stored snapshot covers all "
+                                  "current strikes — averages are directly comparable.")
                     log_invariant_pcr_window("9", _ser9)
                     log_invariant_pcr_window("17", _ser17)
                 else:
