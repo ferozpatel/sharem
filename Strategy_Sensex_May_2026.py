@@ -1615,6 +1615,16 @@ INV_WIDE_STRIKECOUNT = 11   # -> 23 strikes; middle 17 = ATM +/- 8
 INV_WIDE_MEASURE_COUNT = 17  # strikes actually measured (the middle slice)
 chainOiHistoryWide = []     # last INV_PCR_WINDOW maps from the WIDE chain
 
+# The NARROW-chain 17-strike invariant series (same strikecount=8 chain, zero buffer)
+# is SUPERSEDED by the wide one above and is OFF by default. It is not wrong, but on a
+# shifted cycle its average is taken over fewer strikes than the current cycle's, so the
+# value is unreliable: on 2026-10-23 only 21 of 86 cycles had clean 17/17/17 coverage.
+# The 9-strike series is unaffected (ATM +/- 4 inside a 17-wide chain tolerates a
+# 4-strike shift at full coverage) and stays ON.
+# Set True to bring it back — useful as a FALLBACK if the wide fetch proves flaky, and
+# as a cross-check that wide and narrow agree on full-coverage cycles.
+INV_LOG_NARROW_17 = False
+
 # Persistent cross-cycle streaks per series label ("9", "17", "17WIDE"):
 #   {label: {"inc": n, "dec": n}}
 # The 3-cycle window verdict caps a run at 3; these do not, so a long invariant
@@ -3225,16 +3235,22 @@ while x == 1:
                         if _a17 is not None and _a9 is not None:
                             _ser17.append(_a17)
                             _ser9.append(_a9)
-                            _cov.append(f"{_c17}/{len(_inv_strikes17)}"
-                                        f",{_c9}/{len(_inv_strikes9)}")
+                            if INV_LOG_NARROW_17:
+                                _cov.append(f"{_c17}/{len(_inv_strikes17)}"
+                                            f",{_c9}/{len(_inv_strikes9)}")
+                            else:
+                                _cov.append(f"{_c9}/{len(_inv_strikes9)}")
                             _cov17.append(_c17)
                             _cov9.append(_c9)
                     _ibuf.append("==== INVARIANT-WINDOW PCR check (log-only) ====")
-                    _ibuf.append(f"inv_strikes17 = {_inv_strikes17}")
+                    if INV_LOG_NARROW_17:
+                        _ibuf.append(f"inv_strikes17 = {_inv_strikes17}")
                     _ibuf.append(f"inv_strikes9  = {_inv_strikes9}"
                                  "  (central 9 = pcr5..pcr13)")
                     _ibuf.append(f"inv_strike_coverage_per_cycle = {_cov}"
-                                 "  (17-strike,9-strike found in each stored snapshot)")
+                                 + ("  (17-strike,9-strike found in each stored snapshot)"
+                                    if INV_LOG_NARROW_17
+                                    else "  (9-strike found in each stored snapshot)"))
                     # A stored snapshot only holds the 17 strikes that were in the chain
                     # at THAT time (strikecount=8 -> ATM +/- 8). After an ATM shift the
                     # older snapshots are missing the new edge strikes, so their average
@@ -3245,7 +3261,7 @@ while x == 1:
                     # each missing strike is ~11% of the sample.
                     if _cov17 and _cov9:
                         _deg = []
-                        if min(_cov17) < len(_inv_strikes17):
+                        if INV_LOG_NARROW_17 and min(_cov17) < len(_inv_strikes17):
                             _deg.append(f"17-strike {min(_cov17)}/{len(_inv_strikes17)}")
                         if min(_cov9) < len(_inv_strikes9):
                             _deg.append(f"9-strike {min(_cov9)}/{len(_inv_strikes9)}")
@@ -3260,7 +3276,9 @@ while x == 1:
                                          "all current strikes — averages are directly "
                                          "comparable.")
                     log_invariant_pcr_window("9", _ser9, buf=_ibuf)
-                    log_invariant_pcr_window("17", _ser17, buf=_ibuf)
+                    # Narrow 17 is superseded by the WIDE 17 (see INV_LOG_NARROW_17).
+                    if INV_LOG_NARROW_17:
+                        log_invariant_pcr_window("17", _ser17, buf=_ibuf)
                 else:
                     _ibuf.append("INV_WINDOW_SKIPPED: no strike_price column / strikes "
                                  "unavailable this cycle (needs helper_fyers "
