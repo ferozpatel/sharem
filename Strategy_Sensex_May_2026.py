@@ -1583,6 +1583,38 @@ INV_PCR_WINDOW = 3        # cycles kept (matches the existing 3-value window)
 INV_PCR_MIN_STEP_PCT = 0.1  # a step smaller than this is drift, not a move
 chainOiHistory = []      # last INV_PCR_WINDOW maps of {strike: (ce_oi, pe_oi)}
 
+# ============================================================
+# WIDE-CHAIN INVARIANT 17-PCR (separate fetch) — OBSERVATION / LOG ONLY
+# ============================================================
+# PROBLEM the wide fetch solves (measured on 2026-10-23, 86 cycles):
+# the main loop fetches strikecount=8 -> EXACTLY 17 strikes (ATM +/- 8), so the
+# invariant 17-window has ZERO buffer. Any ATM shift means the older stored
+# snapshots never captured the new edge strikes, and their average is taken over
+# fewer strikes than the current cycle's. That session shifted the ATM on 41 of
+# 86 cycles and only 21 cycles had clean 17/17/17 coverage. Worst case was a
+# 5-strike shift:
+#   cycle1 73400..71800 | cycle2 73800..72200 | current 73900..72300  -> 12/17
+#
+# FIX: fetch a WIDER chain just for this measurement. strikecount=11 -> 23
+# strikes (ATM +/- 11), and the middle 17 of those 23 is exactly ATM +/- 8 — the
+# same set the existing pcr1..pcr17 use. The 3 spare strikes each side mean a
+# 1-3 strike shift still leaves every current strike present in the older
+# snapshots, so the re-measurement is genuinely apples-to-apples.
+#
+# The central 9 needs no such help: being ATM +/- 4 inside a 17-wide chain, it
+# already tolerates a 4-strike shift with full coverage (confirmed in the same
+# log: the 5-strike shift above still gave the 9-set 8/9). This wide path is
+# therefore for the 17-STRIKE series only.
+#
+# COST: one extra option-chain call per cycle. A 2nd ochain call has caused
+# API contention before (see the disabled checkCriteriaAndTakeTrade block), so
+# this one uses retries=1, is fully try/except wrapped, feeds NOTHING, and
+# simply logs a skip line when the fetch fails. The existing strikecount=8
+# fetch, every pcr1..pcr17 value, and every entry gate are untouched.
+INV_WIDE_STRIKECOUNT = 11   # -> 23 strikes; middle 17 = ATM +/- 8
+INV_WIDE_MEASURE_COUNT = 17  # strikes actually measured (the middle slice)
+chainOiHistoryWide = []     # last INV_PCR_WINDOW maps from the WIDE chain
+
 
 def build_strike_oi_map(dfochain):
     """``{int(strike): (ce_oi, pe_oi)}`` for the current cycle. Never raises."""
@@ -1688,6 +1720,73 @@ def log_invariant_pcr_window(label, series):
             print(f"{label}_SEQ_FLAT_InvariantWindow: {chain} | {step_txt} (not monotonic)")
     except Exception as e:
         print(f"INV_WINDOW_WARN: log_invariant_pcr_window({label}) failed: "
+              f"{type(e).__name__}: {e}")
+
+
+def log_invariant_pcr_wide(sname, fyers_client):
+    """
+    WIDE-CHAIN invariant 17-strike PCR — STRICTLY LOG-ONLY, no gate, no global state
+    shared with the live path.
+
+    Fetches its OWN wider option chain (INV_WIDE_STRIKECOUNT=11 -> 23 strikes) so the
+    3-cycle invariant window has real buffer: the middle 17 of those 23 is ATM +/- 8,
+    the same set pcr1..pcr17 measure, but with 3 spare strikes each side. An ATM shift
+    of 1-3 strikes therefore still finds every current strike in the older snapshots,
+    which the main strikecount=8 chain cannot do (it has zero buffer).
+
+    Does NOT touch dfochain, any pcr variable, any streak counter, or any entry
+    condition. Never raises — on any failure it logs and returns.
+    """
+    try:
+        dfwide, _resp = fetch_ochain_safe(INV_WIDE_STRIKECOUNT, sname, fyers_client,
+                                         use_closest1=True, retries=1)
+        if dfwide is None:
+            print("INV_WIDE_SKIPPED: wide option-chain fetch failed this cycle "
+                  "(log-only feature; nothing else affected).")
+            return
+
+        wide_strikes = ordered_pcr_strikes(dfwide, 2 * INV_WIDE_STRIKECOUNT + 1)
+        if not wide_strikes:
+            print("INV_WIDE_SKIPPED: no strike_price column in the wide chain.")
+            return
+
+        # Middle INV_WIDE_MEASURE_COUNT of the wide list = ATM +/- 8. The list is
+        # ordered highest strike first, so trimming equally from both ends centres
+        # the slice on the ATM regardless of how many strikes came back.
+        trim = (len(wide_strikes) - INV_WIDE_MEASURE_COUNT) // 2
+        if trim < 0:
+            print(f"INV_WIDE_SKIPPED: wide chain returned only "
+                  f"{len(wide_strikes)} strikes, need at least "
+                  f"{INV_WIDE_MEASURE_COUNT}.")
+            return
+        mid17 = wide_strikes[trim:trim + INV_WIDE_MEASURE_COUNT]
+
+        chainOiHistoryWide.append(build_strike_oi_map(dfwide))
+        del chainOiHistoryWide[:-INV_PCR_WINDOW]
+
+        series, cov = [], []
+        for snap in chainOiHistoryWide:
+            avg, covered = invariant_avg_pcr(snap, mid17)
+            if avg is not None:
+                series.append(avg)
+                cov.append(covered)
+
+        print("==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====")
+        print(f"inv_wide_fetched   = {len(wide_strikes)} strikes "
+              f"(strikecount={INV_WIDE_STRIKECOUNT}), buffer={trim} each side")
+        print(f"inv_wide_measured  = {mid17}")
+        print(f"inv_wide_coverage_per_cycle = "
+              f"{[f'{c}/{len(mid17)}' for c in cov]}")
+        if cov and min(cov) == len(mid17):
+            print("INV_WIDE_FULL: every stored snapshot covers all 17 measured "
+                  "strikes — the series below is a true same-strike comparison.")
+        elif cov:
+            print(f"INV_WIDE_DEGRADED: worst coverage {min(cov)}/{len(mid17)} — the "
+                  "ATM moved further than the 3-strike buffer absorbs; treat the "
+                  "verdict below as indicative only.")
+        log_invariant_pcr_window("17WIDE", series)
+    except Exception as e:
+        print(f"INV_WIDE_WARN: wide invariant block failed: "
               f"{type(e).__name__}: {e}")
 
 
@@ -3092,6 +3191,12 @@ while x == 1:
             except Exception as _inv_e:
                 print(f"INV_WINDOW_WARN: invariant-window block failed: "
                       f"{type(_inv_e).__name__}: {_inv_e}")
+
+            # WIDE-CHAIN invariant 17-PCR — its own strikecount=11 fetch so the
+            # 17-strike window has 3 spare strikes of buffer each side. Separate
+            # from everything above: own history list, own log labels, feeds no
+            # gate. Self-contained try/except inside the function.
+            log_invariant_pcr_wide(sname, fyers)
 
             SUPP_RES = get_support_resistance(anchorLTP)
             if SUPP_RES != "NOTRADEZONE":
