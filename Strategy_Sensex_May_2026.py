@@ -1615,6 +1615,19 @@ INV_WIDE_STRIKECOUNT = 11   # -> 23 strikes; middle 17 = ATM +/- 8
 INV_WIDE_MEASURE_COUNT = 17  # strikes actually measured (the middle slice)
 chainOiHistoryWide = []     # last INV_PCR_WINDOW maps from the WIDE chain
 
+# Persistent cross-cycle streaks per series label ("9", "17", "17WIDE"):
+#   {label: {"inc": n, "dec": n}}
+# The 3-cycle window verdict caps a run at 3; these do not, so a long invariant
+# trend stays visible. Log-only, same as everything else here.
+invPcrStreaks = {}
+
+# The invariant blocks are COMPUTED where dfochain is fetched (so the 3-cycle
+# history gets a snapshot on EVERY cycle — a `continue` further down must never
+# leave a gap), but PRINTED later in the "signal check time" section next to the
+# other signal flags. These buffers carry the lines between the two points.
+invPcrLogLines = []       # narrow-chain block (9 + 17)
+invWideLogLines = []      # wide-chain block (17WIDE)
+
 
 def build_strike_oi_map(dfochain):
     """``{int(strike): (ce_oi, pe_oi)}`` for the current cycle. Never raises."""
@@ -1683,17 +1696,70 @@ def invariant_avg_pcr(snapshot, strikes):
     return round(sum(vals) / len(vals), 4), len(vals)
 
 
-def log_invariant_pcr_window(label, series):
-    """Print one invariant series + its monotonic-run / MinMove verdict.
+def update_inv_pcr_streak(label, series):
+    """
+    Cross-cycle CONSECUTIVE streak for an invariant PCR series — LOG-ONLY.
 
-    ``series`` is oldest-first. Detection is WITHIN the window (no cross-cycle
-    streak state is kept — this is a logging aid, not a gate)."""
+    The window verdict above only sees 3 cycles. This keeps a persistent count of how
+    many cycles IN A ROW the invariant average has moved the same way, so a long trend
+    is visible instead of being capped at 3 (mirrors the existing _pe_supp_streak /
+    pcr17_up_streak style counters).
+
+    Rule, applied ONCE per cycle on the newest step only:
+      step > +INV_PCR_MIN_STEP_PCT  -> inc += 1, dec = 0
+      step < -INV_PCR_MIN_STEP_PCT  -> dec += 1, inc = 0
+      otherwise (sub-threshold drift) -> BOTH reset to 0 (a flat cycle breaks the run)
+
+    Returns (inc, dec). Never raises.
+    """
     try:
+        st = invPcrStreaks.setdefault(label, {"inc": 0, "dec": 0})
+        if len(series) < 2:
+            return st["inc"], st["dec"]
+        prev, last = series[-2], series[-1]
+        step = ((last - prev) / prev * 100) if prev else 0.0
+        if step > INV_PCR_MIN_STEP_PCT:
+            st["inc"] += 1
+            st["dec"] = 0
+        elif step < -INV_PCR_MIN_STEP_PCT:
+            st["dec"] += 1
+            st["inc"] = 0
+        else:
+            st["inc"] = 0
+            st["dec"] = 0
+        return st["inc"], st["dec"]
+    except Exception as e:
+        print(f"INV_WINDOW_WARN: update_inv_pcr_streak({label}) failed: "
+              f"{type(e).__name__}: {e}")
+        return 0, 0
+
+
+def log_invariant_pcr_window(label, series, buf=None):
+    """Emit one invariant series + its monotonic-run / MinMove verdict + the
+    cross-cycle streak.
+
+    ``series`` is oldest-first. The run/MinMove verdict is WITHIN the 3-cycle window;
+    the STREAK is persistent across cycles (see update_inv_pcr_streak). Lines go into
+    ``buf`` when given so the caller can print them wherever it likes (the compute site
+    and the print site are deliberately different); falls back to printing directly."""
+    out = buf if buf is not None else None
+
+    def _emit(line):
+        if out is None:
+            print(line)
+        else:
+            out.append(line)
+
+    try:
+        inc_streak, dec_streak = update_inv_pcr_streak(label, series)
         shown = [round(v, 4) for v in series]
-        print(f"avgOiPcr{label}List2_InvariantWindow  = {shown}"
+        _emit(f"avgOiPcr{label}List2_InvariantWindow  = {shown}"
               f"  ({label}-strike, re-measured on current strikes)")
+        _emit(f"is{label}Pcr_InvariantWindow_STREAK: inc={inc_streak} dec={dec_streak}"
+              f"  (consecutive cycles same direction, >{INV_PCR_MIN_STEP_PCT}% steps;"
+              f" not capped at the {INV_PCR_WINDOW}-cycle window)")
         if len(series) < INV_PCR_WINDOW:
-            print(f"is{label}PcrInc_InvariantWindow = building"
+            _emit(f"is{label}PcrInc_InvariantWindow = building"
                   f" ({len(series)}/{INV_PCR_WINDOW} cycles)")
             return
         steps = []
@@ -1707,19 +1773,19 @@ def log_invariant_pcr_window(label, series):
         smallest = min(abs(s) for s in steps) if steps else 0.0
         minmove = smallest > INV_PCR_MIN_STEP_PCT
         if rising:
-            print(f"{label}_SEQ_INC_InvariantWindow: {chain} | {step_txt}")
-            print(f"is{label}PcrInc_InvariantWindow = True  (run={len(series)} rising)")
-            print(f"is{label}PcrInc_InvariantWindow_MinMove = {minmove}"
+            _emit(f"{label}_SEQ_INC_InvariantWindow: {chain} | {step_txt}")
+            _emit(f"is{label}PcrInc_InvariantWindow = True  (run={len(series)} rising)")
+            _emit(f"is{label}PcrInc_InvariantWindow_MinMove = {minmove}"
                   f"  (smallest step {smallest:.2f}% vs {INV_PCR_MIN_STEP_PCT}% threshold)")
         elif falling:
-            print(f"{label}_SEQ_DEC_InvariantWindow: {chain} | {step_txt}")
-            print(f"is{label}PcrDecr_InvariantWindow = True  (run={len(series)} falling)")
-            print(f"is{label}PcrDecr_InvariantWindow_MinMove = {minmove}"
+            _emit(f"{label}_SEQ_DEC_InvariantWindow: {chain} | {step_txt}")
+            _emit(f"is{label}PcrDecr_InvariantWindow = True  (run={len(series)} falling)")
+            _emit(f"is{label}PcrDecr_InvariantWindow_MinMove = {minmove}"
                   f"  (smallest step {smallest:.2f}% vs {INV_PCR_MIN_STEP_PCT}% threshold)")
         else:
-            print(f"{label}_SEQ_FLAT_InvariantWindow: {chain} | {step_txt} (not monotonic)")
+            _emit(f"{label}_SEQ_FLAT_InvariantWindow: {chain} | {step_txt} (not monotonic)")
     except Exception as e:
-        print(f"INV_WINDOW_WARN: log_invariant_pcr_window({label}) failed: "
+        _emit(f"INV_WINDOW_WARN: log_invariant_pcr_window({label}) failed: "
               f"{type(e).__name__}: {e}")
 
 
@@ -1737,17 +1803,19 @@ def log_invariant_pcr_wide(sname, fyers_client):
     Does NOT touch dfochain, any pcr variable, any streak counter, or any entry
     condition. Never raises — on any failure it logs and returns.
     """
+    del invWideLogLines[:]
+    buf = invWideLogLines
     try:
         dfwide, _resp = fetch_ochain_safe(INV_WIDE_STRIKECOUNT, sname, fyers_client,
                                          use_closest1=True, retries=1)
         if dfwide is None:
-            print("INV_WIDE_SKIPPED: wide option-chain fetch failed this cycle "
-                  "(log-only feature; nothing else affected).")
+            buf.append("INV_WIDE_SKIPPED: wide option-chain fetch failed this cycle "
+                       "(log-only feature; nothing else affected).")
             return
 
         wide_strikes = ordered_pcr_strikes(dfwide, 2 * INV_WIDE_STRIKECOUNT + 1)
         if not wide_strikes:
-            print("INV_WIDE_SKIPPED: no strike_price column in the wide chain.")
+            buf.append("INV_WIDE_SKIPPED: no strike_price column in the wide chain.")
             return
 
         # Middle INV_WIDE_MEASURE_COUNT of the wide list = ATM +/- 8. The list is
@@ -1755,9 +1823,9 @@ def log_invariant_pcr_wide(sname, fyers_client):
         # the slice on the ATM regardless of how many strikes came back.
         trim = (len(wide_strikes) - INV_WIDE_MEASURE_COUNT) // 2
         if trim < 0:
-            print(f"INV_WIDE_SKIPPED: wide chain returned only "
-                  f"{len(wide_strikes)} strikes, need at least "
-                  f"{INV_WIDE_MEASURE_COUNT}.")
+            buf.append(f"INV_WIDE_SKIPPED: wide chain returned only "
+                       f"{len(wide_strikes)} strikes, need at least "
+                       f"{INV_WIDE_MEASURE_COUNT}.")
             return
         mid17 = wide_strikes[trim:trim + INV_WIDE_MEASURE_COUNT]
 
@@ -1771,23 +1839,23 @@ def log_invariant_pcr_wide(sname, fyers_client):
                 series.append(avg)
                 cov.append(covered)
 
-        print("==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====")
-        print(f"inv_wide_fetched   = {len(wide_strikes)} strikes "
-              f"(strikecount={INV_WIDE_STRIKECOUNT}), buffer={trim} each side")
-        print(f"inv_wide_measured  = {mid17}")
-        print(f"inv_wide_coverage_per_cycle = "
-              f"{[f'{c}/{len(mid17)}' for c in cov]}")
+        buf.append("==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====")
+        buf.append(f"inv_wide_fetched   = {len(wide_strikes)} strikes "
+                   f"(strikecount={INV_WIDE_STRIKECOUNT}), buffer={trim} each side")
+        buf.append(f"inv_wide_measured  = {mid17}")
+        buf.append(f"inv_wide_coverage_per_cycle = "
+                   f"{[f'{c}/{len(mid17)}' for c in cov]}")
         if cov and min(cov) == len(mid17):
-            print("INV_WIDE_FULL: every stored snapshot covers all 17 measured "
-                  "strikes — the series below is a true same-strike comparison.")
+            buf.append("INV_WIDE_FULL: every stored snapshot covers all 17 measured "
+                       "strikes — the series below is a true same-strike comparison.")
         elif cov:
-            print(f"INV_WIDE_DEGRADED: worst coverage {min(cov)}/{len(mid17)} — the "
-                  "ATM moved further than the 3-strike buffer absorbs; treat the "
-                  "verdict below as indicative only.")
-        log_invariant_pcr_window("17WIDE", series)
+            buf.append(f"INV_WIDE_DEGRADED: worst coverage {min(cov)}/{len(mid17)} — the "
+                       "ATM moved further than the 3-strike buffer absorbs; treat the "
+                       "verdict below as indicative only.")
+        log_invariant_pcr_window("17WIDE", series, buf=buf)
     except Exception as e:
-        print(f"INV_WIDE_WARN: wide invariant block failed: "
-              f"{type(e).__name__}: {e}")
+        buf.append(f"INV_WIDE_WARN: wide invariant block failed: "
+                   f"{type(e).__name__}: {e}")
 
 
 def getChangeInOI(dfochain, index1, index2):
@@ -3134,6 +3202,13 @@ while x == 1:
             # destroys a PCR trend. Uses the dfochain already in memory -> ZERO
             # extra API calls. Touches NO existing variable or gate; wrapped so a
             # bad cycle can never break the loop.
+            #
+            # Lines are BUFFERED here and printed later in the "signal check time"
+            # section. The computation must stay HERE so chainOiHistory gets a
+            # snapshot on EVERY cycle — a `continue` between this point and the
+            # print site would otherwise leave a hole in the 3-cycle window.
+            del invPcrLogLines[:]
+            _ibuf = invPcrLogLines
             try:
                 _inv_strikes17 = ordered_pcr_strikes(dfochain, 17)
                 if _inv_strikes17:
@@ -3154,11 +3229,12 @@ while x == 1:
                                         f",{_c9}/{len(_inv_strikes9)}")
                             _cov17.append(_c17)
                             _cov9.append(_c9)
-                    print("==== INVARIANT-WINDOW PCR check (log-only) ====")
-                    print(f"inv_strikes17 = {_inv_strikes17}")
-                    print(f"inv_strikes9  = {_inv_strikes9}  (central 9 = pcr5..pcr13)")
-                    print(f"inv_strike_coverage_per_cycle = {_cov}"
-                          f"  (17-strike,9-strike found in each stored snapshot)")
+                    _ibuf.append("==== INVARIANT-WINDOW PCR check (log-only) ====")
+                    _ibuf.append(f"inv_strikes17 = {_inv_strikes17}")
+                    _ibuf.append(f"inv_strikes9  = {_inv_strikes9}"
+                                 "  (central 9 = pcr5..pcr13)")
+                    _ibuf.append(f"inv_strike_coverage_per_cycle = {_cov}"
+                                 "  (17-strike,9-strike found in each stored snapshot)")
                     # A stored snapshot only holds the 17 strikes that were in the chain
                     # at THAT time (strikecount=8 -> ATM +/- 8). After an ATM shift the
                     # older snapshots are missing the new edge strikes, so their average
@@ -3174,23 +3250,24 @@ while x == 1:
                         if min(_cov9) < len(_inv_strikes9):
                             _deg.append(f"9-strike {min(_cov9)}/{len(_inv_strikes9)}")
                         if _deg:
-                            print("INV_WINDOW_DEGRADED: not apples-to-apples — "
-                                  f"worst coverage {' and '.join(_deg)}"
-                                  " (ATM shifted; older snapshots predate the current"
-                                  " edge strikes). Treat the verdicts below as"
-                                  " indicative only.")
+                            _ibuf.append("INV_WINDOW_DEGRADED: not apples-to-apples — "
+                                         f"worst coverage {' and '.join(_deg)}"
+                                         " (ATM shifted; older snapshots predate the"
+                                         " current edge strikes). Treat the verdicts"
+                                         " below as indicative only.")
                         else:
-                            print("INV_WINDOW_FULL: every stored snapshot covers all "
-                                  "current strikes — averages are directly comparable.")
-                    log_invariant_pcr_window("9", _ser9)
-                    log_invariant_pcr_window("17", _ser17)
+                            _ibuf.append("INV_WINDOW_FULL: every stored snapshot covers "
+                                         "all current strikes — averages are directly "
+                                         "comparable.")
+                    log_invariant_pcr_window("9", _ser9, buf=_ibuf)
+                    log_invariant_pcr_window("17", _ser17, buf=_ibuf)
                 else:
-                    print("INV_WINDOW_SKIPPED: no strike_price column / strikes "
-                          "unavailable this cycle (needs helper_fyers "
-                          "getClosestOptions1 to return strike_price).")
+                    _ibuf.append("INV_WINDOW_SKIPPED: no strike_price column / strikes "
+                                 "unavailable this cycle (needs helper_fyers "
+                                 "getClosestOptions1 to return strike_price).")
             except Exception as _inv_e:
-                print(f"INV_WINDOW_WARN: invariant-window block failed: "
-                      f"{type(_inv_e).__name__}: {_inv_e}")
+                _ibuf.append(f"INV_WINDOW_WARN: invariant-window block failed: "
+                             f"{type(_inv_e).__name__}: {_inv_e}")
 
             # WIDE-CHAIN invariant 17-PCR — its own strikecount=11 fetch so the
             # 17-strike window has 3 spare strikes of buffer each side. Separate
@@ -3561,6 +3638,14 @@ while x == 1:
                       " isCE_DominantAtRes_twice =", isCE_DominantAtRes_twice,
                       " isCE_DominantAtRes_trice =", isCE_DominantAtRes_trice,
                       "(CE_res_streak=", _ce_res_streak, ")")
+
+            # ----- INVARIANT-WINDOW PCR output (computed earlier this cycle) -----
+            # Printed here, alongside the other signal flags, rather than up where it
+            # is computed. Both blocks are LOG-ONLY and feed no gate.
+            for _line in invPcrLogLines:
+                print(_line)
+            for _line in invWideLogLines:
+                print(_line)
 
             # print("newSynthFut = ", SYNTH_FUT_STRIKE)
             print("ATMStrike = ", ATM_STRIKE)
