@@ -165,19 +165,27 @@ TRAIL_TRIGGER_TARGET_FRACTION = 0.50
 # multipliers produced SL=377 (premium had to rise 75%) and a NEGATIVE target of -54.95. The
 # multipliers were not the problem; the unguarded median was.
 # 2026-10-22 (user): target 4.0 -> 4.5 and SL 2.4 -> 2.2, BOTH directions.
-# R:R moves 1.67 -> 4.5/2.2 = 2.05 (breakeven win rate ~37% -> ~33%).
+# 2026-10-end (user): SL 2.2 -> 2.0, BOTH directions. R:R now 4.5/2.0 = 2.25.
+# Backed by Aug-Oct log review: across the spot-anchor months 10 of 11 winning
+# trades pulled back <= 1.32x the median before working, so a 2.0x stop clears
+# the body of real winners while tightening R:R vs 2.2.
 #
 # NOTE the two legs pull in opposite directions on risk:
-#   * TIGHTER SL (2.2) means the premium has less room before the stop fires,
-#     so expect MORE stop-outs on the counter-wiggle the 2.4 widening was
-#     introduced to survive (see the 2026-10-15 note above).
+#   * A TIGHTER SL means the premium has less room before the stop fires, so
+#     expect more stop-outs on a counter-wiggle.
 #   * A tighter SL also SHRINKS net_sl_points, and qty = FIXED_RISK /
-#     (net_sl * LOT_SIZE), so LOTS GO UP ~9% for the same Rs 4,000 budget.
+#     (net_sl * LOT_SIZE), so LOTS GO UP for the same Rs 4,000 budget.
 #     Rupee risk per trade is unchanged; position size is larger.
-SL_MULT_BULL = 2.2
+SL_MULT_BULL = 2.0
 TARGET_MULT_BULL = 4.5
-SL_MULT_BEAR = 2.2
+SL_MULT_BEAR = 2.0
 TARGET_MULT_BEAR = 4.5
+
+# ONE TRADE PER DAY (user, 2026-10-end): the day ends after the FIRST completed
+# trade, win OR loss. A TARGET win already stops re-entry (st = -1). A LOSS now
+# also stops the day: the entry gate requires slCount != 1, so the single
+# allowed SL (slCount 0 -> 1) halts all further entries for the session.
+# (Previously slCount != 2 allowed a re-entry after the first SL.)
 # Trailing SL (move SL to breakeven once TRAIL_TRIGGER_TARGET_FRACTION of target is covered) is
 # DISABLED for BOTH directions: trailing kept exiting trades at breakeven on a normal pullback
 # instead of letting them reach target. Every trade now keeps its ORIGINAL SL for the whole trade.
@@ -3676,7 +3684,7 @@ while x == 1:
                   "| isCE_DomRes_once=", isCE_DominantAtRes_once, " fresh_CE=", _last_fresh_ce)
 
             # === BULL ENTRY ===
-            if bull_direction_ok and _dominance_ok_bull and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
+            if bull_direction_ok and _dominance_ok_bull and slCount != 1 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bull and anchorLTP > SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2:
                 print("In Bull trade, slCount = ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
@@ -3823,7 +3831,7 @@ while x == 1:
                 avgOiPcrList2 = []; avgOiPcr9List2 = []
 
             # === BEAR ENTRY ===
-            elif bear_direction_ok and _dominance_ok_bear and slCount != 2 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
+            elif bear_direction_ok and _dominance_ok_bear and slCount != 1 and dt1.hour <= 15 and SUPP_RES != "NOTRADEZONE" and st == 0 and choi_filter_bear and anchorLTP < SUPP_RES and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2:
                 print("In Bear trade, slCount= ", slCount, " (mode=", _entry_mode, ")")
 
                 # LOGIC3 = observation only (log signal, no real trade). LOGIC1/LOGIC2 trade live.
@@ -4063,7 +4071,8 @@ while x == 1:
                                 print('SL Hit (LTP)')
                                 st = 0
                                 # Only an UNTRAILED SL is a real loss and counts toward the daily
-                                # 2-SL halt. A trailed exit (SL already at breakeven) is a scratch.
+                                # halt (now 1-SL: the entry gate blocks once slCount reaches 1).
+                                # A trailed exit (SL already at breakeven) is a scratch.
                                 if not slTrailed:
                                     slCount += 1
                                     print('slCount =', slCount)
