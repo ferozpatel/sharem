@@ -312,12 +312,15 @@ USE_SPOT_ANCHOR = True
 # and DEBIT has repeatedly lost in chop/expiry (needs a directional move that often doesn't
 # come). True disables debit entirely; set False to re-enable the IV-Rank/premium debit rule.
 ALWAYS_CREDIT = True
-# CHOI fresh-flow dominance confirmation gate wired into the ENTRY criteria. When True, a BULL
-# entry additionally requires PE writers freshly DEFENDING the support this cycle
-# (isPE_DominantAtSupp_once AND fresh_PE >= 0 = flat or added, not unwound); a BEAR entry
-# requires CE writers freshly CAPPING the resistance (isCE_DominantAtRes_once AND fresh_CE >= 0).
-# The >= 0 check also excludes the "both sides unwinding (both negative)" case. This is on top
-# of the existing price-vs-S/R + PCR-trend gates. Set False to revert to prior behaviour.
+# CHOI dominance confirmation gate wired into the ENTRY criteria. When True, a BULL entry
+# additionally requires PE writers to be DOMINANT at the support this cycle
+# (isPE_DominantAtSupp_once); a BEAR entry requires CE writers DOMINANT at the resistance
+# (isCE_DominantAtRes_once). DOMINANCE-ONLY: the fresh_PE/fresh_CE >= 0 requirement has been
+# dropped, so the "both sides unwinding (both negative)" case is now ACCEPTED as long as the
+# correct side dominates by magnitude — change-in-OI builds over multiple cycles, and at the
+# signal moment who wins the OI battle matters more than fresh buildup on a single cycle. This
+# is on top of the existing price-vs-S/R + PCR-trend + cumulative-CHOI gates. The dominance
+# STREAK (twice/trice) is log-only. Set False to revert to prior behaviour.
 USE_CHOI_DOMINANCE_GATE = True
 # NO-TRADE ZONE: skip the middle of the 500-pt S/R band. Price must be at least
 # NO_TRADE_ZONE_BUFFER points away from the band midpoint before a directional trade is allowed
@@ -3695,14 +3698,19 @@ while x == 1:
                 _entry_mode = "LOGIC3_CHOI_15PCT"
 
             # CHOI fresh-flow dominance confirmation (wired into entry via USE_CHOI_DOMINANCE_GATE).
-            # BULL: at the moment PCR trends up, PE writers must be freshly DEFENDING the support
-            # THIS cycle -> isPE_DominantAtSupp_once (fresh_PE > fresh_CE at a support) AND
-            # fresh_PE NOT being unwound (>= 0: flat or added). The >= 0 check also excludes the
-            # "both sides negative" case automatically: if PE is dominant yet fresh_PE < 0 then
-            # PE is unwinding too, so it's rejected. BEAR mirrors at the resistance (fresh_CE >= 0).
+            # BULL: at the moment PCR trends up, PE writers must be DOMINANT at the support THIS
+            # cycle -> isPE_DominantAtSupp_once (fresh_PE magnitude > fresh_CE magnitude at a
+            # support). DOMINANCE-ONLY: we no longer require fresh_PE >= 0. Change-in-OI builds
+            # over multiple cycles, so at the signal moment who is WINNING the OI battle matters
+            # more than whether the dominant side added fresh this one cycle. The both-sides-
+            # negative (both unwinding) case is now ACCEPTED as long as the correct side dominates
+            # -- on a directional move the losing side unwinds, which is itself confirmation.
+            # The multi-cycle context is still enforced by the cumulative-CHOI, total-OI and
+            # positional-PCR gates. BEAR mirrors at the resistance (isCE_DominantAtRes_once).
+            # NOTE: the dominance STREAK (isPE_DominantAtSupp_twice / _trice) remains log-only.
             if USE_CHOI_DOMINANCE_GATE:
-                _dominance_ok_bull = isPE_DominantAtSupp_once and (_last_fresh_pe >= 0)
-                _dominance_ok_bear = isCE_DominantAtRes_once and (_last_fresh_ce >= 0)
+                _dominance_ok_bull = isPE_DominantAtSupp_once
+                _dominance_ok_bear = isCE_DominantAtRes_once
             else:
                 _dominance_ok_bull = True
                 _dominance_ok_bear = True
