@@ -1639,6 +1639,16 @@ INV_LOG_NARROW_17 = False
 # trend stays visible. Log-only, same as everything else here.
 invPcrStreaks = {}
 
+# CONSECUTIVE-RISING-WINDOWS streak per label (the operator's "streak count").
+#   {label: {"inc": n, "dec": n}}
+# Counts how many 3-min cycles IN A ROW the invariant 3-value window itself stayed
+# monotonic (rising -> inc, falling -> dec). This mirrors the live 17-PCR idea:
+#   cycle A window [1.54,1.63,1.74] rising  -> isPcrInc True  (streak 1)
+#   cycle B window [1.63,1.74,1.79] rising  -> still rising   (streak 2)
+# i.e. "the next printed 3-min window is also increasing". A non-rising (or building)
+# window resets the count to 0. LOG-ONLY, no gate.
+invPcrWinRun = {}
+
 # The invariant blocks are COMPUTED where dfochain is fetched (so the 3-cycle
 # history gets a snapshot on EVERY cycle — a `continue` further down must never
 # leave a gap), but PRINTED later in the "signal check time" section next to the
@@ -1776,7 +1786,10 @@ def log_invariant_pcr_window(label, series, buf=None):
         _emit(f"is{label}Pcr_InvariantWindow_STREAK: inc={inc_streak} dec={dec_streak}"
               f"  (consecutive cycles same direction, >{INV_PCR_MIN_STEP_PCT}% steps;"
               f" not capped at the {INV_PCR_WINDOW}-cycle window)")
+        wr = invPcrWinRun.setdefault(label, {"inc": 0, "dec": 0})
         if len(series) < INV_PCR_WINDOW:
+            # No full window yet -> no rising/falling window this cycle -> reset the run.
+            wr["inc"] = 0; wr["dec"] = 0
             _emit(f"is{label}PcrInc_InvariantWindow = building"
                   f" ({len(series)}/{INV_PCR_WINDOW} cycles)")
             return
@@ -1790,18 +1803,33 @@ def log_invariant_pcr_window(label, series, buf=None):
         falling = all(series[i] < series[i - 1] for i in range(1, len(series)))
         smallest = min(abs(s) for s in steps) if steps else 0.0
         minmove = smallest > INV_PCR_MIN_STEP_PCT
+        # Update the consecutive-rising/falling-WINDOWS streak (operator's "streak count").
+        if rising:
+            wr["inc"] += 1; wr["dec"] = 0
+        elif falling:
+            wr["dec"] += 1; wr["inc"] = 0
+        else:
+            wr["inc"] = 0; wr["dec"] = 0
         if rising:
             _emit(f"{label}_SEQ_INC_InvariantWindow: {chain} | {step_txt}")
             _emit(f"is{label}PcrInc_InvariantWindow = True  (run={len(series)} rising)")
             _emit(f"is{label}PcrInc_InvariantWindow_MinMove = {minmove}"
                   f"  (smallest step {smallest:.2f}% vs {INV_PCR_MIN_STEP_PCT}% threshold)")
+            _emit(f"is{label}Pcr_InvariantWindow_WINSTREAK = {wr['inc']}"
+                  f"  (consecutive 3-min cycles the window stayed RISING; "
+                  f"operator streak count)")
         elif falling:
             _emit(f"{label}_SEQ_DEC_InvariantWindow: {chain} | {step_txt}")
             _emit(f"is{label}PcrDecr_InvariantWindow = True  (run={len(series)} falling)")
             _emit(f"is{label}PcrDecr_InvariantWindow_MinMove = {minmove}"
                   f"  (smallest step {smallest:.2f}% vs {INV_PCR_MIN_STEP_PCT}% threshold)")
+            _emit(f"is{label}Pcr_InvariantWindow_WINSTREAK = {wr['dec']}"
+                  f"  (consecutive 3-min cycles the window stayed FALLING; "
+                  f"operator streak count)")
         else:
             _emit(f"{label}_SEQ_FLAT_InvariantWindow: {chain} | {step_txt} (not monotonic)")
+            _emit(f"is{label}Pcr_InvariantWindow_WINSTREAK = 0  (window not monotonic "
+                  f"this cycle; run reset)")
     except Exception as e:
         _emit(f"INV_WINDOW_WARN: log_invariant_pcr_window({label}) failed: "
               f"{type(e).__name__}: {e}")
