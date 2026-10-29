@@ -322,6 +322,13 @@ ALWAYS_CREDIT = True
 # is on top of the existing price-vs-S/R + PCR-trend + cumulative-CHOI gates. The dominance
 # STREAK (twice/trice) is log-only. Set False to revert to prior behaviour.
 USE_CHOI_DOMINANCE_GATE = True
+# VOLUME-PRESSURE logging (LOG-ONLY, feeds NO gate). Every 3-min cycle, print the
+# change-in-volume PCR (fresh traded volume = vol_now - vol_prev) at ATM-1 / ATM / ATM+1,
+# plus a pooled ATM+-1 value and an ATM-only value with their change vs the previous cycle.
+# Volume = trading activity/conviction behind the OI build; the fresh (delta) basis avoids the
+# cumulative-volume drag so the ratio reflects THIS cycle's put-vs-call pressure. Experiment to
+# correlate volume pressure with whether price moves cleanly or bounces after a signal.
+LOG_VOL_PRESSURE = True
 # NO-TRADE ZONE: skip the middle of the 500-pt S/R band. Price must be at least
 # NO_TRADE_ZONE_BUFFER points away from the band midpoint before a directional trade is allowed
 # — bull only in the lower part (near support), bear only in the upper part (near resistance).
@@ -1659,6 +1666,14 @@ invPcrWinRun = {}
 invPcrLogLines = []       # narrow-chain block (9 + 17)
 invWideLogLines = []      # wide-chain block (17WIDE)
 
+# VOLUME-PRESSURE (change-in-volume PCR) — LOG-ONLY. Buffered here, printed in the signal-check
+# section next to the other diagnostics. All three are module-level objects mutated IN PLACE
+# (never rebound) so they persist across cycles without a `global` declaration, mirroring
+# invPcrLogLines / chainOiHistory.
+volPressureLogLines = []  # lines emitted each cycle
+_prev_vol_map = {}        # {int(strike): (ce_vol_cumulative, pe_vol_cumulative)} from prev cycle
+_vol_pcr_state = {}       # {'pooled_prev': float|None, 'atm_prev': float|None}
+
 
 def build_strike_oi_map(dfochain):
     """``{int(strike): (ce_oi, pe_oi)}`` for the current cycle. Never raises."""
@@ -1687,6 +1702,93 @@ def build_strike_oi_map(dfochain):
     except Exception as e:
         print(f"INV_WINDOW_WARN: build_strike_oi_map failed: {type(e).__name__}: {e}")
     return out
+
+
+def build_strike_vol_map(dfochain):
+    """``{int(strike): (ce_volume, pe_volume)}`` (cumulative day volume) for the current
+    cycle. Mirrors build_strike_oi_map but reads the 'volume' column. Never raises."""
+    out = {}
+    try:
+        if 'strike_price' not in dfochain.columns or 'volume' not in dfochain.columns:
+            return out
+        sp = dfochain['strike_price'].to_numpy()
+        ot = dfochain['option_type'].to_numpy()
+        volarr = dfochain['volume'].to_numpy()
+        for i in range(len(sp)):
+            try:
+                k = int(float(sp[i]))
+            except (TypeError, ValueError):
+                continue
+            ce, pe = out.get(k, (0.0, 0.0))
+            try:
+                v = float(volarr[i] or 0)
+            except (TypeError, ValueError):
+                v = 0.0
+            if ot[i] == 'CE':
+                ce = v
+            elif ot[i] == 'PE':
+                pe = v
+            out[k] = (ce, pe)
+    except Exception as e:
+        print(f"VOL_PRESSURE_WARN: build_strike_vol_map failed: {type(e).__name__}: {e}")
+    return out
+
+
+def _fresh_vol_pcr(cur_map, prev_map, strike):
+    """FRESH (this-cycle) volume PCR at one strike: (PE_now-PE_prev)/(CE_now-CE_prev).
+    Cumulative day volume only rises, so the deltas are >= 0 (clamped for safety).
+    Returns (pcr_or_None, freshCE, freshPE). pcr is None when freshCE == 0."""
+    ce_now, pe_now = cur_map.get(strike, (0.0, 0.0))
+    ce_prev, pe_prev = prev_map.get(strike, (0.0, 0.0))
+    fresh_ce = max(0.0, ce_now - ce_prev)
+    fresh_pe = max(0.0, pe_now - pe_prev)
+    pcr = round(fresh_pe / fresh_ce, 2) if fresh_ce > 0 else None
+    return pcr, fresh_ce, fresh_pe
+
+
+def log_vol_pressure(cur_map, atm_strike, step, buf):
+    """Emit the change-in-volume PCR at ATM-1 / ATM / ATM+1, a pooled ATM+-1 value, and an
+    ATM-only value — each with its change vs the previous cycle. LOG-ONLY, feeds no gate.
+    Reads/updates module-level _prev_vol_map and _vol_pcr_state IN PLACE. Never raises."""
+    try:
+        buf.append("==== VOL PRESSURE (change-in-volume PCR, ATM +/- 1) ====  [log-only]")
+        if not _prev_vol_map:
+            buf.append("VOL_PRESSURE: no previous cycle yet — baseline stored, ratios next cycle.")
+        else:
+            s_dn = int(atm_strike) - step   # ATM-1 (lower strike)
+            s_at = int(atm_strike)          # ATM
+            s_up = int(atm_strike) + step   # ATM+1 (higher strike)
+            def _fmt(pcr):
+                return f"{pcr:.2f}" if pcr is not None else "NA(freshCE=0)"
+            p_dn, ce_dn, pe_dn = _fresh_vol_pcr(cur_map, _prev_vol_map, s_dn)
+            p_at, ce_at, pe_at = _fresh_vol_pcr(cur_map, _prev_vol_map, s_at)
+            p_up, ce_up, pe_up = _fresh_vol_pcr(cur_map, _prev_vol_map, s_up)
+            buf.append(f"change in vol pcr atm-1 (strike={s_dn}) = {_fmt(p_dn)}  "
+                       f"(freshPE={int(pe_dn)} freshCE={int(ce_dn)})")
+            buf.append(f"change in vol pcr atm   (strike={s_at}) = {_fmt(p_at)}  "
+                       f"(freshPE={int(pe_at)} freshCE={int(ce_at)})")
+            buf.append(f"change in vol pcr atm+1 (strike={s_up}) = {_fmt(p_up)}  "
+                       f"(freshPE={int(pe_up)} freshCE={int(ce_up)})")
+            # Pooled ATM+-1 (sum fresh across the 3 strikes) — net put-vs-call pressure at the money
+            pool_ce = ce_dn + ce_at + ce_up
+            pool_pe = pe_dn + pe_at + pe_up
+            pool_pcr = round(pool_pe / pool_ce, 2) if pool_ce > 0 else None
+            prev_pool = _vol_pcr_state.get('pooled_prev')
+            dpool = (f"{pool_pcr - prev_pool:+.2f}" if (pool_pcr is not None and prev_pool is not None) else "NA")
+            buf.append(f"VOL_PCR_POOLED (ATM+-1 fresh) = {_fmt(pool_pcr)}  "
+                       f"prev = {('%.2f' % prev_pool) if prev_pool is not None else 'NA'}  change = {dpool}")
+            # ATM-only, for comparison with the pooled version
+            prev_atm = _vol_pcr_state.get('atm_prev')
+            datm = (f"{p_at - prev_atm:+.2f}" if (p_at is not None and prev_atm is not None) else "NA")
+            buf.append(f"VOL_PCR_ATM_only = {_fmt(p_at)}  "
+                       f"prev = {('%.2f' % prev_atm) if prev_atm is not None else 'NA'}  change = {datm}")
+            _vol_pcr_state['pooled_prev'] = pool_pcr
+            _vol_pcr_state['atm_prev'] = p_at
+        # Store this cycle's cumulative map as next cycle's baseline (in-place).
+        _prev_vol_map.clear()
+        _prev_vol_map.update(cur_map)
+    except Exception as e:
+        buf.append(f"VOL_PRESSURE_WARN: log_vol_pressure failed: {type(e).__name__}: {e}")
 
 
 def ordered_pcr_strikes(dfochain, count=17):
@@ -3245,6 +3347,19 @@ while x == 1:
             print("avgOiPcr9List2 =", avgOiPcr9List2, "atmStrikeNotShiftedCount=", atmStrikeNotShiftedCount)
             print(IS_ATM_STRIKE_SHIFT, " ", atmStrikeNotShiftedCount, " ", len(avgOiPcrList2))
 
+            # ===== VOLUME-PRESSURE (change-in-volume PCR) — LOG ONLY =====
+            # Computed HERE (dfochain + ATM_STRIKE in scope) but PRINTED in the signal-check
+            # section. Must stay here so _prev_vol_map gets a snapshot EVERY cycle (a `continue`
+            # below would otherwise leave a hole). Zero extra API calls — reuses dfochain.
+            del volPressureLogLines[:]
+            if LOG_VOL_PRESSURE:
+                try:
+                    _vol_map_now = build_strike_vol_map(dfochain)
+                    log_vol_pressure(_vol_map_now, ATM_STRIKE, 100, volPressureLogLines)
+                except Exception as _vperr:
+                    volPressureLogLines.append(
+                        f"VOL_PRESSURE_WARN: cycle compute failed: {type(_vperr).__name__}: {_vperr}")
+
             # ===== INVARIANT-WINDOW PCR (17 + 9) — OBSERVATION / LOG ONLY =====
             # Keep the last 3 cycles' per-strike OI and re-measure every one of
             # them over the CURRENT strike set, so an ATM shift neither fakes nor
@@ -3615,6 +3730,9 @@ while x == 1:
             for _line in invPcrLogLines:
                 print(_line)
             for _line in invWideLogLines:
+                print(_line)
+            # Volume-pressure block (change-in-volume PCR at ATM +/- 1) — log-only.
+            for _line in volPressureLogLines:
                 print(_line)
 
             # print("newSynthFut = ", SYNTH_FUT_STRIKE)
