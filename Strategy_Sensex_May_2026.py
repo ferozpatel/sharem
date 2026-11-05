@@ -1815,6 +1815,17 @@ def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
             def _fmt(pcr):
                 return f"{pcr:.2f}" if pcr is not None else "NA(freshCE=0)"
 
+            def _vol_side_tag(pcr):
+                # Plain-language read of the volume PCR: PE/CE. >1 = more put trading, <1 = more
+                # call trading. Lets you eyeball the activity side without doing the ratio.
+                if pcr is None:
+                    return "(freshCE=0)"
+                if pcr > 1.02:
+                    return "(more pe than ce)"
+                if pcr < 0.98:
+                    return "(more ce than pe)"
+                return "(balanced ce/pe)"
+
             def _oich_line(label, strike):
                 ce_now, pe_now = cur_oich_map.get(strike, (0.0, 0.0))
                 ce_prev, pe_prev = _prev_oich_map.get(strike, (0.0, 0.0))
@@ -1830,19 +1841,19 @@ def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
 
             # --- per-strike: volume line then OI-change line ---
             p_dn, ce_dn, pe_dn = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_dn)
-            buf.append(f"change in vol pcr atm-1 (strike={s_dn}) = {_fmt(p_dn)}  "
+            buf.append(f"change in vol pcr atm-1 (strike={s_dn}) = {_fmt(p_dn)} {_vol_side_tag(p_dn)}  "
                        f"(freshPE_vol={int(pe_dn)} freshCE_vol={int(ce_dn)})")
             l_dn, foi_ce_dn, foi_pe_dn = _oich_line("atm-1", s_dn)
             if have_oi_prev: buf.append(l_dn)
 
             p_at, ce_at, pe_at = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_at)
-            buf.append(f"change in vol pcr atm   (strike={s_at}) = {_fmt(p_at)}  "
+            buf.append(f"change in vol pcr atm   (strike={s_at}) = {_fmt(p_at)} {_vol_side_tag(p_at)}  "
                        f"(freshPE_vol={int(pe_at)} freshCE_vol={int(ce_at)})")
             l_at, foi_ce_at, foi_pe_at = _oich_line("atm  ", s_at)
             if have_oi_prev: buf.append(l_at)
 
             p_up, ce_up, pe_up = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_up)
-            buf.append(f"change in vol pcr atm+1 (strike={s_up}) = {_fmt(p_up)}  "
+            buf.append(f"change in vol pcr atm+1 (strike={s_up}) = {_fmt(p_up)} {_vol_side_tag(p_up)}  "
                        f"(freshPE_vol={int(pe_up)} freshCE_vol={int(ce_up)})")
             l_up, foi_ce_up, foi_pe_up = _oich_line("atm+1", s_up)
             if have_oi_prev: buf.append(l_up)
