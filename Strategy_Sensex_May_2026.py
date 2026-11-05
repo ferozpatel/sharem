@@ -193,6 +193,26 @@ TRAIL_SL_FOR_BULL = False
 TRAIL_SL_FOR_BEAR = False
 
 # ============================================================
+# LADDERED TRAILING TARGET / SL  (R:R booster)
+# ============================================================
+# Instead of exiting at the single fixed target, ride a ladder: when the premium reaches a
+# target rung at multiplier T (of the option median), DON'T exit — ratchet the SL up to lock
+# profit at (T - LADDER_LOCK_GAP) and move the target to the NEXT rung. Repeat up the ladder.
+# The base loss-side SL (SL_MULT) and the FIRST rung (= TARGET_MULT = 4.5) are unchanged, so the
+# base R:R stays ~1:2; everything beyond the first rung is captured purely by the trailing SL.
+#
+# CREDIT (profit = premium falls):  target_prem = entry - median*T ; locked_sl = entry - median*(T-gap)
+# DEBIT  (profit = premium rises):  target_prem = entry + median*T ; locked_sl = entry + median*(T-gap)
+#
+# Once ANY rung is hit the SL sits in PROFIT, so a later SL breach is a BOOKED WIN (counts like a
+# target for the one-trade-per-day halt: st=-1, targetCount++), never a loss (slCount untouched).
+# Worst case after rung1 is +4.0x median (vs the old fixed +4.5x) — a small giveback for the
+# upside of riding to 8.0x on a trend. Set LADDER_TRAIL_ENABLED=False to keep the single target.
+LADDER_TRAIL_ENABLED = True
+LADDER_TARGET_MULTS = [4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0]  # target rungs (median multiples)
+LADDER_LOCK_GAP = 0.5   # when rung T is hit, SL locks at (T - gap) in profit
+
+# ============================================================
 # MEDIAN-RANGE LOW-SAMPLE GUARD (see get_option_candle_range)
 # ============================================================
 # The median option candle range drives BOTH sizing and SL/target. It needs enough candles
@@ -3246,6 +3266,28 @@ hedgeEntryPremium = 0     # hedge leg entry premium — mirrors entryPremium for
 assumedOffsetRatio = None  # the used_ratio calc_lots_by_risk actually sized with
 
 
+# Laddered-trail per-trade state (module-level; reset at each entry).
+ladderIdx = 0           # index of the rung currently being targeted (0 = first = 4.5x)
+ladderActive = False    # True once >=1 rung hit -> SL is locked in profit
+ladderMedian = 0        # option median (opt_range) for this trade = basis for rung premiums
+
+
+def _ladder_levels(entry_prem, median, idx, is_debit):
+    """Advance helper: given the rung index just REACHED, return the new (sl, target) premiums
+    plus the multipliers, for riding to the next rung. Caller guarantees idx < last rung.
+    CREDIT (is_debit False): profit = premium down. DEBIT: profit = premium up."""
+    hit_mult = LADDER_TARGET_MULTS[idx]
+    lock_mult = hit_mult - LADDER_LOCK_GAP
+    next_mult = LADDER_TARGET_MULTS[idx + 1]
+    if not is_debit:
+        new_sl = round(entry_prem - median * lock_mult)
+        new_tgt = round(entry_prem - median * next_mult)
+    else:
+        new_sl = round(entry_prem + median * lock_mult)
+        new_tgt = round(entry_prem + median * next_mult)
+    return new_sl, new_tgt, hit_mult, lock_mult, next_mult
+
+
 # ============================================================
 # MAIN WHILE LOOP
 # ============================================================
@@ -4095,6 +4137,10 @@ while x == 1:
                 slTrailed = False
                 pyramided = False
                 slConfirmCount = 0
+                # Laddered-trail state reset for this trade.
+                ladderIdx = 0
+                ladderActive = False
+                ladderMedian = opt_range if (opt_range and opt_range > 0) else 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
@@ -4104,6 +4150,9 @@ while x == 1:
                       " SL_Source=", sl_source,
                       " (iv_pts=", dynamic_sl_pt,
                       " effective_sl=", effective_sl, ")")
+                if LADDER_TRAIL_ENABLED and ladderMedian > 0:
+                    print(f"LADDER_TRAIL armed: median={ladderMedian} rungs={LADDER_TARGET_MULTS} "
+                          f"lock_gap={LADDER_LOCK_GAP} (first target {LADDER_TARGET_MULTS[0]}x)")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
 
@@ -4237,6 +4286,10 @@ while x == 1:
                 slTrailed = False
                 pyramided = False
                 slConfirmCount = 0
+                # Laddered-trail state reset for this trade.
+                ladderIdx = 0
+                ladderActive = False
+                ladderMedian = opt_range if (opt_range and opt_range > 0) else 0
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
@@ -4246,6 +4299,9 @@ while x == 1:
                       " SL_Source=", sl_source,
                       " (iv_pts=", dynamic_sl_pt,
                       " effective_sl=", effective_sl, ")")
+                if LADDER_TRAIL_ENABLED and ladderMedian > 0:
+                    print(f"LADDER_TRAIL armed: median={ladderMedian} rungs={LADDER_TARGET_MULTS} "
+                          f"lock_gap={LADDER_LOCK_GAP} (first target {LADDER_TARGET_MULTS[0]}x)")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                 mapStrike.clear()
@@ -4351,14 +4407,21 @@ while x == 1:
                             print(f"LTP_SL_WATCH: ltp={ltp_now} SL={sl} confirm={ltpSlConfirm}/{SL_CONFIRM_TICKS}")
                             if ltpSlConfirm >= SL_CONFIRM_TICKS:
                                 print('SL Hit (LTP)')
-                                st = 0
-                                # Only an UNTRAILED SL is a real loss and counts toward the daily
-                                # halt (now 1-SL: the entry gate blocks once slCount reaches 1).
-                                # A trailed exit (SL already at breakeven) is a scratch.
-                                if not slTrailed:
+                                if ladderActive:
+                                    # SL was ratcheted into PROFIT by the ladder -> this is a
+                                    # BOOKED WIN. End the day like a target (st=-1, targetCount++),
+                                    # NOT a loss (slCount untouched).
+                                    st = -1
+                                    targetCount += 1
+                                    print(f'LADDER_EXIT: trailed SL hit in PROFIT at {sl} '
+                                          f'(highest rung idx={ladderIdx}) -> booked win. slCount =', slCount)
+                                elif not slTrailed:
+                                    # Untrailed SL = real loss; counts toward the 1-SL daily halt.
+                                    st = 0
                                     slCount += 1
                                     print('slCount =', slCount)
                                 else:
+                                    st = 0
                                     print('SL at breakeven (trailed) — scratch, not counted. slCount =', slCount)
                                 oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
                                 break
@@ -4369,11 +4432,29 @@ while x == 1:
                             ltpTgtConfirm += 1
                             print(f"LTP_TGT_WATCH: ltp={ltp_now} target={target} confirm={ltpTgtConfirm}/{TGT_CONFIRM_TICKS}")
                             if ltpTgtConfirm >= TGT_CONFIRM_TICKS:
-                                print('Target hit (LTP)')
-                                st = -1
-                                targetCount += 1
-                                oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                break
+                                # LADDER: a rung is reached. If it's not the final rung, DON'T exit —
+                                # lock the SL in profit at (hit_mult - gap) and advance the target to
+                                # the next rung. Only the FINAL rung (or ladder disabled) exits here.
+                                if (LADDER_TRAIL_ENABLED and ladderMedian > 0
+                                        and ladderIdx < len(LADDER_TARGET_MULTS) - 1):
+                                    _nsl, _ntgt, _hitm, _lockm, _nextm = _ladder_levels(
+                                        entryPremium, ladderMedian, ladderIdx, is_debit)
+                                    sl = _nsl
+                                    target = _ntgt
+                                    ladderIdx += 1
+                                    ladderActive = True
+                                    slTrailed = True   # SL now locked in profit -> any SL exit = booked win
+                                    ltpTgtConfirm = 0
+                                    print(f"LADDER_TRAIL: rung {_hitm}x reached (ltp={ltp_now}) -> SL locked "
+                                          f"at {_lockm}x ({sl}), next target {_nextm}x ({target}) "
+                                          f"[ladderIdx={ladderIdx}]")
+                                    # keep riding — no break
+                                else:
+                                    print('Target hit (LTP)')
+                                    st = -1
+                                    targetCount += 1
+                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                    break
                         else:
                             ltpTgtConfirm = 0
 
@@ -4404,22 +4485,43 @@ while x == 1:
                                 fb_tgt = _fb_close >= target
                             if fb_sl:
                                 print("SL Hit (CANDLE FALLBACK) close=", _fb_close, " SL=", sl)
-                                st = 0
-                                # Same rule as the LTP path: untrailed SL counts, trailed
-                                # (breakeven) exit is a scratch and is not counted.
-                                if not slTrailed:
+                                # Same rule as the LTP path: a ladder-locked SL is a booked win,
+                                # an untrailed SL is a real loss, a plain trail is a scratch.
+                                if ladderActive:
+                                    st = -1
+                                    targetCount += 1
+                                    print(f'LADDER_EXIT (fallback): trailed SL hit in PROFIT at {sl} '
+                                          f'(idx={ladderIdx}) -> booked win. slCount =', slCount)
+                                elif not slTrailed:
+                                    st = 0
                                     slCount += 1
                                     print('slCount =', slCount)
                                 else:
+                                    st = 0
                                     print('SL at breakeven (trailed) — scratch, not counted. slCount =', slCount)
                                 oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
                                 break
                             elif fb_tgt:
                                 print("Target hit (CANDLE FALLBACK) close=", _fb_close, " target=", target)
-                                st = -1
-                                targetCount += 1
-                                oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                                break
+                                # LADDER: advance instead of exiting unless final rung / disabled.
+                                if (LADDER_TRAIL_ENABLED and ladderMedian > 0
+                                        and ladderIdx < len(LADDER_TARGET_MULTS) - 1):
+                                    _nsl, _ntgt, _hitm, _lockm, _nextm = _ladder_levels(
+                                        entryPremium, ladderMedian, ladderIdx, is_debit)
+                                    sl = _nsl
+                                    target = _ntgt
+                                    ladderIdx += 1
+                                    ladderActive = True
+                                    slTrailed = True
+                                    print(f"LADDER_TRAIL (fallback): rung {_hitm}x reached -> SL locked "
+                                          f"at {_lockm}x ({sl}), next target {_nextm}x ({target}) "
+                                          f"[ladderIdx={ladderIdx}]")
+                                    # keep riding — no break
+                                else:
+                                    st = -1
+                                    targetCount += 1
+                                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                    break
                             else:
                                 print("LTP_FALLBACK: quotes down, using candle close=", _fb_close,
                                       " SL=", sl, " target=", target)
