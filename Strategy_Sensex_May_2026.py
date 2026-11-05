@@ -1820,10 +1820,10 @@ def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
                 # side's net OI change is greater "wins": a side freshly ADDED (+) beats a side
                 # UNWOUND (-). Simple direct comparison, no PCR threshold.
                 if f_pe > f_ce:
-                    return "(pe more than ce)"
+                    return "[oi-chg: pe more than ce]"
                 if f_ce > f_pe:
-                    return "(ce more than pe)"
-                return "(ce == pe)"
+                    return "[oi-chg: ce more than pe]"
+                return "[oi-chg: ce == pe]"
 
             def _oich_line(label, strike):
                 ce_now, pe_now = cur_oich_map.get(strike, (0.0, 0.0))
