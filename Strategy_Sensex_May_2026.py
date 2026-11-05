@@ -1672,6 +1672,7 @@ invWideLogLines = []      # wide-chain block (17WIDE)
 # invPcrLogLines / chainOiHistory.
 volPressureLogLines = []  # lines emitted each cycle
 _prev_vol_map = {}        # {int(strike): (ce_vol_cumulative, pe_vol_cumulative)} from prev cycle
+_prev_oich_map = {}       # {int(strike): (ce_oich_cumulative, pe_oich_cumulative)} from prev cycle
 _vol_pcr_state = {}       # {'pooled_prev': float|None, 'atm_prev': float|None}
 
 
@@ -1734,6 +1735,49 @@ def build_strike_vol_map(dfochain):
     return out
 
 
+def build_strike_oich_map(dfochain):
+    """``{int(strike): (ce_oich, pe_oich)}`` (cumulative day change-in-OI) for the current
+    cycle. Mirrors build_strike_oi_map but reads the 'oich' column. Never raises."""
+    out = {}
+    try:
+        if 'strike_price' not in dfochain.columns or 'oich' not in dfochain.columns:
+            return out
+        sp = dfochain['strike_price'].to_numpy()
+        ot = dfochain['option_type'].to_numpy()
+        oicharr = dfochain['oich'].to_numpy()
+        for i in range(len(sp)):
+            try:
+                k = int(float(sp[i]))
+            except (TypeError, ValueError):
+                continue
+            ce, pe = out.get(k, (0.0, 0.0))
+            try:
+                v = float(oicharr[i] or 0)
+            except (TypeError, ValueError):
+                v = 0.0
+            if ot[i] == 'CE':
+                ce = v
+            elif ot[i] == 'PE':
+                pe = v
+            out[k] = (ce, pe)
+    except Exception as e:
+        print(f"VOL_PRESSURE_WARN: build_strike_oich_map failed: {type(e).__name__}: {e}")
+    return out
+
+
+def _fresh_oich_regime(fresh_ce, fresh_pe):
+    """Human tag for the signed fresh OI-change pair at one strike."""
+    ce_up = fresh_ce > 0
+    pe_up = fresh_pe > 0
+    if pe_up and ce_up:
+        return "both added"
+    if (not pe_up) and (not ce_up):
+        return "both unwound"
+    if pe_up and not ce_up:
+        return "PE added / CE unwound"
+    return "PE unwound / CE added"
+
+
 def _fresh_vol_pcr(cur_map, prev_map, strike):
     """FRESH (this-cycle) volume PCR at one strike: (PE_now-PE_prev)/(CE_now-CE_prev).
     Cumulative day volume only rises, so the deltas are >= 0 (clamped for safety).
@@ -1746,30 +1790,64 @@ def _fresh_vol_pcr(cur_map, prev_map, strike):
     return pcr, fresh_ce, fresh_pe
 
 
-def log_vol_pressure(cur_map, atm_strike, step, buf):
-    """Emit the change-in-volume PCR at ATM-1 / ATM / ATM+1, a pooled ATM+-1 value, and an
-    ATM-only value — each with its change vs the previous cycle. LOG-ONLY, feeds no gate.
-    Reads/updates module-level _prev_vol_map and _vol_pcr_state IN PLACE. Never raises."""
+def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
+    """Emit, at ATM-1 / ATM / ATM+1, the change-in-VOLUME PCR (activity/turnover) and right
+    beside it the change-in-OI PCR (net added/unwound positioning), plus pooled ATM+-1 values.
+    LOG-ONLY, feeds no gate. Reads/updates module-level _prev_vol_map, _prev_oich_map and
+    _vol_pcr_state IN PLACE. Never raises.
+
+    Volume is unsigned (every trade adds to it) = how much fighting happened. OI change is
+    SIGNED (+added / -unwound) = who ended up holding. The OICHG_PCR ratio is only shown when
+    BOTH sides are freshly added (both > 0); otherwise the signed raw values + regime tag tell
+    the story (a both-negative ratio would look normal but actually means both sides unwinding).
+    """
     try:
-        buf.append("==== VOL PRESSURE (change-in-volume PCR, ATM +/- 1) ====  [log-only]")
-        if not _prev_vol_map:
+        buf.append("==== VOL PRESSURE (change-in-volume PCR + change-in-OI PCR, ATM +/- 1) ====  [log-only]")
+        have_vol_prev = bool(_prev_vol_map)
+        have_oi_prev = bool(_prev_oich_map)
+        if not have_vol_prev:
             buf.append("VOL_PRESSURE: no previous cycle yet — baseline stored, ratios next cycle.")
         else:
             s_dn = int(atm_strike) - step   # ATM-1 (lower strike)
             s_at = int(atm_strike)          # ATM
             s_up = int(atm_strike) + step   # ATM+1 (higher strike)
+
             def _fmt(pcr):
                 return f"{pcr:.2f}" if pcr is not None else "NA(freshCE=0)"
-            p_dn, ce_dn, pe_dn = _fresh_vol_pcr(cur_map, _prev_vol_map, s_dn)
-            p_at, ce_at, pe_at = _fresh_vol_pcr(cur_map, _prev_vol_map, s_at)
-            p_up, ce_up, pe_up = _fresh_vol_pcr(cur_map, _prev_vol_map, s_up)
+
+            def _oich_line(label, strike):
+                ce_now, pe_now = cur_oich_map.get(strike, (0.0, 0.0))
+                ce_prev, pe_prev = _prev_oich_map.get(strike, (0.0, 0.0))
+                f_ce = ce_now - ce_prev   # signed: + added, - unwound
+                f_pe = pe_now - pe_prev
+                regime = _fresh_oich_regime(f_ce, f_pe)
+                # PCR only meaningful when both freshly ADDED (both > 0)
+                oipcr = round(f_pe / f_ce, 2) if (f_ce > 0 and f_pe > 0) else None
+                oipcr_s = f"{oipcr:.2f}" if oipcr is not None else "NA(see signs)"
+                return (f"     oi-change {label} (strike={strike}): "
+                        f"freshPE_oi={int(f_pe):+d} freshCE_oi={int(f_ce):+d}  "
+                        f"OICHG_PCR={oipcr_s} [{regime}]"), f_ce, f_pe
+
+            # --- per-strike: volume line then OI-change line ---
+            p_dn, ce_dn, pe_dn = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_dn)
             buf.append(f"change in vol pcr atm-1 (strike={s_dn}) = {_fmt(p_dn)}  "
-                       f"(freshPE={int(pe_dn)} freshCE={int(ce_dn)})")
+                       f"(freshPE_vol={int(pe_dn)} freshCE_vol={int(ce_dn)})")
+            l_dn, foi_ce_dn, foi_pe_dn = _oich_line("atm-1", s_dn)
+            if have_oi_prev: buf.append(l_dn)
+
+            p_at, ce_at, pe_at = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_at)
             buf.append(f"change in vol pcr atm   (strike={s_at}) = {_fmt(p_at)}  "
-                       f"(freshPE={int(pe_at)} freshCE={int(ce_at)})")
+                       f"(freshPE_vol={int(pe_at)} freshCE_vol={int(ce_at)})")
+            l_at, foi_ce_at, foi_pe_at = _oich_line("atm  ", s_at)
+            if have_oi_prev: buf.append(l_at)
+
+            p_up, ce_up, pe_up = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_up)
             buf.append(f"change in vol pcr atm+1 (strike={s_up}) = {_fmt(p_up)}  "
-                       f"(freshPE={int(pe_up)} freshCE={int(ce_up)})")
-            # Pooled ATM+-1 (sum fresh across the 3 strikes) — net put-vs-call pressure at the money
+                       f"(freshPE_vol={int(pe_up)} freshCE_vol={int(ce_up)})")
+            l_up, foi_ce_up, foi_pe_up = _oich_line("atm+1", s_up)
+            if have_oi_prev: buf.append(l_up)
+
+            # --- pooled ATM+-1 ---
             pool_ce = ce_dn + ce_at + ce_up
             pool_pe = pe_dn + pe_at + pe_up
             pool_pcr = round(pool_pe / pool_ce, 2) if pool_ce > 0 else None
@@ -1777,16 +1855,23 @@ def log_vol_pressure(cur_map, atm_strike, step, buf):
             dpool = (f"{pool_pcr - prev_pool:+.2f}" if (pool_pcr is not None and prev_pool is not None) else "NA")
             buf.append(f"VOL_PCR_POOLED (ATM+-1 fresh) = {_fmt(pool_pcr)}  "
                        f"prev = {('%.2f' % prev_pool) if prev_pool is not None else 'NA'}  change = {dpool}")
-            # ATM-only, for comparison with the pooled version
             prev_atm = _vol_pcr_state.get('atm_prev')
             datm = (f"{p_at - prev_atm:+.2f}" if (p_at is not None and prev_atm is not None) else "NA")
             buf.append(f"VOL_PCR_ATM_only = {_fmt(p_at)}  "
                        f"prev = {('%.2f' % prev_atm) if prev_atm is not None else 'NA'}  change = {datm}")
+            if have_oi_prev:
+                oi_pool_ce = foi_ce_dn + foi_ce_at + foi_ce_up
+                oi_pool_pe = foi_pe_dn + foi_pe_at + foi_pe_up
+                oi_pool_pcr = round(oi_pool_pe / oi_pool_ce, 2) if (oi_pool_ce > 0 and oi_pool_pe > 0) else None
+                oi_pool_s = f"{oi_pool_pcr:.2f}" if oi_pool_pcr is not None else "NA(see signs)"
+                buf.append(f"OICHG_PCR_POOLED (ATM+-1 fresh) = {oi_pool_s}  "
+                           f"freshPE_oi={int(oi_pool_pe):+d} freshCE_oi={int(oi_pool_ce):+d} "
+                           f"[{_fresh_oich_regime(oi_pool_ce, oi_pool_pe)}]")
             _vol_pcr_state['pooled_prev'] = pool_pcr
             _vol_pcr_state['atm_prev'] = p_at
-        # Store this cycle's cumulative map as next cycle's baseline (in-place).
-        _prev_vol_map.clear()
-        _prev_vol_map.update(cur_map)
+        # Store this cycle's cumulative maps as next cycle's baseline (in-place).
+        _prev_vol_map.clear(); _prev_vol_map.update(cur_vol_map)
+        _prev_oich_map.clear(); _prev_oich_map.update(cur_oich_map)
     except Exception as e:
         buf.append(f"VOL_PRESSURE_WARN: log_vol_pressure failed: {type(e).__name__}: {e}")
 
@@ -3355,7 +3440,8 @@ while x == 1:
             if LOG_VOL_PRESSURE:
                 try:
                     _vol_map_now = build_strike_vol_map(dfochain)
-                    log_vol_pressure(_vol_map_now, ATM_STRIKE, 100, volPressureLogLines)
+                    _oich_map_now = build_strike_oich_map(dfochain)
+                    log_vol_pressure(_vol_map_now, _oich_map_now, ATM_STRIKE, 100, volPressureLogLines)
                 except Exception as _vperr:
                     volPressureLogLines.append(
                         f"VOL_PRESSURE_WARN: cycle compute failed: {type(_vperr).__name__}: {_vperr}")
