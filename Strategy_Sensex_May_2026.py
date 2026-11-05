@@ -3272,9 +3272,26 @@ ladderActive = False    # True once >=1 rung hit -> SL is locked in profit
 ladderMedian = 0        # option median (opt_range) for this trade = basis for rung premiums
 
 
+def _ladder_highest_reached(entry_prem, median, ltp, is_debit):
+    """Highest rung INDEX whose target the current ltp has already reached (profit distance
+    covered so far), or -1 if not even the first rung is reached. Lets the SL snap straight to
+    the top rung on a fast spike instead of crawling one rung per poll.
+    CREDIT: profit distance = entry - ltp. DEBIT: profit distance = ltp - entry."""
+    if median <= 0:
+        return -1
+    covered_mult = ((entry_prem - ltp) if not is_debit else (ltp - entry_prem)) / median
+    hi = -1
+    for i, m in enumerate(LADDER_TARGET_MULTS):
+        if covered_mult >= m:
+            hi = i
+        else:
+            break
+    return hi
+
+
 def _ladder_levels(entry_prem, median, idx, is_debit):
-    """Advance helper: given the rung index just REACHED, return the new (sl, target) premiums
-    plus the multipliers, for riding to the next rung. Caller guarantees idx < last rung.
+    """Given the rung index just REACHED, return the (sl, target) premiums plus the multipliers
+    for riding to the NEXT rung. Caller guarantees idx < last rung.
     CREDIT (is_debit False): profit = premium down. DEBIT: profit = premium up."""
     hit_mult = LADDER_TARGET_MULTS[idx]
     lock_mult = hit_mult - LADDER_LOCK_GAP
@@ -4432,16 +4449,18 @@ while x == 1:
                             ltpTgtConfirm += 1
                             print(f"LTP_TGT_WATCH: ltp={ltp_now} target={target} confirm={ltpTgtConfirm}/{TGT_CONFIRM_TICKS}")
                             if ltpTgtConfirm >= TGT_CONFIRM_TICKS:
-                                # LADDER: a rung is reached. If it's not the final rung, DON'T exit —
-                                # lock the SL in profit at (hit_mult - gap) and advance the target to
-                                # the next rung. Only the FINAL rung (or ladder disabled) exits here.
-                                if (LADDER_TRAIL_ENABLED and ladderMedian > 0
-                                        and ladderIdx < len(LADDER_TARGET_MULTS) - 1):
+                                # LADDER: snap to the HIGHEST rung the current ltp has already
+                                # reached (so a fast spike from 4.5x to 7x moves the SL straight to
+                                # the 6.5x lock, not one rung per poll). Lock SL at (hit - gap),
+                                # target = next rung. Exit only when the FINAL rung is reached.
+                                _hi = _ladder_highest_reached(entryPremium, ladderMedian, ltp_now, is_debit) \
+                                    if (LADDER_TRAIL_ENABLED and ladderMedian > 0) else -1
+                                if _hi >= 0 and _hi < len(LADDER_TARGET_MULTS) - 1:
                                     _nsl, _ntgt, _hitm, _lockm, _nextm = _ladder_levels(
-                                        entryPremium, ladderMedian, ladderIdx, is_debit)
+                                        entryPremium, ladderMedian, _hi, is_debit)
                                     sl = _nsl
                                     target = _ntgt
-                                    ladderIdx += 1
+                                    ladderIdx = _hi + 1
                                     ladderActive = True
                                     slTrailed = True   # SL now locked in profit -> any SL exit = booked win
                                     ltpTgtConfirm = 0
@@ -4450,6 +4469,7 @@ while x == 1:
                                           f"[ladderIdx={ladderIdx}]")
                                     # keep riding — no break
                                 else:
+                                    # Final rung reached (or ladder disabled) -> take profit and exit.
                                     print('Target hit (LTP)')
                                     st = -1
                                     targetCount += 1
@@ -4503,14 +4523,15 @@ while x == 1:
                                 break
                             elif fb_tgt:
                                 print("Target hit (CANDLE FALLBACK) close=", _fb_close, " target=", target)
-                                # LADDER: advance instead of exiting unless final rung / disabled.
-                                if (LADDER_TRAIL_ENABLED and ladderMedian > 0
-                                        and ladderIdx < len(LADDER_TARGET_MULTS) - 1):
+                                # LADDER: snap to the highest rung the fallback close has reached.
+                                _hi = _ladder_highest_reached(entryPremium, ladderMedian, _fb_close, is_debit) \
+                                    if (LADDER_TRAIL_ENABLED and ladderMedian > 0) else -1
+                                if _hi >= 0 and _hi < len(LADDER_TARGET_MULTS) - 1:
                                     _nsl, _ntgt, _hitm, _lockm, _nextm = _ladder_levels(
-                                        entryPremium, ladderMedian, ladderIdx, is_debit)
+                                        entryPremium, ladderMedian, _hi, is_debit)
                                     sl = _nsl
                                     target = _ntgt
-                                    ladderIdx += 1
+                                    ladderIdx = _hi + 1
                                     ladderActive = True
                                     slTrailed = True
                                     print(f"LADDER_TRAIL (fallback): rung {_hitm}x reached -> SL locked "
