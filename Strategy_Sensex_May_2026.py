@@ -366,7 +366,7 @@ NO_TRADE_ZONE_BUFFER = 20
 # higher-probability short leg with less gamma whipsaw. DEBIT is unaffected either way.
 # Always deploy by copying this file to sharem/ and pushing; never hand-edit on the server.
 ONE_OTM = 0
-FIXED_RISK_PER_TRADE = 4000     # ₹ NET risk per trade if SL hits (after hedge offset)
+FIXED_RISK_PER_TRADE = 7000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
