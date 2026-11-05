@@ -1834,7 +1834,7 @@ def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
                 # PCR only meaningful when both freshly ADDED (both > 0)
                 oipcr = round(f_pe / f_ce, 2) if (f_ce > 0 and f_pe > 0) else None
                 oipcr_s = f"{oipcr:.2f}" if oipcr is not None else "NA(see signs)"
-                return (f"     oi-change {label} (strike={strike}): "
+                return (f"ChInOi  pcr {label} (strike={strike}): "
                         f"freshPE_oi={int(f_pe):+d} freshCE_oi={int(f_ce):+d}  "
                         f"OICHG_PCR={oipcr_s} [{regime}]"), f_ce, f_pe
 
@@ -1844,21 +1844,21 @@ def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
             l_dn, foi_ce_dn, foi_pe_dn = _oich_line("atm-1", s_dn)
             p_dn, ce_dn, pe_dn = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_dn)
             tag_dn = _oi_side_tag(foi_ce_dn, foi_pe_dn) if have_oi_prev else "(oi n/a)"
-            buf.append(f"change in vol pcr atm-1 (strike={s_dn}) = {_fmt(p_dn)} {tag_dn}  "
+            buf.append(f"chInVol pcr atm-1 (strike={s_dn}) = {_fmt(p_dn)} {tag_dn}  "
                        f"(freshPE_vol={int(pe_dn)} freshCE_vol={int(ce_dn)})")
             if have_oi_prev: buf.append(l_dn)
 
             l_at, foi_ce_at, foi_pe_at = _oich_line("atm  ", s_at)
             p_at, ce_at, pe_at = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_at)
             tag_at = _oi_side_tag(foi_ce_at, foi_pe_at) if have_oi_prev else "(oi n/a)"
-            buf.append(f"change in vol pcr atm   (strike={s_at}) = {_fmt(p_at)} {tag_at}  "
+            buf.append(f"chInVol pcr atm   (strike={s_at}) = {_fmt(p_at)} {tag_at}  "
                        f"(freshPE_vol={int(pe_at)} freshCE_vol={int(ce_at)})")
             if have_oi_prev: buf.append(l_at)
 
             l_up, foi_ce_up, foi_pe_up = _oich_line("atm+1", s_up)
             p_up, ce_up, pe_up = _fresh_vol_pcr(cur_vol_map, _prev_vol_map, s_up)
             tag_up = _oi_side_tag(foi_ce_up, foi_pe_up) if have_oi_prev else "(oi n/a)"
-            buf.append(f"change in vol pcr atm+1 (strike={s_up}) = {_fmt(p_up)} {tag_up}  "
+            buf.append(f"chInVol pcr atm+1 (strike={s_up}) = {_fmt(p_up)} {tag_up}  "
                        f"(freshPE_vol={int(pe_up)} freshCE_vol={int(ce_up)})")
             if have_oi_prev: buf.append(l_up)
 
