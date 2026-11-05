@@ -3171,6 +3171,10 @@ avgOiPcrMap = {}
 # Observation-only: last cycle's cumulative CE/PE oich per strike, used to derive the 3-min
 # INCREMENTAL (fresh) change-in-OI at the SUPP_RES strike = now_oich - prev_cycle_oich.
 _prev_suppres_choi = {}   # {strike: (ce_oich, pe_oich)}
+# Prev-cycle cumulative VOLUME at the SUPP_RES strike, so the 3-min fresh (incremental) volume
+# PCR at that exact strike can be printed below INCR_CHOI. Independent of the ATM+-1 block's
+# _prev_vol_map. Keyed by strike so a SUPP_RES shift compares like-for-like.
+_prev_suppres_vol = {}    # {strike: (ce_vol_cumulative, pe_vol_cumulative)}
 # Consecutive-streak of INCR_CHOI fresh-flow dominance at the S/R level. Flags flip True once
 # the same-side dominance persists >= CHOI_DOM_STREAK consecutive cycles (mirrors the PCR
 # consecutive-trend idea): PE-dominant at a SUPPORT -> isPE_DominantAtSupp (bull confirm),
@@ -3648,6 +3652,28 @@ while x == 1:
                         # Reset so the dominance entry gate stays conservative (blocks).
                         _last_fresh_ce = 0
                         _last_fresh_pe = 0
+                    # --- change-in-VOLUME PCR at the SAME SUPP_RES strike (log-only) ---
+                    # Fresh (this-cycle) volume = now_cumulative - prev_cycle_cumulative at the
+                    # SUPP_RES strike; PCR = freshPE_vol / freshCE_vol. Shows the put-vs-call
+                    # TRADING activity right at the level, next to the OI-flow line above.
+                    if LOG_VOL_PRESSURE:
+                        try:
+                            _sr_volmap = build_strike_vol_map(dfochain)
+                            _sr_ce_now, _sr_pe_now = _sr_volmap.get(int(float(SUPP_RES)), (0.0, 0.0))
+                            _sr_vprev = _prev_suppres_vol.get(SUPP_RES)
+                            if _sr_vprev is not None:
+                                _sr_fce = max(0.0, _sr_ce_now - _sr_vprev[0])
+                                _sr_fpe = max(0.0, _sr_pe_now - _sr_vprev[1])
+                                _sr_vpcr = round(_sr_fpe / _sr_fce, 2) if _sr_fce > 0 else None
+                                _sr_vpcr_s = f"{_sr_vpcr:.2f}" if _sr_vpcr is not None else "NA(freshCE=0)"
+                                print(f"INCR_VOLPCR: SUPP_RES={SUPP_RES} chInVol pcr = {_sr_vpcr_s} "
+                                      f"(freshPE_vol={int(_sr_fpe)} freshCE_vol={int(_sr_fce)})")
+                            else:
+                                print(f"INCR_VOLPCR: SUPP_RES={SUPP_RES} chInVol pcr first sighting "
+                                      f"(no prev cycle to diff)")
+                            _prev_suppres_vol[SUPP_RES] = (_sr_ce_now, _sr_pe_now)
+                        except Exception as _srv_err:
+                            print("INCR_VOLPCR_FAILED (non-fatal, diagnostic only):", _srv_err)
                     _prev_suppres_choi[SUPP_RES] = (suppResCeChOi, suppResPeChOi)
                 except Exception as _incr_err:
                     print("INCR_CHOI_DIAG_FAILED (non-fatal, diagnostic only):", _incr_err)
