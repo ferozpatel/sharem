@@ -3272,6 +3272,23 @@ ladderActive = False    # True once >=1 rung hit -> SL is locked in profit
 ladderMedian = 0        # option median (opt_range) for this trade = basis for rung premiums
 
 
+def _ladder_max_usable_idx(entry_prem, median, is_debit):
+    """Highest rung index whose TARGET premium is still reachable (> 0). For a CREDIT spread the
+    target = entry - median*T, which goes negative for large T (premium can't fall below 0) — so
+    rungs past that point are unreachable and the ladder must stop at the last positive one.
+    DEBIT targets (entry + median*T) only rise, so all rungs are usable. Never returns < 0 when
+    at least the first rung is reachable; falls back to 0 otherwise."""
+    if is_debit or median <= 0:
+        return len(LADDER_TARGET_MULTS) - 1
+    last = -1
+    for i, m in enumerate(LADDER_TARGET_MULTS):
+        if entry_prem - median * m > 0:   # target premium still positive -> reachable
+            last = i
+        else:
+            break
+    return last if last >= 0 else 0
+
+
 def _ladder_highest_reached(entry_prem, median, ltp, is_debit):
     """Highest rung INDEX whose target the current ltp has already reached (profit distance
     covered so far), or -1 if not even the first rung is reached. Lets the SL snap straight to
@@ -4455,7 +4472,10 @@ while x == 1:
                                 # target = next rung. Exit only when the FINAL rung is reached.
                                 _hi = _ladder_highest_reached(entryPremium, ladderMedian, ltp_now, is_debit) \
                                     if (LADDER_TRAIL_ENABLED and ladderMedian > 0) else -1
-                                if _hi >= 0 and _hi < len(LADDER_TARGET_MULTS) - 1:
+                                # Effective last rung = last one whose target premium is still
+                                # positive (for credit, higher rungs can go negative/unreachable).
+                                _last_idx = _ladder_max_usable_idx(entryPremium, ladderMedian, is_debit)
+                                if _hi >= 0 and _hi < _last_idx:
                                     _nsl, _ntgt, _hitm, _lockm, _nextm = _ladder_levels(
                                         entryPremium, ladderMedian, _hi, is_debit)
                                     sl = _nsl
@@ -4466,10 +4486,10 @@ while x == 1:
                                     ltpTgtConfirm = 0
                                     print(f"LADDER_TRAIL: rung {_hitm}x reached (ltp={ltp_now}) -> SL locked "
                                           f"at {_lockm}x ({sl}), next target {_nextm}x ({target}) "
-                                          f"[ladderIdx={ladderIdx}]")
+                                          f"[ladderIdx={ladderIdx}] (last usable rung={LADDER_TARGET_MULTS[_last_idx]}x)")
                                     # keep riding — no break
                                 else:
-                                    # Final rung reached (or ladder disabled) -> take profit and exit.
+                                    # Final reachable rung hit (or ladder disabled) -> take profit, exit.
                                     print('Target hit (LTP)')
                                     st = -1
                                     targetCount += 1
@@ -4536,7 +4556,8 @@ while x == 1:
                                 # LADDER: snap to the highest rung the fallback close has reached.
                                 _hi = _ladder_highest_reached(entryPremium, ladderMedian, _fb_close, is_debit) \
                                     if (LADDER_TRAIL_ENABLED and ladderMedian > 0) else -1
-                                if _hi >= 0 and _hi < len(LADDER_TARGET_MULTS) - 1:
+                                _last_idx = _ladder_max_usable_idx(entryPremium, ladderMedian, is_debit)
+                                if _hi >= 0 and _hi < _last_idx:
                                     _nsl, _ntgt, _hitm, _lockm, _nextm = _ladder_levels(
                                         entryPremium, ladderMedian, _hi, is_debit)
                                     sl = _nsl
@@ -4546,7 +4567,7 @@ while x == 1:
                                     slTrailed = True
                                     print(f"LADDER_TRAIL (fallback): rung {_hitm}x reached -> SL locked "
                                           f"at {_lockm}x ({sl}), next target {_nextm}x ({target}) "
-                                          f"[ladderIdx={ladderIdx}]")
+                                          f"[ladderIdx={ladderIdx}] (last usable rung={LADDER_TARGET_MULTS[_last_idx]}x)")
                                     # keep riding — no break
                                 else:
                                     st = -1
