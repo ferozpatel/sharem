@@ -4481,8 +4481,18 @@ while x == 1:
                         # Routine heartbeat throttled to ~once/min (near top of minute) so the
                         # 2s poll doesn't flood the log — breach lines above still log every poll.
                         if not sl_breach and not tgt_reached and dt2.second < LTP_POLL_INTERVAL:
+                            if LADDER_TRAIL_ENABLED and ladderMedian > 0:
+                                _reached_mult = (LADDER_TARGET_MULTS[ladderIdx - 1]
+                                                 if ladderActive and ladderIdx > 0 else None)
+                                _next_mult = (LADDER_TARGET_MULTS[ladderIdx]
+                                              if ladderIdx < len(LADDER_TARGET_MULTS) else "final")
+                                _ladder_tag = (f" LADDER[reached={_reached_mult}x SLlock next_tgt={_next_mult}x "
+                                               f"idx={ladderIdx}]" if ladderActive
+                                               else f" LADDER[base, aiming {_next_mult}x idx={ladderIdx}]")
+                            else:
+                                _ladder_tag = ""
                             print(dt2.strftime("%H:%M:%S"), "In Trade (", spread_decision.get("type"), "). No Exit. ltp=", ltp_now,
-                                  " SL=", sl, " target=", target)
+                                  " SL=", sl, " target=", target, _ladder_tag)
 
                     elif ltp_now is None and (st == 1 or st == 2):
                         # === FALLBACK: LTP unavailable → use last completed 1-min candle close ===
