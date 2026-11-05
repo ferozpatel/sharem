@@ -1802,7 +1802,8 @@ def log_vol_pressure(cur_vol_map, cur_oich_map, atm_strike, step, buf):
     the story (a both-negative ratio would look normal but actually means both sides unwinding).
     """
     try:
-        buf.append("==== VOL PRESSURE (change-in-volume PCR + change-in-OI PCR, ATM +/- 1) ====  [log-only]")
+        _vp_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        buf.append(f"==== {_vp_ts} VOL PRESSURE (change-in-volume PCR + change-in-OI PCR, ATM +/- 1) ====  [log-only]")
         have_vol_prev = bool(_prev_vol_map)
         have_oi_prev = bool(_prev_oich_map)
         if not have_vol_prev:
