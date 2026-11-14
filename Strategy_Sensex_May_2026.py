@@ -1330,7 +1330,7 @@ def log_chart_patterns(opens, high, low, close, iv_params):
 # Falls back to IV formula if insufficient candle data available
 # ============================================================
 
-def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
+def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
     """
     Measure actual ATM option 3-min candle range from recent history.
 
@@ -1338,7 +1338,9 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
     9:15-9:18 candle which is abnormally large due to opening volatility), then
     return MEDIAN of all valid candle ranges.
 
-    - Last 10 candles (post first candle) covers ~30 min of recent activity
+    - Last 15 candles (post first candle) covers ~45 min of recent activity
+    - A 20-candle median is ALSO computed and logged (OPT_MEDIAN20_LOG) for a
+      wider-window comparison; it does NOT feed sizing.
     - Median of all = balanced view of typical movement (not biased by outliers)
     - top_k param kept for backward compat but unused (top-K logic removed —
       was over-weighting active candles and inflating SL)
@@ -1442,23 +1444,38 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=10, top_k=5):
                   f"| median={round(representative_range, 2)} (<= {LOW_SAMPLE_MEDIAN_THRESHOLD})",
                   f"-> kept as-is")
 
+        # === 20-CANDLE MEDIAN (LOG-ONLY) — wider-window comparison vs the 15-candle sizing ===
+        # Computed over the last 20 valid ranges (or fewer if the session is young). Does NOT
+        # feed sizing/SL/target — purely to compare how a wider window would read vs the 15 used.
+        try:
+            _all_ranges = (opt_data['high'].to_numpy() - opt_data['low'].to_numpy())
+            _all_ranges = _all_ranges[_all_ranges > 0]
+            _ranges20 = _all_ranges[-20:]
+            _median20 = round(float(np.median(_ranges20)), 2) if len(_ranges20) else None
+            print(f"OPT_MEDIAN20_LOG: symbol={option_symbol}",
+                  f"| candles_used={len(_ranges20)}",
+                  f"| median20={_median20}",
+                  f"| (sizing median15={round(representative_range, 2)} over {len(ranges)} candles)")
+        except Exception as _m20err:
+            print("OPT_MEDIAN20_LOG_ERROR:", str(_m20err))
+
         # === MAIN-LEG OPTION CHART OHLC (single line at entry) — kept for future analysis ===
         # Full open/high/low/close of the exact traded (main/ATM) leg at entry time, so we can
         # later reconstruct the median calc and re-tune SL/target sizing logic offline.
-        # One consolidated line (not per-candle) covering the candles that fed the median.
+        # Logs the LAST 20 candles (or however many are available if fewer than 20).
         try:
-            ohlc_candles = opt_data.iloc[-n_candles:]
+            ohlc_candles = opt_data.iloc[-20:]
             o_list = [round(float(x), 2) for x in ohlc_candles['open'].to_numpy()]
             h_list = [round(float(x), 2) for x in ohlc_candles['high'].to_numpy()]
             l_list = [round(float(x), 2) for x in ohlc_candles['low'].to_numpy()]
             c_list = [round(float(x), 2) for x in ohlc_candles['close'].to_numpy()]
             print(f"OPT_OHLC_ENTRY: symbol={option_symbol}",
-                  f"| candles={len(ohlc_candles)}",
+                  f"| candles={len(ohlc_candles)} (last 20 for logging)",
                   f"| open={o_list}",
                   f"| high={h_list}",
                   f"| low={l_list}",
                   f"| close={c_list}",
-                  f"| median_range={round(representative_range, 2)}")
+                  f"| median_range(15)={round(representative_range, 2)}")
         except Exception as ohlc_err:
             print("OPT_OHLC_LOG_ERROR:", str(ohlc_err))
 
@@ -2250,7 +2267,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
-        opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
+        opt_range = get_option_candle_range(atmPE, fyers, n_candles=15)
         # CREDIT spread: target = premium - median x TARGET_MULT, so an oversized median
         # makes that level zero/negative and unreachable. Cap BEFORE tradeOptRange is
         # stored so sizing and the post-entry SL/Target use the identical median.
@@ -2259,7 +2276,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
-        hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
+        hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=15)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * SL_MULT_BULL) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
@@ -2340,7 +2357,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         print("CREDIT_NET_CREDIT=", round(entryPrice - hedge_entry_price, 2))
 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
-        opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
+        opt_range = get_option_candle_range(atmCE, fyers, n_candles=15)
         # CREDIT spread: target = premium - median x TARGET_MULT, so an oversized median
         # makes that level zero/negative and unreachable. Cap BEFORE tradeOptRange is
         # stored so sizing and the post-entry SL/Target use the identical median.
@@ -2349,7 +2366,7 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
-        hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
+        hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=15)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * SL_MULT_BEAR) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
@@ -2464,11 +2481,11 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
-        opt_range = get_option_candle_range(atmCE, fyers, n_candles=10)
+        opt_range = get_option_candle_range(atmCE, fyers, n_candles=15)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
-        hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=10)
+        hedge_opt_range = get_option_candle_range(otmCE, fyers, n_candles=15)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * SL_MULT_BULL) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
@@ -2548,11 +2565,11 @@ def takeEntryDebit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, p
         print("DEBIT_NET_DEBIT=", round(entryPrice - hedge_entry_price, 2))
 
         # === RISK-BASED LOT SIZING (net-of-hedge, on the exact strikes being traded) ===
-        opt_range = get_option_candle_range(atmPE, fyers, n_candles=10)
+        opt_range = get_option_candle_range(atmPE, fyers, n_candles=15)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
-        hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=10)
+        hedge_opt_range = get_option_candle_range(otmPE, fyers, n_candles=15)
         # Deltas come from select_hedge_by_delta above (None in the premium-walk fallback);
         # calc_lots_by_risk then falls back to range/premium when they are None.
         effective_sl_pre = round(opt_range * SL_MULT_BEAR) if (opt_range and opt_range > 0) else iv_params.get("sl_point", sl_point)
