@@ -367,6 +367,13 @@ NO_TRADE_ZONE_BUFFER = 20
 # Always deploy by copying this file to sharem/ and pushing; never hand-edit on the server.
 ONE_OTM = 0
 FIXED_RISK_PER_TRADE = 7000     # ₹ NET risk per trade if SL hits (after hedge offset)
+# NET-RUPEE HARD STOP (loss side only). The point-based SL on the short leg does not map to a
+# consistent rupee loss because the hedge under-offsets (realized ~half the entry delta ratio),
+# so losses overshoot FIXED_RISK_PER_TRADE. This backstop tracks the LIVE combined P&L of BOTH
+# legs (main sell + hedge buy) every poll and, when the net loss reaches -FIXED_RISK_PER_TRADE,
+# confirms over SL_CONFIRM_TICKS polls then exits — capping the actual rupee loss near budget
+# regardless of how the hedge behaves. TARGET side is NOT touched (only the SL/loss side).
+RUPEE_NET_SL_ENABLED = True
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -4382,6 +4389,7 @@ while x == 1:
                 # Reset per-trade LTP confirmation counters at the start of monitoring.
                 ltpSlConfirm = 0
                 ltpTgtConfirm = 0
+                netSlConfirm = 0   # net-rupee hard-stop confirmation counter
                 while y == 1:
                     dt2 = datetime.now()
 
@@ -4435,6 +4443,38 @@ while x == 1:
                                     pyramided = True
                             sl_breach = ltp_now <= sl
                             tgt_reached = ltp_now >= target
+
+                        # === NET-RUPEE HARD STOP (loss side only) ===
+                        # Combined live P&L of BOTH legs. Caps the actual rupee loss at
+                        # FIXED_RISK_PER_TRADE even when the hedge under-offsets and the point-SL
+                        # would have lost more. 2-poll confirmation like the price SL. Target side
+                        # is never affected (threshold is a NEGATIVE P&L only).
+                        if RUPEE_NET_SL_ENABLED and tradeHedgeOption and not ladderActive:
+                            try:
+                                _hedge_ltp = helper.manualLTP(tradeHedgeOption, fyers)
+                            except Exception as _he:
+                                _hedge_ltp = None
+                            if _hedge_ltp is not None:
+                                if not is_debit:
+                                    # credit: main SOLD (profit if main falls), hedge BOUGHT (profit if hedge rises)
+                                    _net_pnl = ((entryPremium - ltp_now) + (_hedge_ltp - hedgeEntryPremium)) * qty
+                                else:
+                                    # debit: main BOUGHT (profit if main rises), hedge SOLD (profit if hedge falls)
+                                    _net_pnl = ((ltp_now - entryPremium) + (hedgeEntryPremium - _hedge_ltp)) * qty
+                                if _net_pnl <= -FIXED_RISK_PER_TRADE:
+                                    netSlConfirm += 1
+                                    print(f"NET_PNL_SL_WATCH: net_pnl={round(_net_pnl)} <= -{FIXED_RISK_PER_TRADE} "
+                                          f"confirm={netSlConfirm}/{SL_CONFIRM_TICKS} "
+                                          f"(main_ltp={ltp_now} hedge_ltp={_hedge_ltp} qty={qty})")
+                                    if netSlConfirm >= SL_CONFIRM_TICKS:
+                                        print('NET_PNL_SL Hit (rupee backstop) — net loss reached budget')
+                                        st = 0
+                                        slCount += 1
+                                        print('slCount =', slCount)
+                                        oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                                        break
+                                else:
+                                    netSlConfirm = 0
 
                         if sl_breach:
                             ltpSlConfirm += 1
