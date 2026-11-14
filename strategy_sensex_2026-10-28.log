@@ -5933,3 +5933,909 @@ CEchoi  PechOi = 1511840.0    2021840.0
 ====================================
 atmPCR= 0.15  belowATM  0.17
 CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= True  fresh_PE= -3760 | isCE_DomRes_once= False  fresh_CE= -184460
+India VIX = 16.31  Spot Price = 73329.68
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1708.6 | 3minCandleRange = 89.9 (theoretical= 149.9 ) | ATMoptionMove = 40.5 | SL = 142 | Target = 142 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.31, 'bn_price': 73329.68, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1708.6, 'candle_range': 89.9, 'atm_option_move': 40.5, 'sl_point': 142, 'target_point': 142, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 12:48:00.000002
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74100PE   0.04   -0.01 CALL added 546120   PUT unwind -6120  CE_OI=740540 PE_OI=29500
+pcr2 =  BSE:SENSEX26OCT74000CE   0.1   -0.0 CALL added 1827720   PUT unwind -6880  CE_OI=2885780 PE_OI=288860
+pcr3 =  BSE:SENSEX26OCT73900PE   0.1   -0.02 CALL added 466780   PUT unwind -9480  CE_OI=701240 PE_OI=68960
+pcr4 =  BSE:SENSEX26OCT73800CE   0.14   -0.01 CALL added 600120   PUT unwind -7760  CE_OI=956740 PE_OI=130220
+pcr5 =  BSE:SENSEX26OCT73700CE   0.17   -0.08 CALL added 306780   PUT unwind -24560  CE_OI=834800 PE_OI=139860
+pcr6 =  BSE:SENSEX26OCT73600PE   0.2    -0.29 CALL added 528040   PUT unwind -153120  CE_OI=994360 PE_OI=196020
+pcr7 =  BSE:SENSEX26OCT73500CE   0.38   -0.0 CALL added 1157880   PUT unwind -5100  CE_OI=1937420 PE_OI=738700
+pcr8 =  BSE:SENSEX26OCT73400PE   0.41   0.08 CALL added 716320   PUT added 60640  CE_OI=961240 PE_OI=392720
+pcr9 =  BSE:SENSEX26OCT73300PE   0.66   0.42 CALL added 932520   PUT added 394220  CE_OI=1105480 PE_OI=725660
+pcr10 =  BSE:SENSEX26OCT73200PE   0.9   0.64 CALL added 1086200   PUT added 689900  CE_OI=1217500 PE_OI=1099880
+pcr11 =  BSE:SENSEX26OCT73100CE   1.93   1.86 CALL added 644860   PUT added 1200960  CE_OI=783540 PE_OI=1509580
+pcr12 =  BSE:SENSEX26OCT73000PE   1.85   1.64 CALL added 1241400   PUT added 2032340  CE_OI=1547080 PE_OI=2859480
+pcr13 =  BSE:SENSEX26OCT72900PE   2.61   2.5 CALL added 600340   PUT added 1503080  CE_OI=672620 PE_OI=1758180
+pcr14 =  BSE:SENSEX26OCT72800PE   3.08   2.66 CALL added 446180   PUT added 1187980  CE_OI=514300 PE_OI=1582000
+pcr15 =  BSE:SENSEX26OCT72700CE   5.93   5.56 CALL added 222500   PUT added 1238000  CE_OI=267000 PE_OI=1582660
+pcr16 =  BSE:SENSEX26OCT72600PE   9.95   12.26 CALL added 68880   PUT added 844380  CE_OI=126620 PE_OI=1259240
+pcr17 =  BSE:SENSEX26OCT72500PE   15.26   22.92 CALL added 73660   PUT added 1688440  CE_OI=175240 PE_OI=2674540
+PCRSUM== 43.71
+pcrSummation== 9.11
+spotLTP =  73328.98  ATM_STRIKE =  73300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73300: 73300}
+avgOiPcrList2 = [np.float64(2.4), np.float64(2.57)] atmStrikeNotShiftedCount= 2
+avgOiPcr9List2 = [np.float64(0.88), np.float64(1.01)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73328.98 fut=73356.6 basis(fut-spot)=27.62 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73300 PCRwin_future=73400
+CEoich val =  1157880.0  PEoich val =  -5100.0 , CE > PE by 100.4%
+SUPP_RES TOTAL OI: CE= 1937420  PE= 738700 , CE > PE by 61.9%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE first sighting (no prev cycle to diff) | cumulative CE=1157880.0 PE=-5100.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73356.6 ) Buffer= 72
+FUT CEoich val =  1157880.0  PEoich val =  -5100.0 , CE > PE by 100.4%
+FUT_SUPP_RES TOTAL OI: CE= 1937420  PE= 738700 , CE > PE by 61.9%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+CHOI_MIXED: CE building / PE unwinding at SUPP_RES (CEchoi=1157880.0, PEchoi=-5100.0) - CONSIDERED (divergence); % gap is inflated by the opposite signs
+================================================
+==== signal check time ==== 2026-10-28 12:48:00.698682
+CHART_PATTERN_DETECTED: THREE_WHITE_SOLDIERS
+  PATTERN_CONTEXT: Body= 16.6  Range= 51.9  ExpectedRange= 89.9  RangeRatio= 0.58  O= 73340.0  H= 73370.0  L= 73318.1  C= 73356.6
+isPE_DominantAtSupp_once = True  isPE_DominantAtSupp_twice = False  isPE_DominantAtSupp_trice = False (PE_supp_streak= 1 )
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [0.8107, 0.8849, 1.0115]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=9 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 0.8107 -> 0.8849 -> 1.0115 | step1 +9.15% | step2 +14.31%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 9.15% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600, 72500]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.3197, 2.3975, 2.5699]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=5 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 2.3197 -> 2.3975 -> 2.5699 | step1 +3.35% | step2 +7.19%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 3.35% vs 0.1% threshold)
+ATMStrike =  73300
+AVG_OIPCR= 1.01
+avgoiPCROld=  2.57
+AVG_OIPCR_9STRIKE= 1.01  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73328.98
+FUT LTP = 73356.6
+CEchoi  PechOi = 1157880.0    -5100.0
+====================================
+atmPCR= 0.17  belowATM  0.2
+CHOI_DOM_GATE: gate_on= True  bull_ok= True  bear_ok= False | isPE_DomSupp_once= True  fresh_PE= 0 | isCE_DomRes_once= False  fresh_CE= 0
+India VIX = 16.32  Spot Price = 73291.61
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1708.7 | 3minCandleRange = 89.9 (theoretical= 149.9 ) | ATMoptionMove = 40.5 | SL = 142 | Target = 142 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.32, 'bn_price': 73291.61, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1708.7, 'candle_range': 89.9, 'atm_option_move': 40.5, 'sl_point': 142, 'target_point': 142, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 12:51:00.000317
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74100PE   0.04   -0.01 CALL added 626400   PUT unwind -3860  CE_OI=820820 PE_OI=31760
+pcr2 =  BSE:SENSEX26OCT74000CE   0.1   -0.0 CALL added 1744300   PUT unwind -2060  CE_OI=2802360 PE_OI=293680
+pcr3 =  BSE:SENSEX26OCT73900PE   0.1   -0.02 CALL added 487300   PUT unwind -8840  CE_OI=721760 PE_OI=69600
+pcr4 =  BSE:SENSEX26OCT73800CE   0.13   -0.02 CALL added 584440   PUT unwind -14140  CE_OI=941060 PE_OI=123840
+pcr5 =  BSE:SENSEX26OCT73700CE   0.17   -0.07 CALL added 322920   PUT unwind -22060  CE_OI=850940 PE_OI=142360
+pcr6 =  BSE:SENSEX26OCT73600PE   0.19    -0.28 CALL added 543860   PUT unwind -152160  CE_OI=1010180 PE_OI=196980
+pcr7 =  BSE:SENSEX26OCT73500CE   0.38   0.01 CALL added 1195780   PUT added 12660  CE_OI=1975320 PE_OI=756460
+pcr8 =  BSE:SENSEX26OCT73400PE   0.44   0.18 CALL added 855120   PUT added 156960  CE_OI=1100040 PE_OI=489040
+pcr9 =  BSE:SENSEX26OCT73300PE   0.74   0.53 CALL added 987600   PUT added 522380  CE_OI=1160560 PE_OI=853820
+pcr10 =  BSE:SENSEX26OCT73200PE   1.01   0.73 CALL added 1009220   PUT added 738320  CE_OI=1140520 PE_OI=1148300
+pcr11 =  BSE:SENSEX26OCT73100CE   2.29   2.3 CALL added 551100   PUT added 1269380  CE_OI=689780 PE_OI=1578000
+pcr12 =  BSE:SENSEX26OCT73000PE   1.95   1.75 CALL added 1181060   PUT added 2069300  CE_OI=1486740 PE_OI=2896440
+pcr13 =  BSE:SENSEX26OCT72900PE   2.68   2.58 CALL added 593900   PUT added 1532040  CE_OI=666180 PE_OI=1787140
+pcr14 =  BSE:SENSEX26OCT72800PE   3.29   2.88 CALL added 412700   PUT added 1189720  CE_OI=480820 PE_OI=1583740
+pcr15 =  BSE:SENSEX26OCT72700CE   6.22   5.9 CALL added 208940   PUT added 1232380  CE_OI=253440 PE_OI=1577040
+pcr16 =  BSE:SENSEX26OCT72600PE   10.28   13.01 CALL added 65240   PUT added 849040  CE_OI=122980 PE_OI=1263900
+pcr17 =  BSE:SENSEX26OCT72500PE   15.7   23.98 CALL added 73480   PUT added 1762240  CE_OI=175060 PE_OI=2748340
+PCRSUM== 45.71
+pcrSummation== 9.85
+spotLTP =  73291.61  ATM_STRIKE =  73300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73300: 73300}
+avgOiPcrList2 = [np.float64(2.4), np.float64(2.57), np.float64(2.69)] atmStrikeNotShiftedCount= 3
+avgOiPcr9List2 = [np.float64(0.88), np.float64(1.01), np.float64(1.09)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73291.61 fut=73290.5 basis(fut-spot)=-1.11 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73300 PCRwin_future=73300
+CEoich val =  1195780.0  PEoich val =  12660.0 , CE > PE by 98.9%
+SUPP_RES TOTAL OI: CE= 1975320  PE= 756460 , CE > PE by 61.7%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=37900 fresh_PE=17760 -> CE_dominant by 53.1% (resistance HOLDING (bearish)) | cumulative CE=1195780.0 PE=12660.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73290.5 ) Buffer= 72
+FUT CEoich val =  1195780.0  PEoich val =  12660.0 , CE > PE by 98.9%
+FUT_SUPP_RES TOTAL OI: CE= 1975320  PE= 756460 , CE > PE by 61.7%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 12:51:00.756184
+CHART_PATTERN: None
+isPcrInc9 = True
+PCR9_SEQ_INC: 0.88 -> 1.01 -> 1.09 | pcr2 > pcr1 by +14.8% | pcr3 > pcr2 by +7.9%
+isPcrInc = True
+PCR_SEQ_INC: 2.4 -> 2.57 -> 2.69 | pcr2 > pcr1 by +7.1% | pcr3 > pcr2 by +4.7%
+isCE_DominantAtRes_once = True  isCE_DominantAtRes_twice = False  isCE_DominantAtRes_trice = False (CE_res_streak= 1 )
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [0.8849, 1.0115, 1.0945]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=10 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 0.8849 -> 1.0115 -> 1.0945 | step1 +14.31% | step2 +8.21%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 8.21% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600, 72500]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.3975, 2.5699, 2.6891]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=6 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 2.3975 -> 2.5699 -> 2.6891 | step1 +7.19% | step2 +4.64%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 4.64% vs 0.1% threshold)
+ATMStrike =  73300
+AVG_OIPCR= 1.09
+avgoiPCROld=  2.69
+AVG_OIPCR_9STRIKE= 1.09  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73291.61
+FUT LTP = 73290.5
+CEchoi  PechOi = 1195780.0    12660.0
+====================================
+atmPCR= 0.17  belowATM  0.19
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= True | isPE_DomSupp_once= False  fresh_PE= 17760 | isCE_DomRes_once= True  fresh_CE= 37900
+no trade yet = [np.float64(2.4), np.float64(2.57), np.float64(2.69)]
+India VIX = 16.27  Spot Price = 73339.6
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1704.6 | 3minCandleRange = 89.7 (theoretical= 149.5 ) | ATMoptionMove = 40.4 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.27, 'bn_price': 73339.6, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1704.6, 'candle_range': 89.7, 'atm_option_move': 40.4, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 12:54:00.000004
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74100PE   0.04   -0.0 CALL added 651020   PUT unwind -920  CE_OI=845440 PE_OI=34700
+pcr2 =  BSE:SENSEX26OCT74000CE   0.11   0.0 CALL added 1700380   PUT added 3940  CE_OI=2758440 PE_OI=299680
+pcr3 =  BSE:SENSEX26OCT73900PE   0.1   -0.02 CALL added 475460   PUT unwind -7600  CE_OI=709920 PE_OI=70840
+pcr4 =  BSE:SENSEX26OCT73800CE   0.14   -0.02 CALL added 567320   PUT unwind -10220  CE_OI=923940 PE_OI=127760
+pcr5 =  BSE:SENSEX26OCT73700CE   0.18   -0.06 CALL added 309000   PUT unwind -17180  CE_OI=837020 PE_OI=147240
+pcr6 =  BSE:SENSEX26OCT73600PE   0.2    -0.3 CALL added 526320   PUT unwind -155520  CE_OI=992640 PE_OI=193620
+pcr7 =  BSE:SENSEX26OCT73500CE   0.43   0.09 CALL added 1215700   PUT added 114400  CE_OI=1995240 PE_OI=858200
+pcr8 =  BSE:SENSEX26OCT73400PE   0.46   0.21 CALL added 875220   PUT added 186520  CE_OI=1120140 PE_OI=518600
+pcr9 =  BSE:SENSEX26OCT73300PE   0.79   0.6 CALL added 992960   PUT added 591880  CE_OI=1165920 PE_OI=923320
+pcr10 =  BSE:SENSEX26OCT73200PE   1.06   0.79 CALL added 996340   PUT added 786460  CE_OI=1127640 PE_OI=1196440
+pcr11 =  BSE:SENSEX26OCT73100CE   2.47   2.54 CALL added 506520   PUT added 1288040  CE_OI=645200 PE_OI=1596660
+pcr12 =  BSE:SENSEX26OCT73000PE   2.03   1.85 CALL added 1145300   PUT added 2117140  CE_OI=1450980 PE_OI=2944280
+pcr13 =  BSE:SENSEX26OCT72900PE   2.83   2.74 CALL added 566360   PUT added 1551600  CE_OI=638640 PE_OI=1806700
+pcr14 =  BSE:SENSEX26OCT72800PE   3.47   3.08 CALL added 396780   PUT added 1220700  CE_OI=464900 PE_OI=1614720
+pcr15 =  BSE:SENSEX26OCT72700CE   6.4   6.1 CALL added 203160   PUT added 1239600  CE_OI=247660 PE_OI=1584260
+pcr16 =  BSE:SENSEX26OCT72600PE   10.95   14.52 CALL added 60800   PUT added 882720  CE_OI=118540 PE_OI=1297580
+pcr17 =  BSE:SENSEX26OCT72500PE   17.16   28.26 CALL added 68200   PUT added 1927480  CE_OI=169780 PE_OI=2913580
+PCRSUM== 48.82
+pcrSummation== 10.45
+spotLTP =  73339.6  ATM_STRIKE =  73300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73300: 73300}
+avgOiPcrList2 = [np.float64(2.57), np.float64(2.69), np.float64(2.87)] atmStrikeNotShiftedCount= 4
+avgOiPcr9List2 = [np.float64(1.01), np.float64(1.09), np.float64(1.16)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73339.6 fut=73375.0 basis(fut-spot)=35.4 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73300 PCRwin_future=73400
+CEoich val =  1215700.0  PEoich val =  114400.0 , CE > PE by 90.6%
+SUPP_RES TOTAL OI: CE= 1995240  PE= 858200 , CE > PE by 57.0%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=19920 fresh_PE=101740 -> PE_dominant by 80.4% (resistance CHALLENGED (bullish warning)) | cumulative CE=1215700.0 PE=114400.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73375.0 ) Buffer= 72
+FUT CEoich val =  1215700.0  PEoich val =  114400.0 , CE > PE by 90.6%
+FUT_SUPP_RES TOTAL OI: CE= 1995240  PE= 858200 , CE > PE by 57.0%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 12:54:00.807635
+CHART_PATTERN_DETECTED: DOUBLE_TOP_FORMING
+  PATTERN_CONTEXT: Body= 25.0  Range= 25.1  ExpectedRange= 89.7  RangeRatio= 0.28  O= 73350.0  H= 73375.1  L= 73350.0  C= 73375.0
+isPcrInc9 = True
+PCR9_SEQ_INC: 1.01 -> 1.09 -> 1.16 | pcr2 > pcr1 by +7.9% | pcr3 > pcr2 by +6.4%
+isPcrInc = True
+PCR_SEQ_INC: 2.57 -> 2.69 -> 2.87 | pcr2 > pcr1 by +4.7% | pcr3 > pcr2 by +6.7%
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.0115, 1.0945, 1.1611]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=11 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 1.0115 -> 1.0945 -> 1.1611 | step1 +8.21% | step2 +6.08%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 6.08% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600, 72500]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.5699, 2.6891, 2.8715]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=7 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 2.5699 -> 2.6891 -> 2.8715 | step1 +4.64% | step2 +6.78%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 4.64% vs 0.1% threshold)
+ATMStrike =  73300
+AVG_OIPCR= 1.16
+avgoiPCROld=  2.87
+AVG_OIPCR_9STRIKE= 1.16  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73339.6
+FUT LTP = 73375.0
+CEchoi  PechOi = 1215700.0    114400.0
+====================================
+atmPCR= 0.18  belowATM  0.2
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= 101740 | isCE_DomRes_once= False  fresh_CE= 19920
+no trade yet = [np.float64(2.57), np.float64(2.69), np.float64(2.87)]
+India VIX = 16.25  Spot Price = 73327.63
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1702.2 | 3minCandleRange = 89.6 (theoretical= 149.3 ) | ATMoptionMove = 40.3 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.25, 'bn_price': 73327.63, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1702.2, 'candle_range': 89.6, 'atm_option_move': 40.3, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 12:57:00.000001
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74100PE   0.04   -0.0 CALL added 678700   PUT unwind -800  CE_OI=873120 PE_OI=34820
+pcr2 =  BSE:SENSEX26OCT74000CE   0.11   0.0 CALL added 1643600   PUT added 4800  CE_OI=2701660 PE_OI=300540
+pcr3 =  BSE:SENSEX26OCT73900PE   0.11   -0.02 CALL added 435900   PUT unwind -7500  CE_OI=670360 PE_OI=70940
+pcr4 =  BSE:SENSEX26OCT73800CE   0.15   -0.01 CALL added 534800   PUT unwind -4020  CE_OI=891420 PE_OI=133960
+pcr5 =  BSE:SENSEX26OCT73700CE   0.18   -0.02 CALL added 335900   PUT unwind -7960  CE_OI=863920 PE_OI=156460
+pcr6 =  BSE:SENSEX26OCT73600PE   0.21    -0.3 CALL added 500820   PUT unwind -149520  CE_OI=967140 PE_OI=199620
+pcr7 =  BSE:SENSEX26OCT73500CE   0.47   0.14 CALL added 1167540   PUT added 165940  CE_OI=1947080 PE_OI=909740
+pcr8 =  BSE:SENSEX26OCT73400PE   0.49   0.25 CALL added 868400   PUT added 213520  CE_OI=1113320 PE_OI=545600
+pcr9 =  BSE:SENSEX26OCT73300PE   0.83   0.65 CALL added 1016260   PUT added 658060  CE_OI=1189220 PE_OI=989500
+pcr10 =  BSE:SENSEX26OCT73200PE   1.22   0.93 CALL added 878900   PUT added 818060  CE_OI=1010200 PE_OI=1228040
+pcr11 =  BSE:SENSEX26OCT73100CE   2.73   2.88 CALL added 454800   PUT added 1311460  CE_OI=593480 PE_OI=1620080
+pcr12 =  BSE:SENSEX26OCT73000PE   2.12   1.96 CALL added 1128840   PUT added 2210860  CE_OI=1434520 PE_OI=3038000
+pcr13 =  BSE:SENSEX26OCT72900PE   3.2   3.15 CALL added 537320   PUT added 1694080  CE_OI=609600 PE_OI=1949180
+pcr14 =  BSE:SENSEX26OCT72800PE   3.9   3.54 CALL added 355000   PUT added 1258160  CE_OI=423120 PE_OI=1652180
+pcr15 =  BSE:SENSEX26OCT72700CE   6.57   6.3 CALL added 193620   PUT added 1219680  CE_OI=238120 PE_OI=1564340
+pcr16 =  BSE:SENSEX26OCT72600PE   10.72   14.21 CALL added 58440   PUT added 830440  CE_OI=116180 PE_OI=1245300
+pcr17 =  BSE:SENSEX26OCT72500PE   17.22   28.74 CALL added 66240   PUT added 1903700  CE_OI=167820 PE_OI=2889800
+PCRSUM== 50.27
+pcrSummation== 11.45
+spotLTP =  73327.63  ATM_STRIKE =  73300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73300: 73300}
+avgOiPcrList2 = [np.float64(2.69), np.float64(2.87), np.float64(2.96)] atmStrikeNotShiftedCount= 5
+avgOiPcr9List2 = [np.float64(1.09), np.float64(1.16), np.float64(1.27)] atmStrikeNotShiftedCount= 5
+False   5   3
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73327.63 fut=73342.05 basis(fut-spot)=14.42 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73300 PCRwin_future=73300
+CEoich val =  1167540.0  PEoich val =  165940.0 , CE > PE by 85.8%
+SUPP_RES TOTAL OI: CE= 1947080  PE= 909740 , CE > PE by 53.3%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=-48160 fresh_PE=51540 -> PE_dominant by 193.4% (resistance CHALLENGED (bullish warning)) | cumulative CE=1167540.0 PE=165940.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73342.05 ) Buffer= 72
+FUT CEoich val =  1167540.0  PEoich val =  165940.0 , CE > PE by 85.8%
+FUT_SUPP_RES TOTAL OI: CE= 1947080  PE= 909740 , CE > PE by 53.3%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 12:57:00.683442
+CHART_PATTERN_DETECTED: BEARISH_ENGULFING | OUTSIDE_BAR
+  PATTERN_CONTEXT: Body= -32.9  Range= 58.0  ExpectedRange= 89.6  RangeRatio= 0.65  O= 73375.0  H= 73400.0  L= 73342.0  C= 73342.0
+isPcrInc9 = True
+PCR9_SEQ_INC: 1.09 -> 1.16 -> 1.27 | pcr2 > pcr1 by +6.4% | pcr3 > pcr2 by +9.5%
+isPcrInc = True
+PCR_SEQ_INC: 2.69 -> 2.87 -> 2.96 | pcr2 > pcr1 by +6.7% | pcr3 > pcr2 by +3.1%
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.0945, 1.1611, 1.2708]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=12 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 1.0945 -> 1.1611 -> 1.2708 | step1 +6.08% | step2 +9.45%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 6.08% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600, 72500]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.6891, 2.8715, 2.9563]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=8 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 2.6891 -> 2.8715 -> 2.9563 | step1 +6.78% | step2 +2.95%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 2.95% vs 0.1% threshold)
+ATMStrike =  73300
+AVG_OIPCR= 1.27
+avgoiPCROld=  2.96
+AVG_OIPCR_9STRIKE= 1.27  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73327.63
+FUT LTP = 73342.05
+CEchoi  PechOi = 1167540.0    165940.0
+====================================
+atmPCR= 0.18  belowATM  0.21
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= 51540 | isCE_DomRes_once= False  fresh_CE= -48160
+no trade yet = [np.float64(2.69), np.float64(2.87), np.float64(2.96)]
+India VIX = 16.23  Spot Price = 73468.69
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1703.4 | 3minCandleRange = 89.6 (theoretical= 149.4 ) | ATMoptionMove = 40.3 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.23, 'bn_price': 73468.69, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1703.4, 'candle_range': 89.6, 'atm_option_move': 40.3, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:00:00.000002
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74300CE   0.03   -0.03 CALL added 219660   PUT unwind -6240  CE_OI=741860 PE_OI=20740
+pcr2 =  BSE:SENSEX26OCT74200CE   0.03   -0.01 CALL added 911240   PUT unwind -5120  CE_OI=1193740 PE_OI=32780
+pcr3 =  BSE:SENSEX26OCT74100PE   0.04   -0.0 CALL added 674860   PUT unwind -1020  CE_OI=869280 PE_OI=34600
+pcr4 =  BSE:SENSEX26OCT74000CE   0.11   0.0 CALL added 1581420   PUT added 6060  CE_OI=2639480 PE_OI=301800
+pcr5 =  BSE:SENSEX26OCT73900PE   0.11   -0.02 CALL added 426060   PUT unwind -7940  CE_OI=660520 PE_OI=70500
+pcr6 =  BSE:SENSEX26OCT73800CE   0.15    -0.0 CALL added 558020   PUT unwind -340  CE_OI=914640 PE_OI=137640
+pcr7 =  BSE:SENSEX26OCT73700CE   0.18   -0.03 CALL added 347500   PUT unwind -9020  CE_OI=875520 PE_OI=155400
+pcr8 =  BSE:SENSEX26OCT73600PE   0.24   -0.23 CALL added 502640   PUT unwind -113840  CE_OI=968960 PE_OI=235300
+pcr9 =  BSE:SENSEX26OCT73500CE   0.45   0.14 CALL added 1220800   PUT added 165940  CE_OI=2000340 PE_OI=909740
+pcr10 =  BSE:SENSEX26OCT73400PE   0.49   0.27 CALL added 949120   PUT added 257180  CE_OI=1194040 PE_OI=589260
+pcr11 =  BSE:SENSEX26OCT73300PE   0.9   0.73 CALL added 1029360   PUT added 748020  CE_OI=1202320 PE_OI=1079460
+pcr12 =  BSE:SENSEX26OCT73200PE   1.28   1.0 CALL added 878900   PUT added 878880  CE_OI=1010200 PE_OI=1288860
+pcr13 =  BSE:SENSEX26OCT73100CE   3.25   3.64 CALL added 368640   PUT added 1341440  CE_OI=507320 PE_OI=1650060
+pcr14 =  BSE:SENSEX26OCT73000PE   2.22   2.08 CALL added 1094660   PUT added 2280240  CE_OI=1400340 PE_OI=3107380
+pcr15 =  BSE:SENSEX26OCT72900PE   3.39   3.38 CALL added 522360   PUT added 1763680  CE_OI=594640 PE_OI=2018780
+pcr16 =  BSE:SENSEX26OCT72800PE   4.04   3.69 CALL added 341920   PUT added 1263000  CE_OI=410040 PE_OI=1657020
+pcr17 =  BSE:SENSEX26OCT72700CE   6.74   6.5 CALL added 187660   PUT added 1219640  CE_OI=232160 PE_OI=1564300
+PCRSUM== 23.65
+pcrSummation== 7.05
+spotLTP =  73468.69  ATM_STRIKE =  73500
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {73500: 73500}
+avgOiPcrList2 = [np.float64(1.39)] atmStrikeNotShiftedCount= 1
+avgOiPcr9List2 = [np.float64(0.78)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73468.69 fut=73500.0 basis(fut-spot)=31.31 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73500 PCRwin_future=73500
+CEoich val =  1220800.0  PEoich val =  165940.0 , CE > PE by 86.4%
+SUPP_RES TOTAL OI: CE= 2000340  PE= 909740 , CE > PE by 54.5%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=53260 fresh_PE=0 -> CE_dominant by 100.0% (resistance HOLDING (bearish)) | cumulative CE=1220800.0 PE=165940.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73500.0 ) Buffer= 72
+FUT CEoich val =  1220800.0  PEoich val =  165940.0 , CE > PE by 86.4%
+FUT_SUPP_RES TOTAL OI: CE= 2000340  PE= 909740 , CE > PE by 54.5%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:00:00.812004
+CHART_PATTERN_DETECTED: BULLISH_ENGULFING | STRONG_MOMENTUM_BULL
+  PATTERN_CONTEXT: Body= 156.9  Range= 156.9  ExpectedRange= 89.6  RangeRatio= 1.75  O= 73342.0  H= 73499.0  L= 73342.0  C= 73499.0
+isCE_DominantAtRes_once = True  isCE_DominantAtRes_twice = False  isCE_DominantAtRes_trice = False (CE_res_streak= 1 )
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [0.6477, 0.7087, 0.7836]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=13 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 0.6477 -> 0.7087 -> 0.7836 | step1 +9.42% | step2 +10.57%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 9.42% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74300, 74200, 74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [1.2212, 1.3161, 1.3915]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=9 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 1.2212 -> 1.3161 -> 1.3915 | step1 +7.77% | step2 +5.73%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 5.73% vs 0.1% threshold)
+ATMStrike =  73500
+AVG_OIPCR= 0.78
+avgoiPCROld=  1.39
+AVG_OIPCR_9STRIKE= 0.78  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73468.69
+FUT LTP = 73500.0
+CEchoi  PechOi = 1220800.0    165940.0
+====================================
+atmPCR= 0.11  belowATM  0.15
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= True | isPE_DomSupp_once= False  fresh_PE= 0 | isCE_DomRes_once= True  fresh_CE= 53260
+India VIX = 16.25  Spot Price = 73422.85
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1704.5 | 3minCandleRange = 89.7 (theoretical= 149.5 ) | ATMoptionMove = 40.4 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.25, 'bn_price': 73422.85, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1704.5, 'candle_range': 89.7, 'atm_option_move': 40.4, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:03:00.000001
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74200CE   0.03   -0.01 CALL added 872520   PUT unwind -4760  CE_OI=1155020 PE_OI=33140
+pcr2 =  BSE:SENSEX26OCT74100PE   0.05   0.0 CALL added 580420   PUT added 1700  CE_OI=774840 PE_OI=37320
+pcr3 =  BSE:SENSEX26OCT74000CE   0.13   0.02 CALL added 1346960   PUT added 23420  CE_OI=2405020 PE_OI=319160
+pcr4 =  BSE:SENSEX26OCT73900PE   0.12   -0.02 CALL added 375540   PUT unwind -7520  CE_OI=610000 PE_OI=70920
+pcr5 =  BSE:SENSEX26OCT73800CE   0.17   0.01 CALL added 499400   PUT added 5320  CE_OI=856020 PE_OI=143300
+pcr6 =  BSE:SENSEX26OCT73700CE   0.2    -0.02 CALL added 259220   PUT unwind -6300  CE_OI=787240 PE_OI=158120
+pcr7 =  BSE:SENSEX26OCT73600PE   0.28   -0.18 CALL added 473180   PUT unwind -87280  CE_OI=939500 PE_OI=261860
+pcr8 =  BSE:SENSEX26OCT73500CE   0.51   0.22 CALL added 1195480   PUT added 265560  CE_OI=1975020 PE_OI=1009360
+pcr9 =  BSE:SENSEX26OCT73400PE   0.69   0.47 CALL added 728860   PUT added 341100  CE_OI=973780 PE_OI=673180
+pcr10 =  BSE:SENSEX26OCT73300PE   1.19   1.03 CALL added 788460   PUT added 809040  CE_OI=961420 PE_OI=1140480
+pcr11 =  BSE:SENSEX26OCT73200PE   1.71   1.42 CALL added 634280   PUT added 901780  CE_OI=765580 PE_OI=1311760
+pcr12 =  BSE:SENSEX26OCT73100CE   3.76   4.46 CALL added 300560   PUT added 1341680  CE_OI=439240 PE_OI=1650300
+pcr13 =  BSE:SENSEX26OCT73000PE   2.35   2.24 CALL added 997860   PUT added 2231900  CE_OI=1303540 PE_OI=3059040
+pcr14 =  BSE:SENSEX26OCT72900PE   3.85   3.9 CALL added 439940   PUT added 1714400  CE_OI=512220 PE_OI=1969500
+pcr15 =  BSE:SENSEX26OCT72800PE   4.47   4.17 CALL added 300820   PUT added 1254600  CE_OI=368940 PE_OI=1648620
+pcr16 =  BSE:SENSEX26OCT72700CE   6.97   6.77 CALL added 172880   PUT added 1170520  CE_OI=217380 PE_OI=1515180
+pcr17 =  BSE:SENSEX26OCT72600PE   11.57   16.54 CALL added 51040   PUT added 844260  CE_OI=108780 PE_OI=1259120
+PCRSUM== 38.05
+pcrSummation== 10.86
+spotLTP =  73422.85  ATM_STRIKE =  73400
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {73400: 73400}
+avgOiPcrList2 = [np.float64(2.24)] atmStrikeNotShiftedCount= 1
+avgOiPcr9List2 = [np.float64(1.21)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73422.85 fut=73456.25 basis(fut-spot)=33.4 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73400 PCRwin_future=73500
+CEoich val =  1195480.0  PEoich val =  265560.0 , CE > PE by 77.8%
+SUPP_RES TOTAL OI: CE= 1975020  PE= 1009360 , CE > PE by 48.9%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=-25320 fresh_PE=99620 -> PE_dominant by 125.4% (resistance CHALLENGED (bullish warning)) | cumulative CE=1195480.0 PE=265560.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73456.25 ) Buffer= 72
+FUT CEoich val =  1195480.0  PEoich val =  265560.0 , CE > PE by 77.8%
+FUT_SUPP_RES TOTAL OI: CE= 1975020  PE= 1009360 , CE > PE by 48.9%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:03:00.802300
+CHART_PATTERN_DETECTED: DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= -43.8  Range= 94.1  ExpectedRange= 89.7  RangeRatio= 1.05  O= 73500.0  H= 73550.4  L= 73456.2  C= 73456.2
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [0.9323, 1.0183, 1.2059]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=14 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 0.9323 -> 1.0183 -> 1.2059 | step1 +9.22% | step2 +18.42%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 9.22% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74200, 74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [1.9449, 2.0573, 2.2375]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=10 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 1.9449 -> 2.0573 -> 2.2375 | step1 +5.78% | step2 +8.76%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 5.78% vs 0.1% threshold)
+ATMStrike =  73400
+AVG_OIPCR= 1.21
+avgoiPCROld=  2.24
+AVG_OIPCR_9STRIKE= 1.21  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73422.85
+FUT LTP = 73456.25
+CEchoi  PechOi = 1195480.0    265560.0
+====================================
+atmPCR= 0.17  belowATM  0.2
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= 99620 | isCE_DomRes_once= False  fresh_CE= -25320
+India VIX = 16.25  Spot Price = 73391.19
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1703.7 | 3minCandleRange = 89.7 (theoretical= 149.4 ) | ATMoptionMove = 40.3 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.25, 'bn_price': 73391.19, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1703.7, 'candle_range': 89.7, 'atm_option_move': 40.3, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:06:00.000004
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74200CE   0.03   -0.0 CALL added 940500   PUT unwind -1520  CE_OI=1223000 PE_OI=36380
+pcr2 =  BSE:SENSEX26OCT74100PE   0.06   0.0 CALL added 472400   PUT added 2300  CE_OI=666820 PE_OI=37920
+pcr3 =  BSE:SENSEX26OCT74000CE   0.13   0.02 CALL added 1603560   PUT added 39040  CE_OI=2661620 PE_OI=334780
+pcr4 =  BSE:SENSEX26OCT73900PE   0.11   -0.01 CALL added 415760   PUT unwind -5560  CE_OI=650220 PE_OI=72880
+pcr5 =  BSE:SENSEX26OCT73800CE   0.16   0.02 CALL added 553380   PUT added 11040  CE_OI=910000 PE_OI=149020
+pcr6 =  BSE:SENSEX26OCT73700CE   0.22    0.02 CALL added 241600   PUT added 5800  CE_OI=769620 PE_OI=170220
+pcr7 =  BSE:SENSEX26OCT73600PE   0.32   -0.05 CALL added 534660   PUT unwind -25860  CE_OI=1000980 PE_OI=323280
+pcr8 =  BSE:SENSEX26OCT73500CE   0.57   0.34 CALL added 1358440   PUT added 464380  CE_OI=2137980 PE_OI=1208180
+pcr9 =  BSE:SENSEX26OCT73400PE   0.97   0.84 CALL added 714860   PUT added 598800  CE_OI=959780 PE_OI=930880
+pcr10 =  BSE:SENSEX26OCT73300PE   1.63   1.55 CALL added 566320   PUT added 875940  CE_OI=739280 PE_OI=1207380
+pcr11 =  BSE:SENSEX26OCT73200PE   2.21   1.98 CALL added 507520   PUT added 1004960  CE_OI=638820 PE_OI=1414940
+pcr12 =  BSE:SENSEX26OCT73100CE   4.51   5.9 CALL added 227380   PUT added 1341680  CE_OI=366060 PE_OI=1650300
+pcr13 =  BSE:SENSEX26OCT73000PE   2.7   2.7 CALL added 872360   PUT added 2356840  CE_OI=1178040 PE_OI=3183980
+pcr14 =  BSE:SENSEX26OCT72900PE   4.21   4.34 CALL added 379180   PUT added 1646280  CE_OI=451460 PE_OI=1901380
+pcr15 =  BSE:SENSEX26OCT72800PE   5.06   4.88 CALL added 275300   PUT added 1343600  CE_OI=343420 PE_OI=1737620
+pcr16 =  BSE:SENSEX26OCT72700CE   7.63   7.6 CALL added 162600   PUT added 1235880  CE_OI=207100 PE_OI=1580540
+pcr17 =  BSE:SENSEX26OCT72600PE   13.32   21.95 CALL added 40980   PUT added 899660  CE_OI=98720 PE_OI=1314520
+PCRSUM== 43.84
+pcrSummation== 13.29
+spotLTP =  73391.81  ATM_STRIKE =  73400
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73400: 73400}
+avgOiPcrList2 = [np.float64(2.24), np.float64(2.58)] atmStrikeNotShiftedCount= 2
+avgOiPcr9List2 = [np.float64(1.21), np.float64(1.48)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73391.81 fut=73412.1 basis(fut-spot)=20.29 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73400 PCRwin_future=73400
+CEoich val =  1358440.0  PEoich val =  464380.0 , CE > PE by 65.8%
+SUPP_RES TOTAL OI: CE= 2137980  PE= 1208180 , CE > PE by 43.5%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=162960 fresh_PE=198820 -> PE_dominant by 18.0% (resistance CHALLENGED (bullish warning)) | cumulative CE=1358440.0 PE=464380.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73412.1 ) Buffer= 72
+FUT CEoich val =  1358440.0  PEoich val =  464380.0 , CE > PE by 65.8%
+FUT_SUPP_RES TOTAL OI: CE= 2137980  PE= 1208180 , CE > PE by 43.5%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:06:00.703820
+CHART_PATTERN: None
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.0183, 1.2059, 1.478]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=15 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 1.0183 -> 1.2059 -> 1.478 | step1 +18.42% | step2 +22.56%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 18.42% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74200, 74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.0573, 2.2375, 2.5791]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=11 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 2.0573 -> 2.2375 -> 2.5791 | step1 +8.76% | step2 +15.27%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 8.76% vs 0.1% threshold)
+ATMStrike =  73400
+AVG_OIPCR= 1.48
+avgoiPCROld=  2.58
+AVG_OIPCR_9STRIKE= 1.48  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73391.81
+FUT LTP = 73412.1
+CEchoi  PechOi = 1358440.0    464380.0
+====================================
+atmPCR= 0.16  belowATM  0.22
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= 198820 | isCE_DomRes_once= False  fresh_CE= 162960
+India VIX = 16.27  Spot Price = 73384.91
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1705.7 | 3minCandleRange = 89.8 (theoretical= 149.6 ) | ATMoptionMove = 40.4 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.27, 'bn_price': 73384.91, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1705.7, 'candle_range': 89.8, 'atm_option_move': 40.4, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:09:00.000001
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74200CE   0.03   -0.0 CALL added 964400   PUT unwind -2780  CE_OI=1246900 PE_OI=35120
+pcr2 =  BSE:SENSEX26OCT74100PE   0.05   0.0 CALL added 496460   PUT added 660  CE_OI=690880 PE_OI=36280
+pcr3 =  BSE:SENSEX26OCT74000CE   0.12   0.02 CALL added 1673920   PUT added 34240  CE_OI=2731980 PE_OI=329980
+pcr4 =  BSE:SENSEX26OCT73900PE   0.11   -0.01 CALL added 429440   PUT unwind -5960  CE_OI=663900 PE_OI=72480
+pcr5 =  BSE:SENSEX26OCT73800CE   0.16   0.01 CALL added 583980   PUT added 8720  CE_OI=940600 PE_OI=146700
+pcr6 =  BSE:SENSEX26OCT73700CE   0.21    0.02 CALL added 299480   PUT added 5660  CE_OI=827500 PE_OI=170080
+pcr7 =  BSE:SENSEX26OCT73600PE   0.32   -0.03 CALL added 564760   PUT unwind -17540  CE_OI=1031080 PE_OI=331600
+pcr8 =  BSE:SENSEX26OCT73500CE   0.55   0.33 CALL added 1453360   PUT added 478580  CE_OI=2232900 PE_OI=1222380
+pcr9 =  BSE:SENSEX26OCT73400PE   0.95   0.83 CALL added 802680   PUT added 668360  CE_OI=1047600 PE_OI=1000440
+pcr10 =  BSE:SENSEX26OCT73300PE   1.65   1.57 CALL added 589680   PUT added 926320  CE_OI=762640 PE_OI=1257760
+pcr11 =  BSE:SENSEX26OCT73200PE   2.16   1.91 CALL added 521620   PUT added 998540  CE_OI=652920 PE_OI=1408520
+pcr12 =  BSE:SENSEX26OCT73100CE   4.51   5.93 CALL added 223180   PUT added 1324560  CE_OI=361860 PE_OI=1633180
+pcr13 =  BSE:SENSEX26OCT73000PE   2.78   2.81 CALL added 870740   PUT added 2443960  CE_OI=1176420 PE_OI=3271100
+pcr14 =  BSE:SENSEX26OCT72900PE   4.3   4.45 CALL added 368840   PUT added 1642080  CE_OI=441120 PE_OI=1897180
+pcr15 =  BSE:SENSEX26OCT72800PE   5.19   5.04 CALL added 272100   PUT added 1372040  CE_OI=340220 PE_OI=1766060
+pcr16 =  BSE:SENSEX26OCT72700CE   7.75   7.75 CALL added 161740   PUT added 1254200  CE_OI=206240 PE_OI=1598860
+pcr17 =  BSE:SENSEX26OCT72600PE   13.66   23.4 CALL added 38420   PUT added 899120  CE_OI=96160 PE_OI=1313980
+PCRSUM== 44.5
+pcrSummation== 13.29
+spotLTP =  73385.13  ATM_STRIKE =  73400
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73400: 73400}
+avgOiPcrList2 = [np.float64(2.24), np.float64(2.58), np.float64(2.62)] atmStrikeNotShiftedCount= 3
+avgOiPcr9List2 = [np.float64(1.21), np.float64(1.48), np.float64(1.48)] atmStrikeNotShiftedCount= 3
+False   3   3
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73385.13 fut=73420.0 basis(fut-spot)=34.87 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73400 PCRwin_future=73400
+CEoich val =  1453360.0  PEoich val =  478580.0 , CE > PE by 67.1%
+SUPP_RES TOTAL OI: CE= 2232900  PE= 1222380 , CE > PE by 45.3%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=94920 fresh_PE=14200 -> CE_dominant by 85.0% (resistance HOLDING (bearish)) | cumulative CE=1453360.0 PE=478580.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73420.0 ) Buffer= 72
+FUT CEoich val =  1453360.0  PEoich val =  478580.0 , CE > PE by 67.1%
+FUT_SUPP_RES TOTAL OI: CE= 2232900  PE= 1222380 , CE > PE by 45.3%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:09:00.790320
+CHART_PATTERN: None
+PCR9_SEQ_FLAT: 1.21 -> 1.48 -> 1.48 (not monotonic)
+isPcrInc = True
+PCR_SEQ_INC: 2.24 -> 2.58 -> 2.62 | pcr2 > pcr1 by +15.2% | pcr3 > pcr2 by +1.6%
+isCE_DominantAtRes_once = True  isCE_DominantAtRes_twice = False  isCE_DominantAtRes_trice = False (CE_res_streak= 1 )
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.2059, 1.478, 1.4762]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=0 dec=1  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_FLAT_InvariantWindow: 1.2059 -> 1.478 -> 1.4762 | step1 +22.56% | step2 -0.12% (not monotonic)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74200, 74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.2375, 2.5791, 2.618]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=12 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 2.2375 -> 2.5791 -> 2.618 | step1 +15.27% | step2 +1.51%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 1.51% vs 0.1% threshold)
+ATMStrike =  73400
+AVG_OIPCR= 1.48
+avgoiPCROld=  2.62
+AVG_OIPCR_9STRIKE= 1.48  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73385.13
+FUT LTP = 73420.0
+CEchoi  PechOi = 1453360.0    478580.0
+====================================
+atmPCR= 0.16  belowATM  0.21
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= True | isPE_DomSupp_once= False  fresh_PE= 14200 | isCE_DomRes_once= True  fresh_CE= 94920
+no trade yet = [np.float64(2.24), np.float64(2.58), np.float64(2.62)]
+India VIX = 16.27  Spot Price = 73361.99
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1705.1 | 3minCandleRange = 89.7 (theoretical= 149.6 ) | ATMoptionMove = 40.4 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.27, 'bn_price': 73361.99, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1705.1, 'candle_range': 89.7, 'atm_option_move': 40.4, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:12:00.000003
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74200CE   0.03   -0.0 CALL added 975260   PUT unwind -2480  CE_OI=1257760 PE_OI=35420
+pcr2 =  BSE:SENSEX26OCT74100PE   0.05   0.0 CALL added 491460   PUT added 560  CE_OI=685880 PE_OI=36180
+pcr3 =  BSE:SENSEX26OCT74000CE   0.11   0.01 CALL added 1799180   PUT added 21100  CE_OI=2857240 PE_OI=316840
+pcr4 =  BSE:SENSEX26OCT73900PE   0.1   -0.01 CALL added 501040   PUT unwind -6180  CE_OI=735500 PE_OI=72260
+pcr5 =  BSE:SENSEX26OCT73800CE   0.14   0.01 CALL added 673160   PUT added 6980  CE_OI=1029780 PE_OI=144960
+pcr6 =  BSE:SENSEX26OCT73700CE   0.2    0.02 CALL added 322980   PUT added 6900  CE_OI=851000 PE_OI=171320
+pcr7 =  BSE:SENSEX26OCT73600PE   0.33   -0.02 CALL added 565180   PUT unwind -12020  CE_OI=1031500 PE_OI=337120
+pcr8 =  BSE:SENSEX26OCT73500CE   0.55   0.34 CALL added 1463120   PUT added 494420  CE_OI=2242660 PE_OI=1238220
+pcr9 =  BSE:SENSEX26OCT73400PE   0.97   0.86 CALL added 847420   PUT added 724980  CE_OI=1092340 PE_OI=1057060
+pcr10 =  BSE:SENSEX26OCT73300PE   1.5   1.4 CALL added 702260   PUT added 982460  CE_OI=875220 PE_OI=1313900
+pcr11 =  BSE:SENSEX26OCT73200PE   2.09   1.84 CALL added 554560   PUT added 1020460  CE_OI=685860 PE_OI=1430440
+pcr12 =  BSE:SENSEX26OCT73100CE   2.82   3.01 CALL added 443440   PUT added 1334500  CE_OI=582120 PE_OI=1643120
+pcr13 =  BSE:SENSEX26OCT73000PE   2.83   2.87 CALL added 880460   PUT added 2529740  CE_OI=1186140 PE_OI=3356880
+pcr14 =  BSE:SENSEX26OCT72900PE   4.37   4.54 CALL added 356560   PUT added 1617500  CE_OI=428840 PE_OI=1872600
+pcr15 =  BSE:SENSEX26OCT72800PE   5.4   5.3 CALL added 269020   PUT added 1424980  CE_OI=337140 PE_OI=1819000
+pcr16 =  BSE:SENSEX26OCT72700CE   7.95   8.0 CALL added 161200   PUT added 1290120  CE_OI=205700 PE_OI=1634780
+pcr17 =  BSE:SENSEX26OCT72600PE   13.91   24.09 CALL added 38160   PUT added 919440  CE_OI=95900 PE_OI=1334300
+PCRSUM== 43.35
+pcrSummation== 11.43
+spotLTP =  73361.99  ATM_STRIKE =  73400
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73400: 73400}
+avgOiPcrList2 = [np.float64(2.58), np.float64(2.62), np.float64(2.55)] atmStrikeNotShiftedCount= 4
+avgOiPcr9List2 = [np.float64(1.48), np.float64(1.48), np.float64(1.27)] atmStrikeNotShiftedCount= 4
+False   4   3
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73361.99 fut=73420.0 basis(fut-spot)=58.01 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73400 PCRwin_future=73400
+CEoich val =  1463120.0  PEoich val =  494420.0 , CE > PE by 66.2%
+SUPP_RES TOTAL OI: CE= 2242660  PE= 1238220 , CE > PE by 44.8%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=9760 fresh_PE=15840 -> PE_dominant by 38.4% (resistance CHALLENGED (bullish warning)) | cumulative CE=1463120.0 PE=494420.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73420.0 ) Buffer= 72
+FUT CEoich val =  1463120.0  PEoich val =  494420.0 , CE > PE by 66.2%
+FUT_SUPP_RES TOTAL OI: CE= 2242660  PE= 1238220 , CE > PE by 44.8%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:12:00.730712
+CHART_PATTERN_DETECTED: INSIDE_BAR | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= 0.0  Range= 17.4  ExpectedRange= 89.7  RangeRatio= 0.19  O= 73420.0  H= 73420.0  L= 73402.6  C= 73420.0
+PCR9_SEQ_FLAT: 1.48 -> 1.48 -> 1.27 (not monotonic)
+recent two = [np.float64(2.62), np.float64(2.55)]
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.478, 1.4762, 1.2698]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=0 dec=2  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_DEC_InvariantWindow: 1.478 -> 1.4762 -> 1.2698 | step1 -0.12% | step2 -13.98%
+is9PcrDecr_InvariantWindow = True  (run=3 falling)
+is9PcrDecr_InvariantWindow_MinMove = True  (smallest step 0.12% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74200, 74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.5791, 2.618, 2.5495]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=0 dec=1  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_FLAT_InvariantWindow: 2.5791 -> 2.618 -> 2.5495 | step1 +1.51% | step2 -2.62% (not monotonic)
+ATMStrike =  73400
+AVG_OIPCR= 1.27
+avgoiPCROld=  2.55
+AVG_OIPCR_9STRIKE= 1.27  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73361.99
+FUT LTP = 73420.0
+CEchoi  PechOi = 1463120.0    494420.0
+====================================
+atmPCR= 0.14  belowATM  0.2
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= 15840 | isCE_DomRes_once= False  fresh_CE= 9760
+India VIX = 16.28  Spot Price = 73379.46
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1706.6 | 3minCandleRange = 89.8 (theoretical= 149.7 ) | ATMoptionMove = 40.4 | SL = 141 | Target = 141 | TrailTrigger = 40 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.28, 'bn_price': 73379.46, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1706.6, 'candle_range': 89.8, 'atm_option_move': 40.4, 'sl_point': 141, 'target_point': 141, 'sl_pct_of_premium': 0.1, 'trail_trigger': 40, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:15:00.000004
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74200CE   0.03   -0.0 CALL added 986340   PUT unwind -180  CE_OI=1268840 PE_OI=37720
+pcr2 =  BSE:SENSEX26OCT74100PE   0.05   0.0 CALL added 523440   PUT added 1580  CE_OI=717860 PE_OI=37200
+pcr3 =  BSE:SENSEX26OCT74000CE   0.11   0.01 CALL added 1769780   PUT added 22940  CE_OI=2827840 PE_OI=318680
+pcr4 =  BSE:SENSEX26OCT73900PE   0.1   -0.01 CALL added 481180   PUT unwind -4200  CE_OI=715640 PE_OI=74240
+pcr5 =  BSE:SENSEX26OCT73800CE   0.14   0.01 CALL added 664340   PUT added 5900  CE_OI=1020960 PE_OI=143880
+pcr6 =  BSE:SENSEX26OCT73700CE   0.2    0.04 CALL added 348720   PUT added 12920  CE_OI=876740 PE_OI=177340
+pcr7 =  BSE:SENSEX26OCT73600PE   0.31   -0.02 CALL added 610880   PUT unwind -11920  CE_OI=1077200 PE_OI=337220
+pcr8 =  BSE:SENSEX26OCT73500CE   0.53   0.31 CALL added 1540640   PUT added 481840  CE_OI=2320180 PE_OI=1225640
+pcr9 =  BSE:SENSEX26OCT73400PE   0.93   0.81 CALL added 900660   PUT added 733780  CE_OI=1145580 PE_OI=1065860
+pcr10 =  BSE:SENSEX26OCT73300PE   1.29   1.15 CALL added 796100   PUT added 918600  CE_OI=969060 PE_OI=1250040
+pcr11 =  BSE:SENSEX26OCT73200PE   2.09   1.84 CALL added 532060   PUT added 979080  CE_OI=663360 PE_OI=1389060
+pcr12 =  BSE:SENSEX26OCT73100CE   4.04   5.0 CALL added 259800   PUT added 1299520  CE_OI=398480 PE_OI=1608140
+pcr13 =  BSE:SENSEX26OCT73000PE   2.81   2.85 CALL added 891160   PUT added 2535500  CE_OI=1196840 PE_OI=3362640
+pcr14 =  BSE:SENSEX26OCT72900PE   4.5   4.7 CALL added 345040   PUT added 1622680  CE_OI=417320 PE_OI=1877780
+pcr15 =  BSE:SENSEX26OCT72800PE   5.44   5.36 CALL added 267640   PUT added 1433960  CE_OI=335760 PE_OI=1827980
+pcr16 =  BSE:SENSEX26OCT72700CE   8.06   8.14 CALL added 158160   PUT added 1288200  CE_OI=202660 PE_OI=1632860
+pcr17 =  BSE:SENSEX26OCT72600PE   14.03   24.46 CALL added 37860   PUT added 926040  CE_OI=95600 PE_OI=1340900
+PCRSUM== 44.66
+pcrSummation== 12.34
+spotLTP =  73379.46  ATM_STRIKE =  73400
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73400: 73400}
+avgOiPcrList2 = [np.float64(2.62), np.float64(2.55), np.float64(2.63)] atmStrikeNotShiftedCount= 5
+avgOiPcr9List2 = [np.float64(1.48), np.float64(1.27), np.float64(1.37)] atmStrikeNotShiftedCount= 5
+False   5   3
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73379.46 fut=73404.45 basis(fut-spot)=24.99 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73400 PCRwin_future=73400
+CEoich val =  1540640.0  PEoich val =  481840.0 , CE > PE by 68.7%
+SUPP_RES TOTAL OI: CE= 2320180  PE= 1225640 , CE > PE by 47.2%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=77520 fresh_PE=-12580 -> CE_dominant by 116.2% (resistance HOLDING (bearish)) | cumulative CE=1540640.0 PE=481840.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73404.45 ) Buffer= 72
+FUT CEoich val =  1540640.0  PEoich val =  481840.0 , CE > PE by 68.7%
+FUT_SUPP_RES TOTAL OI: CE= 2320180  PE= 1225640 , CE > PE by 47.2%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:15:00.857639
+CHART_PATTERN_DETECTED: OUTSIDE_BAR | DOUBLE_BOTTOM_FORMING
+  PATTERN_CONTEXT: Body= -11.5  Range= 62.8  ExpectedRange= 89.8  RangeRatio= 0.7  O= 73416.0  H= 73453.4  L= 73390.6  C= 73404.4
+PCR9_SEQ_FLAT: 1.48 -> 1.27 -> 1.37 (not monotonic)
+recent two = [np.float64(2.55), np.float64(2.63)]
+isCE_DominantAtRes_once = True  isCE_DominantAtRes_twice = False  isCE_DominantAtRes_trice = False (CE_res_streak= 1 )
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.4762, 1.2698, 1.3716]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=1 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_FLAT_InvariantWindow: 1.4762 -> 1.2698 -> 1.3716 | step1 -13.98% | step2 +8.02% (not monotonic)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74200, 74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [2.618, 2.5495, 2.6276]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=1 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_FLAT_InvariantWindow: 2.618 -> 2.5495 -> 2.6276 | step1 -2.62% | step2 +3.06% (not monotonic)
+ATMStrike =  73400
+AVG_OIPCR= 1.37
+avgoiPCROld=  2.63
+AVG_OIPCR_9STRIKE= 1.37  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73379.46
+FUT LTP = 73404.45
+CEchoi  PechOi = 1540640.0    481840.0
+====================================
+atmPCR= 0.14  belowATM  0.2
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= True | isPE_DomSupp_once= False  fresh_PE= -12580 | isCE_DomRes_once= True  fresh_CE= 77520
+India VIX = 16.36  Spot Price = 73335.39
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1714.0 | 3minCandleRange = 90.2 (theoretical= 150.3 ) | ATMoptionMove = 40.6 | SL = 142 | Target = 142 | TrailTrigger = 41 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.36, 'bn_price': 73335.39, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1714.0, 'candle_range': 90.2, 'atm_option_move': 40.6, 'sl_point': 142, 'target_point': 142, 'sl_pct_of_premium': 0.1, 'trail_trigger': 41, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:18:00.000004
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74100PE   0.05   0.0 CALL added 530880   PUT added 1320  CE_OI=725300 PE_OI=36940
+pcr2 =  BSE:SENSEX26OCT74000CE   0.12   0.01 CALL added 1673140   PUT added 22720  CE_OI=2731200 PE_OI=318460
+pcr3 =  BSE:SENSEX26OCT73900PE   0.11   -0.01 CALL added 435060   PUT unwind -4840  CE_OI=669520 PE_OI=73600
+pcr4 =  BSE:SENSEX26OCT73800CE   0.14   0.0 CALL added 623160   PUT added 2780  CE_OI=979780 PE_OI=140760
+pcr5 =  BSE:SENSEX26OCT73700CE   0.2   0.02 CALL added 330280   PUT added 7900  CE_OI=858300 PE_OI=172320
+pcr6 =  BSE:SENSEX26OCT73600PE   0.35    0.03 CALL added 599420   PUT added 19960  CE_OI=1065740 PE_OI=369100
+pcr7 =  BSE:SENSEX26OCT73500CE   0.56   0.33 CALL added 1330740   PUT added 441720  CE_OI=2110280 PE_OI=1185520
+pcr8 =  BSE:SENSEX26OCT73400PE   0.98   0.88 CALL added 894600   PUT added 787420  CE_OI=1139520 PE_OI=1119500
+pcr9 =  BSE:SENSEX26OCT73300PE   1.51   1.41 CALL added 720500   PUT added 1013560  CE_OI=893460 PE_OI=1345000
+pcr10 =  BSE:SENSEX26OCT73200PE   2.18   1.93 CALL added 506860   PUT added 978800  CE_OI=638160 PE_OI=1388780
+pcr11 =  BSE:SENSEX26OCT73100CE   4.21   5.35 CALL added 242400   PUT added 1297480  CE_OI=381080 PE_OI=1606100
+pcr12 =  BSE:SENSEX26OCT73000PE   2.88   2.94 CALL added 885260   PUT added 2606940  CE_OI=1190940 PE_OI=3434080
+pcr13 =  BSE:SENSEX26OCT72900PE   4.6   4.82 CALL added 337900   PUT added 1629740  CE_OI=410180 PE_OI=1884840
+pcr14 =  BSE:SENSEX26OCT72800PE   5.61   5.57 CALL added 262020   PUT added 1458960  CE_OI=330140 PE_OI=1852980
+pcr15 =  BSE:SENSEX26OCT72700CE   8.24   8.38 CALL added 154100   PUT added 1291400  CE_OI=198600 PE_OI=1636060
+pcr16 =  BSE:SENSEX26OCT72600PE   14.29   25.13 CALL added 37880   PUT added 951940  CE_OI=95620 PE_OI=1366800
+pcr17 =  BSE:SENSEX26OCT72500PE   23.11   59.21 CALL added 37700   PUT added 2232100  CE_OI=139280 PE_OI=3218200
+PCRSUM== 69.14
+pcrSummation== 17.47
+spotLTP =  73335.39  ATM_STRIKE =  73300
+IS_ATM_STRIKE_SHIFT = True  mapStrike = {73300: 73300}
+avgOiPcrList2 = [np.float64(4.07)] atmStrikeNotShiftedCount= 1
+avgOiPcr9List2 = [np.float64(1.94)] atmStrikeNotShiftedCount= 1
+True   1   1
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73335.39 fut=73338.6 basis(fut-spot)=3.21 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73300 PCRwin_future=73300
+CEoich val =  1330740.0  PEoich val =  441720.0 , CE > PE by 66.8%
+SUPP_RES TOTAL OI: CE= 2110280  PE= 1185520 , CE > PE by 43.8%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=-209900 fresh_PE=-40120 -> PE_dominant by 80.9% (resistance CHALLENGED (bullish warning)) | cumulative CE=1330740.0 PE=441720.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73338.6 ) Buffer= 72
+FUT CEoich val =  1330740.0  PEoich val =  441720.0 , CE > PE by 66.8%
+FUT_SUPP_RES TOTAL OI: CE= 2110280  PE= 1185520 , CE > PE by 43.8%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:18:00.735577
+CHART_PATTERN_DETECTED: STRONG_MOMENTUM_BEAR
+  PATTERN_CONTEXT: Body= -91.4  Range= 93.6  ExpectedRange= 90.2  RangeRatio= 1.04  O= 73430.0  H= 73430.0  L= 73336.4  C= 73338.6
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.7394, 1.8559, 1.9407]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=2 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 1.7394 -> 1.8559 -> 1.9407 | step1 +6.70% | step2 +4.57%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 4.57% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600, 72500]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [3.9171, 3.9741, 4.0669]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=2 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 3.9171 -> 3.9741 -> 4.0669 | step1 +1.46% | step2 +2.34%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 1.46% vs 0.1% threshold)
+ATMStrike =  73300
+AVG_OIPCR= 1.94
+avgoiPCROld=  4.07
+AVG_OIPCR_9STRIKE= 1.94  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73335.39
+FUT LTP = 73338.6
+CEchoi  PechOi = 1330740.0    441720.0
+====================================
+atmPCR= 0.2  belowATM  0.35
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= -40120 | isCE_DomRes_once= False  fresh_CE= -209900
+India VIX = 16.34  Spot Price = 73346.63
+IV Regime = HIGH (ADAPTIVE: P25= 14.01  P50= 14.63  P75= 15.71 ) | DailyRange = 1712.1 | 3minCandleRange = 90.1 (theoretical= 150.2 ) | ATMoptionMove = 40.5 | SL = 142 | Target = 142 | TrailTrigger = 41 | Spread = 400 | Buffer = 72
+IV Params refreshed: {'vix': 16.34, 'bn_price': 73346.63, 'regime': 'HIGH', 'regime_thresholds': 'P25=14.01 P50=14.63 P75=15.71', 'daily_range': 1712.1, 'candle_range': 90.1, 'atm_option_move': 40.5, 'sl_point': 142, 'target_point': 142, 'sl_pct_of_premium': 0.1, 'trail_trigger': 41, 'spread_width': 400, 'support_resistance_buffer': 72}
+===
+====after 3 min ochain==== 2026-10-28 13:21:00.000002
+                                    oipcr   choipcr   CE_OI / PE_OI (same strike)
+pcr1 =  BSE:SENSEX26OCT74100PE   0.05   0.0 CALL added 522540   PUT added 1260  CE_OI=716960 PE_OI=36880
+pcr2 =  BSE:SENSEX26OCT74000CE   0.11   0.01 CALL added 1728360   PUT added 12200  CE_OI=2786420 PE_OI=307940
+pcr3 =  BSE:SENSEX26OCT73900PE   0.11   -0.01 CALL added 431500   PUT unwind -5880  CE_OI=665960 PE_OI=72560
+pcr4 =  BSE:SENSEX26OCT73800CE   0.14   -0.01 CALL added 586580   PUT unwind -3540  CE_OI=943200 PE_OI=134440
+pcr5 =  BSE:SENSEX26OCT73700CE   0.2   0.0 CALL added 317120   PUT added 1540  CE_OI=845140 PE_OI=165960
+pcr6 =  BSE:SENSEX26OCT73600PE   0.35    0.0 CALL added 525720   PUT added 1960  CE_OI=992040 PE_OI=351100
+pcr7 =  BSE:SENSEX26OCT73500CE   0.54   0.28 CALL added 1247020   PUT added 345720  CE_OI=2026560 PE_OI=1089520
+pcr8 =  BSE:SENSEX26OCT73400PE   0.94   0.82 CALL added 908000   PUT added 746160  CE_OI=1152920 PE_OI=1078240
+pcr9 =  BSE:SENSEX26OCT73300PE   1.59   1.51 CALL added 705000   PUT added 1066360  CE_OI=877960 PE_OI=1397800
+pcr10 =  BSE:SENSEX26OCT73200PE   2.2   1.96 CALL added 498840   PUT added 978800  CE_OI=630140 PE_OI=1388780
+pcr11 =  BSE:SENSEX26OCT73100CE   4.4   5.75 CALL added 222780   PUT added 1280300  CE_OI=361460 PE_OI=1588920
+pcr12 =  BSE:SENSEX26OCT73000PE   2.87   2.93 CALL added 876900   PUT added 2565040  CE_OI=1182580 PE_OI=3392180
+pcr13 =  BSE:SENSEX26OCT72900PE   4.41   4.6 CALL added 328180   PUT added 1510980  CE_OI=400460 PE_OI=1766080
+pcr14 =  BSE:SENSEX26OCT72800PE   5.61   5.57 CALL added 262020   PUT added 1458960  CE_OI=330140 PE_OI=1852980
+pcr15 =  BSE:SENSEX26OCT72700CE   8.78   9.09 CALL added 146940   PUT added 1335420  CE_OI=191440 PE_OI=1680080
+pcr16 =  BSE:SENSEX26OCT72600PE   15.02   27.68 CALL added 35720   PUT added 988600  CE_OI=93460 PE_OI=1403460
+pcr17 =  BSE:SENSEX26OCT72500PE   23.72   61.46 CALL added 37700   PUT added 2317100  CE_OI=139280 PE_OI=3303200
+PCRSUM== 71.04
+pcrSummation== 17.5
+spotLTP =  73346.63  ATM_STRIKE =  73300
+IS_ATM_STRIKE_SHIFT = False  mapStrike = {73300: 73300}
+avgOiPcrList2 = [np.float64(4.07), np.float64(4.18)] atmStrikeNotShiftedCount= 2
+avgOiPcr9List2 = [np.float64(1.94), np.float64(1.94)] atmStrikeNotShiftedCount= 2
+False   2   2
+SUPP_RES=== 73500  Buffer= 72
+ANCHOR_COMPARE: spot=73346.63 fut=73339.3 basis(fut-spot)=-7.33 | SR_spot(PRIMARY)=73500 SR_future=73500 SR_diff(fut-spot)=0 | PCRwin_spot(PRIMARY)=73300 PCRwin_future=73300
+CEoich val =  1247020.0  PEoich val =  345720.0 , CE > PE by 72.3%
+SUPP_RES TOTAL OI: CE= 2026560  PE= 1089520 , CE > PE by 46.2%
+INCR_CHOI: SUPP_RES=73500 role=RESISTANCE fresh_CE=-83720 fresh_PE=-96000 -> CE_dominant by 12.8% (resistance HOLDING (bearish)) | cumulative CE=1247020.0 PE=345720.0
+==========================
+FUT_SUPP_RES=== 73500  (FUT_LTP= 73339.3 ) Buffer= 72
+FUT CEoich val =  1247020.0  PEoich val =  345720.0 , CE > PE by 72.3%
+FUT_SUPP_RES TOTAL OI: CE= 2026560  PE= 1089520 , CE > PE by 46.2%
+IS_MORNING_WINDOW= False  (active 9:15-9:48 IST)
+================================================
+==== signal check time ==== 2026-10-28 13:21:00.721695
+CHART_PATTERN: None
+isCE_DominantAtRes_once = True  isCE_DominantAtRes_twice = False  isCE_DominantAtRes_trice = False (CE_res_streak= 1 )
+==== INVARIANT-WINDOW PCR check (log-only) ====
+inv_strikes9  = [73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900]  (central 9 = pcr5..pcr13)
+inv_strike_coverage_per_cycle = ['9/9', '9/9', '9/9']  (9-strike found in each stored snapshot)
+INV_WINDOW_FULL: every stored snapshot covers all current strikes — averages are directly comparable.
+avgOiPcr9List2_InvariantWindow  = [1.8559, 1.9407, 1.9437]  (9-strike, re-measured on current strikes)
+is9Pcr_InvariantWindow_STREAK: inc=3 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+9_SEQ_INC_InvariantWindow: 1.8559 -> 1.9407 -> 1.9437 | step1 +4.57% | step2 +0.15%
+is9PcrInc_InvariantWindow = True  (run=3 rising)
+is9PcrInc_InvariantWindow_MinMove = True  (smallest step 0.15% vs 0.1% threshold)
+==== WIDE-CHAIN INVARIANT 17-PCR (log-only, separate fetch) ====
+inv_wide_fetched   = 23 strikes (strikecount=11), buffer=3 each side
+inv_wide_measured  = [74100, 74000, 73900, 73800, 73700, 73600, 73500, 73400, 73300, 73200, 73100, 73000, 72900, 72800, 72700, 72600, 72500]
+inv_wide_coverage_per_cycle = ['17/17', '17/17', '17/17']
+INV_WIDE_FULL: every stored snapshot covers all 17 measured strikes — the series below is a true same-strike comparison.
+avgOiPcr17WIDEList2_InvariantWindow  = [3.9741, 4.0669, 4.1782]  (17WIDE-strike, re-measured on current strikes)
+is17WIDEPcr_InvariantWindow_STREAK: inc=3 dec=0  (consecutive cycles same direction, >0.1% steps; not capped at the 3-cycle window)
+17WIDE_SEQ_INC_InvariantWindow: 3.9741 -> 4.0669 -> 4.1782 | step1 +2.34% | step2 +2.74%
+is17WIDEPcrInc_InvariantWindow = True  (run=3 rising)
+is17WIDEPcrInc_InvariantWindow_MinMove = True  (smallest step 2.34% vs 0.1% threshold)
+ATMStrike =  73300
+AVG_OIPCR= 1.94
+avgoiPCROld=  4.18
+AVG_OIPCR_9STRIKE= 1.94  (pcr5..pcr13 = ATM +/-4, 9 strikes)
+SUPP_RES = 73500
+spotLTP = 73346.63
+FUT LTP = 73339.3
+CEchoi  PechOi = 1247020.0    345720.0
+====================================
+atmPCR= 0.2  belowATM  0.35
+CHOI_DOM_GATE: gate_on= True  bull_ok= False  bear_ok= False | isPE_DomSupp_once= False  fresh_PE= -96000 | isCE_DomRes_once= True  fresh_CE= -83720
