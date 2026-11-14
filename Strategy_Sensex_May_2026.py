@@ -374,6 +374,13 @@ FIXED_RISK_PER_TRADE = 7000     # ₹ NET risk per trade if SL hits (after hedge
 # confirms over SL_CONFIRM_TICKS polls then exits — capping the actual rupee loss near budget
 # regardless of how the hedge behaves. TARGET side is NOT touched (only the SL/loss side).
 RUPEE_NET_SL_ENABLED = True
+# IN-TRADE 3-MIN DIAGNOSTICS: while a position is open, keep the 2s SL/target monitoring but
+# ALSO print the full 3-min cycle diagnostics (option-chain table, PCR, CHOI, invariant window,
+# volume pressure, S/R) at each 3-min boundary — so the in-trade heartbeat and the usual cycle
+# data both appear in the log. The monitor yields to the outer diagnostic block ONLY when no
+# SL/target/net-stop confirmation is in progress (so a breach mid-confirmation is never
+# interrupted). Costs a ~2-3s monitoring pause at each 3-min mark (the heavy chain fetch).
+IN_TRADE_3MIN_LOG = True
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -3355,6 +3362,10 @@ def _ladder_levels(entry_prem, median, idx, is_debit):
 # inside that window and process the same candle twice (was masked before by the slower
 # checkCriteriaAndTakeTrade call). Tracking the last processed minute makes it deterministic.
 last_candle_minute = -1
+# Set True by the in-trade monitor at a 3-min boundary to force the diagnostic block to run
+# this outer iteration (even past the second<=1 window) so the usual 3-min data prints while
+# a position is open. Reset as soon as the diagnostic block consumes it.
+force_intrade_diag = False
 
 while x == 1:
 
@@ -3365,7 +3376,8 @@ while x == 1:
 
     if now >= custom_time1:
 
-        if dt1.second <= 1 and dt1.minute % timeFrame == 0 and dt1.minute != last_candle_minute:
+        if (dt1.second <= 1 and dt1.minute % timeFrame == 0 and dt1.minute != last_candle_minute) or force_intrade_diag:
+            force_intrade_diag = False         # consume the in-trade forced-diag request
             last_candle_minute = dt1.minute   # process this candle only once
             count += 1
             candle_formed = 1
@@ -4634,6 +4646,20 @@ while x == 1:
                             else:
                                 print("LTP_FALLBACK: quotes down, using candle close=", _fb_close,
                                       " SL=", sl, " target=", target)
+
+                    # === IN-TRADE 3-MIN DIAGNOSTIC YIELD ===
+                    # At a fresh 3-min boundary, break out so the outer loop prints the full cycle
+                    # data (chain table/PCR/CHOI/invariant/volume-pressure). We re-enter the
+                    # monitor immediately after. Only yield when NO exit confirmation is in
+                    # progress (ltpSl/ltpTgt/netSl all 0), so a breach mid-confirmation is never
+                    # interrupted by the (heavier) diagnostic fetch.
+                    if (IN_TRADE_3MIN_LOG and (st == 1 or st == 2)
+                            and ltpSlConfirm == 0 and ltpTgtConfirm == 0 and netSlConfirm == 0
+                            and dt2.minute % timeFrame == 0 and dt2.minute != last_candle_minute):
+                        print(f"IN_TRADE_3MIN_YIELD: {dt2.strftime('%H:%M:%S')} — printing 3-min diagnostics "
+                              f"(position still open, monitoring resumes right after)")
+                        force_intrade_diag = True
+                        break
 
                     time.sleep(LTP_POLL_INTERVAL)
 
