@@ -3233,6 +3233,9 @@ _prev_suppres_choi = {}   # {strike: (ce_oich, pe_oich)}
 # PCR at that exact strike can be printed below INCR_CHOI. Independent of the ATM+-1 block's
 # _prev_vol_map. Keyed by strike so a SUPP_RES shift compares like-for-like.
 _prev_suppres_vol = {}    # {strike: (ce_vol_cumulative, pe_vol_cumulative)}
+# Prev-cycle cumulative change-in-OI at the ATM strike, for the ATM fresh-flow dominance line
+# printed right below INCR_CHOI. Independent of the ATM+-1 volume-pressure block's _prev_oich_map.
+_prev_atm_choi = {}       # {atm_strike: (ce_oich_cumulative, pe_oich_cumulative)}
 # Consecutive-streak of INCR_CHOI fresh-flow dominance at the S/R level. Flags flip True once
 # the same-side dominance persists >= CHOI_DOM_STREAK consecutive cycles (mirrors the PCR
 # consecutive-trend idea): PE-dominant at a SUPPORT -> isPE_DominantAtSupp (bull confirm),
@@ -3798,6 +3801,28 @@ while x == 1:
                     print("INCR_CHOI_DIAG_FAILED (non-fatal, diagnostic only):", _incr_err)
             else:
                 print("not found")
+
+            # === ATM-STRIKE fresh change-in-OI (same dominance read as INCR_CHOI, log-only) ===
+            # Mirrors the SUPP_RES INCR_CHOI but at the ATM strike, so we can see whether the
+            # at-the-money flow agrees with the S/R-level flow. Fresh = now_oich - prev_cycle_oich,
+            # dominance = whichever side's signed fresh change is greater (same rule as INCR_CHOI).
+            try:
+                _atm_oich_map = build_strike_oich_map(dfochain)
+                _atm_ce_now, _atm_pe_now = _atm_oich_map.get(int(ATM_STRIKE), (0.0, 0.0))
+                _atm_prev = _prev_atm_choi.get(int(ATM_STRIKE))
+                if _atm_prev is not None:
+                    _atm_fce = round(_atm_ce_now - _atm_prev[0])
+                    _atm_fpe = round(_atm_pe_now - _atm_prev[1])
+                    _atm_dom = "CE" if _atm_fce > _atm_fpe else ("PE" if _atm_fpe > _atm_fce else "FLAT")
+                    _atm_den = max(abs(_atm_fce), abs(_atm_fpe)) or 1
+                    _atm_gap = round(abs(_atm_fce - _atm_fpe) / _atm_den * 100, 1)
+                    print(f"INCR_CHOI_ATM: ATM={int(ATM_STRIKE)} fresh_CE={_atm_fce} fresh_PE={_atm_fpe} "
+                          f"-> {_atm_dom}_dominant by {_atm_gap}%")
+                else:
+                    print(f"INCR_CHOI_ATM: ATM={int(ATM_STRIKE)} first sighting (no prev cycle to diff)")
+                _prev_atm_choi[int(ATM_STRIKE)] = (_atm_ce_now, _atm_pe_now)
+            except Exception as _atm_err:
+                print("INCR_CHOI_ATM_FAILED (non-fatal, diagnostic only):", _atm_err)
 
             # === DIAGNOSTIC (no behaviour change): FUT-based S/R for OBSERVATION. The primary
             # SUPP_RES above is now SPOT-based (anchorLTP); this logs what the S/R WOULD be on the
