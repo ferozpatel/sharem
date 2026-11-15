@@ -209,8 +209,9 @@ TRAIL_SL_FOR_BEAR = False
 # Worst case after rung1 is +4.0x median (vs the old fixed +4.5x) — a small giveback for the
 # upside of riding to 8.0x on a trend. Set LADDER_TRAIL_ENABLED=False to keep the single target.
 LADDER_TRAIL_ENABLED = True
-LADDER_TARGET_MULTS = [4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0]  # target rungs (median multiples)
-LADDER_LOCK_GAP = 0.25  # when rung T is hit, SL locks at (T - gap) in profit
+LADDER_TARGET_MULTS = [4.5, 4.75, 5.0, 5.25, 5.5, 5.75, 6.0, 6.25, 6.5, 6.75,
+                       7.0, 7.25, 7.5, 7.75, 8.0]  # target rungs (median multiples), 0.25 step
+LADDER_LOCK_GAP = 0.25  # when rung T is hit, SL locks at (T - gap) = the previous rung in profit
 
 # ============================================================
 # MEDIAN-RANGE LOW-SAMPLE GUARD (see get_option_candle_range)
