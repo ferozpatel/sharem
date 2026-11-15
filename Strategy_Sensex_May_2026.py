@@ -382,6 +382,12 @@ RUPEE_NET_SL_ENABLED = True
 # SL/target/net-stop confirmation is in progress (so a breach mid-confirmation is never
 # interrupted). Costs a ~2-3s monitoring pause at each 3-min mark (the heavy chain fetch).
 IN_TRADE_3MIN_LOG = True
+# REVERSAL / EARLY-EXIT SIGNAL (LOG-ONLY): while in a trade, each 3-min cycle re-evaluate the
+# OPPOSITE direction's FULL entry criteria (same gates as a real entry, minus st==0/slCount). If
+# the opposite setup is fully met at the current S/R, the move may be reversing — a cue to study
+# whether an early exit beats waiting for target/SL. Feeds NO exit; purely logged as
+# REVERSAL_SIGNAL for now.
+REVERSAL_SIGNAL_LOG = True
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -4073,6 +4079,32 @@ while x == 1:
             else:
                 _dominance_ok_bull = True
                 _dominance_ok_bear = True
+
+            # === REVERSAL / EARLY-EXIT SIGNAL (LOG-ONLY) ===
+            # While in a trade, check whether the OPPOSITE direction's FULL entry criteria are met
+            # this cycle (same direction + dominance + CHOI + price-vs-S/R + PCR-trend gates as a
+            # real entry, minus the st==0 / slCount / time checks). A met opposite setup at the
+            # current (possibly shifted) S/R means selling pressure / PCR are flipping against the
+            # position -> the move may be reversing. Logged only, feeds no exit.
+            if REVERSAL_SIGNAL_LOG and (st == 1 or st == 2):
+                _rev_bear_ok = (bear_direction_ok and _dominance_ok_bear and choi_filter_bear
+                                and SUPP_RES != "NOTRADEZONE" and anchorLTP < SUPP_RES
+                                and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2)
+                _rev_bull_ok = (bull_direction_ok and _dominance_ok_bull and choi_filter_bull
+                                and SUPP_RES != "NOTRADEZONE" and anchorLTP > SUPP_RES
+                                and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2)
+                if st == 1 and _rev_bear_ok:
+                    print(f"REVERSAL_SIGNAL: in BULL trade but full BEAR entry criteria MET "
+                          f"(mode={_entry_mode}) -> potential reversal / early-exit cue | "
+                          f"SUPP_RES={SUPP_RES} anchorLTP={anchorLTP} CEchoi={suppResCeChOi} "
+                          f"PEchoi={suppResPeChOi} isPcrDecr={IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2} "
+                          f"isCE_DomRes_once={isCE_DominantAtRes_once}")
+                elif st == 2 and _rev_bull_ok:
+                    print(f"REVERSAL_SIGNAL: in BEAR trade but full BULL entry criteria MET "
+                          f"(mode={_entry_mode}) -> potential reversal / early-exit cue | "
+                          f"SUPP_RES={SUPP_RES} anchorLTP={anchorLTP} CEchoi={suppResCeChOi} "
+                          f"PEchoi={suppResPeChOi} isPcrInc={IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2} "
+                          f"isPE_DomSupp_once={isPE_DominantAtSupp_once}")
             print("CHOI_DOM_GATE: gate_on=", USE_CHOI_DOMINANCE_GATE,
                   " bull_ok=", _dominance_ok_bull, " bear_ok=", _dominance_ok_bear,
                   "| isPE_DomSupp_once=", isPE_DominantAtSupp_once, " fresh_PE=", _last_fresh_pe,
