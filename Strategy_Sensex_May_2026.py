@@ -3818,20 +3818,27 @@ while x == 1:
             # at-the-money flow agrees with the S/R-level flow. Fresh = now_oich - prev_cycle_oich,
             # dominance = whichever side's signed fresh change is greater (same rule as INCR_CHOI).
             try:
-                _atm_oich_map = build_strike_oich_map(dfochain)
-                _atm_ce_now, _atm_pe_now = _atm_oich_map.get(int(ATM_STRIKE), (0.0, 0.0))
-                _atm_prev = _prev_atm_choi.get(int(ATM_STRIKE))
-                if _atm_prev is not None:
-                    _atm_fce = round(_atm_ce_now - _atm_prev[0])
-                    _atm_fpe = round(_atm_pe_now - _atm_prev[1])
-                    _atm_dom = "CE" if _atm_fce > _atm_fpe else ("PE" if _atm_fpe > _atm_fce else "FLAT")
-                    _atm_den = max(abs(_atm_fce), abs(_atm_fpe)) or 1
-                    _atm_gap = round(abs(_atm_fce - _atm_fpe) / _atm_den * 100, 1)
-                    print(f"INCR_CHOI_ATM: ATM={int(ATM_STRIKE)} fresh_CE={_atm_fce} fresh_PE={_atm_fpe} "
-                          f"-> {_atm_dom}_dominant by {_atm_gap}%")
-                else:
-                    print(f"INCR_CHOI_ATM: ATM={int(ATM_STRIKE)} first sighting (no prev cycle to diff)")
-                _prev_atm_choi[int(ATM_STRIKE)] = (_atm_ce_now, _atm_pe_now)
+                _atm_oich_map = build_strike_oich_map(dfochain)   # cumulative change-in-OI per strike
+                _atm_oi_map = build_strike_oi_map(dfochain)        # total OI per strike
+                _atm_base = int(ATM_STRIKE)
+                # ATM-1 (lower strike), ATM, ATM+1 (higher strike) — fresh flow + cumulative + total.
+                for _lbl, _k in (("atm-1", _atm_base - 100), ("atm  ", _atm_base), ("atm+1", _atm_base + 100)):
+                    _ce_now, _pe_now = _atm_oich_map.get(_k, (0.0, 0.0))
+                    _ce_oi, _pe_oi = _atm_oi_map.get(_k, (0.0, 0.0))
+                    _prev = _prev_atm_choi.get(_k)
+                    if _prev is not None:
+                        _fce = round(_ce_now - _prev[0])
+                        _fpe = round(_pe_now - _prev[1])
+                        _dom = "CE" if _fce > _fpe else ("PE" if _fpe > _fce else "FLAT")
+                        _den = max(abs(_fce), abs(_fpe)) or 1
+                        _gap = round(abs(_fce - _fpe) / _den * 100, 1)
+                        print(f"INCR_CHOI_ATM {_lbl} (strike={_k}): fresh_CE={_fce} fresh_PE={_fpe} "
+                              f"-> {_dom}_dominant by {_gap}% | cumChOI CE={_ce_now} PE={_pe_now} "
+                              f"| totalOI CE={int(_ce_oi)} PE={int(_pe_oi)}")
+                    else:
+                        print(f"INCR_CHOI_ATM {_lbl} (strike={_k}): first sighting (no prev cycle to diff) "
+                              f"| cumChOI CE={_ce_now} PE={_pe_now} | totalOI CE={int(_ce_oi)} PE={int(_pe_oi)}")
+                    _prev_atm_choi[_k] = (_ce_now, _pe_now)
             except Exception as _atm_err:
                 print("INCR_CHOI_ATM_FAILED (non-fatal, diagnostic only):", _atm_err)
 
