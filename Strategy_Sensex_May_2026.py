@@ -388,6 +388,13 @@ IN_TRADE_3MIN_LOG = True
 # whether an early exit beats waiting for target/SL. Feeds NO exit; purely logged as
 # REVERSAL_SIGNAL for now.
 REVERSAL_SIGNAL_LOG = True
+# SMART TARGET EXIT (reversal-based early exit, LIVE). On entry, LOCK the entry SUPP_RES strike.
+# Each 3-min cycle while in the trade, re-measure that locked strike's cumulative-CHOI gap% and
+# total-OI gap%. Exit the position when the OPPOSITE PCR trend is live (bull trade -> isPcrDecr;
+# bear -> isPcrInc) AND BOTH gaps have shrunk vs the previous 3-min cycle (the level that
+# justified the trade is weakening). No threshold — any decrease in both counts. Runs alongside
+# the fixed target / SL / net-stop; whichever triggers first wins. Exit ends the day (st=-1).
+SMART_TARGET_EXIT_ENABLED = True
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -3236,6 +3243,10 @@ _prev_suppres_vol = {}    # {strike: (ce_vol_cumulative, pe_vol_cumulative)}
 # Prev-cycle cumulative change-in-OI at the ATM strike, for the ATM fresh-flow dominance line
 # printed right below INCR_CHOI. Independent of the ATM+-1 volume-pressure block's _prev_oich_map.
 _prev_atm_choi = {}       # {atm_strike: (ce_oich_cumulative, pe_oich_cumulative)}
+# SMART TARGET EXIT state (per-trade; set at entry, cleared on exit).
+_smart_exit_entry_sr = None        # the SUPP_RES strike locked at entry (fixed for the trade)
+_smart_exit_prev_choi_pct = None   # prev-cycle cumulative-CHOI gap% at the locked strike
+_smart_exit_prev_oi_pct = None     # prev-cycle total-OI gap% at the locked strike
 # Consecutive-streak of INCR_CHOI fresh-flow dominance at the S/R level. Flags flip True once
 # the same-side dominance persists >= CHOI_DOM_STREAK consecutive cycles (mirrors the PCR
 # consecutive-trend idea): PE-dominant at a SUPPORT -> isPE_DominantAtSupp (bull confirm),
@@ -4130,6 +4141,59 @@ while x == 1:
                           f"SUPP_RES={SUPP_RES} anchorLTP={anchorLTP} CEchoi={suppResCeChOi} "
                           f"PEchoi={suppResPeChOi} isPcrInc={IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2} "
                           f"isPE_DomSupp_once={isPE_DominantAtSupp_once}")
+
+            # === SMART TARGET EXIT (reversal-based early exit, LIVE) ===
+            # Measure the LOCKED entry SUPP_RES strike's cumulative-CHOI gap% and total-OI gap%
+            # this cycle. Exit when the OPPOSITE PCR trend is live AND BOTH gaps have shrunk vs
+            # the previous cycle (no threshold — any decrease). Ends the day (st=-1). Runs next
+            # to the fixed target / SL / net-stop; first trigger wins.
+            if (SMART_TARGET_EXIT_ENABLED and (st == 1 or st == 2)
+                    and _smart_exit_entry_sr is not None and _smart_exit_entry_sr != "NOTRADEZONE"):
+                try:
+                    _se_ce_sym = getOptionFormatSensex(intExpiry, int(_smart_exit_entry_sr), "CE")
+                    _se_pe_sym = getOptionFormatSensex(intExpiry, int(_smart_exit_entry_sr), "PE")
+                    _se_r1 = dfochain[dfochain['symbol'] == _se_ce_sym]
+                    _se_r2 = dfochain[dfochain['symbol'] == _se_pe_sym]
+                    if not _se_r1.empty and not _se_r2.empty:
+                        _se_ce_choi = float(_se_r1.iloc[0]['oich'])
+                        _se_pe_choi = float(_se_r2.iloc[0]['oich'])
+                        _se_ce_oi = float(_se_r1.iloc[0]['oi'])
+                        _se_pe_oi = float(_se_r2.iloc[0]['oi'])
+                        _se_choi_den = max(abs(_se_ce_choi), abs(_se_pe_choi)) or 1
+                        _se_oi_den = max(_se_ce_oi, _se_pe_oi) or 1
+                        _se_choi_pct = round(abs(_se_ce_choi - _se_pe_choi) / _se_choi_den * 100, 1)
+                        _se_oi_pct = round(abs(_se_ce_oi - _se_pe_oi) / _se_oi_den * 100, 1)
+                        _se_opp_pcr = (IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 if st == 1
+                                       else IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2)
+                        _se_ready = (_smart_exit_prev_choi_pct is not None
+                                     and _smart_exit_prev_oi_pct is not None)
+                        print(f"SMART_EXIT_WATCH: entry_SR={int(_smart_exit_entry_sr)} "
+                              f"choi_gap%={_se_choi_pct} (prev={_smart_exit_prev_choi_pct}) "
+                              f"oi_gap%={_se_oi_pct} (prev={_smart_exit_prev_oi_pct}) "
+                              f"opp_pcr({'Dec' if st == 1 else 'Inc'})={_se_opp_pcr}")
+                        if (_se_ready and _se_opp_pcr
+                                and _se_choi_pct < _smart_exit_prev_choi_pct
+                                and _se_oi_pct < _smart_exit_prev_oi_pct):
+                            print(f"SMART_TGT_EXIT: {'BULL' if st == 1 else 'BEAR'} trade — opposite PCR "
+                                  f"+ both gaps shrinking at locked SR {int(_smart_exit_entry_sr)} "
+                                  f"(choi {_smart_exit_prev_choi_pct}->{_se_choi_pct}, "
+                                  f"oi {_smart_exit_prev_oi_pct}->{_se_oi_pct}) -> early exit")
+                            oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                            st = -1
+                            IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                            IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                            mapStrike.clear()
+                            IS_ATM_STRIKE_SHIFT = False
+                            atmStrikeNotShiftedCount = 1
+                            avgOiPcrList2 = []; avgOiPcr9List2 = []
+                            _smart_exit_prev_choi_pct = None
+                            _smart_exit_prev_oi_pct = None
+                            continue
+                        # store this cycle's gaps as next cycle's baseline
+                        _smart_exit_prev_choi_pct = _se_choi_pct
+                        _smart_exit_prev_oi_pct = _se_oi_pct
+                except Exception as _se_err:
+                    print("SMART_TGT_EXIT_FAILED (non-fatal, diagnostic only):", _se_err)
             print("CHOI_DOM_GATE: gate_on=", USE_CHOI_DOMINANCE_GATE,
                   " bull_ok=", _dominance_ok_bull, " bear_ok=", _dominance_ok_bear,
                   "| isPE_DomSupp_once=", isPE_DominantAtSupp_once, " fresh_PE=", _last_fresh_pe,
@@ -4269,6 +4333,10 @@ while x == 1:
                 ladderIdx = 0
                 ladderActive = False
                 ladderMedian = opt_range if (opt_range and opt_range > 0) else 0
+                # SMART TARGET EXIT: lock the entry SUPP_RES strike for this trade.
+                _smart_exit_entry_sr = SUPP_RES
+                _smart_exit_prev_choi_pct = None
+                _smart_exit_prev_oi_pct = None
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
@@ -4281,6 +4349,8 @@ while x == 1:
                 if LADDER_TRAIL_ENABLED and ladderMedian > 0:
                     print(f"LADDER_TRAIL armed: median={ladderMedian} rungs={LADDER_TARGET_MULTS} "
                           f"lock_gap={LADDER_LOCK_GAP} (first target {LADDER_TARGET_MULTS[0]}x)")
+                if SMART_TARGET_EXIT_ENABLED:
+                    print(f"SMART_EXIT armed: locked entry SUPP_RES={_smart_exit_entry_sr}")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
 
@@ -4418,6 +4488,10 @@ while x == 1:
                 ladderIdx = 0
                 ladderActive = False
                 ladderMedian = opt_range if (opt_range and opt_range > 0) else 0
+                # SMART TARGET EXIT: lock the entry SUPP_RES strike for this trade.
+                _smart_exit_entry_sr = SUPP_RES
+                _smart_exit_prev_choi_pct = None
+                _smart_exit_prev_oi_pct = None
                 trailTriggerPts = round(effective_tgt * TRAIL_TRIGGER_TARGET_FRACTION)
                 print("ENTRY_SL_TGT: spread=", spread_decision.get("type"),
                       " SL=", sl, " Target=", target,
@@ -4430,6 +4504,8 @@ while x == 1:
                 if LADDER_TRAIL_ENABLED and ladderMedian > 0:
                     print(f"LADDER_TRAIL armed: median={ladderMedian} rungs={LADDER_TARGET_MULTS} "
                           f"lock_gap={LADDER_LOCK_GAP} (first target {LADDER_TARGET_MULTS[0]}x)")
+                if SMART_TARGET_EXIT_ENABLED:
+                    print(f"SMART_EXIT armed: locked entry SUPP_RES={_smart_exit_entry_sr}")
 
                 IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                 mapStrike.clear()
