@@ -367,7 +367,7 @@ NO_TRADE_ZONE_BUFFER = 20
 # higher-probability short leg with less gamma whipsaw. DEBIT is unaffected either way.
 # Always deploy by copying this file to sharem/ and pushing; never hand-edit on the server.
 ONE_OTM = 0
-FIXED_RISK_PER_TRADE = 7000     # ₹ NET risk per trade if SL hits (after hedge offset)
+FIXED_RISK_PER_TRADE = 3000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # NET-RUPEE HARD STOP (loss side only). The point-based SL on the short leg does not map to a
 # consistent rupee loss because the hedge under-offsets (realized ~half the entry delta ratio),
 # so losses overshoot FIXED_RISK_PER_TRADE. This backstop tracks the LIVE combined P&L of BOTH
