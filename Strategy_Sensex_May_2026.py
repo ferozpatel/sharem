@@ -374,7 +374,7 @@ FIXED_RISK_PER_TRADE = 7000     # ₹ NET risk per trade if SL hits (after hedge
 # legs (main sell + hedge buy) every poll and, when the net loss reaches -FIXED_RISK_PER_TRADE,
 # confirms over SL_CONFIRM_TICKS polls then exits — capping the actual rupee loss near budget
 # regardless of how the hedge behaves. TARGET side is NOT touched (only the SL/loss side).
-RUPEE_NET_SL_ENABLED = True
+RUPEE_NET_SL_ENABLED = False
 # IN-TRADE 3-MIN DIAGNOSTICS: while a position is open, keep the 2s SL/target monitoring but
 # ALSO print the full 3-min cycle diagnostics (option-chain table, PCR, CHOI, invariant window,
 # volume pressure, S/R) at each 3-min boundary — so the in-trade heartbeat and the usual cycle
