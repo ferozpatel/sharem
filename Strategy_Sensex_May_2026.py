@@ -369,7 +369,7 @@ NO_TRADE_ZONE_BUFFER = 20
 # higher-probability short leg with less gamma whipsaw. DEBIT is unaffected either way.
 # Always deploy by copying this file to sharem/ and pushing; never hand-edit on the server.
 ONE_OTM = 0
-FIXED_RISK_PER_TRADE = 3000     # ₹ NET risk per trade if SL hits (after hedge offset)
+FIXED_RISK_PER_TRADE = 7000     # ₹ NET risk per trade if SL hits (after hedge offset)
 # NET-RUPEE HARD STOP (loss side only). The point-based SL on the short leg does not map to a
 # consistent rupee loss because the hedge under-offsets (realized ~half the entry delta ratio),
 # so losses overshoot FIXED_RISK_PER_TRADE. This backstop tracks the LIVE combined P&L of BOTH
@@ -4168,7 +4168,9 @@ while x == 1:
             # this cycle. Exit when the OPPOSITE PCR trend is live AND BOTH gaps have shrunk vs
             # the previous cycle (no threshold — any decrease). Ends the day (st=-1). Runs next
             # to the fixed target / SL / net-stop; first trigger wins.
-            if (SMART_TARGET_EXIT_ENABLED and (st == 1 or st == 2)
+            # ONLY ACTIVE UNTIL THE FIRST TRAILING SL LOCKS IN (not ladderActive): once a ladder
+            # rung is hit and SL is trailing in profit, exits are handed over to the ladder points.
+            if (SMART_TARGET_EXIT_ENABLED and (st == 1 or st == 2) and not ladderActive
                     and _smart_exit_entry_sr is not None and _smart_exit_entry_sr != "NOTRADEZONE"):
                 try:
                     _se_ce_sym = getOptionFormatSensex(intExpiry, int(_smart_exit_entry_sr), "CE")
