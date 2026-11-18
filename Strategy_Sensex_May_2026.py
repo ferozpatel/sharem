@@ -228,6 +228,7 @@ LADDER_LOCK_GAP = 0.25  # when rung T is hit, SL locks at (T - gap) = the previo
 MIN_MEDIAN_CANDLES = 4            # a median below this many candles is treated as unreliable
 LOW_SAMPLE_MEDIAN_THRESHOLD = 40  # only halve a thin-window median if it exceeds this
 LOW_SAMPLE_MEDIAN_FACTOR = 0.5    # halve it (67.55 -> 33.78)
+LOW_SAMPLE_MEDIAN_HALVE_ENABLED = False  # master switch for the halving; False = never halve (logging kept)
 
 # ============================================================
 # TARGET-REACHABILITY MEDIAN CAP (CREDIT spreads only)
@@ -1442,7 +1443,9 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
         # Deliberately NOT applied when the window is full: 2026-06-24 produced median 43.43
         # off a complete 10-candle window — that was real volatility, not a sampling artifact,
         # and must not be shaved.
-        if len(ranges) < MIN_MEDIAN_CANDLES and representative_range > LOW_SAMPLE_MEDIAN_THRESHOLD:
+        if (LOW_SAMPLE_MEDIAN_HALVE_ENABLED
+                and len(ranges) < MIN_MEDIAN_CANDLES
+                and representative_range > LOW_SAMPLE_MEDIAN_THRESHOLD):
             representative_range = representative_range * LOW_SAMPLE_MEDIAN_FACTOR
             low_sample_halved = True
 
