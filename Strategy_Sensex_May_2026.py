@@ -229,6 +229,7 @@ MIN_MEDIAN_CANDLES = 4            # a median below this many candles is treated 
 LOW_SAMPLE_MEDIAN_THRESHOLD = 40  # only halve a thin-window median if it exceeds this
 LOW_SAMPLE_MEDIAN_FACTOR = 0.5    # halve it (67.55 -> 33.78)
 LOW_SAMPLE_MEDIAN_HALVE_ENABLED = False  # master switch for the halving; False = never halve (logging kept)
+SIZING_MEDIAN_CANDLES = 5         # sizing/SL/target uses median of the LAST N candle ranges (was 15); 15 & 20 still logged
 
 # ============================================================
 # TARGET-REACHABILITY MEDIAN CAP (CREDIT spreads only)
@@ -1358,11 +1359,13 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
 
     Method: Take last n_candles from TODAY's session (skipping the very first
     9:15-9:18 candle which is abnormally large due to opening volatility), then
-    return MEDIAN of all valid candle ranges.
+    return the MEDIAN of the LAST SIZING_MEDIAN_CANDLES (5) valid candle ranges.
 
-    - Last 15 candles (post first candle) covers ~45 min of recent activity
-    - A 20-candle median is ALSO computed and logged (OPT_MEDIAN20_LOG) for a
-      wider-window comparison; it does NOT feed sizing.
+    - Sizing basis = median of the last 5 candle ranges (~15 min) — responsive to
+      current volatility. This is the value returned and used for SL/target/qty.
+    - The 15-candle and 20-candle medians are ALSO computed and logged
+      (OPT_RANGE_DEBUG median15 / OPT_MEDIAN20_LOG) for wider-window comparison;
+      they do NOT feed sizing.
     - Median of all = balanced view of typical movement (not biased by outliers)
     - top_k param kept for backward compat but unused (top-K logic removed —
       was over-weighting active candles and inflating SL)
@@ -1413,8 +1416,14 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
         if len(ranges) == 0:
             return None
 
-        # MEDIAN OF ALL valid candle ranges (was top-K median, simplified for stability)
-        representative_range = float(np.median(ranges))
+        # 15-candle median — kept for LOGGING reference only (was the old sizing basis)
+        median15 = float(np.median(ranges))
+
+        # SIZING BASIS: median of the LAST SIZING_MEDIAN_CANDLES (5) ranges — more responsive
+        # to current volatility than the 15-candle window. This value feeds qty sizing AND
+        # post-entry SL/target (via tradeOptRange). 15 & 20 medians are logged for comparison.
+        ranges_sizing = ranges[-SIZING_MEDIAN_CANDLES:]
+        representative_range = float(np.median(ranges_sizing)) if len(ranges_sizing) else median15
         raw_median = representative_range
         low_sample_halved = False
 
@@ -1454,7 +1463,8 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
         print(f"OPT_RANGE_DEBUG: symbol={option_symbol}",
               f"| total_candles_after_skip1st={len(ranges)}",
               f"| ranges={all_ranges_rounded}",
-              f"| median_all={round(representative_range, 2)}")
+              f"| median_sizing5={round(representative_range, 2)} (last {len(ranges_sizing)})",
+              f"| median15={round(median15, 2)}")
 
         if low_sample_halved:
             print(f"LOW_SAMPLE_MEDIAN_HALVED: symbol={option_symbol}",
@@ -1479,7 +1489,8 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
             print(f"OPT_MEDIAN20_LOG: symbol={option_symbol}",
                   f"| candles_used={len(_ranges20)}",
                   f"| median20={_median20}",
-                  f"| (sizing median15={round(representative_range, 2)} over {len(ranges)} candles)")
+                  f"| median15={round(median15, 2)}",
+                  f"| (SIZING median5={round(representative_range, 2)} over last {len(ranges_sizing)} candles)")
         except Exception as _m20err:
             print("OPT_MEDIAN20_LOG_ERROR:", str(_m20err))
 
@@ -1499,7 +1510,7 @@ def get_option_candle_range(option_symbol, fyers_client, n_candles=15, top_k=5):
                   f"| high={h_list}",
                   f"| low={l_list}",
                   f"| close={c_list}",
-                  f"| median_range(15)={round(representative_range, 2)}")
+                  f"| median_sizing5={round(representative_range, 2)} median15={round(median15, 2)}")
         except Exception as ohlc_err:
             print("OPT_OHLC_LOG_ERROR:", str(ohlc_err))
 
