@@ -396,8 +396,12 @@ REVERSAL_SIGNAL_LOG = True
 # total-OI gap%. Exit the position when the OPPOSITE PCR trend is live (bull trade -> isPcrDecr;
 # bear -> isPcrInc) AND BOTH gaps have shrunk vs the previous 3-min cycle (the level that
 # justified the trade is weakening). No threshold — any decrease in both counts. Runs alongside
-# the fixed target / SL / net-stop; whichever triggers first wins. Exit ends the day (st=-1).
+# the fixed target / SL / net-stop; whichever triggers first wins.
+# A smart exit is NOT counted as an SL or a target — it increments smartExitCount and RE-ARMS for
+# another trade (st=0). Only after SMART_EXIT_MAX_PER_DAY smart exits does the day end (st=-1).
+# The normal one-trade-per-day halt (a real SL or a target/ladder win) is unchanged.
 SMART_TARGET_EXIT_ENABLED = True
+SMART_EXIT_MAX_PER_DAY = 2   # day ends after this many smart exits; below it, re-arm and look again
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -866,6 +870,7 @@ sl = 0
 target = 0
 slCount = 0
 targetCount = 0
+smartExitCount = 0   # smart-target exits today; NOT counted as SL/target. Day ends at SMART_EXIT_MAX_PER_DAY.
 
 
 # ============================================================
@@ -4203,7 +4208,18 @@ while x == 1:
                                   f"(choi {_smart_exit_prev_choi_pct}->{_se_choi_pct}, "
                                   f"oi {_smart_exit_prev_oi_pct}->{_se_oi_pct}) -> early exit")
                             oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
-                            st = -1
+                            # A smart exit is NOT an SL and NOT a target — it does not touch
+                            # slCount/targetCount. Count it separately; re-arm for another trade
+                            # until SMART_EXIT_MAX_PER_DAY is reached, then end the day.
+                            smartExitCount += 1
+                            if smartExitCount >= SMART_EXIT_MAX_PER_DAY:
+                                st = -1
+                                print(f"SMART_EXIT_COUNT={smartExitCount} >= {SMART_EXIT_MAX_PER_DAY}"
+                                      f" -> day ends, no more trades (not counted as SL/target)")
+                            else:
+                                st = 0
+                                print(f"SMART_EXIT_COUNT={smartExitCount} (< {SMART_EXIT_MAX_PER_DAY})"
+                                      f" -> re-arming, looking for next trade (not counted as SL/target)")
                             IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
                             IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
                             mapStrike.clear()
