@@ -177,9 +177,9 @@ TRAIL_TRIGGER_TARGET_FRACTION = 0.50
 #     (net_sl * LOT_SIZE), so LOTS GO UP for the same Rs 4,000 budget.
 #     Rupee risk per trade is unchanged; position size is larger.
 SL_MULT_BULL = 2.0
-TARGET_MULT_BULL = 4.5
+TARGET_MULT_BULL = 4.25
 SL_MULT_BEAR = 2.0
-TARGET_MULT_BEAR = 4.5
+TARGET_MULT_BEAR = 4.25
 
 # ONE TRADE PER DAY (user, 2026-10-end): the day ends after the FIRST completed
 # trade, win OR loss. A TARGET win already stops re-entry (st = -1). A LOSS now
@@ -198,8 +198,9 @@ TRAIL_SL_FOR_BEAR = False
 # Instead of exiting at the single fixed target, ride a ladder: when the premium reaches a
 # target rung at multiplier T (of the option median), DON'T exit — ratchet the SL up to lock
 # profit at (T - LADDER_LOCK_GAP) and move the target to the NEXT rung. Repeat up the ladder.
-# The base loss-side SL (SL_MULT) and the FIRST rung (= TARGET_MULT = 4.5) are unchanged, so the
-# base R:R stays ~1:2; everything beyond the first rung is captured purely by the trailing SL.
+# The base loss-side SL (SL_MULT=2.0) and the FIRST rung (= TARGET_MULT = 4.25) set the base R:R
+# (~1:2.1); when the 4.25x rung is hit the SL locks at 4.0x, and everything beyond the first rung
+# is captured purely by the trailing SL (0.25 step, 0.25 lock gap).
 #
 # CREDIT (profit = premium falls):  target_prem = entry - median*T ; locked_sl = entry - median*(T-gap)
 # DEBIT  (profit = premium rises):  target_prem = entry + median*T ; locked_sl = entry + median*(T-gap)
@@ -209,8 +210,8 @@ TRAIL_SL_FOR_BEAR = False
 # Worst case after rung1 is +4.0x median (vs the old fixed +4.5x) — a small giveback for the
 # upside of riding to 8.0x on a trend. Set LADDER_TRAIL_ENABLED=False to keep the single target.
 LADDER_TRAIL_ENABLED = True
-LADDER_TARGET_MULTS = [4.5, 4.75, 5.0, 5.25, 5.5, 5.75, 6.0, 6.25, 6.5, 6.75,
-                       7.0, 7.25, 7.5, 7.75, 8.0]  # target rungs (median multiples), 0.25 step
+LADDER_TARGET_MULTS = [4.25, 4.5, 4.75, 5.0, 5.25, 5.5, 5.75, 6.0, 6.25, 6.5, 6.75,
+                       7.0, 7.25, 7.5, 7.75, 8.0]  # target rungs (median multiples), 0.25 step; first=4.25 -> SL locks 4.0
 LADDER_LOCK_GAP = 0.25  # when rung T is hit, SL locks at (T - gap) = the previous rung in profit
 
 # ============================================================
