@@ -242,7 +242,8 @@ SIZING_MEDIAN_CANDLES = 5         # sizing/SL/target uses median of the LAST N c
 # The median actually used = MIN(5-candle median, structural_median) — i.e. never size the target
 # further than the S/R move can deliver. A small buffer keeps the target just INSIDE the level
 # (cushion for delta decay near the edge). CREDIT only (ALWAYS_CREDIT). Logged as SR_STRUCT_MEDIAN.
-SR_STRUCTURAL_MEDIAN_ENABLED = True
+SR_STRUCTURAL_MEDIAN_ENABLED = True   # compute + LOG the structural median (SR_STRUCT_MEDIAN)
+SR_STRUCTURAL_MEDIAN_APPLY = False    # False = LOG ONLY (sizing keeps the 5-candle median); True = clamp sizing to min(5c, structural)
 SR_TARGET_BUFFER = 15             # points inside the opposing S/R where the target is anchored
 SR_BAND_WIDTH = 500              # S/R grid step (matches get_support_resistance step=500)
 
@@ -1634,13 +1635,16 @@ def apply_sr_structural_median(opt_range, main_premium, main_delta, is_bull,
         expected_drop = abs(main_delta) * distance
         structural_median = expected_drop / float(target_mult)
         chosen = min(opt_range, structural_median)
+        applied = SR_STRUCTURAL_MEDIAN_APPLY
         print(f"SR_STRUCT_MEDIAN: symbol={option_symbol} dir={'BULL' if is_bull else 'BEAR'}"
               f" anchor={round(float(anchor_ltp), 2)} SR={supp_res}"
               f" target_level={round(target_level, 2)} dist={round(distance, 2)}"
               f" delta={main_delta} exp_drop={round(expected_drop, 2)}"
               f" struct_median={round(structural_median, 2)} vs opt_range5={opt_range}"
-              f" -> used={round(chosen, 2)}")
-        return round(chosen, 2)
+              f" -> min={round(chosen, 2)} | APPLY={applied}"
+              f" -> used={round(chosen, 2) if applied else opt_range}")
+        # LOG-ONLY unless APPLY is True: sizing keeps the 5-candle median (opt_range).
+        return round(chosen, 2) if applied else opt_range
     except Exception as e:
         print("SR_STRUCT_MEDIAN_FAILED (non-fatal, keeping opt_range):", e)
         return opt_range
