@@ -233,6 +233,20 @@ LOW_SAMPLE_MEDIAN_HALVE_ENABLED = False  # master switch for the halving; False 
 SIZING_MEDIAN_CANDLES = 5         # sizing/SL/target uses median of the LAST N candle ranges (was 15); 15 & 20 still logged
 
 # ============================================================
+# S/R STRUCTURAL MEDIAN (LIVE) — make the target reachable at the opposing S/R level
+# ============================================================
+# Price tends to travel to the opposing edge of the 500-pt S/R band (the large-OI strike) and
+# reverse there. So the TARGET should be set to land AT that level, not beyond it. We estimate
+# the option premium the main leg will have when spot reaches the (buffered) opposing S/R, using
+# delta:  expected_drop = |main_delta| * distance_to_SR ;  structural_median = expected_drop / TARGET_MULT.
+# The median actually used = MIN(5-candle median, structural_median) — i.e. never size the target
+# further than the S/R move can deliver. A small buffer keeps the target just INSIDE the level
+# (cushion for delta decay near the edge). CREDIT only (ALWAYS_CREDIT). Logged as SR_STRUCT_MEDIAN.
+SR_STRUCTURAL_MEDIAN_ENABLED = True
+SR_TARGET_BUFFER = 15             # points inside the opposing S/R where the target is anchored
+SR_BAND_WIDTH = 500              # S/R grid step (matches get_support_resistance step=500)
+
+# ============================================================
 # TARGET-REACHABILITY MEDIAN CAP (CREDIT spreads only)
 # ============================================================
 # On a CREDIT spread the target level is  premium - (median x TARGET_MULT).  When the
@@ -1573,6 +1587,65 @@ def apply_target_reachability_cap(opt_range, main_premium, target_mult, sl_mult,
         return opt_range
 
 
+def apply_sr_structural_median(opt_range, main_premium, main_delta, is_bull,
+                               supp_res, anchor_ltp, target_mult, option_symbol=""):
+    """
+    Clamp the sizing median so the TARGET lands at the opposing S/R edge (where price tends to
+    reverse), making the TARGET_MULT target reachable within the band move — in either direction.
+
+    Opposing S/R edge (500-pt band):
+      BULL (sell PE): target = resistance = SUPP_RES(support) + SR_BAND_WIDTH ; buffered INSIDE by
+                      SR_TARGET_BUFFER -> distance = (SUPP_RES + band - buffer) - anchor_ltp
+      BEAR (sell CE): target = support = SUPP_RES(resistance) - SR_BAND_WIDTH ; buffered INSIDE ->
+                      distance = anchor_ltp - (SUPP_RES - band + buffer)
+
+    Expected main-leg premium move by the time spot reaches that level (delta approximation):
+      expected_drop     = |main_delta| * distance
+      structural_median = expected_drop / target_mult
+
+    Returns MIN(opt_range, structural_median): the median is only ever pulled DOWN so the target
+    cannot be set further than the S/R move can deliver. Never raises; returns opt_range unchanged
+    on any unusable input (so a bad delta / NOTRADEZONE never blocks or distorts a live entry).
+    """
+    try:
+        if not SR_STRUCTURAL_MEDIAN_ENABLED:
+            return opt_range
+        if not opt_range or opt_range <= 0:
+            return opt_range
+        if main_delta is None or abs(main_delta) <= 0:
+            print(f"SR_STRUCT_MEDIAN: symbol={option_symbol} delta unavailable -> keep opt_range={opt_range}")
+            return opt_range
+        if (supp_res is None or supp_res == "NOTRADEZONE" or not anchor_ltp
+                or not target_mult or target_mult <= 0):
+            return opt_range
+
+        if is_bull:
+            target_level = supp_res + SR_BAND_WIDTH - SR_TARGET_BUFFER
+            distance = target_level - anchor_ltp
+        else:
+            target_level = supp_res - SR_BAND_WIDTH + SR_TARGET_BUFFER
+            distance = anchor_ltp - target_level
+
+        if distance <= 0:
+            print(f"SR_STRUCT_MEDIAN: symbol={option_symbol} non-positive distance "
+                  f"({round(distance, 1)}) -> keep opt_range={opt_range}")
+            return opt_range
+
+        expected_drop = abs(main_delta) * distance
+        structural_median = expected_drop / float(target_mult)
+        chosen = min(opt_range, structural_median)
+        print(f"SR_STRUCT_MEDIAN: symbol={option_symbol} dir={'BULL' if is_bull else 'BEAR'}"
+              f" anchor={round(float(anchor_ltp), 2)} SR={supp_res}"
+              f" target_level={round(target_level, 2)} dist={round(distance, 2)}"
+              f" delta={main_delta} exp_drop={round(expected_drop, 2)}"
+              f" struct_median={round(structural_median, 2)} vs opt_range5={opt_range}"
+              f" -> used={round(chosen, 2)}")
+        return round(chosen, 2)
+    except Exception as e:
+        print("SR_STRUCT_MEDIAN_FAILED (non-fatal, keeping opt_range):", e)
+        return opt_range
+
+
 def get_entry_anchor_premium(option_symbol, fyers_client):
     """
     Resolve the premium used to anchor SL/Target immediately AFTER a spread is filled.
@@ -2314,6 +2387,11 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # stored so sizing and the post-entry SL/Target use the identical median.
         opt_range = apply_target_reachability_cap(
             opt_range, entryPrice, TARGET_MULT_BULL, SL_MULT_BULL, atmPE)
+        # S/R STRUCTURAL MEDIAN: pull the median down to whatever makes the target land AT the
+        # opposing resistance (where price tends to reverse), if that is tighter than the 5-candle
+        # median. Uses the SAME anchor (anchorLTP) and SUPP_RES the entry gate keyed off.
+        opt_range = apply_sr_structural_median(
+            opt_range, entryPrice, main_delta_val, True, SUPP_RES, anchorLTP, TARGET_MULT_BULL, atmPE)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
@@ -2404,6 +2482,11 @@ def takeEntryCredit(isBullish, isBearish, syntheticATMStrike, intExpiry, fyers, 
         # stored so sizing and the post-entry SL/Target use the identical median.
         opt_range = apply_target_reachability_cap(
             opt_range, entryPrice, TARGET_MULT_BEAR, SL_MULT_BEAR, atmCE)
+        # S/R STRUCTURAL MEDIAN: pull the median down to whatever makes the target land AT the
+        # opposing support (where price tends to reverse), if that is tighter than the 5-candle
+        # median. Uses the SAME anchor (anchorLTP) and SUPP_RES the entry gate keyed off.
+        opt_range = apply_sr_structural_median(
+            opt_range, entryPrice, main_delta_val, False, SUPP_RES, anchorLTP, TARGET_MULT_BEAR, atmCE)
         tradeOptRange = opt_range  # store for post-entry SL/Target reuse — no re-fetch, no drift
         # Hedge leg range too -> empirical delta-offset ratio for risk sizing. Returns None on
         # any failure (thin/illiquid strike); sizing then falls back to the premium ratio.
