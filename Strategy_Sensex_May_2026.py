@@ -417,6 +417,12 @@ REVERSAL_SIGNAL_LOG = True
 # The normal one-trade-per-day halt (a real SL or a target/ladder win) is unchanged.
 SMART_TARGET_EXIT_ENABLED = True
 SMART_EXIT_MAX_PER_DAY = 2   # day ends after this many smart exits; below it, re-arm and look again
+# REVERSAL SMART EXIT (LIVE): while in a trade (and before the first trailing SL locks), if the
+# OPPOSITE direction's FULL entry criteria are met this cycle (the REVERSAL_SIGNAL condition),
+# exit the position — a confirmed opposite setup means the move is reversing against us. Counts as
+# a smart exit (smartExitCount, re-arm up to SMART_EXIT_MAX_PER_DAY); NOT an SL and NOT a target.
+# This is a 2nd, faster smart-exit path alongside the gaps-shrinking SMART_TARGET_EXIT.
+SMART_EXIT_ON_REVERSAL = True
 # MAX_LOTS is now just a sanity backstop — the real capital constraint is the live
 # margin check (apply_margin_cap) against DEPLOYABLE_CAPITAL_FRACTION of real available funds.
 MAX_LOTS = 40                    # hard safety ceiling (backstop only, not capital-derived)
@@ -4236,25 +4242,56 @@ while x == 1:
             # real entry, minus the st==0 / slCount / time checks). A met opposite setup at the
             # current (possibly shifted) S/R means selling pressure / PCR are flipping against the
             # position -> the move may be reversing. Logged only, feeds no exit.
-            if REVERSAL_SIGNAL_LOG and (st == 1 or st == 2):
+            if (REVERSAL_SIGNAL_LOG or SMART_EXIT_ON_REVERSAL) and (st == 1 or st == 2):
                 _rev_bear_ok = (bear_direction_ok and _dominance_ok_bear and choi_filter_bear
                                 and SUPP_RES != "NOTRADEZONE" and anchorLTP < SUPP_RES
                                 and IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2)
                 _rev_bull_ok = (bull_direction_ok and _dominance_ok_bull and choi_filter_bull
                                 and SUPP_RES != "NOTRADEZONE" and anchorLTP > SUPP_RES
                                 and IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2)
+                _rev_hit = False
                 if st == 1 and _rev_bear_ok:
                     print(f"REVERSAL_SIGNAL: in BULL trade but full BEAR entry criteria MET "
                           f"(mode={_entry_mode}) -> potential reversal / early-exit cue | "
                           f"SUPP_RES={SUPP_RES} anchorLTP={anchorLTP} CEchoi={suppResCeChOi} "
                           f"PEchoi={suppResPeChOi} isPcrDecr={IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2} "
                           f"isCE_DomRes_once={isCE_DominantAtRes_once}")
+                    _rev_hit = True
                 elif st == 2 and _rev_bull_ok:
                     print(f"REVERSAL_SIGNAL: in BEAR trade but full BULL entry criteria MET "
                           f"(mode={_entry_mode}) -> potential reversal / early-exit cue | "
                           f"SUPP_RES={SUPP_RES} anchorLTP={anchorLTP} CEchoi={suppResCeChOi} "
                           f"PEchoi={suppResPeChOi} isPcrInc={IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2} "
                           f"isPE_DomSupp_once={isPE_DominantAtSupp_once}")
+                    _rev_hit = True
+
+                # === REVERSAL SMART EXIT (LIVE) ===
+                # A confirmed opposite setup = the move is reversing against the position. Exit now,
+                # BEFORE the reversal plays out (today's 11-23 would exit near the profit low instead
+                # of riding back to SL). Only until the first trailing SL locks (not ladderActive).
+                # Counts as a smart exit (smartExitCount, re-arm) — NOT an SL and NOT a target.
+                if SMART_EXIT_ON_REVERSAL and _rev_hit and not ladderActive:
+                    print(f"REVERSAL_SMART_EXIT: {'BULL' if st == 1 else 'BEAR'} trade — opposite "
+                          f"full entry criteria met (mode={_entry_mode}) -> exiting before reversal")
+                    oidexit = exitSpreadPosition(tradeATMOption, tradeHedgeOption)
+                    smartExitCount += 1
+                    if smartExitCount >= SMART_EXIT_MAX_PER_DAY:
+                        st = -1
+                        print(f"SMART_EXIT_COUNT={smartExitCount} >= {SMART_EXIT_MAX_PER_DAY}"
+                              f" -> day ends, no more trades (reversal smart exit; not SL/target)")
+                    else:
+                        st = 0
+                        print(f"SMART_EXIT_COUNT={smartExitCount} (< {SMART_EXIT_MAX_PER_DAY})"
+                              f" -> re-arming, looking for next trade (reversal smart exit; not SL/target)")
+                    IS_CONSECUTIVELY_2TIMES_PCR_INCREASED2 = False
+                    IS_CONSECUTIVELY_2TIMES_PCR_DECREASED2 = False
+                    mapStrike.clear()
+                    IS_ATM_STRIKE_SHIFT = False
+                    atmStrikeNotShiftedCount = 1
+                    avgOiPcrList2 = []; avgOiPcr9List2 = []
+                    _smart_exit_prev_choi_pct = None
+                    _smart_exit_prev_oi_pct = None
+                    continue
 
             # === SMART TARGET EXIT (reversal-based early exit, LIVE) ===
             # Measure the LOCKED entry SUPP_RES strike's cumulative-CHOI gap% and total-OI gap%
