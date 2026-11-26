@@ -166,7 +166,7 @@ structural_median = expected_drop / TARGET_MULT
 candidate         = min(5-candle median, structural_median)
 ```
 
-- Currently **logged only** (`SR_STRUCTURAL_MEDIAN_APPLY=False`) — sizing keeps the 5-candle median.
+- **LIVE** (`SR_STRUCTURAL_MEDIAN_APPLY=True`) — sizing uses `min(5-candle median, structural median)`.
 - Backtest (Sep–Nov) showed it rescues unreachable/too-far targets on wide-median days without
   flipping any clean winner to a loss (one caveat: 11-09, a volatile EOD-held day, would stop early).
 - To make it live: set `SR_STRUCTURAL_MEDIAN_APPLY=True`.
@@ -190,7 +190,7 @@ candidate         = min(5-candle median, structural_median)
 | `SMART_EXIT_ON_REVERSAL` | True | reversal-signal smart exit |
 | `SMART_EXIT_MAX_PER_DAY` | 2 | smart exits before day ends |
 | `SR_STRUCTURAL_MEDIAN_ENABLED` | True | compute + log structural median |
-| `SR_STRUCTURAL_MEDIAN_APPLY` | False | structural is log-only |
+| `SR_STRUCTURAL_MEDIAN_APPLY` | True | LIVE — sizing uses min(5-candle, structural) |
 | `SR_TARGET_BUFFER` / `SR_BAND_WIDTH` | 15 / 500 | structural buffer / band |
 | `RUPEE_NET_SL_ENABLED` | False | net-rupee stop disabled |
 | `FIXED_RISK_PER_TRADE` | 7000 | ₹ net risk per trade |

@@ -243,7 +243,7 @@ SIZING_MEDIAN_CANDLES = 5         # sizing/SL/target uses median of the LAST N c
 # further than the S/R move can deliver. A small buffer keeps the target just INSIDE the level
 # (cushion for delta decay near the edge). CREDIT only (ALWAYS_CREDIT). Logged as SR_STRUCT_MEDIAN.
 SR_STRUCTURAL_MEDIAN_ENABLED = True   # compute + LOG the structural median (SR_STRUCT_MEDIAN)
-SR_STRUCTURAL_MEDIAN_APPLY = False    # False = LOG ONLY (sizing keeps the 5-candle median); True = clamp sizing to min(5c, structural)
+SR_STRUCTURAL_MEDIAN_APPLY = True     # True = clamp sizing to min(5-candle, structural); False = log only
 SR_TARGET_BUFFER = 15             # points inside the opposing S/R where the target is anchored
 SR_BAND_WIDTH = 500              # S/R grid step (matches get_support_resistance step=500)
 
